@@ -90,22 +90,76 @@ wilburs-rewardbook/
 └── public/               # Static assets
 ```
 
-## Deployment
+## 🚀 Quick Deploy / 快速部署
 
-### Vercel Deployment (Recommended)
+### One-Click Deploy to Vercel (Recommended)
 
-1. Push the project to GitHub
-2. Import the project on [Vercel](https://vercel.com)
-3. Configure environment variables
-4. Deploy!
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook)
+
+**Steps:**
+1. Click the button above
+2. Sign in with GitHub
+3. Add your Supabase environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Click "Deploy"
+5. Run `setup-database.sql` in your Supabase SQL Editor
+6. Done! 🎉
+
+### Deploy to Railway
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/new?template=https://github.com/con2000us/Wilbur-s-rewardbook)
+
+### Deploy to Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/con2000us/Wilbur-s-rewardbook)
+
+### Use as Template
+
+Click the green **"Use this template"** button at the top of this repository to create your own copy.
+
+## 📋 Deployment Guide
+
+### Prerequisites
+
+Before deploying, you need:
+1. **Supabase Account** (Free): [supabase.com](https://supabase.com)
+2. **GitHub Account** (Free)
+
+### Step-by-Step Deployment
+
+#### 1. Set up Supabase (5 minutes)
+
+1. Go to [supabase.com](https://supabase.com) and create a new project
+2. Wait for the project to be ready
+3. Go to **SQL Editor** in your Supabase dashboard
+4. Copy and paste the entire content of `setup-database.sql`
+5. Click **Run** to execute the SQL
+6. Go to **Settings** → **API** and copy:
+   - **Project URL** → This is your `NEXT_PUBLIC_SUPABASE_URL`
+   - **anon public** key → This is your `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+#### 2. Deploy to Vercel (3 minutes)
+
+1. Click the **"Deploy with Vercel"** button above
+2. Sign in with your GitHub account
+3. Click **"New Project"**
+4. In **Environment Variables**, add:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+   ```
+5. Click **"Deploy"**
+6. Wait 2-3 minutes for deployment to complete
+7. Visit your deployed site! 🎉
 
 ### Other Deployment Options
 
-You can also deploy to other Next.js-compatible platforms such as:
-- Netlify
-- Railway
-- Render
-- Self-hosted server (using Docker)
+You can also deploy to:
+- **Netlify**: Import from GitHub and set environment variables
+- **Railway**: Use the Railway button above
+- **Render**: Use the Render button above
+- **Self-hosted**: Use Docker or any Node.js hosting
 
 ## License
 

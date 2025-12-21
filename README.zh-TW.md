@@ -83,22 +83,76 @@ wilburs-rewardbook/
 └── public/              # 靜態資源
 ```
 
-## 部署
+## 🚀 快速部署
 
-### Vercel 部署（推薦）
+### 一鍵部署到 Vercel（推薦）
 
-1. 將專案推送到 GitHub
-2. 在 [Vercel](https://vercel.com) 導入專案
-3. 設定環境變數
-4. 部署完成！
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook)
+
+**步驟：**
+1. 點擊上方按鈕
+2. 使用 GitHub 帳號登入
+3. 添加 Supabase 環境變數：
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. 點擊「Deploy」
+5. 在 Supabase SQL Editor 中執行 `setup-database.sql`
+6. 完成！🎉
+
+### 部署到 Railway
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/new?template=https://github.com/con2000us/Wilbur-s-rewardbook)
+
+### 部署到 Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/con2000us/Wilbur-s-rewardbook)
+
+### 使用此模板
+
+點擊倉庫頂部的綠色 **"Use this template"** 按鈕來創建你自己的副本。
+
+## 📋 部署指南
+
+### 前置需求
+
+部署前，你需要：
+1. **Supabase 帳號**（免費）：[supabase.com](https://supabase.com)
+2. **GitHub 帳號**（免費）
+
+### 逐步部署指南
+
+#### 1. 設置 Supabase（5 分鐘）
+
+1. 前往 [supabase.com](https://supabase.com) 創建新專案
+2. 等待專案準備完成
+3. 在 Supabase 儀表板中進入 **SQL Editor**
+4. 複製並貼上 `setup-database.sql` 的完整內容
+5. 點擊 **Run** 執行 SQL
+6. 前往 **Settings** → **API** 並複製：
+   - **Project URL** → 這是你的 `NEXT_PUBLIC_SUPABASE_URL`
+   - **anon public** 金鑰 → 這是你的 `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+#### 2. 部署到 Vercel（3 分鐘）
+
+1. 點擊上方的 **"Deploy with Vercel"** 按鈕
+2. 使用 GitHub 帳號登入
+3. 點擊 **"New Project"**
+4. 在 **Environment Variables** 中添加：
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=你的_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=你的_supabase_anon_key
+   ```
+5. 點擊 **"Deploy"**
+6. 等待 2-3 分鐘完成部署
+7. 訪問你的部署網站！🎉
 
 ### 其他部署選項
 
-也可以部署到其他支援 Next.js 的平台，如：
-- Netlify
-- Railway
-- Render
-- 自架伺服器（使用 Docker）
+也可以部署到：
+- **Netlify**：從 GitHub 導入並設置環境變數
+- **Railway**：使用上方的 Railway 按鈕
+- **Render**：使用上方的 Render 按鈕
+- **自架伺服器**：使用 Docker 或任何 Node.js 主機
 
 ## 授權
 
