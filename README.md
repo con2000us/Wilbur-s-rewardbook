@@ -36,6 +36,12 @@ A comprehensive student reward management system built with Next.js, TypeScript,
 
 ### Prerequisites
 
+**For Deployment (One-Click Deploy):**
+- GitHub account (free) - [Sign up](https://github.com/signup)
+- Vercel account (free) - [Sign up](https://vercel.com/signup) - Can use GitHub to sign in
+- Supabase account (free) - [Sign up](https://supabase.com)
+
+**For Local Development:**
 - Node.js 18+
 - npm or yarn
 - Supabase account and project

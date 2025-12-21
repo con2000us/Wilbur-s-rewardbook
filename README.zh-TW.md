@@ -29,6 +29,12 @@
 
 ### 環境需求
 
+**部署需求（一鍵部署）：**
+- GitHub 帳號（免費）- [註冊](https://github.com/signup)
+- Vercel 帳號（免費）- [註冊](https://vercel.com/signup) - 可使用 GitHub 登入
+- Supabase 帳號（免費）- [註冊](https://supabase.com)
+
+**本地開發需求：**
 - Node.js 18+ 
 - npm 或 yarn
 - Supabase 帳號和專案

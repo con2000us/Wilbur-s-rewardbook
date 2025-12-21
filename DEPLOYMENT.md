@@ -21,9 +21,17 @@ Complete step-by-step guide for deploying Wilbur's Reward Book.
 
 ## 📋 Prerequisites
 
-- [ ] GitHub account (free)
-- [ ] Supabase account (free) - [Sign up here](https://supabase.com)
+You need **3 free accounts** to deploy this project:
+
+- [ ] **GitHub account** (free) - [Sign up here](https://github.com/signup)
+  - *Required because Vercel needs to clone the code from GitHub*
+- [ ] **Vercel account** (free) - [Sign up here](https://vercel.com/signup)
+  - *You can sign up with your GitHub account*
+- [ ] **Supabase account** (free) - [Sign up here](https://supabase.com)
+  - *For the database*
 - [ ] 10 minutes of your time
+
+**All accounts are 100% free** and take less than 2 minutes each to create!
 
 ## 🗄️ Step 1: Set Up Supabase Database
 
