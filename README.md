@@ -103,14 +103,25 @@ wilburs-rewardbook/
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook)
 
 **Steps:**
-1. Click the button above
-2. Sign in with GitHub
-3. Add your Supabase environment variables:
+1. **Set up Supabase first** (Required):
+   - Create a new project at [supabase.com](https://supabase.com)
+   - Go to **SQL Editor** in your Supabase dashboard
+   - Copy and paste the entire content of `setup-database.sql`
+   - Click **Run** to create all database tables, functions, and triggers
+   - ⚠️ **Important**: This step is **required** - the app won't work without it!
+   - Go to **Settings** → **API** and copy:
+     - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
+     - **anon public** key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+2. Click the "Deploy with Vercel" button above
+3. Sign in with GitHub
+4. Add your Supabase environment variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Click "Deploy"
-5. Run `setup-database.sql` in your Supabase SQL Editor
+5. Click "Deploy"
 6. Done! 🎉
+
+> 💡 **Note**: The database setup (`setup-database.sql`) must be run **before** or **after** deployment, but it's **required** for the app to function. Supabase doesn't automatically create tables from code - you need to run the SQL script manually.
 
 ### Deploy to Railway
 
