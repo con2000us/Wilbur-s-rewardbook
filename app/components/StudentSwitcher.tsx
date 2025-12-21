@@ -14,7 +14,7 @@ interface Student {
 interface Props {
   currentStudentId: string
   currentStudentName: string
-  currentStudentAvatar: { emoji: string; gradient: string }
+  currentStudentAvatar: { emoji: string; gradient?: string; gradientStyle?: string; hex?: string }
   allStudents: Student[]
   basePath?: string
 }
@@ -127,8 +127,11 @@ export default function StudentSwitcher({
         >
           {/* 學生頭像 */}
           <div 
-            className={`w-16 h-16 rounded-full bg-gradient-to-br ${currentStudentAvatar.gradient} flex items-center justify-center text-3xl shadow-2xl ring-4 ring-white/30 flex-shrink-0 group-hover:scale-105 transition-transform duration-200`}
-            style={{ filter: 'drop-shadow(0 10px 25px rgba(0, 0, 0, 0.5))' }}
+            className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-2xl ring-4 ring-white/30 flex-shrink-0 group-hover:scale-105 transition-transform duration-200 ${currentStudentAvatar.gradient ? `bg-gradient-to-br ${currentStudentAvatar.gradient}` : ''}`}
+            style={{ 
+              filter: 'drop-shadow(0 10px 25px rgba(0, 0, 0, 0.5))',
+              ...(currentStudentAvatar.gradientStyle ? { background: currentStudentAvatar.gradientStyle } : {})
+            }}
           >
             {currentStudentAvatar.emoji}
           </div>

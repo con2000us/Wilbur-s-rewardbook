@@ -50,11 +50,11 @@ export default async function PrintPage({
     .order('due_date', { ascending: false })
   
   // 根據月份和科目篩選
-  let assessments = allAssessments
+  let assessments: typeof allAssessments = allAssessments
   
   // 篩選月份
-  if (month) {
-    assessments = assessments?.filter(a => {
+  if (month && assessments) {
+    assessments = assessments.filter(a => {
       if (!a.due_date) return false
       const date = new Date(a.due_date)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
@@ -63,8 +63,8 @@ export default async function PrintPage({
   }
   
   // 篩選科目
-  if (subject) {
-    assessments = assessments?.filter(a => a.subject_id === subject)
+  if (subject && assessments) {
+    assessments = assessments.filter(a => a.subject_id === subject)
   }
 
   // 解析頭像

@@ -74,14 +74,15 @@ export async function createAssessment(formData: {
           .single()
         
         if (insertedAssessment) {
+          const assessment = insertedAssessment as { id: string }
           await supabase.from('transactions').insert({
             student_id: formData.student_id,
-            assessment_id: insertedAssessment.id,
+            assessment_id: assessment.id,
             transaction_type: 'earn',
             amount: reward.amount,
             description: `${formData.title} - ${reward.ruleName}`,
             category: '測驗獎金'
-          })
+          } as any)
         }
         
         revalidatePath(`/student/${formData.student_id}`)
@@ -121,7 +122,7 @@ export async function updateAssessment(
   
   const { error } = await supabase
     .from('assessments')
-    .update(updates)
+    .update(updates as any)
     .eq('id', id)
   
   if (error) {

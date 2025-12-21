@@ -130,7 +130,7 @@ export default function AssessmentForm({
   const percentage = score !== null && maxScore > 0 ? (score / maxScore) * 100 : null
 
   // 找到匹配的規則
-  const matchingRule = score !== null && applicableRules.find(rule => {
+  const matchingRule = score !== null ? applicableRules.find(rule => {
     if (rule.condition === 'score_equals') {
       return score === rule.min_score
     } else if (rule.condition === 'perfect_score') {
@@ -141,7 +141,7 @@ export default function AssessmentForm({
       return minCheck && maxCheck
     }
     return false
-  })
+  }) : undefined
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()

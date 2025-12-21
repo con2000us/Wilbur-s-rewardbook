@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import AssessmentForm from '../components/AssessmentForm'
 import { getTranslations } from 'next-intl/server'
 import { parseStudentAvatar, getStudentBackgroundGradient } from '@/lib/utils/studentTheme'
