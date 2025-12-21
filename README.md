@@ -62,10 +62,11 @@ npm install
 ```
 
 3. Set up environment variables:
-Create a `.env.local` file and add your Supabase credentials:
+Create a `.env.local` file and add your credentials:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SITE_PASSWORD=your-strong-password-here
 ```
 
 4. Run database migrations:
@@ -117,9 +118,10 @@ wilburs-rewardbook/
 
 2. Click the "Deploy with Vercel" button above
 3. Sign in with GitHub
-4. Add your Supabase environment variables:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Add your environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
+   - `SITE_PASSWORD` - **Required**: Set a strong password to protect your site
 5. Click "Deploy"
 6. Done! 🎉
 
