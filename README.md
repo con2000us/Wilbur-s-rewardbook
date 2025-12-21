@@ -1,8 +1,15 @@
 # Wilbur's Reward Book
 
+![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?logo=supabase)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+
 A comprehensive student reward management system built with Next.js, TypeScript, Tailwind CSS, and Supabase.
 
-**Keywords**: student management, reward system, education app, learning tracker, grade book, student tracker, reward points, student assessment, homework tracker, exam tracker, parent-teacher tool, classroom management, student progress, academic tracking
+> 💡 **Built with AI**: This project was developed using [Cursor](https://cursor.sh) with AI-powered vibe coding, demonstrating modern AI-assisted development workflows.
+
+**Perfect for**: Teachers, Parents, Tutors, and Educators who want to track student progress, manage assessments, and implement reward systems.
 
 ## Features
 
