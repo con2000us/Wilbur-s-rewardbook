@@ -62,7 +62,7 @@ export async function createAssessment(formData: {
       .eq('is_active', true)
     
     if (rules && rules.length > 0) {
-      const reward = calculateReward(formData.score, rules)
+      const reward = calculateReward(formData.score, rules as any[])
       assessmentData.reward_amount = reward.amount
       
       // 如果有獎金，創建交易記錄
@@ -189,7 +189,7 @@ export async function gradeAssessment(
       reward_amount: reward.amount,
       status: 'graded',
       completed_date: new Date().toISOString()
-    })
+    } as any)
     .eq('id', id)
   
   if (updateError) {

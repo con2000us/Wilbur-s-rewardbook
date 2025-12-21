@@ -101,10 +101,10 @@ export default function AssessmentForm({
     })
 
     // 按規則類型分組（與管理頁面相同的優先級順序）
-    const exclusiveRules = filteredRules.filter(r => r.student_id === studentId && r.subject_id === selectedSubjectId)
-    const subjectOnlyRules = filteredRules.filter(r => !r.student_id && r.subject_id === selectedSubjectId)
-    const studentRules = filteredRules.filter(r => r.student_id === studentId && !r.subject_id)
-    const globalRules = filteredRules.filter(r => !r.student_id && !r.subject_id)
+    const exclusiveRules = filteredRules.filter((r: any) => r.student_id === studentId && r.subject_id === selectedSubjectId)
+    const subjectOnlyRules = filteredRules.filter((r: any) => !r.student_id && r.subject_id === selectedSubjectId)
+    const studentRules = filteredRules.filter((r: any) => r.student_id === studentId && !r.subject_id)
+    const globalRules = filteredRules.filter((r: any) => !r.student_id && !r.subject_id)
 
     // 排序函數：按 display_order（如果存在），否則按 priority（升序，因為 display_order 越小越優先）
     const sortRules = (rules: typeof filteredRules) => {

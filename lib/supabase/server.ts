@@ -13,5 +13,5 @@ export function createClient() {
         autoRefreshToken: false,
       },
     }
-  )
+  ) as any
 }
