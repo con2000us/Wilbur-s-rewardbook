@@ -62,22 +62,21 @@ export async function createAssessment(formData: {
       .eq('is_active', true)
     
     if (rules && rules.length > 0) {
-      const reward = calculateReward(formData.score, rules as any[])
+      const reward = calculateReward(formData.score, rules)
       assessmentData.reward_amount = reward.amount
       
       // 如果有獎金，創建交易記錄
       if (reward.amount > 0) {
         const { data: insertedAssessment } = await supabase
           .from('assessments')
-          .insert(assessmentData)
+          .insert(assessmentData as any)
           .select()
           .single()
         
-        if (insertedAssessment) {
-          const assessment = insertedAssessment as { id: string }
+        if (insertedAssessment && 'id' in insertedAssessment) {
           await supabase.from('transactions').insert({
             student_id: formData.student_id,
-            assessment_id: assessment.id,
+            assessment_id: (insertedAssessment as any).id,
             transaction_type: 'earn',
             amount: reward.amount,
             description: `${formData.title} - ${reward.ruleName}`,
@@ -189,7 +188,7 @@ export async function gradeAssessment(
       reward_amount: reward.amount,
       status: 'graded',
       completed_date: new Date().toISOString()
-    } as any)
+    })
     .eq('id', id)
   
   if (updateError) {

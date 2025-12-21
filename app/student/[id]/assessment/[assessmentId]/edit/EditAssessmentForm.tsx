@@ -20,11 +20,11 @@ interface Assessment {
   max_score: number
   due_date: string | null
   status: string
-  reward_amount: number | null
-  penalty_amount: number | null
-  description: string | null
-  notes: string | null
-  completed_date: string | null
+  reward_amount?: number | null
+  penalty_amount?: number | null
+  description?: string | null
+  notes?: string | null
+  completed_date?: string | null
   subjects?: {
     id: string
     name: string
@@ -44,7 +44,7 @@ interface RewardRule {
   reward_amount: number
   priority: number
   is_active: boolean
-  assessment_type: string | null
+  assessment_type?: string | null
 }
 
 interface Props {

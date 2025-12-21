@@ -22,7 +22,7 @@ export function calculateReward(score: number, rules: RewardRule[]) {
   }
 
   // 按優先級排序
-  const sortedRules = [...rules].sort((a: RewardRule, b: RewardRule) => a.priority - b.priority)
+  const sortedRules = [...rules].sort((a, b) => a.priority - b.priority)
 
   // 找到第一個符合的規則
   for (const rule of sortedRules) {

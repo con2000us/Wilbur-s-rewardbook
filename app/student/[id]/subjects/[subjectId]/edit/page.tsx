@@ -51,7 +51,11 @@ export default async function EditSubjectPage({
     .select('id, name, avatar_url')
     .order('display_order', { ascending: true })
 
-  const avatar = parseStudentAvatar(student.avatar_url, student.name)
+  const avatarData = parseStudentAvatar(student.avatar_url, student.name)
+  const avatar = {
+    emoji: avatarData.emoji,
+    gradient: getStudentBackgroundGradient(student.avatar_url, student.name)
+  }
   const backgroundGradient = getStudentBackgroundGradient(student.avatar_url, student.name)
 
   return (

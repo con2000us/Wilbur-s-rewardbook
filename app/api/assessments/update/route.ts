@@ -44,13 +44,13 @@ export async function POST(request: NextRequest) {
       let matchedRule = null
       if (rules && rules.length > 0) {
         // 先過濾評量類型匹配的規則
-        const typeFilteredRules = rules.filter((r: any) => !r.assessment_type || r.assessment_type === body.assessment_type)
+        const typeFilteredRules = rules.filter(r => !r.assessment_type || r.assessment_type === body.assessment_type)
         
         // 按優先級分組
-        const subjectStudentRules = typeFilteredRules.filter((r: any) => r.subject_id === body.subject_id && r.student_id === body.student_id)
-        const subjectGlobalRules = typeFilteredRules.filter((r: any) => r.subject_id === body.subject_id && !r.student_id)
-        const studentGlobalRules = typeFilteredRules.filter((r: any) => !r.subject_id && r.student_id === body.student_id)
-        const globalRules = typeFilteredRules.filter((r: any) => !r.subject_id && !r.student_id)
+        const subjectStudentRules = typeFilteredRules.filter(r => r.subject_id === body.subject_id && r.student_id === body.student_id)
+        const subjectGlobalRules = typeFilteredRules.filter(r => r.subject_id === body.subject_id && !r.student_id)
+        const studentGlobalRules = typeFilteredRules.filter(r => !r.subject_id && r.student_id === body.student_id)
+        const globalRules = typeFilteredRules.filter(r => !r.subject_id && !r.student_id)
 
         // 排序函數：按 display_order（如果存在），否則按 priority（升序）
         const sortRules = (ruleList: typeof typeFilteredRules) => {
