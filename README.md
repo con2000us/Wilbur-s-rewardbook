@@ -2,6 +2,8 @@
 
 A comprehensive student reward management system built with Next.js, TypeScript, Tailwind CSS, and Supabase.
 
+**Keywords**: student management, reward system, education app, learning tracker, grade book, student tracker, reward points, student assessment, homework tracker, exam tracker, parent-teacher tool, classroom management, student progress, academic tracking
+
 ## Features
 
 - 📚 **Student Management**: Add, edit, and delete students with custom avatars and background colors
