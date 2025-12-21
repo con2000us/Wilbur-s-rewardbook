@@ -100,7 +100,7 @@ wilburs-rewardbook/
 
 ### One-Click Deploy to Vercel (Recommended)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=SUPABASE_URL,SUPABASE_ANON_KEY)
 
 **Steps:**
 1. Click the button above
