@@ -9,6 +9,8 @@ A comprehensive student reward management system built with Next.js, TypeScript,
 
 > 💡 **Built with AI**: This project was developed using [Cursor](https://cursor.sh) with AI-powered vibe coding, demonstrating modern AI-assisted development workflows.
 
+> ⚠️ **Security Warning**: This application currently has **NO authentication or access control**. When deployed publicly, **anyone with the URL can view and modify all data**. See [SECURITY_WARNING.md](./SECURITY_WARNING.md) for details and solutions.
+
 **Perfect for**: Teachers, Parents, Tutors, and Educators who want to track student progress, manage assessments, and implement reward systems.
 
 ## Features
