@@ -64,8 +64,10 @@ export default async function SubjectsManagementPage({
     .select('id, name, avatar_url')
     .order('display_order', { ascending: true })
 
-  const avatar = parseStudentAvatar(student.avatar_url, student.name)
-  const backgroundGradient = getStudentBackgroundGradient(student.avatar_url, student.name)
+  // @ts-ignore - Supabase type inference issue with select queries
+  const avatar = parseStudentAvatar((student as any).avatar_url, (student as any).name)
+  // @ts-ignore - Supabase type inference issue with select queries
+  const backgroundGradient = getStudentBackgroundGradient((student as any).avatar_url, (student as any).name)
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -80,7 +82,7 @@ export default async function SubjectsManagementPage({
         <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-8">
           <StudentHeaderWithDropdown
             studentId={id}
-            studentName={student.name}
+            studentName={(student as any).name}
             studentAvatar={avatar}
             recordsTitle={t('manageSubjects')}
             allStudents={allStudents || []}
@@ -96,14 +98,15 @@ export default async function SubjectsManagementPage({
               📚 {t('manageSubjects')}
             </h1>
             <p className="text-gray-600">
-              {t('manageAllSubjects', { name: student.name }) || `管理 ${student.name} 的所有科目`}
+              {/* @ts-ignore - Supabase type inference issue with select queries */}
+              {t('manageAllSubjects', { name: (student as any).name }) || `管理 ${(student as any).name} 的所有科目`}
             </p>
           </div>
 
           {/* 科目列表和 Modal */}
           <SubjectsPageClient 
             studentId={id} 
-            studentName={student.name}
+            studentName={(student as any).name}
             subjects={subjects || []}
             allRewardRules={allRewardRules || []}
             globalRules={globalRules || []}

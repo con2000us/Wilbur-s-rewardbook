@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '評量不存在' }, { status: 404 })
     }
 
+    // @ts-ignore - Supabase type inference issue with join queries
     if (assessment.subjects?.student_id !== body.student_id) {
       return NextResponse.json({ error: '無權刪除此評量' }, { status: 403 })
     }

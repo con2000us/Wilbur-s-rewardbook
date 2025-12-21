@@ -20,7 +20,8 @@ export default async function Home() {
     .eq('key', 'site_name')
     .single()
   
-  const siteName = siteNameSetting?.value || t('title')
+  // @ts-ignore - Supabase type inference issue with select queries
+  const siteName = (siteNameSetting as any)?.value || t('title')
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-8">

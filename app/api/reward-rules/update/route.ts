@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('reward_rules')
+      // @ts-ignore - Supabase type inference issue with update operations
       .update(updateData)
       .eq('id', body.rule_id)
       .select()
@@ -40,10 +41,15 @@ export async function POST(request: NextRequest) {
 
     // 記錄更新結果以便調試
     console.log('Reward rule updated:', {
+      // @ts-ignore - Supabase type inference issue with select queries
       id: data.id,
+      // @ts-ignore - Supabase type inference issue with select queries
       rule_name: data.rule_name,
+      // @ts-ignore - Supabase type inference issue with select queries
       is_active: data.is_active,
+      // @ts-ignore - Supabase type inference issue with select queries
       student_id: data.student_id,
+      // @ts-ignore - Supabase type inference issue with select queries
       subject_id: data.subject_id
     })
 

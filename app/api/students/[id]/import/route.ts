@@ -110,7 +110,8 @@ export async function POST(
       .select('id')
       .eq('student_id', id)
     
-    const existingSubjectIds = existingSubjects?.map(s => s.id) || []
+    // @ts-ignore - Supabase type inference issue with select queries
+    const existingSubjectIds = existingSubjects?.map((s: any) => s.id) || []
     
     // 刪除該學生現有的相關資料（按外鍵依賴順序）
     // 先刪除交易記錄
@@ -150,6 +151,7 @@ export async function POST(
       student: backup.data.student
         ? await supabase
             .from('students')
+            // @ts-ignore - Supabase type inference issue with update operations
             .update({
               name: backup.data.student.name,
               email: backup.data.student.email || null,

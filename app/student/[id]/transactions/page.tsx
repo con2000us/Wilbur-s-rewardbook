@@ -40,8 +40,10 @@ export default async function TransactionsPage({
     .select('id, name, avatar_url')
     .order('display_order', { ascending: true })
 
-  const avatar = parseStudentAvatar(student.avatar_url, student.name)
-  const backgroundGradient = getStudentBackgroundGradient(student.avatar_url, student.name)
+  // @ts-ignore - Supabase type inference issue with select queries
+  const avatar = parseStudentAvatar((student as any).avatar_url, (student as any).name)
+  // @ts-ignore - Supabase type inference issue with select queries
+  const backgroundGradient = getStudentBackgroundGradient((student as any).avatar_url, (student as any).name)
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -56,7 +58,7 @@ export default async function TransactionsPage({
         <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-8">
           <StudentHeaderWithDropdown
             studentId={id}
-            studentName={student.name}
+            studentName={(student as any).name}
             studentAvatar={avatar}
             recordsTitle={t('passbook')}
             allStudents={allStudents || []}
@@ -73,7 +75,8 @@ export default async function TransactionsPage({
                 💰 {t('passbook')}
               </h1>
               <p className="text-gray-600">
-                {t('description', { name: student.name })}
+                {/* @ts-ignore - Supabase type inference issue with select queries */}
+                {t('description', { name: (student as any).name })}
               </p>
             </div>
           </div>

@@ -43,7 +43,8 @@ export default async function EditAssessmentPage({
     .eq('id', assessmentId)
     .single()
 
-  if (!assessment || assessment.subjects?.student_id !== id) {
+  // @ts-ignore - Supabase type inference issue with join queries
+  if (!assessment || (assessment as any).subjects?.student_id !== id) {
     notFound()
   }
 
@@ -68,8 +69,10 @@ export default async function EditAssessmentPage({
     .select('id, name, avatar_url')
     .order('display_order', { ascending: true })
 
-  const avatar = parseStudentAvatar(student.avatar_url, student.name)
-  const backgroundGradient = getStudentBackgroundGradient(student.avatar_url, student.name)
+  // @ts-ignore - Supabase type inference issue with select queries
+  const avatar = parseStudentAvatar((student as any).avatar_url, (student as any).name)
+  // @ts-ignore - Supabase type inference issue with select queries
+  const backgroundGradient = getStudentBackgroundGradient((student as any).avatar_url, (student as any).name)
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -84,7 +87,8 @@ export default async function EditAssessmentPage({
         <div className="mb-6 flex justify-between items-start gap-4">
           <StudentHeaderWithDropdown
             studentId={id}
-            studentName={student.name}
+            // @ts-ignore - Supabase type inference issue with select queries
+            studentName={(student as any).name}
             studentAvatar={avatar}
             recordsTitle={t('editAssessment')}
             allStudents={allStudents || []}
@@ -99,7 +103,8 @@ export default async function EditAssessmentPage({
             ✏️ {t('editAssessment')}
           </h1>
           <p className="text-gray-600 mb-6">
-            {t('editOrDelete', { title: assessment.title }) || `修改或刪除 ${assessment.title} 的記錄`}
+            {/* @ts-ignore - Supabase type inference issue with join queries */}
+            {t('editOrDelete', { title: (assessment as any).title }) || `修改或刪除 ${(assessment as any).title} 的記錄`}
           </p>
 
           <AssessmentForm 

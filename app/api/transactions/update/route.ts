@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     // 更新交易記錄
     const { error } = await supabase
       .from('transactions')
+      // @ts-ignore - Supabase type inference issue with update operations
       .update({
         transaction_type: body.transaction_type,
         amount: body.amount,

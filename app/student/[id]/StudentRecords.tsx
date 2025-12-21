@@ -37,11 +37,23 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
   const [resetDate, setResetDate] = useState<Date | null>(null)
   const [rewardBreakdown, setRewardBreakdown] = useState({
-    assessmentEarned: 0,    // 評量獎金收入
-    assessmentSpent: 0,     // 評量相關支出（通常為0）
-    passbookEarned: 0,      // 存摺其他收入
-    passbookSpent: 0,       // 存摺其他支出
-    startingBalance: 0      // 歸零基準金額
+    assessmentEarned: 0,    // 評量獎金收入（保留用於向後兼容）
+    assessmentSpent: 0,     // 評量相關支出（保留用於向後兼容）
+    passbookEarned: 0,      // 存摺其他收入（保留用於向後兼容）
+    passbookSpent: 0,       // 存摺其他支出（保留用於向後兼容）
+    startingBalance: 0,     // 歸零基準金額
+    totalRewardAmount: 0,   // 評量獎金（從評量記錄計算）
+    totalPassbookEarned: 0, // 非評量收入
+    totalPassbookSpent: 0,  // 非評量支出
+    resetBaseInPeriod: 0,   // 該時間區段內的獎金存摺歸零基準
+    nonAssessmentBalance: 0, // 獎金存摺非評量獎金部份的金額（收入-支出）
+    averageScores: {        // 各評量類型平均分數
+      exam: 0,
+      quiz: 0,
+      homework: 0,
+      project: 0
+    },
+    totalAverage: 0         // 總平均分數
   })
 
   useEffect(() => {
@@ -158,18 +170,76 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
       })
     }
 
-    // 4. 分類計算獎金
-    // 評量相關的交易（有 assessment_id）
+    // 4. 計算該時間區段內的獎金存摺數據
+    // 該時間區段內的獎金存摺歸零基準（在該時間區段內的 reset 記錄）
+    const resetInPeriod = filteredTransactions.find(t => t.transaction_type === 'reset')
+    const resetBaseInPeriod = resetInPeriod?.amount || 0
+    
+    // 5. 計算評量獎金（從評量記錄中計算 reward_amount 總和）
+    // 根據月份篩選評量
+    let filteredAssessmentsForReward = assessments
+    if (selectedMonth) {
+      filteredAssessmentsForReward = assessments.filter(assessment => {
+        if (!assessment.due_date) return false
+        const date = new Date(assessment.due_date)
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        return monthKey === selectedMonth
+      })
+    }
+    // 計算所有科目的 reward_amount 總和（評量獎金）
+    const assessmentReward = filteredAssessmentsForReward
+      .filter(a => a.reward_amount && a.reward_amount > 0)
+      .reduce((sum, a) => sum + (a.reward_amount || 0), 0) || 0
+    
+    // 6. 計算各評量類型的平均分數（根據選中的科目）
+    // 如果選擇了科目，只計算該科目的評量
+    let assessmentsForAverage = filteredAssessmentsForReward
+    if (selectedSubject && selectedSubject !== '') {
+      assessmentsForAverage = filteredAssessmentsForReward.filter(a => a.subject_id === selectedSubject)
+    }
+    
+    const assessmentTypes = ['exam', 'quiz', 'homework', 'project'] as const
+    const averageScores: { [key: string]: number } = {}
+    let totalScoreSum = 0
+    let totalCount = 0
+    
+    assessmentTypes.forEach(type => {
+      const typeAssessments = assessmentsForAverage.filter(a => 
+        a.assessment_type === type && a.score !== null && a.score !== undefined
+      )
+      if (typeAssessments.length > 0) {
+        const sum = typeAssessments.reduce((s, a) => s + (a.score || 0), 0)
+        const avg = sum / typeAssessments.length
+        averageScores[type] = Math.round(avg * 10) / 10 // 保留一位小數
+        totalScoreSum += sum
+        totalCount += typeAssessments.length
+      } else {
+        averageScores[type] = 0
+      }
+    })
+    
+    // 計算總平均分數
+    const totalAverage = totalCount > 0 ? Math.round((totalScoreSum / totalCount) * 10) / 10 : 0
+    
+    // 7. 計算獎金存摺非評量獎金部份的金額（沒有 assessment_id 的交易）
+    const nonAssessmentTransactions = filteredTransactions.filter(t => !t.assessment_id)
+    const nonAssessmentEarned = nonAssessmentTransactions
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0) || 0
+    const nonAssessmentSpent = nonAssessmentTransactions
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
+    const nonAssessmentBalance = nonAssessmentEarned - nonAssessmentSpent
+
+    // 8. 計算評量相關的交易（只計算因評量給予的金額）
     const assessmentTransactions = filteredTransactions.filter(t => t.assessment_id)
     const assessmentEarned = assessmentTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0) || 0
     const assessmentSpent = assessmentTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
     
-    // 存摺其他交易（沒有 assessment_id）
     const passbookTransactions = filteredTransactions.filter(t => !t.assessment_id)
     const passbookEarned = passbookTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0) || 0
     const passbookSpent = passbookTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
     
-    // 歸零基準金額
     const startingBalance = lastReset?.amount || 0
     
     // 設置獎金明細
@@ -178,7 +248,19 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
       assessmentSpent,
       passbookEarned,
       passbookSpent,
-      startingBalance
+      startingBalance,
+      totalRewardAmount: assessmentReward,  // 評量獎金
+      totalPassbookEarned: nonAssessmentEarned,  // 非評量收入
+      totalPassbookSpent: nonAssessmentSpent,   // 非評量支出
+      resetBaseInPeriod,
+      nonAssessmentBalance,  // 非評量獎金部分的金額（收入-支出）
+      averageScores: {
+        exam: averageScores.exam || 0,
+        quiz: averageScores.quiz || 0,
+        homework: averageScores.homework || 0,
+        project: averageScores.project || 0
+      },
+      totalAverage
     })
 
     // 5. 根據科目篩選（通過 assessment_id 關聯）
@@ -202,8 +284,10 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
 
     // 6. 計算統計數據
     const calculateFilteredStats = () => {
-      const earned = subjectFilteredTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0) || 0
-      const spent = subjectFilteredTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
+      // 只計算評量相關的交易（有 assessment_id 的交易）
+      const assessmentFilteredTransactions = subjectFilteredTransactions.filter(t => t.assessment_id)
+      const earned = assessmentFilteredTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0) || 0
+      const spent = assessmentFilteredTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
 
       // 如果是查看單科，不顯示起始金額（因為起始金額是總體的）
       // 單科只顯示該科目的收入和支出

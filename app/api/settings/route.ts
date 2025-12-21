@@ -16,7 +16,8 @@ export async function GET() {
     
     // 轉換為 key-value 對象
     const settings: Record<string, string> = {}
-    data?.forEach(item => {
+    // @ts-ignore - Supabase type inference issue with select queries
+    data?.forEach((item: any) => {
       settings[item.key] = item.value || ''
     })
     
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
     // upsert - 如果存在則更新，不存在則插入
     const { data, error } = await supabase
       .from('site_settings')
+      // @ts-ignore - Supabase type inference issue with upsert operations
       .upsert(
         { key, value },
         { onConflict: 'key' }

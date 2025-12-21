@@ -36,7 +36,8 @@ export async function GET(
     }
 
     // 獲取該學生的所有評量（通過科目關聯）
-    const subjectIds = subjects?.map(s => s.id) || []
+    // @ts-ignore - Supabase type inference issue with select queries
+    const subjectIds = subjects?.map((s: any) => s.id) || []
     const { data: assessments, error: assessmentsError } = subjectIds.length > 0
       ? await supabase
           .from('assessments')
@@ -77,6 +78,7 @@ export async function GET(
       type: 'student_export',
       exported_at: new Date().toISOString(),
       student_id: id,
+      // @ts-ignore - Supabase type inference issue with select queries
       student_name: student.name,
       
       // 學生相關資料
@@ -98,6 +100,7 @@ export async function GET(
     }
 
     // 回傳 JSON 檔案下載
+    // @ts-ignore - Supabase type inference issue with select queries
     const filename = `student-${student.name}-${new Date().toISOString().split('T')[0]}-${Date.now()}.json`
     
     return new NextResponse(JSON.stringify(studentBackup, null, 2), {

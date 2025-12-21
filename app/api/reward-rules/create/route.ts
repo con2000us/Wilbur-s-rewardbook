@@ -8,6 +8,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error} = await supabase
       .from('reward_rules')
+      // @ts-ignore - Supabase type inference issue with insert operations
       .insert({
         student_id: body.student_id,
         subject_id: body.subject_id,

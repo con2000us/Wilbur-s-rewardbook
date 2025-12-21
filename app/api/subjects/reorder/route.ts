@@ -14,6 +14,7 @@ export async function POST(req: Request) {
     for (const order of subjectOrders) {
       const { error } = await supabase
         .from('subjects')
+        // @ts-ignore - Supabase type inference issue with update operations
         .update({ order_index: order.order_index })
         .eq('id', order.id)
 

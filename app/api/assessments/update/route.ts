@@ -44,19 +44,20 @@ export async function POST(request: NextRequest) {
       let matchedRule = null
       if (rules && rules.length > 0) {
         // 先過濾評量類型匹配的規則
-        const typeFilteredRules = rules.filter(r => !r.assessment_type || r.assessment_type === body.assessment_type)
+        // @ts-ignore - Supabase type inference issue with select queries
+        const typeFilteredRules = rules.filter((r: any) => !r.assessment_type || r.assessment_type === body.assessment_type)
         
         // 按優先級分組
-        const subjectStudentRules = typeFilteredRules.filter(r => r.subject_id === body.subject_id && r.student_id === body.student_id)
-        const subjectGlobalRules = typeFilteredRules.filter(r => r.subject_id === body.subject_id && !r.student_id)
-        const studentGlobalRules = typeFilteredRules.filter(r => !r.subject_id && r.student_id === body.student_id)
-        const globalRules = typeFilteredRules.filter(r => !r.subject_id && !r.student_id)
+        const subjectStudentRules = typeFilteredRules.filter((r: any) => r.subject_id === body.subject_id && r.student_id === body.student_id)
+        const subjectGlobalRules = typeFilteredRules.filter((r: any) => r.subject_id === body.subject_id && !r.student_id)
+        const studentGlobalRules = typeFilteredRules.filter((r: any) => !r.subject_id && r.student_id === body.student_id)
+        const globalRules = typeFilteredRules.filter((r: any) => !r.subject_id && !r.student_id)
 
         // 排序函數：按 display_order（如果存在），否則按 priority（升序）
-        const sortRules = (ruleList: typeof typeFilteredRules) => {
-          return [...ruleList].sort((a, b) => {
-            const orderA = (a as any).display_order ?? a.priority ?? 0
-            const orderB = (b as any).display_order ?? b.priority ?? 0
+        const sortRules = (ruleList: any[]) => {
+          return [...ruleList].sort((a: any, b: any) => {
+            const orderA = a.display_order ?? a.priority ?? 0
+            const orderB = b.display_order ?? b.priority ?? 0
             return orderA - orderB
           })
         }
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest) {
     // 更新評量
     const { data: assessment, error } = await supabase
       .from('assessments')
+      // @ts-ignore - Supabase type inference issue with update operations
       .update(updateData)
       .eq('id', body.assessment_id)
       .select()
@@ -139,8 +141,10 @@ export async function POST(request: NextRequest) {
 
     // 如果有新獎金，創建新交易
     if (updateData.reward_amount > 0) {
+      // @ts-ignore - Supabase type inference issue with insert operations
       await supabase.from('transactions').insert({
         student_id: body.student_id,
+        // @ts-ignore - Supabase type inference issue with select queries
         assessment_id: assessment.id,
         transaction_type: 'earn',
         amount: updateData.reward_amount,

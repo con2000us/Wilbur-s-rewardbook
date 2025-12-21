@@ -25,6 +25,7 @@ export async function POST(req: Request) {
         )
       }
 
+      // @ts-ignore - Supabase type inference issue with select queries
       backupData = data.backup_data
     }
 

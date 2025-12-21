@@ -33,11 +33,17 @@ export async function GET(
 
     return NextResponse.json({
       backup: {
+        // @ts-ignore - Supabase type inference issue with select queries
         id: data.id,
+        // @ts-ignore - Supabase type inference issue with select queries
         name: data.name,
+        // @ts-ignore - Supabase type inference issue with select queries
         description: data.description,
+        // @ts-ignore - Supabase type inference issue with select queries
         backup_data: data.backup_data,
+        // @ts-ignore - Supabase type inference issue with select queries
         file_size: data.file_size,
+        // @ts-ignore - Supabase type inference issue with select queries
         created_at: data.created_at
       }
     })

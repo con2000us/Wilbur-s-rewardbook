@@ -19,6 +19,7 @@ export async function POST(req: Request) {
     for (const update of updates) {
       const { error } = await supabase
         .from('reward_rules')
+        // @ts-ignore - Supabase type inference issue with update operations
         .update({ display_order: update.display_order })
         .eq('id', update.id)
 

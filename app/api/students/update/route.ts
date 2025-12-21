@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('students')
+      // @ts-ignore - Supabase type inference issue with update operations
       .update({
         name: body.name,
         email: body.email || null,

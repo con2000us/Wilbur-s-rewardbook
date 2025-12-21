@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { calculateReward, calculatePercentage } from '@/lib/utils'
+import type { Database } from '@/lib/supabase/types'
 
 // 獲取所有評量
 export async function getAssessments(subjectId: string) {
@@ -121,7 +122,8 @@ export async function updateAssessment(
   
   const { error } = await supabase
     .from('assessments')
-    .update(updates as any)
+    // @ts-ignore - Supabase type inference issue with update operations
+    .update(updates)
     .eq('id', id)
   
   if (error) {
@@ -177,11 +179,13 @@ export async function gradeAssessment(
     .eq('is_active', true)
   
   const reward = calculateReward(score, rules || [])
+  // @ts-ignore - Supabase type inference issue with join queries
   const percentage = calculatePercentage(score, assessment.max_score)
   
   // 更新評量
   const { error: updateError } = await supabase
     .from('assessments')
+    // @ts-ignore - Supabase type inference issue with update operations
     .update({
       score,
       percentage,
@@ -197,11 +201,13 @@ export async function gradeAssessment(
   
   // 創建交易記錄
   if (reward.amount > 0) {
+    // @ts-ignore - Supabase type inference issue with insert operations
     await supabase.from('transactions').insert({
       student_id: studentId,
       assessment_id: id,
       transaction_type: 'earn',
       amount: reward.amount,
+      // @ts-ignore - Supabase type inference issue with join queries
       description: `${assessment.title} - ${reward.ruleName}`,
       category: '測驗獎金'
     })

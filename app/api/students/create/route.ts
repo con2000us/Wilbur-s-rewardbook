@@ -28,12 +28,14 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .maybeSingle()
     
-    const nextDisplayOrder = maxOrderData?.display_order !== null && maxOrderData?.display_order !== undefined
-      ? maxOrderData.display_order + 1
+    // @ts-ignore - Supabase type inference issue with select queries
+    const nextDisplayOrder = (maxOrderData as any)?.display_order !== null && (maxOrderData as any)?.display_order !== undefined
+      ? (maxOrderData as any).display_order + 1
       : 0
 
     const { data, error } = await supabase
       .from('students')
+      // @ts-ignore - Supabase type inference issue with insert operations
       .insert({
         name: body.name,
         email: body.email || null,

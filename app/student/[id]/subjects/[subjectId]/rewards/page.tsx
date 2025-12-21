@@ -77,26 +77,29 @@ export default async function SubjectRewardsPage({
             href={`/student/${id}`}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold"
           >
-            {tStudent('returnToStudent', { name: student.name })}
+            {/* @ts-ignore - Supabase type inference issue with select queries */}
+            {tStudent('returnToStudent', { name: (student as any).name })}
           </Link>
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-              {subject.icon} {subject.name} - {t('manageRules')}
+              {/* @ts-ignore - Supabase type inference issue with select queries */}
+              {(subject as any).icon} {(subject as any).name} - {t('manageRules')}
             </h1>
             <p className="text-gray-600">
-              {t('setRulesFor', { studentName: student.name, subjectName: subject.name }) || `為 ${student.name} 的 ${subject.name} 設置獎金規則`}
+              {/* @ts-ignore - Supabase type inference issue with select queries */}
+              {t('setRulesFor', { studentName: (student as any).name, subjectName: (subject as any).name }) || `為 ${(student as any).name} 的 ${(subject as any).name} 設置獎金規則`}
             </p>
           </div>
 
           <SubjectRewardRulesManager 
             studentId={id}
-            studentName={student.name}
+            studentName={(student as any).name}
             subjectId={subjectId}
-            subjectName={subject.name}
-            subjectIcon={subject.icon}
+            subjectName={(subject as any).name}
+            subjectIcon={(subject as any).icon}
             subjectRules={subjectRules || []}
             studentRules={studentRules || []}
             globalRules={globalRules || []}

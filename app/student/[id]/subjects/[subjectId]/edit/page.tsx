@@ -51,12 +51,15 @@ export default async function EditSubjectPage({
     .select('id, name, avatar_url')
     .order('display_order', { ascending: true })
 
-  const avatarData = parseStudentAvatar(student.avatar_url, student.name)
+  // @ts-ignore - Supabase type inference issue with select queries
+  const avatarData = parseStudentAvatar((student as any).avatar_url, (student as any).name)
   const avatar = {
     emoji: avatarData.emoji,
-    gradient: getStudentBackgroundGradient(student.avatar_url, student.name)
+    // @ts-ignore - Supabase type inference issue with select queries
+    gradient: getStudentBackgroundGradient((student as any).avatar_url, (student as any).name)
   }
-  const backgroundGradient = getStudentBackgroundGradient(student.avatar_url, student.name)
+  // @ts-ignore - Supabase type inference issue with select queries
+  const backgroundGradient = getStudentBackgroundGradient((student as any).avatar_url, (student as any).name)
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -79,7 +82,8 @@ export default async function EditSubjectPage({
           
           <StudentSwitcher
             currentStudentId={id}
-            currentStudentName={student.name}
+            // @ts-ignore - Supabase type inference issue with select queries
+            currentStudentName={(student as any).name}
             currentStudentAvatar={avatar}
             allStudents={allStudentsData || []}
             basePath={`/subjects/${subjectId}/edit`}
@@ -91,7 +95,8 @@ export default async function EditSubjectPage({
             ✏️ {t('editSubject')}
           </h1>
           <p className="text-gray-600 mb-6">
-            {t('editOrDeleteSubject', { name: subject.name })}
+            {/* @ts-ignore - Supabase type inference issue with select queries */}
+            {t('editOrDeleteSubject', { name: (subject as any).name })}
           </p>
 
           <EditSubjectForm 

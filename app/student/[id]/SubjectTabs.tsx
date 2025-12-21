@@ -44,6 +44,18 @@ interface RewardBreakdown {
   passbookEarned: number
   passbookSpent: number
   startingBalance: number
+  totalRewardAmount?: number      // 評量獎金（從評量記錄計算）
+  totalPassbookEarned?: number    // 非評量收入
+  totalPassbookSpent?: number     // 非評量支出
+  resetBaseInPeriod?: number      // 該時間區段內的獎金存摺歸零基準
+  nonAssessmentBalance?: number,  // 獎金存摺非評量獎金部份的金額（收入-支出）
+  averageScores?: {               // 各評量類型平均分數
+    exam: number
+    quiz: number
+    homework: number
+    project: number
+  },
+  totalAverage?: number           // 總平均分數
 }
 
 interface Props {
@@ -179,12 +191,12 @@ export default function SubjectTabs({ subjects, assessments, studentId, summary,
         <div className="text-center">
           <p className="text-gray-600 text-lg">
             {(!selectedSubject || selectedSubject === '') 
-              ? t('totalBonus') 
-              : `${selectedSubjectInfo?.icon || ''} ${selectedSubjectInfo?.name || ''} ${t('subjectReward')}`
+              ? '總平均' 
+              : `${selectedSubjectInfo?.icon || ''} ${selectedSubjectInfo?.name || ''} 平均`
             }
           </p>
           <p className="text-5xl font-bold text-blue-600 my-4">
-            ${summary?.balance || 0}
+            {rewardBreakdown.totalAverage || 0}
           </p>
           <div className="flex justify-around mt-4 text-base">
             <div className="text-center">
@@ -196,39 +208,39 @@ export default function SubjectTabs({ subjects, assessments, studentId, summary,
               <span className="font-bold">${summary?.total_spent || 0}</span>
             </div>
           </div>
-          {/* 獎金明細（只在全部科目時顯示） */}
-          {(!selectedSubject || selectedSubject === '') && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                {/* 評量獎金 */}
-                <div className="text-center p-2 bg-green-50 rounded-lg">
-                  <p className="text-gray-500 mb-1">📝 {t('assessmentReward')}</p>
-                  <p className="font-bold text-green-600">${rewardBreakdown.assessmentEarned}</p>
-                </div>
-                {/* 存摺收支 */}
-                <div className="text-center p-2 bg-purple-50 rounded-lg">
-                  <p className="text-gray-500 mb-1">💰 {t('passbookReward')}</p>
-                  <p className="font-bold">
-                    {rewardBreakdown.passbookEarned > 0 && (
-                      <span className="text-green-600">${rewardBreakdown.passbookEarned}</span>
-                    )}
-                    {rewardBreakdown.passbookEarned > 0 && rewardBreakdown.passbookSpent > 0 && ' / '}
-                    {rewardBreakdown.passbookSpent > 0 && (
-                      <span className="text-red-600">-${rewardBreakdown.passbookSpent}</span>
-                    )}
-                    {rewardBreakdown.passbookEarned === 0 && rewardBreakdown.passbookSpent === 0 && (
-                      <span className="text-gray-400">$0</span>
-                    )}
-                  </p>
-                </div>
-                {/* 歸零基準 */}
-                <div className="text-center p-2 bg-blue-50 rounded-lg">
-                  <p className="text-gray-500 mb-1">🔄 {t('resetBase')}</p>
-                  <p className="font-bold text-blue-600">${rewardBreakdown.startingBalance}</p>
-                </div>
+          {/* 各評量類型平均分數（全部科目和單一科目都顯示） */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-4 gap-3 text-sm">
+              {/* 考試平均 */}
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <p className="text-gray-500 mb-1 text-xs">📝 考試</p>
+                <p className="font-bold text-blue-600 text-lg">
+                  {(rewardBreakdown.averageScores?.exam || 0) > 0 ? (rewardBreakdown.averageScores?.exam || 0) : '-'}
+                </p>
+              </div>
+              {/* 小考平均 */}
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <p className="text-gray-500 mb-1 text-xs">📋 小考</p>
+                <p className="font-bold text-green-600 text-lg">
+                  {(rewardBreakdown.averageScores?.quiz || 0) > 0 ? (rewardBreakdown.averageScores?.quiz || 0) : '-'}
+                </p>
+              </div>
+              {/* 作業平均 */}
+              <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                <p className="text-gray-500 mb-1 text-xs">📓 作業</p>
+                <p className="font-bold text-yellow-600 text-lg">
+                  {(rewardBreakdown.averageScores?.homework || 0) > 0 ? (rewardBreakdown.averageScores?.homework || 0) : '-'}
+                </p>
+              </div>
+              {/* 專題平均 */}
+              <div className="text-center p-3 bg-purple-50 rounded-lg">
+                <p className="text-gray-500 mb-1 text-xs">🎨 專題</p>
+                <p className="font-bold text-purple-600 text-lg">
+                  {(rewardBreakdown.averageScores?.project || 0) > 0 ? (rewardBreakdown.averageScores?.project || 0) : '-'}
+                </p>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 

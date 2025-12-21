@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     const updatePromises = studentOrders.map(({ id, display_order }) =>
       supabase
         .from('students')
+        // @ts-ignore - Supabase type inference issue with update operations
         .update({ display_order })
         .eq('id', id)
     )

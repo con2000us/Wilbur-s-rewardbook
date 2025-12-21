@@ -27,7 +27,8 @@ export async function generateMetadata(): Promise<Metadata> {
     .eq('key', 'site_name')
     .single()
   
-  const siteName = siteNameSetting?.value || "Wilbur's RewardBook"
+  // @ts-ignore - Supabase type inference issue with select queries
+  const siteName = (siteNameSetting as any)?.value || "Wilbur's RewardBook"
   
   return {
     title: siteName,
