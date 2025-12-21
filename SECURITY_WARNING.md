@@ -83,11 +83,30 @@ Add a simple password protection:
 
 ## Quick Fix: Add Basic Password Protection / 快速修復：添加基本密碼保護
 
-If you need a quick solution, you can add a simple password check:
+### Option A: Vercel Password Protection (Paid) / Vercel 密碼保護（付費）
+
+**Requirements / 要求:**
+- Vercel Pro plan ($20/month) / Vercel Pro 方案（每月 $20）
+- Only works for production deployments / 僅適用於生產環境部署
+
+**How to enable / 如何啟用:**
+1. Go to Vercel dashboard → Your project → Settings → Deployment Protection
+2. Enable "Password Protection"
+3. Set username and password
+4. Redeploy
+
+**See [VERCEL_PASSWORD_PROTECTION.md](./VERCEL_PASSWORD_PROTECTION.md) for detailed guide.**
+
+### Option B: Custom Password Protection (Free) / 自定義密碼保護（免費）
+
+If you're on Vercel free tier, implement custom password protection:
 
 1. Add environment variable: `SITE_PASSWORD=your-secret-password`
 2. Create middleware to check password
 3. Store authentication in cookie/session
+4. Create a login page
+
+**See [VERCEL_PASSWORD_PROTECTION.md](./VERCEL_PASSWORD_PROTECTION.md) for implementation details.**
 
 ## Recommendation / 建議
 
