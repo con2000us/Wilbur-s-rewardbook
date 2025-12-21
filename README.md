@@ -167,7 +167,10 @@ Before deploying, you need:
    ```
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+   SITE_PASSWORD=your-strong-password-here
    ```
+   
+   > 💡 **Password Protection**: The app includes password protection. Set `SITE_PASSWORD` to protect your site. See [PASSWORD_PROTECTION_SETUP.md](./PASSWORD_PROTECTION_SETUP.md) for details.
 5. Click **"Deploy"**
 6. Wait 2-3 minutes for deployment to complete
 7. Visit your deployed site! 🎉

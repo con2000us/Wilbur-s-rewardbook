@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import LanguageToggle from './components/LanguageToggle'
+import LogoutButton from './components/LogoutButton'
 import StudentList from './components/StudentList'
 
 export default async function Home() {
@@ -36,6 +37,7 @@ export default async function Home() {
             <span>{tNav('settings')}</span>
           </Link>
           <LanguageToggle />
+          <LogoutButton />
         </div>
 
         {/* 主標題區域 - 大而突出 */}
