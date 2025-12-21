@@ -5,7 +5,13 @@ import { useTranslations, useLocale } from 'next-intl'
 
 const AVATAR_EMOJIS = [
   '😊', '😃', '😎', '🤓', '🧐', '😇', '🥳', '🤩',
-  '👦', '👧', '🧒', '👨‍🎓', '👩‍🎓', '🦸', '🦸‍♀️', '🧙'
+  '😄', '😁', '😆', '😋', '😍', '🤗', '🤔', '😴',
+  '😌', '😏', '😉', '🙂', '😀', '😅', '😂', '🤣',
+  '👦', '👧', '🧒', '👨‍🎓', '👩‍🎓', '🦸', '🦸‍♀️', '🧙',
+  '👨', '👩', '👶', '🧑', '👱', '👴', '👵', '🧑‍💼',
+  '🧑‍🔬', '🧑‍🏫', '🧑‍⚕️', '🧑‍🎨', '🧑‍🚀', '🧑‍✈️', '🧑‍🏭', '🧑‍💻',
+  '🤴', '👸', '🦁', '🐯', '🐰', '🐻', '🐼', '🐨',
+  '🐶', '🐱', '🐸', '🐷'
 ]
 
 const AVATAR_COLORS = [
@@ -176,6 +182,10 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
   const [error, setError] = useState('')
   const [selectedEmoji, setSelectedEmoji] = useState('😊')
   const [selectedColorHex, setSelectedColorHex] = useState('#3b82f6') // 預設藍色
+  const [showAllEmojis, setShowAllEmojis] = useState(false)
+  
+  // 計算要顯示的 emoji 數量（預設只顯示 2 行，每行 10 個 = 20 個）
+  const displayedEmojis = showAllEmojis ? AVATAR_EMOJIS : AVATAR_EMOJIS.slice(0, 20)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -238,24 +248,46 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
 
         {/* 選擇 Emoji */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {locale === 'zh-TW' ? '選擇頭像 Emoji' : 'Select Avatar Emoji'}
-          </label>
-          <div className="grid grid-cols-8 gap-2">
-            {AVATAR_EMOJIS.map((emoji) => (
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              {locale === 'zh-TW' ? '選擇頭像 Emoji' : 'Select Avatar Emoji'}
+            </label>
+            {AVATAR_EMOJIS.length > 20 && (
               <button
-                key={emoji}
                 type="button"
-                onClick={() => setSelectedEmoji(emoji)}
-                className={`text-3xl p-3 rounded-lg border-2 transition-all hover:scale-110 ${
-                  selectedEmoji === emoji
-                    ? 'border-blue-500 bg-blue-50 scale-110'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
+                onClick={() => setShowAllEmojis(!showAllEmojis)}
+                className="px-3 py-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 font-semibold cursor-pointer"
               >
-                {emoji}
+                {showAllEmojis 
+                  ? (locale === 'zh-TW' ? '顯示較少' : 'Show Less')
+                  : (locale === 'zh-TW' ? '顯示更多' : 'Show More')
+                }
               </button>
-            ))}
+            )}
+          </div>
+          <div 
+            className="overflow-y-hidden overflow-x-visible transition-all duration-500 ease-in-out"
+            style={{
+              maxHeight: showAllEmojis ? '500px' : '115px',
+              padding: '8px'
+            }}
+          >
+            <div className="grid grid-cols-10 gap-2">
+              {displayedEmojis.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => setSelectedEmoji(emoji)}
+                  className={`text-2xl p-1.5 rounded-lg border-2 transition-all hover:scale-110 flex items-center justify-center cursor-pointer ${
+                    selectedEmoji === emoji
+                      ? 'border-blue-500 bg-blue-50 scale-110'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
