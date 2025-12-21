@@ -38,12 +38,12 @@ In GitHub repository settings, add a concise description:
 
 **英文描述 / English Description:**
 ```
-A comprehensive student reward management system with assessment tracking, grade book, and reward points. Built with Next.js, TypeScript, and Supabase.
+A comprehensive student reward management system with assessment tracking, grade book, and reward points. Built with Next.js, TypeScript, and Supabase. Developed using Cursor with AI-powered vibe coding.
 ```
 
 **中文描述 / Chinese Description:**
 ```
-完整的學生獎勵管理系統，包含評量追蹤、成績記錄和獎勵積分。使用 Next.js、TypeScript 和 Supabase 構建。
+完整的學生獎勵管理系統，包含評量追蹤、成績記錄和獎勵積分。使用 Next.js、TypeScript 和 Supabase 構建。使用 Cursor 配合 AI 的 vibe coding 模式開發。
 ```
 
 ### 3. 添加 README 徽章 / Add README Badges

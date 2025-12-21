@@ -1,7 +1,7 @@
 {
   "name": "wilburs-rewardbook",
   "version": "0.1.0",
-  "description": "A comprehensive student reward management system with assessment tracking, grade book, and reward points system. Built with Next.js, TypeScript, and Supabase.",
+  "description": "A comprehensive student reward management system with assessment tracking, grade book, and reward points system. Built with Next.js, TypeScript, and Supabase. Developed using Cursor with AI-powered vibe coding.",
   "keywords": [
     "student-management",
     "reward-system",

@@ -108,6 +108,10 @@ MIT License
 
 Issues and Pull Requests are welcome!
 
+## Development
+
+This project was developed using [Cursor](https://cursor.sh) with AI-powered vibe coding, showcasing modern AI-assisted development workflows. The entire codebase was built through iterative AI collaboration, demonstrating how AI can accelerate full-stack application development.
+
 ## Contact
 
 For questions or suggestions, please contact us via GitHub Issues.
