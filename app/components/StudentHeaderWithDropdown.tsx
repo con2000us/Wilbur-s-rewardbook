@@ -170,35 +170,7 @@ export default function StudentHeaderWithDropdown({
     }))
   }
 
-  if (otherStudents.length === 0) {
-    // 只有一個學生時，只顯示學生信息，不顯示下拉按鈕
-    return (
-      <div className="flex items-center gap-4">
-        <button
-          onClick={(e) => handleOpenSettings(e, studentId)}
-          className="flex items-center gap-3 group cursor-pointer"
-        >
-          <div 
-            className="w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-2xl ring-4 ring-white/30 flex-shrink-0 group-hover:scale-105 transition-transform duration-200"
-            style={{ 
-              background: studentAvatar.gradientStyle,
-              filter: 'drop-shadow(0 10px 25px rgba(0, 0, 0, 0.5))' 
-            }}
-          >
-            {studentAvatar.emoji}
-          </div>
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white break-words group-hover:text-purple-200 transition-colors duration-200" style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.3)' }}>
-              {studentName}
-            </h1>
-          </div>
-        </button>
-        <p className="text-purple-300 text-base md:text-xl font-semibold whitespace-nowrap" style={{ textShadow: '1px 1px 3px rgba(0, 0, 0, 0.5)' }}>
-          {recordsTitle}
-        </p>
-      </div>
-    )
-  }
+  // 即使只有一個學生，也顯示下拉按鈕，以便訪問各個功能頁面和返回首頁
 
   return (
     <div className="relative" ref={containerRef}>
@@ -355,9 +327,40 @@ export default function StudentHeaderWithDropdown({
             </div>
           </div>
           
+          {/* 返回首頁選項 - 當只有一個學生時特別有用 */}
+          {otherStudents.length === 0 && (
+            <div className="px-4 py-3 border-t-2 border-gray-200">
+              <button
+                onClick={() => {
+                  router.push('/')
+                  setIsOpen(false)
+                }}
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-200 group rounded-lg"
+              >
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-2xl shadow-lg flex-shrink-0 group-hover:scale-105 transition-all duration-200">
+                  🏠
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-lg font-bold text-gray-800 group-hover:text-indigo-700 transition-colors">
+                    {tHome('title') || '返回首頁'}
+                  </p>
+                </div>
+                <svg 
+                  className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          )}
+          
           {/* 其他學生列表 - hover 時顯示學習記錄文字 */}
-          <div className="py-2">
-            {otherStudents.map((student) => {
+          {otherStudents.length > 0 && (
+            <div className="py-2">
+              {otherStudents.map((student) => {
               const avatar = parseAvatar(student.avatar_url, student.name)
               
               return (
@@ -448,7 +451,8 @@ export default function StudentHeaderWithDropdown({
                 </div>
               )
             })}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -87,6 +87,20 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
 
   // Modal 控制函數
   const handleOpenAddModal = () => {
+    // 檢查是否有科目
+    if (!subjects || subjects.length === 0) {
+      // 顯示確認對話框，引導用戶到科目頁面
+      const message = locale === 'zh-TW' 
+        ? '目前還沒有任何科目。\n\n要添加評量記錄，請先添加科目。\n\n是否要前往科目管理頁面添加科目？'
+        : 'No subjects found.\n\nTo add assessment records, please add subjects first.\n\nWould you like to go to the Subjects page to add subjects?'
+      
+      if (window.confirm(message)) {
+        // 跳轉到科目頁面
+        router.push(`/student/${studentId}/subjects`)
+      }
+      return
+    }
+    
     setEditingAssessment(null)
     setIsModalOpen(true)
   }

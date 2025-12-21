@@ -495,9 +495,16 @@ export default function EditStudentForm({ student, onSuccess, isModal = false }:
 
       if (response.ok) {
         alert(t('deleteSuccess'))
-        // 如果是 Modal 模式，使用回調函數；否則跳轉
-        if (isModal && onSuccess) {
-          onSuccess()
+        // 刪除成功後，無論是否為 Modal 模式，都跳轉到首頁
+        if (isModal) {
+          // Modal 模式下，先關閉 Modal，然後跳轉到首頁
+          if (onSuccess) {
+            onSuccess()
+          }
+          // 使用 window.location 確保完整跳轉
+          setTimeout(() => {
+            window.location.href = '/'
+          }, 200)
         } else {
           router.push('/')
           router.refresh()

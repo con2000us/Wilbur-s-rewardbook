@@ -362,7 +362,25 @@ export default function StudentList({ initialStudents }: Props) {
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg mb-4">😢 {t('noStudents')}</p>
+          <p className="text-gray-500 text-lg mb-6">😢 {t('noStudents')}</p>
+          {/* 當沒有學生時，也顯示添加學生按鈕 */}
+          <button
+            onClick={() => setIsAddStudentModalOpen(true)}
+            className="group relative rounded-xl border-2 border-dashed border-gray-300 hover:border-purple-500 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer inline-block"
+          >
+            <div className="block p-5 transition-all duration-300">
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 text-5xl font-bold shadow-lg group-hover:from-purple-200 group-hover:to-purple-300 group-hover:text-purple-600 transition-all duration-300">
+                  +
+                </div>
+                <div className="w-full">
+                  <h3 className="text-xl font-bold text-gray-600 mb-1 group-hover:text-purple-600 transition-colors duration-300">
+                    {t('addStudent')}
+                  </h3>
+                </div>
+              </div>
+            </div>
+          </button>
         </div>
       )}
 
