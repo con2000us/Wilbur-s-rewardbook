@@ -151,9 +151,13 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     }
     
     // 如果勾選了"從最後歸零點計算"，過濾掉歸零點之前的評量（不包含歸零點當天）
+    // 注意：只有在選擇"全部月份"時才會勾選此選項，所以這裡不需要檢查 selectedMonth
     if (calculateFromReset && resetDateOnly) {
       filtered = filtered.filter(assessment => {
-        if (!assessment.due_date && !assessment.completed_date) return true // 沒有日期的評量保留
+        if (!assessment.due_date && !assessment.completed_date) {
+          // 沒有日期的評量：如果勾選了歸零點，則不顯示（因為無法判斷是否在歸零點之後）
+          return false
+        }
         const assessmentDate = new Date(assessment.completed_date || assessment.due_date || assessment.created_at)
         const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
         // 只顯示歸零點隔天及之後的評量（不包含歸零點當天）
@@ -162,12 +166,14 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     }
     
     setFilteredAssessments(filtered)
-    
-    // 當選擇具體月份時，自動取消勾選"從最後歸零點計算"
+  }, [selectedMonth, assessments, calculateFromReset, transactions])
+  
+  // 當選擇具體月份時，自動取消勾選"從最後歸零點計算"（單獨的 useEffect 避免影響過濾邏輯）
+  useEffect(() => {
     if (selectedMonth && calculateFromReset) {
       setCalculateFromReset(false)
     }
-  }, [selectedMonth, assessments, calculateFromReset, transactions])
+  }, [selectedMonth, calculateFromReset])
 
   useEffect(() => {
     // 根據月份和科目篩選交易記錄並重新計算累積獎金
