@@ -470,7 +470,7 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
         )}
 
         {/* 統計卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 mt-6">
           <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center">
             <p className="text-gray-600 font-semibold mb-2">
               {selectedMonth ? `${formatMonth(selectedMonth)} ${t('income')}` : t('totalIncome')}
