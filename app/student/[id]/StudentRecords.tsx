@@ -121,24 +121,53 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
   }
 
   useEffect(() => {
+    // 找到最近的歸零記錄
+    const findLastResetTransaction = (transactionList: any[]) => {
+      const sortedTransactions = [...transactionList].sort((a, b) => {
+        const dateA = new Date(a.transaction_date || a.created_at).getTime()
+        const dateB = new Date(b.transaction_date || b.created_at).getTime()
+        return dateB - dateA
+      })
+      return sortedTransactions.find(t => t.transaction_type === 'reset')
+    }
+    
+    const lastReset = findLastResetTransaction(transactions)
+    const lastResetDate = lastReset 
+      ? new Date(lastReset.transaction_date || lastReset.created_at)
+      : null
+    const resetDateOnly = lastResetDate 
+      ? new Date(lastResetDate.getFullYear(), lastResetDate.getMonth(), lastResetDate.getDate()).getTime()
+      : null
+    
     // 根據選中的月份篩選評量
-    if (!selectedMonth) {
-      setFilteredAssessments(assessments)
-    } else {
-      const filtered = assessments.filter(assessment => {
+    let filtered = assessments
+    if (selectedMonth) {
+      filtered = assessments.filter(assessment => {
         if (!assessment.due_date) return false
         const date = new Date(assessment.due_date)
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
         return monthKey === selectedMonth
       })
-      setFilteredAssessments(filtered)
     }
+    
+    // 如果勾選了"從最後歸零點計算"，過濾掉歸零點之前的評量（不包含歸零點當天）
+    if (calculateFromReset && resetDateOnly) {
+      filtered = filtered.filter(assessment => {
+        if (!assessment.due_date && !assessment.completed_date) return true // 沒有日期的評量保留
+        const assessmentDate = new Date(assessment.completed_date || assessment.due_date || assessment.created_at)
+        const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
+        // 只顯示歸零點隔天及之後的評量（不包含歸零點當天）
+        return assessmentDateOnly > resetDateOnly
+      })
+    }
+    
+    setFilteredAssessments(filtered)
     
     // 當選擇具體月份時，自動取消勾選"從最後歸零點計算"
     if (selectedMonth && calculateFromReset) {
       setCalculateFromReset(false)
     }
-  }, [selectedMonth, assessments])
+  }, [selectedMonth, assessments, calculateFromReset, transactions])
 
   useEffect(() => {
     // 根據月份和科目篩選交易記錄並重新計算累積獎金
