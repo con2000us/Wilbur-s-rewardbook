@@ -159,6 +159,36 @@ CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON transactions(created_a
 -- PART 5: Enable Row Level Security (RLS)
 -- 第五部分：啟用行級安全策略
 -- ============================================
+--
+-- IMPORTANT: Security Architecture / 重要：安全架構
+-- ============================================
+-- This application uses a TWO-LAYER security approach:
+-- 本應用程式使用兩層安全架構：
+--
+-- 1. APPLICATION LAYER (Password Protection) / 應用層（密碼保護）
+--    - Password protection is implemented in Next.js middleware
+--    - 密碼保護在 Next.js middleware 中實現
+--    - Users must enter password to access the UI
+--    - 用戶必須輸入密碼才能訪問 UI
+--    - Password is stored in environment variable SITE_PASSWORD
+--    - 密碼存儲在環境變數 SITE_PASSWORD 中
+--
+-- 2. DATABASE LAYER (Row Level Security) / 數據庫層（行級安全）
+--    - RLS policies are currently OPEN (allow all access)
+--    - RLS 策略目前是開放的（允許所有訪問）
+--    - This is because password protection happens at application level
+--    - 這是因為密碼保護在應用層進行
+--    - If someone bypasses the password, they can still access data via API
+--    - 如果有人繞過密碼，仍可通過 API 訪問數據
+--
+-- NOTE: For stronger security, you can modify RLS policies to restrict access.
+-- However, this requires implementing user authentication in the database.
+-- See AUTHENTICATION_IMPLEMENTATION.md for details.
+--
+-- 注意：為了更強的安全性，可以修改 RLS 策略以限制訪問。
+-- 但這需要在數據庫中實現用戶身份驗證。
+-- 詳見 AUTHENTICATION_IMPLEMENTATION.md
+-- ============================================
 
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
@@ -192,6 +222,16 @@ DROP POLICY IF EXISTS "Allow delete" ON transactions;
 DROP POLICY IF EXISTS "Allow delete" ON reward_rules;
 
 -- Create RLS policies
+-- NOTE: These policies allow ALL access (USING (true))
+-- This works with application-level password protection.
+-- For production with multiple users, consider implementing
+-- user-based RLS policies (see AUTHENTICATION_IMPLEMENTATION.md)
+--
+-- 注意：這些策略允許所有訪問（USING (true)）
+-- 這與應用層密碼保護配合使用。
+-- 對於多用戶生產環境，請考慮實現
+-- 基於用戶的 RLS 策略（見 AUTHENTICATION_IMPLEMENTATION.md）
+
 CREATE POLICY "Allow public read access" ON students FOR SELECT USING (true);
 CREATE POLICY "Allow public read access" ON subjects FOR SELECT USING (true);
 CREATE POLICY "Allow public read access" ON assessments FOR SELECT USING (true);
@@ -237,6 +277,8 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 
+-- RLS policies for site_settings (open access, protected by application password)
+-- site_settings 的 RLS 策略（開放訪問，由應用層密碼保護）
 DROP POLICY IF EXISTS "Allow public read access" ON site_settings;
 CREATE POLICY "Allow public read access" ON site_settings FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Allow insert" ON site_settings;
@@ -324,6 +366,8 @@ CREATE INDEX IF NOT EXISTS idx_backups_name ON backups(name);
 
 ALTER TABLE backups ENABLE ROW LEVEL SECURITY;
 
+-- RLS policies for backups (open access, protected by application password)
+-- backups 的 RLS 策略（開放訪問，由應用層密碼保護）
 DROP POLICY IF EXISTS "Allow public read access" ON backups;
 CREATE POLICY "Allow public read access" ON backups FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Allow insert" ON backups;
