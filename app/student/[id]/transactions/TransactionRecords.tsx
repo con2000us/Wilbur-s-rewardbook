@@ -429,14 +429,14 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
             </button>
           </div>
             
-          {/* 從最後歸零點計算說明（只在選擇最近結算時顯示） */}
-          {!selectedMonth && calculateFromReset && (
-            <div className="flex items-center gap-2 bg-blue-50 border-2 border-blue-300 rounded-lg px-4 py-2">
-              <span className="text-sm font-semibold text-blue-700 whitespace-nowrap">
-                {tStudent('calculateFromResetDescription')}
-              </span>
-            </div>
-          )}
+            {/* 從最後歸零點計算說明（只在選擇最近結算時顯示） */}
+            {!selectedMonth && calculateFromReset && (
+              <div className="flex items-center gap-2 bg-blue-50 border-2 border-blue-300 rounded-lg px-4 py-2">
+                <span className="text-sm font-semibold text-blue-700 whitespace-nowrap">
+                  {tStudent('calculateFromResetDescription')}
+                </span>
+              </div>
+            )}
           </div>
           </div>
           
