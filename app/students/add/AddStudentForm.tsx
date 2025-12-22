@@ -353,7 +353,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-lg"
+            className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 hover:-translate-y-1 hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 text-lg cursor-pointer"
           >
             {loading ? (locale === 'zh-TW' ? '創建中...' : 'Creating...') : (locale === 'zh-TW' ? '✅ 創建學生' : '✅ Create Student')}
           </button>
@@ -362,7 +362,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
             type="button"
             onClick={onCancel || (() => {})}
             disabled={loading}
-            className="px-8 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="px-8 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
           >
             {tCommon('cancel')}
           </button>
