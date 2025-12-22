@@ -152,17 +152,23 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     
     // 如果勾選了"從最後歸零點計算"，過濾掉歸零點之前的評量（不包含歸零點當天）
     // 注意：只有在選擇"全部月份"時才會勾選此選項，所以這裡不需要檢查 selectedMonth
-    if (calculateFromReset && resetDateOnly) {
-      filtered = filtered.filter(assessment => {
-        if (!assessment.due_date && !assessment.completed_date) {
-          // 沒有日期的評量：如果勾選了歸零點，則不顯示（因為無法判斷是否在歸零點之後）
-          return false
-        }
-        const assessmentDate = new Date(assessment.completed_date || assessment.due_date || assessment.created_at)
-        const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
-        // 只顯示歸零點隔天及之後的評量（不包含歸零點當天）
-        return assessmentDateOnly > resetDateOnly
-      })
+    if (calculateFromReset) {
+      if (resetDateOnly) {
+        // 有歸零記錄：過濾掉歸零點之前的評量
+        filtered = filtered.filter(assessment => {
+          if (!assessment.due_date && !assessment.completed_date) {
+            // 沒有日期的評量：如果勾選了歸零點，則不顯示（因為無法判斷是否在歸零點之後）
+            return false
+          }
+          const assessmentDate = new Date(assessment.completed_date || assessment.due_date || assessment.created_at)
+          const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
+          // 只顯示歸零點隔天及之後的評量（不包含歸零點當天）
+          return assessmentDateOnly > resetDateOnly
+        })
+      } else {
+        // 沒有歸零記錄：如果勾選了但沒有歸零記錄，顯示所有評量（等同於不勾選）
+        // 這種情況下 filtered 保持不變
+      }
     }
     
     setFilteredAssessments(filtered)
