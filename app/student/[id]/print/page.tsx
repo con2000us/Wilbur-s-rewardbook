@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import PrintButtons from './PrintButtons'
+import PrintFilters from './PrintFilters'
 import { getTranslations, getLocale } from 'next-intl/server'
 
 export default async function PrintPage({ 
@@ -8,10 +9,10 @@ export default async function PrintPage({
   searchParams 
 }: { 
   params: Promise<{ id: string }>
-  searchParams: Promise<{ month?: string; subject?: string }>
+  searchParams: Promise<{ month?: string; subject?: string; startDate?: string; endDate?: string }>
 }) {
   const { id } = await params
-  const { month, subject } = await searchParams
+  const { month, subject, startDate, endDate } = await searchParams
   const supabase = createClient()
   const t = await getTranslations('print')
   const tAssessment = await getTranslations('assessment')
@@ -50,11 +51,25 @@ export default async function PrintPage({
     .in('subject_id', subjects?.map((s: any) => s.id) || [])
     .order('due_date', { ascending: false })
   
-  // 根據月份和科目篩選
+  // 根據日期區間、月份和科目篩選
   let assessments: typeof allAssessments = allAssessments
   
-  // 篩選月份
-  if (month && assessments) {
+  // 優先使用日期區間，如果沒有則使用月份
+  if (startDate && endDate && assessments) {
+    // @ts-ignore - Supabase type inference issue with select queries
+    assessments = assessments.filter((a: any) => {
+      if (!a.due_date) return false
+      const assessmentDate = new Date(a.due_date)
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      // 設置時間為當天的開始和結束
+      start.setHours(0, 0, 0, 0)
+      end.setHours(23, 59, 59, 999)
+      assessmentDate.setHours(0, 0, 0, 0)
+      return assessmentDate >= start && assessmentDate <= end
+    })
+  } else if (month && assessments) {
+    // 如果沒有日期區間，則使用月份篩選（向後兼容）
     // @ts-ignore - Supabase type inference issue with select queries
     assessments = assessments.filter((a: any) => {
       if (!a.due_date) return false
@@ -121,6 +136,9 @@ export default async function PrintPage({
     <div className="max-w-[210mm] mx-auto bg-white p-8" style={{fontFamily: 'system-ui, sans-serif'}}>
         {/* 打印按鈕 */}
         <PrintButtons />
+        
+        {/* 日期和科目選擇器 */}
+        <PrintFilters subjects={subjects || []} />
 
         {/* A4 列印內容 */}
         <div className="border-2 border-gray-300 p-6">
@@ -145,7 +163,14 @@ export default async function PrintPage({
             <p className="text-gray-600">
               {/* @ts-ignore - Supabase type inference issue with select queries */}
               {selectedSubject && `${(selectedSubject as any).icon} ${(selectedSubject as any).name} - `}
-              {month ? t('monthReport', { month: formatMonth(month) }) : t('allRecords')}
+              {startDate && endDate 
+                ? t('dateRangeReport', { 
+                    startDate: new Date(startDate).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    endDate: new Date(endDate).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                  }) || `${new Date(startDate).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })} ~ ${new Date(endDate).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`
+                : month 
+                  ? t('monthReport', { month: formatMonth(month) }) 
+                  : t('allRecords')}
             </p>
             <p className="text-sm text-gray-500 mt-1">
               {t('printDate')}：{new Date().toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
