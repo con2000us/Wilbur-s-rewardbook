@@ -589,7 +589,7 @@ export default function EditStudentForm({ student, onSuccess, isModal = false }:
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               {t('selectColor')}
             </label>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2" style={{ minHeight: '131px' }}>
               <input
                 name="color"
                 type="color"

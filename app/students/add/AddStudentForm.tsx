@@ -296,25 +296,27 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             {locale === 'zh-TW' ? '選擇背景顏色' : 'Select Background Color'}
           </label>
-          <div className="flex gap-4 items-center">
-            <input
-              name="color"
-              type="color"
-              required
-              value={selectedColorHex}
-              onChange={(e) => {
-                const hex = e.target.value
-                setSelectedColorHex(hex)
-              }}
-              className="h-12 w-20 border border-gray-300 rounded-lg cursor-pointer"
-            />
-            <div 
-              className="px-4 py-2 rounded-full text-white font-semibold"
-              style={{
-                background: `linear-gradient(to bottom right, ${selectedColorHex}, ${hexToDarker(selectedColorHex)})`
-              }}
-            >
-              {locale === 'zh-TW' ? '預覽' : 'Preview'}
+          <div className="flex gap-4 items-start" style={{ minHeight: '131px' }}>
+            <div className="flex flex-col gap-2">
+              <input
+                name="color"
+                type="color"
+                required
+                value={selectedColorHex}
+                onChange={(e) => {
+                  const hex = e.target.value
+                  setSelectedColorHex(hex)
+                }}
+                className="h-12 w-20 border border-gray-300 rounded-lg cursor-pointer"
+              />
+              <div 
+                className="px-4 py-2 rounded-full text-white font-semibold"
+                style={{
+                  background: `linear-gradient(to bottom right, ${selectedColorHex}, ${hexToDarker(selectedColorHex)})`
+                }}
+              >
+                {locale === 'zh-TW' ? '預覽' : 'Preview'}
+              </div>
             </div>
           </div>
         </div>
