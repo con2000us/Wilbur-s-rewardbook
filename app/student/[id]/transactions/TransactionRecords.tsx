@@ -150,14 +150,30 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
     return sortedTransactions.find(t => t.transaction_type === 'reset')
   }
 
-  // 計算當前顯示的統計（只從最近的歸零記錄開始計算）
+  // 計算當前顯示的統計
   const calculateStats = () => {
-    // 如果選擇了"最近結算"，使用 filteredTransactions（已經過濾過的）
-    // 否則根據 selectedMonth 決定使用哪個交易列表
+    // 決定使用哪個交易列表
     const transactionsToUse = calculateFromReset && !selectedMonth 
       ? filteredTransactions 
       : (selectedMonth ? filteredTransactions : transactions)
     
+    // "全部" 模式：不考慮歸零日期，計算所有交易
+    if (!selectedMonth && !calculateFromReset) {
+      // 排除歸零記錄，計算全部交易
+      const allTransactions = transactionsToUse.filter(t => t.transaction_type !== 'reset')
+      const earned = allTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0) || 0
+      const spent = allTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
+      
+      return { 
+        earned, 
+        spent, 
+        balance: earned - spent,
+        lastResetDate: null,
+        startingBalance: 0
+      }
+    }
+    
+    // "最近結算" 或特定月份模式：考慮歸零日期
     const lastReset = findLastResetTransaction(transactionsToUse)
     
     let transactionsToCalculate = transactionsToUse
@@ -167,8 +183,8 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
     if (lastReset) {
       startingBalance = lastReset.amount || 0 // 歸零記錄的金額就是起始金額
       
-      // 如果沒有選擇"最近結算"，需要手動過濾
-      if (!calculateFromReset || selectedMonth) {
+      // 如果選擇特定月份，需要手動過濾
+      if (selectedMonth) {
         // 獲取歸零記錄的日期和時間戳
         const resetDate = new Date(lastReset.transaction_date || lastReset.created_at)
         const resetDateOnly = new Date(resetDate.getFullYear(), resetDate.getMonth(), resetDate.getDate()).getTime()
@@ -179,9 +195,6 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
           const tDate = new Date(t.transaction_date || t.created_at)
           const tDateOnly = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate()).getTime()
           
-          // 比較邏輯（簡化）：
-          // 歸零記錄視為該天最後發生，所以只計入日期晚於歸零日期的交易
-          // 同一天的記錄全部不計入（因為歸零是該天最後）
           return tDateOnly > resetDateOnly
         })
       }
@@ -451,22 +464,18 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
           )}
         </div>
 
-        {/* 間距 */}
-        <div className="h-4"></div>
+        {/* 間距 - 最近結算時減少 40% */}
+        <div className={calculateFromReset && !selectedMonth ? "h-2" : "h-4"}></div>
 
-        {/* 歸零提示 */}
-        {lastResetDate && !selectedMonth && !calculateFromReset && (
+        {/* 歸零提示 - 只在選擇"最近結算"時顯示 */}
+        {lastResetDate && !selectedMonth && calculateFromReset && (
           <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
             <p className="text-sm text-blue-700 flex items-center gap-2">
               <span>ℹ️</span>
               <span>
                 {t('statsFrom', { date: formatRelativeDate(lastResetDate) })}
-                {startingBalance > 0 && (
-                  <span>
-                    {locale === 'zh-TW' ? '，' : ', '}
-                    {t('startingBalance')}: <span className="font-bold">${startingBalance}</span>
-                  </span>
-                )}
+                {locale === 'zh-TW' ? '，' : ', '}
+                {t('startingBalance')}: <span className="font-bold">${startingBalance}</span>
               </span>
             </p>
           </div>
