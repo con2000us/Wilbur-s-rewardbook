@@ -173,8 +173,9 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
       }
     }
     
-    // "最近結算" 或特定月份模式：考慮歸零日期
-    const lastReset = findLastResetTransaction(transactionsToUse)
+    // "最近結算" 或特定月份模式：考慮結算日期
+    // 注意：要從原始 transactions 找結算記錄，因為 filteredTransactions 可能已過濾掉
+    const lastReset = findLastResetTransaction(transactions)
     
     let transactionsToCalculate = transactionsToUse
     let startingBalance = 0 // 起始金額
