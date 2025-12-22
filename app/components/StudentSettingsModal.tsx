@@ -90,6 +90,7 @@ export default function StudentSettingsModal({ isOpen, onClose, studentId, onSuc
           <EditStudentForm 
             student={student} 
             onSuccess={handleSuccess}
+            onCancel={onClose}
             isModal={true}
           />
         </div>

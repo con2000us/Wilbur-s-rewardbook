@@ -36,10 +36,11 @@ interface Student {
 interface Props {
   student: Student
   onSuccess?: () => void
+  onCancel?: () => void
   isModal?: boolean
 }
 
-export default function EditStudentForm({ student, onSuccess, isModal = false }: Props) {
+export default function EditStudentForm({ student, onSuccess, onCancel, isModal = false }: Props) {
   const router = useRouter()
   const locale = useLocale()
   const t = useTranslations('studentManagement')
@@ -715,7 +716,13 @@ export default function EditStudentForm({ student, onSuccess, isModal = false }:
           
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => {
+              if (isModal && onCancel) {
+                onCancel()
+              } else {
+                router.back()
+              }
+            }}
             disabled={loading || deleting || isExporting || isImporting}
             className="px-8 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 hover:-translate-y-1 hover:shadow-md transition-all duration-200 disabled:opacity-50 cursor-pointer"
           >
