@@ -153,7 +153,8 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     // 如果勾選了"從最後歸零點計算"，過濾掉歸零點之前的評量（不包含歸零點當天）
     if (calculateFromReset && resetDateOnly) {
       filtered = filtered.filter(assessment => {
-        if (!assessment.due_date && !assessment.completed_date) return true // 沒有日期的評量保留
+        // 沒有日期的評量在勾選歸零點時不應該被計算，因為無法判斷是否在歸零點之後
+        if (!assessment.due_date && !assessment.completed_date) return false
         const assessmentDate = new Date(assessment.completed_date || assessment.due_date || assessment.created_at)
         const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
         // 只顯示歸零點隔天及之後的評量（不包含歸零點當天）
@@ -224,9 +225,29 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     const resetInPeriod = filteredTransactions.find(t => t.transaction_type === 'reset')
     const resetBaseInPeriod = resetInPeriod?.amount || 0
     
-    // 5. 計算評量獎金（從已過濾的評量記錄中計算 reward_amount 總和）
-    // 使用 filteredAssessments（已經根據月份和歸零點過濾好的）
-    const filteredAssessmentsForReward = filteredAssessments
+    // 5. 計算評量獎金（從評量記錄中計算 reward_amount 總和）
+    // 根據月份篩選評量
+    let filteredAssessmentsForReward = assessments
+    if (selectedMonth) {
+      filteredAssessmentsForReward = assessments.filter(assessment => {
+        if (!assessment.due_date) return false
+        const date = new Date(assessment.due_date)
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        return monthKey === selectedMonth
+      })
+    }
+    
+    // 如果勾選了"從最後歸零點計算"，只計算歸零點之後的評量獎金（不包含歸零點當天）
+    if (calculateFromReset && resetDateOnly) {
+      filteredAssessmentsForReward = filteredAssessmentsForReward.filter(a => {
+        // 沒有日期的評量在勾選歸零點時不應該被計算
+        if (!a.due_date && !a.completed_date) return false
+        const assessmentDate = new Date(a.completed_date || a.due_date || a.created_at)
+        const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
+        // 只計算歸零點隔天及之後的評量（不包含歸零點當天）
+        return assessmentDateOnly > resetDateOnly
+      })
+    }
     
     // 計算所有科目的 reward_amount 總和（評量獎金）
     const assessmentReward = filteredAssessmentsForReward
@@ -356,7 +377,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     }
 
     setFilteredSummary(calculateFilteredStats())
-  }, [selectedMonth, selectedSubject, transactions, assessments, summary, calculateFromReset, filteredAssessments])
+  }, [selectedMonth, selectedSubject, transactions, assessments, summary, calculateFromReset])
 
   const formatMonth = (monthKey: string) => {
     const [year, month] = monthKey.split('-')
