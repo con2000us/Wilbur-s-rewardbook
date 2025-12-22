@@ -297,7 +297,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
             {locale === 'zh-TW' ? '選擇背景顏色' : 'Select Background Color'}
           </label>
           <div className="flex gap-4 items-start" style={{ minHeight: '131px' }}>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2" style={{ marginTop: '8pt' }}>
               <input
                 name="color"
                 type="color"
