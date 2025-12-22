@@ -36,6 +36,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
   const [filteredSummary, setFilteredSummary] = useState(summary)
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
   const [resetDate, setResetDate] = useState<Date | null>(null)
+  const [calculateFromReset, setCalculateFromReset] = useState<boolean>(false)
   const [rewardBreakdown, setRewardBreakdown] = useState({
     assessmentEarned: 0,    // 評量獎金收入（保留用於向後兼容）
     assessmentSpent: 0,     // 評量相關支出（保留用於向後兼容）
@@ -205,11 +206,22 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
       .filter(a => a.reward_amount && a.reward_amount > 0)
       .reduce((sum, a) => sum + (a.reward_amount || 0), 0) || 0
     
-    // 6. 計算各評量類型的平均分數（根據選中的科目）
+    // 6. 計算各評量類型的平均分數（根據選中的科目和歸零點選項）
     // 如果選擇了科目，只計算該科目的評量
     let assessmentsForAverage = filteredAssessmentsForReward
     if (selectedSubject && selectedSubject !== '') {
       assessmentsForAverage = filteredAssessmentsForReward.filter(a => a.subject_id === selectedSubject)
+    }
+    
+    // 如果勾選了"從最後歸零點計算"，只計算歸零點之後的評量
+    if (calculateFromReset && lastReset && lastResetDate) {
+      const resetTimestamp = new Date(lastReset.created_at).getTime()
+      assessmentsForAverage = assessmentsForAverage.filter(a => {
+        if (!a.due_date && !a.completed_date) return false
+        const assessmentDate = new Date(a.completed_date || a.due_date || a.created_at)
+        const assessmentTimestamp = new Date(assessmentDate).getTime()
+        return assessmentTimestamp > resetTimestamp
+      })
     }
     
     const assessmentTypes = ['exam', 'quiz', 'homework', 'project'] as const
@@ -328,7 +340,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     }
 
     setFilteredSummary(calculateFilteredStats())
-  }, [selectedMonth, selectedSubject, transactions, assessments, summary])
+  }, [selectedMonth, selectedSubject, transactions, assessments, summary, calculateFromReset])
 
   const formatMonth = (monthKey: string) => {
     const [year, month] = monthKey.split('-')
@@ -376,7 +388,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
       <div className="mb-6 no-print">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           {/* 月份控制器 */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <label className="text-sm font-bold text-gray-800 whitespace-nowrap">
               📅 {t('selectMonth')}
             </label>
@@ -503,6 +515,23 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
+            </div>
+            
+            {/* 從最後歸零點計算選項 */}
+            <div className="flex items-center gap-2 bg-white border-2 border-gray-300 rounded-lg px-4 py-2">
+              <input
+                type="checkbox"
+                id="calculateFromReset"
+                checked={calculateFromReset}
+                onChange={(e) => setCalculateFromReset(e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+              />
+              <label 
+                htmlFor="calculateFromReset" 
+                className="text-sm font-semibold text-gray-700 cursor-pointer whitespace-nowrap"
+              >
+                {locale === 'zh-TW' ? '從最後歸零點計算' : 'Calculate from Last Reset Point'}
+              </label>
             </div>
           </div>
 
