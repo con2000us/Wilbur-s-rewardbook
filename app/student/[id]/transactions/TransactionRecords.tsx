@@ -277,8 +277,8 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
     <>
       {/* 月份選擇器和添加記錄按鈕 */}
       <div className="mb-6">
-        <div className="flex items-center justify-between gap-3 mb-6">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             <label className="text-sm font-bold text-gray-800 whitespace-nowrap">
               📅 {tStudent('selectMonth')}
             </label>
