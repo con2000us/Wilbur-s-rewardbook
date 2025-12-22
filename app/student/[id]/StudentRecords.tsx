@@ -160,13 +160,13 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     // 設置 resetDate 供子組件使用
     setResetDate(lastResetDate)
 
-    // 2. 先過濾掉歸零日期之前的交易
+    // 2. 根據歸零點選項過濾交易
     let filteredTransactions = transactions.filter(t => {
       // 排除歸零記錄本身
       if (t.transaction_type === 'reset') return false
       
-      // 如果有歸零記錄，只計入歸零日期之後的交易
-      if (resetDateOnly) {
+      // 如果勾選了"從最後歸零點計算"，只計入歸零日期之後的交易
+      if (calculateFromReset && resetDateOnly) {
         const tDate = new Date(t.transaction_date || t.created_at)
         const tDateOnly = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate()).getTime()
         return tDateOnly > resetDateOnly
@@ -201,6 +201,18 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
         return monthKey === selectedMonth
       })
     }
+    
+    // 如果勾選了"從最後歸零點計算"，只計算歸零點之後的評量獎金
+    if (calculateFromReset && lastReset && lastResetDate) {
+      const resetTimestamp = new Date(lastReset.created_at).getTime()
+      filteredAssessmentsForReward = filteredAssessmentsForReward.filter(a => {
+        if (!a.due_date && !a.completed_date) return false
+        const assessmentDate = new Date(a.completed_date || a.due_date || a.created_at)
+        const assessmentTimestamp = new Date(assessmentDate).getTime()
+        return assessmentTimestamp > resetTimestamp
+      })
+    }
+    
     // 計算所有科目的 reward_amount 總和（評量獎金）
     const assessmentReward = filteredAssessmentsForReward
       .filter(a => a.reward_amount && a.reward_amount > 0)
