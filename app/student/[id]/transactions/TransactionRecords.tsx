@@ -473,7 +473,7 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
 
         {/* 結算提示 - 只在選擇"最近結算"時顯示 */}
         {lastResetDate && !selectedMonth && calculateFromReset && (
-          <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
+          <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg" style={{ marginBottom: '-10px' }}>
             <p className="text-sm text-blue-700 flex items-center gap-2">
               <span>ℹ️</span>
               <span>
