@@ -451,6 +451,9 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
           )}
         </div>
 
+        {/* 間距 */}
+        <div className="h-4"></div>
+
         {/* 歸零提示 */}
         {lastResetDate && !selectedMonth && !calculateFromReset && (
           <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
