@@ -468,9 +468,6 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
           )}
         </div>
 
-        {/* 間距 - 最近結算時減少 40% */}
-        <div className={calculateFromReset && !selectedMonth ? "h-2" : "h-4"}></div>
-
         {/* 結算提示 - 只在選擇"最近結算"時顯示 */}
         {lastResetDate && !selectedMonth && calculateFromReset && (
           <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg" style={{ marginBottom: '-10px' }}>
