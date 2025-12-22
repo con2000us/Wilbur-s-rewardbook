@@ -315,6 +315,34 @@ Congratulations! You have successfully set up the student progress management sy
 
 ---
 
+## ⚠️ Important Notices / 重要提醒
+
+### 🤖 AI-Generated Project / AI 生成專案
+
+**This entire project, including all code, documentation, and this Wiki, was generated using AI (Cursor with AI-powered coding).**  
+**整個專案，包括所有程式碼、文檔和這個 Wiki，都是使用 AI（Cursor AI 編碼）生成的。**
+
+- The project is provided "as is" / 專案以「現狀」提供
+- No guarantee of functionality or support / 不保證功能或支援
+- Use at your own risk / 使用風險自負
+
+### 💾 Data Backup & Disclaimer / 資料備份與免責聲明
+
+**This website provides data backup functionality. We strongly recommend regular backups.**  
+**本網站提供資料備份功能。我們強烈建議定期備份。**
+
+**⚠️ Important / 重要**：
+- This project makes **NO commitment** regarding data preservation or loss / 本專案**不對**使用者的任何資料保存與遺失做任何承諾
+- Users are responsible for their own data backup / 使用者需自行負責資料備份
+- The project developers are not liable for any data loss / 專案開發者不對任何資料遺失負責
+- Always maintain your own backups / 請務必自行維護備份
+
+**Recommendation / 建議**：
+- ✅ Backup your data regularly (weekly or monthly) / 定期備份資料（每週或每月）
+- ✅ Use the built-in backup feature / 使用內建的備份功能
+- ✅ Download and save backup files locally / 下載並在本地保存備份檔案
+- ✅ Test backup restoration periodically / 定期測試備份還原
+
 ## 🎉 Enjoy Using! / 享受使用！
 
 Hope this system helps you better manage student grades!  
