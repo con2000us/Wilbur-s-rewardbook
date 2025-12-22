@@ -3,6 +3,19 @@
 > **Completely free student progress tracking system, ready in just 10 minutes!**  
 > **完全免費的學生成績追蹤系統，10 分鐘就能開始使用！**
 
+## ⚠️ Important Notice / 重要聲明
+
+### 🤖 AI-Generated Project / AI 生成專案
+
+**This entire project, including all code, documentation, and this Wiki, was generated using AI (Cursor with AI-powered coding).**  
+**整個專案，包括所有程式碼、文檔和這個 Wiki，都是使用 AI（Cursor AI 編碼）生成的。**
+
+- The project is provided "as is" / 專案以「現狀」提供
+- No guarantee of functionality or support / 不保證功能或支援
+- Use at your own risk / 使用風險自負
+
+---
+
 ## 🌟 What is this? / 這是什麼？
 
 **Wilbur's Reward Book** is a student progress management system designed for **teachers, parents, and tutors**. You can use it to:
@@ -165,15 +178,6 @@
 **A:** 目前是單一密碼保護，適合個人或家庭使用。未來可能會加入多用戶功能。
 
 ## ⚠️ Important Notices / 重要提醒
-
-### 🤖 AI-Generated Project / AI 生成專案
-
-**This entire project, including all code, documentation, and this Wiki, was generated using AI (Cursor with AI-powered coding).**  
-**整個專案，包括所有程式碼、文檔和這個 Wiki，都是使用 AI（Cursor AI 編碼）生成的。**
-
-- The project is provided "as is" / 專案以「現狀」提供
-- No guarantee of functionality or support / 不保證功能或支援
-- Use at your own risk / 使用風險自負
 
 ### 💾 Data Backup & Disclaimer / 資料備份與免責聲明
 

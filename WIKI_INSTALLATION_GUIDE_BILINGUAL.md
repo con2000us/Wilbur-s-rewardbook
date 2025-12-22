@@ -3,6 +3,19 @@
 > **Designed for non-technical users, with detailed explanations for every step!**  
 > **專為科技小白設計，每個步驟都有截圖和說明！**
 
+## ⚠️ Important Notice / 重要聲明
+
+### 🤖 AI-Generated Project / AI 生成專案
+
+**This entire project, including all code, documentation, and this Wiki, was generated using AI (Cursor with AI-powered coding).**  
+**整個專案，包括所有程式碼、文檔和這個 Wiki，都是使用 AI（Cursor AI 編碼）生成的。**
+
+- The project is provided "as is" / 專案以「現狀」提供
+- No guarantee of functionality or support / 不保證功能或支援
+- Use at your own risk / 使用風險自負
+
+---
+
 ## 🎯 Goal / 目標
 
 After completing this guide, you will have:  
@@ -316,15 +329,6 @@ Congratulations! You have successfully set up the student progress management sy
 ---
 
 ## ⚠️ Important Notices / 重要提醒
-
-### 🤖 AI-Generated Project / AI 生成專案
-
-**This entire project, including all code, documentation, and this Wiki, was generated using AI (Cursor with AI-powered coding).**  
-**整個專案，包括所有程式碼、文檔和這個 Wiki，都是使用 AI（Cursor AI 編碼）生成的。**
-
-- The project is provided "as is" / 專案以「現狀」提供
-- No guarantee of functionality or support / 不保證功能或支援
-- Use at your own risk / 使用風險自負
 
 ### 💾 Data Backup & Disclaimer / 資料備份與免責聲明
 
