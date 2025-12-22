@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import SubjectTabs from './SubjectTabs'
 import AssessmentModal from './components/AssessmentModal'
@@ -120,8 +120,8 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     router.refresh()
   }
 
-  useEffect(() => {
-    // 找到最近的歸零記錄
+  // 計算歸零點日期（使用 useMemo 避免重複計算）
+  const resetDateInfo = useMemo(() => {
     const findLastResetTransaction = (transactionList: any[]) => {
       const sortedTransactions = [...transactionList].sort((a, b) => {
         const dateA = new Date(a.transaction_date || a.created_at).getTime()
@@ -138,6 +138,12 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     const resetDateOnly = lastResetDate 
       ? new Date(lastResetDate.getFullYear(), lastResetDate.getMonth(), lastResetDate.getDate()).getTime()
       : null
+    
+    return { lastReset, lastResetDate, resetDateOnly }
+  }, [transactions])
+
+  useEffect(() => {
+    const { resetDateOnly } = resetDateInfo
     
     // 根據選中的月份篩選評量
     let filtered = assessments
@@ -152,27 +158,22 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     
     // 如果勾選了"從最後歸零點計算"，過濾掉歸零點之前的評量（不包含歸零點當天）
     // 注意：只有在選擇"全部月份"時才會勾選此選項，所以這裡不需要檢查 selectedMonth
-    if (calculateFromReset) {
-      if (resetDateOnly) {
-        // 有歸零記錄：過濾掉歸零點之前的評量
-        filtered = filtered.filter(assessment => {
-          if (!assessment.due_date && !assessment.completed_date) {
-            // 沒有日期的評量：如果勾選了歸零點，則不顯示（因為無法判斷是否在歸零點之後）
-            return false
-          }
-          const assessmentDate = new Date(assessment.completed_date || assessment.due_date || assessment.created_at)
-          const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
-          // 只顯示歸零點隔天及之後的評量（不包含歸零點當天）
-          return assessmentDateOnly > resetDateOnly
-        })
-      } else {
-        // 沒有歸零記錄：如果勾選了但沒有歸零記錄，顯示所有評量（等同於不勾選）
-        // 這種情況下 filtered 保持不變
-      }
+    if (calculateFromReset && resetDateOnly) {
+      // 有歸零記錄：過濾掉歸零點之前的評量
+      filtered = filtered.filter(assessment => {
+        if (!assessment.due_date && !assessment.completed_date) {
+          // 沒有日期的評量：如果勾選了歸零點，則不顯示（因為無法判斷是否在歸零點之後）
+          return false
+        }
+        const assessmentDate = new Date(assessment.completed_date || assessment.due_date || assessment.created_at)
+        const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
+        // 只顯示歸零點隔天及之後的評量（不包含歸零點當天）
+        return assessmentDateOnly > resetDateOnly
+      })
     }
     
     setFilteredAssessments(filtered)
-  }, [selectedMonth, assessments, calculateFromReset, transactions])
+  }, [selectedMonth, assessments, calculateFromReset, resetDateInfo])
   
   // 當選擇具體月份時，自動取消勾選"從最後歸零點計算"（單獨的 useEffect 避免影響過濾邏輯）
   useEffect(() => {
@@ -181,30 +182,16 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     }
   }, [selectedMonth, calculateFromReset])
 
+  // 設置 resetDate 供子組件使用
+  useEffect(() => {
+    setResetDate(resetDateInfo.lastResetDate)
+  }, [resetDateInfo.lastResetDate])
+
   useEffect(() => {
     // 根據月份和科目篩選交易記錄並重新計算累積獎金
     
-    // 1. 找到最近的歸零記錄（從所有交易中查找，不受篩選影響）
-    const findLastResetTransaction = (transactionList: any[]) => {
-      const sortedTransactions = [...transactionList].sort((a, b) => {
-        const dateA = new Date(a.transaction_date || a.created_at).getTime()
-        const dateB = new Date(b.transaction_date || b.created_at).getTime()
-        return dateB - dateA
-      })
-      return sortedTransactions.find(t => t.transaction_type === 'reset')
-    }
-
-    // 從所有交易中找最近的歸零記錄
-    const lastReset = findLastResetTransaction(transactions)
-    const lastResetDate = lastReset 
-      ? new Date(lastReset.transaction_date || lastReset.created_at)
-      : null
-    const resetDateOnly = lastResetDate 
-      ? new Date(lastResetDate.getFullYear(), lastResetDate.getMonth(), lastResetDate.getDate()).getTime()
-      : null
-    
-    // 設置 resetDate 供子組件使用
-    setResetDate(lastResetDate)
+    // 使用 resetDateInfo 中的歸零點信息（保持一致）
+    const { lastReset, lastResetDate, resetDateOnly: currentResetDateOnly } = resetDateInfo
 
     // 2. 根據歸零點選項過濾交易
     let filteredTransactions = transactions.filter(t => {
@@ -212,10 +199,10 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
       if (t.transaction_type === 'reset') return false
       
       // 如果勾選了"從最後歸零點計算"，只計入歸零日期之後的交易
-      if (calculateFromReset && resetDateOnly) {
+      if (calculateFromReset && currentResetDateOnly) {
         const tDate = new Date(t.transaction_date || t.created_at)
         const tDateOnly = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate()).getTime()
-        return tDateOnly > resetDateOnly
+        return tDateOnly > currentResetDateOnly
       }
       
       return true
@@ -249,14 +236,13 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     }
     
     // 如果勾選了"從最後歸零點計算"，只計算歸零點之後的評量獎金（不包含歸零點當天）
-    if (calculateFromReset && lastReset && lastResetDate) {
-      const resetDateOnly = new Date(lastResetDate.getFullYear(), lastResetDate.getMonth(), lastResetDate.getDate()).getTime()
+    if (calculateFromReset && currentResetDateOnly) {
       filteredAssessmentsForReward = filteredAssessmentsForReward.filter(a => {
         if (!a.due_date && !a.completed_date) return false
         const assessmentDate = new Date(a.completed_date || a.due_date || a.created_at)
         const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
         // 只計算歸零點隔天及之後的評量（不包含歸零點當天）
-        return assessmentDateOnly > resetDateOnly
+        return assessmentDateOnly > currentResetDateOnly
       })
     }
     
@@ -273,14 +259,13 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     }
     
     // 如果勾選了"從最後歸零點計算"，只計算歸零點之後的評量（不包含歸零點當天）
-    if (calculateFromReset && lastReset && lastResetDate) {
-      const resetDateOnly = new Date(lastResetDate.getFullYear(), lastResetDate.getMonth(), lastResetDate.getDate()).getTime()
+    if (calculateFromReset && currentResetDateOnly) {
       assessmentsForAverage = assessmentsForAverage.filter(a => {
         if (!a.due_date && !a.completed_date) return false
         const assessmentDate = new Date(a.completed_date || a.due_date || a.created_at)
         const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
         // 只計算歸零點隔天及之後的評量（不包含歸零點當天）
-        return assessmentDateOnly > resetDateOnly
+        return assessmentDateOnly > currentResetDateOnly
       })
     }
     
@@ -400,7 +385,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     }
 
     setFilteredSummary(calculateFilteredStats())
-  }, [selectedMonth, selectedSubject, transactions, assessments, summary, calculateFromReset])
+  }, [selectedMonth, selectedSubject, transactions, assessments, summary, calculateFromReset, resetDateInfo])
 
   const formatMonth = (monthKey: string) => {
     const [year, month] = monthKey.split('-')
