@@ -284,7 +284,7 @@
     "resetWarning": "If there are other income/expense records on the same day, the system will automatically treat the settlement record as the last event of that day, so records before the settlement will not be included in statistics.",
     "lastOfDay": "Last of Day",
     "resetIsLast": "This settlement record is treated as the last event of the day, records before this are not included in statistics",
-    "statsFrom": "Statistics calculated from {date} settlement record",
+    "statsFrom": "Statistics calculated from the day after settlement ({date})",
     "presetCategories": {
       "exam": "Exam Reward",
       "homework": "Homework Reward",

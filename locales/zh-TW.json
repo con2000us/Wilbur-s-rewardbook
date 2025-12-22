@@ -284,7 +284,7 @@
     "resetWarning": "如果同一天有其他收支記錄，系統會自動將結算記錄視為當天最後發生的，所以該天早於結算的記錄不會計入統計。",
     "lastOfDay": "當天最後",
     "resetIsLast": "此結算記錄視為當天最後發生，該天早於此的記錄不計入統計",
-    "statsFrom": "統計數據從 {date} 結算記錄開始計算",
+    "statsFrom": "統計數據從結算記錄隔日({date})開始計算",
     "presetCategories": {
       "exam": "考試獎金",
       "homework": "作業獎勵",

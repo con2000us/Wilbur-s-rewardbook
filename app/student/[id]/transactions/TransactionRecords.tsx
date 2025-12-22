@@ -246,6 +246,18 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
     }
   }
 
+  // 簡單日期格式（用於結算提示）
+  const formatSimpleDate = (dateString: string) => {
+    const date = new Date(dateString)
+    // 計算隔日
+    const nextDay = new Date(date)
+    nextDay.setDate(nextDay.getDate() + 1)
+    
+    return locale === 'zh-TW' 
+      ? `${nextDay.getFullYear()}/${nextDay.getMonth() + 1}/${nextDay.getDate()}`
+      : `${nextDay.getMonth() + 1}/${nextDay.getDate()}/${nextDay.getFullYear()}`
+  }
+
   // 分頁邏輯
   // 分頁邏輯（支援「不限」）
   const isUnlimited = itemsPerPage === null
@@ -442,15 +454,6 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
               </svg>
             </button>
           </div>
-            
-            {/* 從最後歸零點計算說明（只在選擇最近結算時顯示） */}
-            {!selectedMonth && calculateFromReset && (
-              <div className="flex items-center gap-2 bg-blue-50 border-2 border-blue-300 rounded-lg px-4 py-2">
-                <span className="text-sm font-semibold text-blue-700 whitespace-nowrap">
-                  {tStudent('calculateFromResetDescription')}
-                </span>
-              </div>
-            )}
           </div>
           
           {/* 添加記錄按鈕 */}
@@ -468,13 +471,13 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
         {/* 間距 - 最近結算時減少 40% */}
         <div className={calculateFromReset && !selectedMonth ? "h-2" : "h-4"}></div>
 
-        {/* 歸零提示 - 只在選擇"最近結算"時顯示 */}
+        {/* 結算提示 - 只在選擇"最近結算"時顯示 */}
         {lastResetDate && !selectedMonth && calculateFromReset && (
           <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
             <p className="text-sm text-blue-700 flex items-center gap-2">
               <span>ℹ️</span>
               <span>
-                {t('statsFrom', { date: formatRelativeDate(lastResetDate) })}
+                {t('statsFrom', { date: formatSimpleDate(lastResetDate) })}
                 {locale === 'zh-TW' ? '，' : ', '}
                 {t('startingBalance')}: <span className="font-bold">${startingBalance}</span>
               </span>
