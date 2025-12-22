@@ -71,7 +71,7 @@ export default function PrintFilters({ subjects }: Props) {
       {/* 日期選擇器 */}
       <div className="flex items-center gap-3">
         <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
-          {t('startDate') || '開始日期'}:
+          {t('startDate')}:
         </label>
         <input
           type="date"
@@ -80,7 +80,7 @@ export default function PrintFilters({ subjects }: Props) {
           className="px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
         />
         <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
-          {t('endDate') || '結束日期'}:
+          {t('endDate')}:
         </label>
         <input
           type="date"
@@ -93,14 +93,14 @@ export default function PrintFilters({ subjects }: Props) {
       {/* 科目選擇器 */}
       <div className="flex items-center gap-3">
         <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
-          {t('subject') || tCommon('subject')}:
+          {t('subject')}:
         </label>
         <select
           value={selectedSubject}
           onChange={(e) => setSelectedSubject(e.target.value)}
           className="px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm min-w-[150px]"
         >
-          <option value="">{t('allSubjects') || tCommon('all')}</option>
+          <option value="">{t('allSubjects')}</option>
           {subjects.map((subject) => (
             <option key={subject.id} value={subject.id}>
               {subject.icon} {subject.name}

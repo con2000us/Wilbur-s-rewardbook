@@ -167,13 +167,13 @@ export default async function PrintPage({
                 ? t('dateRangeReport', { 
                     startDate: new Date(startDate).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                     endDate: new Date(endDate).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                  }) || `${new Date(startDate).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })} ~ ${new Date(endDate).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`
+                  })
                 : month 
                   ? t('monthReport', { month: formatMonth(month) }) 
                   : t('allRecords')}
             </p>
             <p className="text-sm text-gray-500 mt-1">
-              {t('printDate')}：{new Date().toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              {t('printDate')}{locale === 'zh-TW' ? '：' : ': '}{new Date().toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
 
