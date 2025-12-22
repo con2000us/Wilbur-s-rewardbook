@@ -453,7 +453,11 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
                   onClick={() => setIsMonthPickerOpen(!isMonthPickerOpen)}
                   className="px-4 py-2 font-semibold text-gray-800 hover:bg-gray-50 rounded-lg transition-all min-w-[140px] text-center cursor-pointer"
                 >
-                  {selectedMonth ? formatMonth(selectedMonth) : t('allMonths')}
+                  {selectedMonth 
+                    ? formatMonth(selectedMonth) 
+                    : calculateFromReset 
+                      ? t('recentSettlement')
+                      : t('all')}
                   {selectedMonth === currentMonth && ' 📍'}
                 </button>
 
@@ -465,20 +469,37 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
                       onClick={() => setIsMonthPickerOpen(false)}
                     />
                     <div className="absolute top-full left-0 mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-20 p-4 min-w-[300px]">
-                      {/* 全部月份選項 */}
-                      <button
-                        onClick={() => {
-                          setSelectedMonth('')
-                          setIsMonthPickerOpen(false)
-                        }}
-                        className={`w-full px-4 py-2 rounded-lg font-semibold transition-all mb-2 cursor-pointer ${
-                          selectedMonth === ''
-                            ? 'bg-blue-600 text-white'
-                            : 'hover:bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {t('allMonths')}
-                      </button>
+                      {/* 全部和最近結算選項 */}
+                      <div className="grid grid-cols-2 gap-2 mb-2">
+                        <button
+                          onClick={() => {
+                            setSelectedMonth('')
+                            setCalculateFromReset(false)
+                            setIsMonthPickerOpen(false)
+                          }}
+                          className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                            selectedMonth === '' && !calculateFromReset
+                              ? 'bg-blue-600 text-white'
+                              : 'hover:bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {t('all')}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedMonth('')
+                            setCalculateFromReset(true)
+                            setIsMonthPickerOpen(false)
+                          }}
+                          className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                            calculateFromReset && !selectedMonth
+                              ? 'bg-blue-600 text-white'
+                              : 'hover:bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {t('recentSettlement')}
+                        </button>
+                      </div>
 
                       {/* 月份網格 */}
                       <div 
@@ -553,22 +574,12 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
               </button>
             </div>
             
-            {/* 從最後歸零點計算選項（只在選擇全部月份時顯示） */}
-            {!selectedMonth && (
-              <div className="flex items-center gap-2 bg-white border-2 border-gray-300 rounded-lg px-4 py-2">
-                <input
-                  type="checkbox"
-                  id="calculateFromReset"
-                  checked={calculateFromReset}
-                  onChange={(e) => setCalculateFromReset(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                />
-                <label 
-                  htmlFor="calculateFromReset" 
-                  className="text-sm font-semibold text-gray-700 cursor-pointer whitespace-nowrap"
-                >
-                  {locale === 'zh-TW' ? '從最後歸零點隔天計算' : 'Calculate from Day After Last Reset'}
-                </label>
+            {/* 從最後歸零點計算說明（只在選擇最近結算時顯示） */}
+            {!selectedMonth && calculateFromReset && (
+              <div className="flex items-center gap-2 bg-blue-50 border-2 border-blue-300 rounded-lg px-4 py-2">
+                <span className="text-sm font-semibold text-blue-700 whitespace-nowrap">
+                  {t('calculateFromResetDescription')}
+                </span>
               </div>
             )}
           </div>
@@ -582,16 +593,44 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
               <span>➕</span>
               <span>{t('addAssessment')}</span>
             </button>
-            <Link
-              href={`/student/${studentId}/print?${new URLSearchParams({
-                ...(selectedMonth && { month: selectedMonth }),
-                ...(selectedSubject && { subject: selectedSubject })
-              }).toString()}`}
-              target="_blank"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2"
-            >
-              🖨️ {t('printReport')}
-            </Link>
+            {(() => {
+              const params = new URLSearchParams()
+              
+              // 計算日期範圍（從過濾後的評量中）
+              if (filteredAssessments && filteredAssessments.length > 0) {
+                const dates = filteredAssessments
+                  .filter((a: any) => a.due_date)
+                  .map((a: any) => new Date(a.due_date).getTime())
+                  .filter((d: number) => !isNaN(d))
+                
+                if (dates.length > 0) {
+                  const minDate = new Date(Math.min(...dates))
+                  const maxDate = new Date(Math.max(...dates))
+                  params.set('startDate', minDate.toISOString().split('T')[0])
+                  params.set('endDate', maxDate.toISOString().split('T')[0])
+                }
+              }
+              
+              // 添加科目
+              if (selectedSubject) {
+                params.set('subject', selectedSubject)
+              }
+              
+              // 添加歸零點選項
+              if (calculateFromReset) {
+                params.set('calculateFromReset', 'true')
+              }
+              
+              return (
+                <Link
+                  href={`/student/${studentId}/print?${params.toString()}`}
+                  target="_blank"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2"
+                >
+                  🖨️ {t('printReport')}
+                </Link>
+              )
+            })()}
           </div>
         </div>
       </div>

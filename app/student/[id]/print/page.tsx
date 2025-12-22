@@ -9,10 +9,10 @@ export default async function PrintPage({
   searchParams 
 }: { 
   params: Promise<{ id: string }>
-  searchParams: Promise<{ month?: string; subject?: string; startDate?: string; endDate?: string }>
+  searchParams: Promise<{ month?: string; subject?: string; startDate?: string; endDate?: string; calculateFromReset?: string }>
 }) {
   const { id } = await params
-  const { month, subject, startDate, endDate } = await searchParams
+  const { month, subject, startDate, endDate, calculateFromReset } = await searchParams
   const supabase = createClient()
   const t = await getTranslations('print')
   const tAssessment = await getTranslations('assessment')
@@ -77,6 +77,35 @@ export default async function PrintPage({
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       return monthKey === month
     })
+  }
+  
+  // 如果指定了 calculateFromReset，需要找到最近的歸零記錄並過濾
+  if (calculateFromReset === 'true' && assessments) {
+    // 獲取交易記錄以找到歸零點
+    const { data: transactions } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('student_id', id)
+      .eq('transaction_type', 'reset')
+      .order('transaction_date', { ascending: false })
+      .limit(1)
+    
+    if (transactions && transactions.length > 0) {
+      const lastReset = transactions[0]
+      const lastResetDate = lastReset.transaction_date || lastReset.created_at
+      if (lastResetDate) {
+        const resetDate = new Date(lastResetDate)
+        const resetDateOnly = new Date(resetDate.getFullYear(), resetDate.getMonth(), resetDate.getDate()).getTime()
+        
+        // @ts-ignore - Supabase type inference issue with select queries
+        assessments = assessments.filter((a: any) => {
+          if (!a.due_date && !a.completed_date) return true
+          const assessmentDate = new Date(a.due_date || a.completed_date || a.created_at)
+          const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
+          return assessmentDateOnly > resetDateOnly
+        })
+      }
+    }
   }
   
   // 篩選科目

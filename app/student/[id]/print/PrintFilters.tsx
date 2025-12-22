@@ -31,6 +31,18 @@ export default function PrintFilters({ subjects }: Props) {
   const [selectedSubject, setSelectedSubject] = useState(subjectParam)
   const [isInitialized, setIsInitialized] = useState(false)
   
+  // 當 URL 參數變化時同步更新 state（用於從學習記錄頁面跳轉過來時）
+  useEffect(() => {
+    const currentStartDate = searchParams.get('startDate') || ''
+    const currentEndDate = searchParams.get('endDate') || ''
+    const currentSubject = searchParams.get('subject') || ''
+    
+    if (currentStartDate !== startDate) setStartDate(currentStartDate)
+    if (currentEndDate !== endDate) setEndDate(currentEndDate)
+    if (currentSubject !== selectedSubject) setSelectedSubject(currentSubject)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+  
   // 當參數變化時更新 URL（跳過初始化）
   useEffect(() => {
     if (!isInitialized) {
