@@ -154,7 +154,8 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     if (calculateFromReset && resetDateOnly) {
       filtered = filtered.filter(assessment => {
         if (!assessment.due_date && !assessment.completed_date) return true // 沒有日期的評量保留
-        const assessmentDate = new Date(assessment.completed_date || assessment.due_date || assessment.created_at)
+        // 使用 due_date（考試日期）而非 completed_date（記錄日期）
+        const assessmentDate = new Date(assessment.due_date || assessment.completed_date || assessment.created_at)
         const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
         // 只顯示歸零點隔天及之後的評量（不包含歸零點當天）
         return assessmentDateOnly > resetDateOnly
@@ -236,11 +237,12 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
       })
     }
     
-    // 再根據歸零點過濾
+    // 再根據歸零點過濾 - 優先使用 due_date（考試日期），而不是 completed_date（記錄日期）
     if (calculateFromReset && resetDateOnly) {
       filteredAssessmentsForReward = filteredAssessmentsForReward.filter(assessment => {
         if (!assessment.due_date && !assessment.completed_date) return true
-        const assessmentDate = new Date(assessment.completed_date || assessment.due_date || assessment.created_at)
+        // 使用 due_date（考試日期）而非 completed_date（記錄日期）
+        const assessmentDate = new Date(assessment.due_date || assessment.completed_date || assessment.created_at)
         const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
         return assessmentDateOnly > resetDateOnly
       })
@@ -302,7 +304,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     const startingBalance = lastReset?.amount || 0
     
     // 設置獎金明細
-    setRewardBreakdown({
+    const newRewardBreakdown = {
       assessmentEarned,
       assessmentSpent,
       passbookEarned,
@@ -320,7 +322,8 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
         project: averageScores.project || 0
       },
       totalAverage
-    })
+    };
+    setRewardBreakdown(newRewardBreakdown)
 
     // 5. 根據科目篩選（通過 assessment_id 關聯）
     let subjectFilteredTransactions = filteredTransactions
@@ -564,7 +567,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
                   htmlFor="calculateFromReset" 
                   className="text-sm font-semibold text-gray-700 cursor-pointer whitespace-nowrap"
                 >
-                  {locale === 'zh-TW' ? '從最後歸零點計算' : 'Calculate from Last Reset Point'}
+                  {locale === 'zh-TW' ? '從最後歸零點隔天計算' : 'Calculate from Day After Last Reset'}
                 </label>
               </div>
             )}
