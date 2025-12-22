@@ -26,6 +26,7 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState<number | null>(25)
+  const [calculateFromReset, setCalculateFromReset] = useState<boolean>(false)
 
   // 載入分頁設定
   useEffect(() => {
@@ -110,10 +111,32 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
       })
       result = sortTransactions(filtered)
     }
+    
+    // 如果選擇了"最近結算"，過濾掉歸零點之前的交易
+    if (calculateFromReset && !selectedMonth) {
+      const lastReset = findLastResetTransaction(transactions)
+      if (lastReset) {
+        const resetDate = new Date(lastReset.transaction_date || lastReset.created_at)
+        const resetDateOnly = new Date(resetDate.getFullYear(), resetDate.getMonth(), resetDate.getDate()).getTime()
+        
+        result = result.filter(t => {
+          if (t.transaction_type === 'reset') return false
+          const tDate = new Date(t.transaction_date || t.created_at)
+          const tDateOnly = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate()).getTime()
+          return tDateOnly > resetDateOnly
+        })
+      }
+    }
+    
     setFilteredTransactions(result)
     // 月份變更時重置頁碼
     setCurrentPage(1)
-  }, [selectedMonth, transactions])
+    
+    // 當選擇具體月份時，自動取消勾選"最近結算"
+    if (selectedMonth && calculateFromReset) {
+      setCalculateFromReset(false)
+    }
+  }, [selectedMonth, transactions, calculateFromReset])
 
   // 找到最近的歸零記錄
   const findLastResetTransaction = (transactionList: any[]) => {
@@ -129,31 +152,39 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
 
   // 計算當前顯示的統計（只從最近的歸零記錄開始計算）
   const calculateStats = () => {
-    const lastReset = findLastResetTransaction(selectedMonth ? filteredTransactions : transactions)
+    // 如果選擇了"最近結算"，使用 filteredTransactions（已經過濾過的）
+    // 否則根據 selectedMonth 決定使用哪個交易列表
+    const transactionsToUse = calculateFromReset && !selectedMonth 
+      ? filteredTransactions 
+      : (selectedMonth ? filteredTransactions : transactions)
     
-    let transactionsToCalculate = selectedMonth ? filteredTransactions : transactions
+    const lastReset = findLastResetTransaction(transactionsToUse)
+    
+    let transactionsToCalculate = transactionsToUse
     let startingBalance = 0 // 起始金額
     
     // 如果有歸零記錄，只計算歸零之後的交易
     if (lastReset) {
       startingBalance = lastReset.amount || 0 // 歸零記錄的金額就是起始金額
       
-      // 獲取歸零記錄的日期和時間戳
-      const resetDate = new Date(lastReset.transaction_date || lastReset.created_at)
-      const resetDateOnly = new Date(resetDate.getFullYear(), resetDate.getMonth(), resetDate.getDate()).getTime()
-      const resetTimestamp = new Date(lastReset.created_at).getTime()
-      
-      transactionsToCalculate = transactionsToCalculate.filter(t => {
-        if (t.transaction_type === 'reset') return false // 排除歸零記錄本身
+      // 如果沒有選擇"最近結算"，需要手動過濾
+      if (!calculateFromReset || selectedMonth) {
+        // 獲取歸零記錄的日期和時間戳
+        const resetDate = new Date(lastReset.transaction_date || lastReset.created_at)
+        const resetDateOnly = new Date(resetDate.getFullYear(), resetDate.getMonth(), resetDate.getDate()).getTime()
         
-        const tDate = new Date(t.transaction_date || t.created_at)
-        const tDateOnly = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate()).getTime()
-        
-        // 比較邏輯（簡化）：
-        // 歸零記錄視為該天最後發生，所以只計入日期晚於歸零日期的交易
-        // 同一天的記錄全部不計入（因為歸零是該天最後）
-        return tDateOnly > resetDateOnly
-      })
+        transactionsToCalculate = transactionsToCalculate.filter(t => {
+          if (t.transaction_type === 'reset') return false // 排除歸零記錄本身
+          
+          const tDate = new Date(t.transaction_date || t.created_at)
+          const tDateOnly = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate()).getTime()
+          
+          // 比較邏輯（簡化）：
+          // 歸零記錄視為該天最後發生，所以只計入日期晚於歸零日期的交易
+          // 同一天的記錄全部不計入（因為歸零是該天最後）
+          return tDateOnly > resetDateOnly
+        })
+      }
     }
     
     const earned = transactionsToCalculate.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0) || 0
@@ -253,14 +284,14 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
             </label>
             
             {/* 月份导航器 */}
-            <div className="flex items-center gap-2 bg-gray-50 border-2 border-gray-300 rounded-lg p-1">
+            <div className="flex items-center gap-2 bg-white border-2 border-gray-300 rounded-lg p-1">
             {/* 上一個月按鈕 */}
             <button
               onClick={goToPreviousMonth}
               disabled={!canGoPrevious}
               className={`p-2 rounded-lg transition-all ${
                 canGoPrevious
-                  ? 'hover:bg-gray-200 text-gray-700 cursor-pointer'
+                  ? 'hover:bg-gray-100 text-gray-700 cursor-pointer'
                   : 'text-gray-300 cursor-not-allowed'
               }`}
               title={tStudent('previousMonth')}
@@ -274,9 +305,13 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
             <div className="relative">
               <button
                 onClick={() => setIsMonthPickerOpen(!isMonthPickerOpen)}
-                className="px-4 py-2 font-semibold text-gray-800 hover:bg-gray-100 rounded-lg transition-all min-w-[140px] text-center cursor-pointer"
+                className="px-4 py-2 font-semibold text-gray-800 hover:bg-gray-50 rounded-lg transition-all min-w-[140px] text-center cursor-pointer"
               >
-                {selectedMonth ? formatMonth(selectedMonth) : tStudent('allMonths')}
+                {selectedMonth 
+                  ? formatMonth(selectedMonth) 
+                  : calculateFromReset 
+                    ? tStudent('recentSettlement')
+                    : tStudent('all')}
                 {selectedMonth === currentMonth && ' 📍'}
               </button>
 
@@ -288,20 +323,37 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
                     onClick={() => setIsMonthPickerOpen(false)}
                   />
                   <div className="absolute top-full left-0 mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-20 p-4 min-w-[300px]">
-                    {/* 全部月份選項 */}
-                    <button
-                      onClick={() => {
-                        setSelectedMonth('')
-                        setIsMonthPickerOpen(false)
-                      }}
-                      className={`w-full px-4 py-2 rounded-lg font-semibold transition-all mb-2 cursor-pointer ${
-                        selectedMonth === ''
-                          ? 'bg-blue-600 text-white'
-                          : 'hover:bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      {tStudent('allMonths')}
-                    </button>
+                    {/* 全部和最近結算選項 */}
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <button
+                        onClick={() => {
+                          setSelectedMonth('')
+                          setCalculateFromReset(false)
+                          setIsMonthPickerOpen(false)
+                        }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                          selectedMonth === '' && !calculateFromReset
+                            ? 'bg-blue-600 text-white'
+                            : 'hover:bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {tStudent('all')}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedMonth('')
+                          setCalculateFromReset(true)
+                          setIsMonthPickerOpen(false)
+                        }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                          calculateFromReset && !selectedMonth
+                            ? 'bg-blue-600 text-white'
+                            : 'hover:bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {tStudent('recentSettlement')}
+                      </button>
+                    </div>
 
                     {/* 月份網格 */}
                     <div 
@@ -321,6 +373,7 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
                             key={month}
                             onClick={() => {
                               setSelectedMonth(month)
+                              setCalculateFromReset(false)
                               setIsMonthPickerOpen(false)
                             }}
                             className={`px-3 py-2 rounded-lg font-semibold transition-all flex flex-col items-center h-[85px] cursor-pointer ${
@@ -365,7 +418,7 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
               disabled={!canGoNext}
               className={`p-2 rounded-lg transition-all ${
                 canGoNext
-                  ? 'hover:bg-gray-200 text-gray-700 cursor-pointer'
+                  ? 'hover:bg-gray-100 text-gray-700 cursor-pointer'
                   : 'text-gray-300 cursor-not-allowed'
               }`}
               title={tStudent('nextMonth')}
@@ -374,6 +427,15 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
+            
+            {/* 從最後歸零點計算說明（只在選擇最近結算時顯示） */}
+            {!selectedMonth && calculateFromReset && (
+              <div className="flex items-center gap-2 bg-blue-50 border-2 border-blue-300 rounded-lg px-4 py-2">
+                <span className="text-sm font-semibold text-blue-700 whitespace-nowrap">
+                  {tStudent('calculateFromResetDescription')}
+                </span>
+              </div>
+            )}
           </div>
           </div>
           
@@ -390,7 +452,7 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
         </div>
 
         {/* 歸零提示 */}
-        {lastResetDate && !selectedMonth && (
+        {lastResetDate && !selectedMonth && !calculateFromReset && (
           <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
             <p className="text-sm text-blue-700 flex items-center gap-2">
               <span>ℹ️</span>
