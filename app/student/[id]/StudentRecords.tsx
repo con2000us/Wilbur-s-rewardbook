@@ -133,6 +133,11 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
       })
       setFilteredAssessments(filtered)
     }
+    
+    // 當選擇具體月份時，自動取消勾選"從最後歸零點計算"
+    if (selectedMonth && calculateFromReset) {
+      setCalculateFromReset(false)
+    }
   }, [selectedMonth, assessments])
 
   useEffect(() => {
@@ -202,14 +207,15 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
       })
     }
     
-    // 如果勾選了"從最後歸零點計算"，只計算歸零點之後的評量獎金
+    // 如果勾選了"從最後歸零點計算"，只計算歸零點之後的評量獎金（不包含歸零點當天）
     if (calculateFromReset && lastReset && lastResetDate) {
-      const resetTimestamp = new Date(lastReset.created_at).getTime()
+      const resetDateOnly = new Date(lastResetDate.getFullYear(), lastResetDate.getMonth(), lastResetDate.getDate()).getTime()
       filteredAssessmentsForReward = filteredAssessmentsForReward.filter(a => {
         if (!a.due_date && !a.completed_date) return false
         const assessmentDate = new Date(a.completed_date || a.due_date || a.created_at)
-        const assessmentTimestamp = new Date(assessmentDate).getTime()
-        return assessmentTimestamp > resetTimestamp
+        const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
+        // 只計算歸零點隔天及之後的評量（不包含歸零點當天）
+        return assessmentDateOnly > resetDateOnly
       })
     }
     
@@ -225,14 +231,15 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
       assessmentsForAverage = filteredAssessmentsForReward.filter(a => a.subject_id === selectedSubject)
     }
     
-    // 如果勾選了"從最後歸零點計算"，只計算歸零點之後的評量
+    // 如果勾選了"從最後歸零點計算"，只計算歸零點之後的評量（不包含歸零點當天）
     if (calculateFromReset && lastReset && lastResetDate) {
-      const resetTimestamp = new Date(lastReset.created_at).getTime()
+      const resetDateOnly = new Date(lastResetDate.getFullYear(), lastResetDate.getMonth(), lastResetDate.getDate()).getTime()
       assessmentsForAverage = assessmentsForAverage.filter(a => {
         if (!a.due_date && !a.completed_date) return false
         const assessmentDate = new Date(a.completed_date || a.due_date || a.created_at)
-        const assessmentTimestamp = new Date(assessmentDate).getTime()
-        return assessmentTimestamp > resetTimestamp
+        const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
+        // 只計算歸零點隔天及之後的評量（不包含歸零點當天）
+        return assessmentDateOnly > resetDateOnly
       })
     }
     
@@ -529,22 +536,24 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
               </button>
             </div>
             
-            {/* 從最後歸零點計算選項 */}
-            <div className="flex items-center gap-2 bg-white border-2 border-gray-300 rounded-lg px-4 py-2">
-              <input
-                type="checkbox"
-                id="calculateFromReset"
-                checked={calculateFromReset}
-                onChange={(e) => setCalculateFromReset(e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-              />
-              <label 
-                htmlFor="calculateFromReset" 
-                className="text-sm font-semibold text-gray-700 cursor-pointer whitespace-nowrap"
-              >
-                {locale === 'zh-TW' ? '從最後歸零點計算' : 'Calculate from Last Reset Point'}
-              </label>
-            </div>
+            {/* 從最後歸零點計算選項（只在選擇全部月份時顯示） */}
+            {!selectedMonth && (
+              <div className="flex items-center gap-2 bg-white border-2 border-gray-300 rounded-lg px-4 py-2">
+                <input
+                  type="checkbox"
+                  id="calculateFromReset"
+                  checked={calculateFromReset}
+                  onChange={(e) => setCalculateFromReset(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                />
+                <label 
+                  htmlFor="calculateFromReset" 
+                  className="text-sm font-semibold text-gray-700 cursor-pointer whitespace-nowrap"
+                >
+                  {locale === 'zh-TW' ? '從最後歸零點計算' : 'Calculate from Last Reset Point'}
+                </label>
+              </div>
+            )}
           </div>
 
           {/* 操作按鈕 */}
