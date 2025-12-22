@@ -201,6 +201,32 @@ This project was developed using [Cursor](https://cursor.sh) with AI-powered vib
 
 For questions or suggestions, please contact us via GitHub Issues.
 
+## ⚠️ Important Notices
+
+### 🤖 AI-Generated Project
+
+**This entire project, including all code and documentation, was generated using AI (Cursor with AI-powered coding).**
+
+- The project is provided "as is"
+- No guarantee of functionality or support
+- Use at your own risk
+
+### 💾 Data Backup & Disclaimer
+
+**This website provides data backup functionality. We strongly recommend regular backups.**
+
+**⚠️ Important**:
+- This project makes **NO commitment** regarding data preservation or loss
+- Users are responsible for their own data backup
+- The project developers are not liable for any data loss
+- Always maintain your own backups
+
+**Recommendation**:
+- ✅ Backup your data regularly (weekly or monthly)
+- ✅ Use the built-in backup feature
+- ✅ Download and save backup files locally
+- ✅ Test backup restoration periodically
+
 ---
 
 [中文版 README](README.zh-TW.md)
