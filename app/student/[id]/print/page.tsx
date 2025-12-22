@@ -91,7 +91,8 @@ export default async function PrintPage({
       .limit(1)
     
     if (transactions && transactions.length > 0) {
-      const lastReset = transactions[0]
+      // @ts-ignore - Supabase type inference issue
+      const lastReset = transactions[0] as any
       const lastResetDate = lastReset.transaction_date || lastReset.created_at
       if (lastResetDate) {
         const resetDate = new Date(lastResetDate)
