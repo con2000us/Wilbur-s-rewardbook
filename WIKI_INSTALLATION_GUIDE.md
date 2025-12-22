@@ -171,7 +171,7 @@ Supabase 是用來存放資料的地方。所有學生的成績、記錄都會�
 
 2. **點擊「Deploy with Vercel」按鈕**：
    - 在 README 頁面頂部
-   - 或直接前往：https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook
+   - 或直接前往：https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL,SITE_PASSWORD
 
 3. **登入 Vercel**（如果還沒登入）
 

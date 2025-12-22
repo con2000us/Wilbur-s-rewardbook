@@ -6,12 +6,29 @@ Complete step-by-step guide for deploying Wilbur's Reward Book.
 
 ### Option 1: One-Click Deploy (Easiest)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL,SITE_PASSWORD)
 
-1. Click the button above
-2. Sign in with GitHub
-3. Add environment variables (see below)
-4. Deploy!
+**Steps:**
+1. **Set up Supabase first** (Required):
+   - Create a new project at [supabase.com](https://supabase.com)
+   - Go to **SQL Editor** in your Supabase dashboard
+   - Copy and paste the entire content of `setup-database.sql`
+   - Click **Run** to create all database tables, functions, and triggers
+   - ⚠️ **Important**: This step is **required** - the app won't work without it!
+   - Go to **Settings** → **API** and copy:
+     - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
+     - **anon public** key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+2. Click the "Deploy with Vercel" button above
+3. Sign in with GitHub
+4. Add your environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
+   - `SITE_PASSWORD` - **Required**: Set a strong password to protect your site
+5. Click "Deploy"
+6. Done! 🎉
+
+> 💡 **Note**: The database setup (`setup-database.sql`) must be run **before** or **after** deployment, but it's **required** for the app to function. Supabase doesn't automatically create tables from code - you need to run the SQL script manually.
 
 ### Option 2: Use as Template
 
@@ -87,7 +104,12 @@ You'll need these in the next step!
    - **Name**: `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - **Value**: Paste your Supabase anon public key
    - Click **"Add"**
-4. Click **"Deploy"**
+4. Add the third variable:
+   - **Name**: `SITE_PASSWORD`
+   - **Value**: Set a strong password to protect your site
+   - ⚠️ **Important**: This is required for password protection
+   - Click **"Add"**
+5. Click **"Deploy"**
 
 ### 2.3 Wait for Deployment
 
@@ -107,7 +129,10 @@ Click the deployment URL and you should see your app! 🎉
 
 1. Click the button above
 2. Sign in with GitHub
-3. Add environment variables (same as Vercel)
+3. Add environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SITE_PASSWORD`
 4. Deploy!
 
 ### Deploy to Render
@@ -119,6 +144,7 @@ Click the deployment URL and you should see your app! 🎉
 3. Add environment variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SITE_PASSWORD`
 4. Deploy!
 
 ### Deploy to Netlify
@@ -129,7 +155,10 @@ Click the deployment URL and you should see your app! 🎉
 4. Add build settings:
    - **Build command**: `npm run build`
    - **Publish directory**: `.next`
-5. Add environment variables (same as Vercel)
+5. Add environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SITE_PASSWORD`
 6. Deploy!
 
 ## ✅ Verification Checklist
