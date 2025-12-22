@@ -438,7 +438,6 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
               </div>
             )}
           </div>
-          </div>
           
           {/* 添加記錄按鈕 */}
           {onAddTransaction && (
