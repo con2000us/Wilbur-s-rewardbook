@@ -53,6 +53,9 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [clearing, setClearing] = useState<string | null>(null) // 'assessments', 'transactions', 'subjects', 'all'
+  const [clearDateMode, setClearDateMode] = useState<'all' | 'range'>('all')
+  const [clearStartDate, setClearStartDate] = useState('')
+  const [clearEndDate, setClearEndDate] = useState('')
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   // 將 Tailwind 漸變類名轉換為 hex 顏色
@@ -522,22 +525,40 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
   }
 
   async function handleClear(type: 'assessments' | 'transactions' | 'subjects' | 'all') {
+    // 驗證日期範圍
+    if (clearDateMode === 'range') {
+      if (!clearStartDate || !clearEndDate) {
+        alert('請選擇開始日期和結束日期')
+        return
+      }
+      if (new Date(clearStartDate) > new Date(clearEndDate)) {
+        alert('開始日期不能晚於結束日期')
+        return
+      }
+    }
+
     const messages = {
       assessments: {
-        confirm: '確定要刪除所有評量嗎？此操作無法復原。',
-        title: '刪除所有評量'
+        confirm: clearDateMode === 'all' 
+          ? '確定要刪除所有評量嗎？此操作無法復原。'
+          : `確定要刪除 ${clearStartDate} 至 ${clearEndDate} 期間的評量嗎？此操作無法復原。`,
+        title: clearDateMode === 'all' ? '刪除所有評量' : '刪除指定日期範圍的評量'
       },
       transactions: {
-        confirm: '確定要刪除所有存摺收支嗎？此操作無法復原。',
-        title: '刪除所有存摺收支'
+        confirm: clearDateMode === 'all'
+          ? '確定要刪除所有存摺收支嗎？此操作無法復原。'
+          : `確定要刪除 ${clearStartDate} 至 ${clearEndDate} 期間的存摺收支嗎？此操作無法復原。`,
+        title: clearDateMode === 'all' ? '刪除所有存摺收支' : '刪除指定日期範圍的存摺收支'
       },
       subjects: {
         confirm: '確定要刪除所有科目嗎？此操作會同時刪除相關的評量記錄。此操作無法復原。',
         title: '刪除所有科目'
       },
       all: {
-        confirm: '確定要清空所有記錄嗎？此操作會刪除所有評量、存摺收支、科目和獎勵規則，只保留學生設定。此操作無法復原。',
-        title: '清空所有記錄'
+        confirm: clearDateMode === 'all'
+          ? '確定要清空所有記錄嗎？此操作會刪除所有評量、存摺收支、科目和獎勵規則，只保留學生設定。此操作無法復原。'
+          : `確定要清空 ${clearStartDate} 至 ${clearEndDate} 期間的所有記錄嗎？此操作會刪除該期間的評量、存摺收支，只保留學生設定。此操作無法復原。`,
+        title: clearDateMode === 'all' ? '清空所有記錄' : '清空指定日期範圍的記錄'
       }
     }
 
@@ -553,7 +574,12 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
       const response = await fetch(`/api/students/${student.id}/clear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type })
+        body: JSON.stringify({ 
+          type,
+          dateMode: clearDateMode,
+          startDate: clearDateMode === 'range' ? clearStartDate : null,
+          endDate: clearDateMode === 'range' ? clearEndDate : null
+        })
       })
 
       const result = await response.json()
@@ -566,6 +592,10 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
         } else {
           router.refresh()
         }
+        // 重置日期選擇
+        setClearDateMode('all')
+        setClearStartDate('')
+        setClearEndDate('')
       } else {
         setError(result.error || '操作失敗')
       }
@@ -806,6 +836,60 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
             <p className="text-sm text-gray-600 mb-3">
               以下操作會刪除學生的記錄，但會保留學生設定。請謹慎操作。
             </p>
+            
+            {/* 日期範圍選擇 */}
+            <div className="mb-4 p-3 bg-gray-50 border border-gray-300 rounded-lg">
+              <div className="flex items-center gap-4 mb-3">
+                <label className="text-sm font-semibold text-gray-700">刪除範圍：</label>
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="clearDateMode"
+                      value="all"
+                      checked={clearDateMode === 'all'}
+                      onChange={(e) => setClearDateMode(e.target.value as 'all' | 'range')}
+                      className="cursor-pointer"
+                    />
+                    <span className="text-sm">全部</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="clearDateMode"
+                      value="range"
+                      checked={clearDateMode === 'range'}
+                      onChange={(e) => setClearDateMode(e.target.value as 'all' | 'range')}
+                      className="cursor-pointer"
+                    />
+                    <span className="text-sm">日期範圍</span>
+                  </label>
+                </div>
+              </div>
+              {clearDateMode === 'range' && (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-700 whitespace-nowrap">開始日期：</label>
+                    <input
+                      type="date"
+                      value={clearStartDate}
+                      onChange={(e) => setClearStartDate(e.target.value)}
+                      className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-700 whitespace-nowrap">結束日期：</label>
+                    <input
+                      type="date"
+                      value={clearEndDate}
+                      onChange={(e) => setClearEndDate(e.target.value)}
+                      className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <button
                 type="button"
