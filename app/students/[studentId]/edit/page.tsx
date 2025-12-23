@@ -52,7 +52,7 @@ export default async function EditStudentPage({
             studentId={studentId}
             studentName={(student as any).name}
             studentAvatar={avatar}
-            recordsTitle="設定"
+            recordsTitle={tStudent('editStudentData')}
             allStudents={allStudents || []}
             basePath=""
             currentPage="settings"
@@ -62,11 +62,15 @@ export default async function EditStudentPage({
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            ✏️ 編輯學生資料
+            ✏️ {tStudent('editStudentData')}
           </h1>
           <p className="text-gray-600 mb-6">
             {/* @ts-ignore - Supabase type inference issue with select queries */}
-            修改或刪除 <span className="font-semibold text-blue-600">{(student as any).name}</span> 的資料
+            {tStudent.rich('editStudentDesc', {
+              name: (chunks) => (
+                <span className="font-semibold text-blue-600">{chunks}</span>
+              ),
+            })}
           </p>
 
           <EditStudentForm student={student} />

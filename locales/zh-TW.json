@@ -654,7 +654,75 @@
     "invalidBackupArrays": "無效的備份格式：以下欄位應為陣列格式（{fields}）",
     "jsonParseFailed": "❌ JSON 解析失敗：檔案內容不是有效的 JSON 格式。請確認檔案是否損壞或格式不正確。",
     "selectJSONFile": "❌ 請選擇 JSON 格式的檔案",
-    "backupValidationFailed": "備份格式驗證失敗"
+    "backupValidationFailed": "備份格式驗證失敗",
+    "detailsPrefix": "詳細資訊：",
+    "noEmojisInCategory": "此分類暫無 Emoji",
+    "backupSuggestionTitle": "建議：使用以下操作前，請先備份資料",
+    "backupSuggestionDesc": "您可以使用上方的「📥 匯出 JSON」功能來備份學生資料，以便需要時可以還原。",
+    "clear": {
+      "sectionTitle": "清除記錄（保留學生設定）",
+      "sectionDesc": "以下操作會刪除學生的記錄，但會保留學生設定。請謹慎操作。",
+      "deleteItemLabel": "刪除項目：",
+      "deleteRangeLabel": "刪除範圍：",
+      "selectPlaceholder": "-- 請選擇 --",
+      "options": {
+        "assessments": "刪除評量",
+        "transactions": "刪除存摺收支",
+        "subjects": "刪除科目",
+        "all": "清空記錄"
+      },
+      "processing": "處理中...",
+      "range": {
+        "all": "全部",
+        "dateRange": "日期範圍"
+      },
+      "startLabel": "開始：",
+      "endLabel": "結束：",
+      "validation": {
+        "selectType": "請選擇要刪除的項目",
+        "selectStartEndDates": "請選擇開始日期和結束日期",
+        "startAfterEnd": "開始日期不能晚於結束日期"
+      },
+      "dialog": {
+        "title": {
+          "assessments": {
+            "all": "刪除所有評量",
+            "range": "刪除指定日期範圍的評量"
+          },
+          "transactions": {
+            "all": "刪除所有存摺收支",
+            "range": "刪除指定日期範圍的存摺收支"
+          },
+          "subjects": {
+            "all": "刪除所有科目"
+          },
+          "all": {
+            "all": "清空所有記錄",
+            "range": "清空指定日期範圍的記錄"
+          }
+        },
+        "confirm": {
+          "assessments": {
+            "all": "確定要刪除所有評量嗎？此操作無法復原。",
+            "range": "確定要刪除 {start} 至 {end} 期間的評量嗎？此操作無法復原。"
+          },
+          "transactions": {
+            "all": "確定要刪除所有存摺收支嗎？此操作無法復原。",
+            "range": "確定要刪除 {start} 至 {end} 期間的存摺收支嗎？此操作無法復原。"
+          },
+          "subjects": {
+            "all": "確定要刪除所有科目嗎？此操作會同時刪除相關的評量記錄。此操作無法復原。"
+          },
+          "all": {
+            "all": "確定要清空所有記錄嗎？此操作會刪除所有評量、存摺收支、科目和獎勵規則，只保留學生設定。此操作無法復原。",
+            "range": "確定要清空 {start} 至 {end} 期間的所有記錄嗎？此操作會刪除該期間的評量、存摺收支，只保留學生設定。此操作無法復原。"
+          }
+        }
+      },
+      "operationSuccess": "操作成功",
+      "operationFailed": "操作失敗"
+    },
+    "deleteStudentSectionTitle": "刪除學生（完全移除）"
   },
   "messages": {
     "saveSuccess": "保存成功",

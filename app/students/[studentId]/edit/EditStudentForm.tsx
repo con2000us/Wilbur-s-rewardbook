@@ -48,6 +48,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
   const [clearEndDate, setClearEndDate] = useState('')
   const [selectedClearType, setSelectedClearType] = useState<'assessments' | 'transactions' | 'subjects' | 'all' | ''>('')
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const tKey = (key: string, values?: Record<string, any>) => (t as any)(key, values)
 
   // 將 Tailwind 漸變類名轉換為 hex 顏色
   const gradientToHex = (gradient: string): string => {
@@ -303,7 +304,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
       
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to export student data')
+        throw new Error(error.error || t('exportFailed'))
       }
 
       // 下載檔案
@@ -452,7 +453,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
         // 處理後端返回的詳細錯誤訊息
         const detailsText = typeof result.details === 'string' ? result.details : JSON.stringify(result.details)
         const errorMessage = result.details 
-          ? `${result.error}\n\n${locale === 'zh-TW' ? '詳細資訊：' : 'Details: '}${detailsText}`
+          ? `${result.error}\n\n${tKey('detailsPrefix')}${detailsText}`
           : result.error || t('importFailed')
         throw new Error(errorMessage)
       }
@@ -537,7 +538,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
 
   async function handleConfirmClear() {
     if (!selectedClearType) {
-      alert('請選擇要刪除的項目')
+      alert(tKey('clear.validation.selectType'))
       return
     }
     await handleClear(selectedClearType)
@@ -547,42 +548,23 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
     // 驗證日期範圍
     if (clearDateMode === 'range') {
       if (!clearStartDate || !clearEndDate) {
-        alert('請選擇開始日期和結束日期')
+        alert(tKey('clear.validation.selectStartEndDates'))
         return
       }
       if (new Date(clearStartDate) > new Date(clearEndDate)) {
-        alert('開始日期不能晚於結束日期')
+        alert(tKey('clear.validation.startAfterEnd'))
         return
       }
     }
 
-    const messages = {
-      assessments: {
-        confirm: clearDateMode === 'all' 
-          ? '確定要刪除所有評量嗎？此操作無法復原。'
-          : `確定要刪除 ${clearStartDate} 至 ${clearEndDate} 期間的評量嗎？此操作無法復原。`,
-        title: clearDateMode === 'all' ? '刪除所有評量' : '刪除指定日期範圍的評量'
-      },
-      transactions: {
-        confirm: clearDateMode === 'all'
-          ? '確定要刪除所有存摺收支嗎？此操作無法復原。'
-          : `確定要刪除 ${clearStartDate} 至 ${clearEndDate} 期間的存摺收支嗎？此操作無法復原。`,
-        title: clearDateMode === 'all' ? '刪除所有存摺收支' : '刪除指定日期範圍的存摺收支'
-      },
-      subjects: {
-        confirm: '確定要刪除所有科目嗎？此操作會同時刪除相關的評量記錄。此操作無法復原。',
-        title: '刪除所有科目'
-      },
-      all: {
-        confirm: clearDateMode === 'all'
-          ? '確定要清空所有記錄嗎？此操作會刪除所有評量、存摺收支、科目和獎勵規則，只保留學生設定。此操作無法復原。'
-          : `確定要清空 ${clearStartDate} 至 ${clearEndDate} 期間的所有記錄嗎？此操作會刪除該期間的評量、存摺收支，只保留學生設定。此操作無法復原。`,
-        title: clearDateMode === 'all' ? '清空所有記錄' : '清空指定日期範圍的記錄'
-      }
-    }
+    const mode: 'all' | 'range' = type === 'subjects' ? 'all' : clearDateMode
+    const title = tKey(`clear.dialog.title.${type}.${mode}`)
+    const confirmText = tKey(`clear.dialog.confirm.${type}.${mode}`, {
+      start: clearStartDate,
+      end: clearEndDate,
+    })
 
-    const message = messages[type]
-    if (!confirm(`${message.title}\n\n${message.confirm}`)) {
+    if (!confirm(`${title}\n\n${confirmText}`)) {
       return
     }
 
@@ -604,7 +586,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
       const result = await response.json()
 
       if (response.ok) {
-        alert(result.message || '操作成功')
+        alert(tKey('clear.operationSuccess'))
         // 刷新頁面以更新數據
         if (isModal && onSuccess) {
           onSuccess()
@@ -617,10 +599,10 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
         setClearEndDate('')
         setSelectedClearType('')
       } else {
-        setError(result.error || '操作失敗')
+        setError(result.error || tKey('clear.operationFailed'))
       }
     } catch (err) {
-      setError('發生錯誤：' + (err as Error).message)
+      setError(t('errorOccurred') + (err as Error).message)
     } finally {
       setClearing(null)
     }
@@ -766,7 +748,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
               </div>
               {filteredEmojis.length === 0 && (
                 <div className="text-center py-4 text-gray-500 text-sm">
-                  {locale === 'zh-TW' ? '此分類暫無 Emoji' : 'No emojis in this category'}
+                  {tKey('noEmojisInCategory')}
                 </div>
               )}
             </div>
@@ -854,25 +836,25 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
           {/* 備份提醒 */}
           <div className="mb-4 p-3 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
             <p className="text-sm text-yellow-800 font-semibold mb-1">
-              💾 建議：使用以下操作前，請先備份資料
+              💾 {tKey('backupSuggestionTitle')}
             </p>
             <p className="text-xs text-yellow-700">
-              您可以使用上方的「📥 匯出 JSON」功能來備份學生資料，以便需要時可以還原。
+              {tKey('backupSuggestionDesc')}
             </p>
           </div>
 
           {/* 清除記錄 */}
           <div className="mb-6">
-            <h4 className="text-md font-semibold text-orange-600 mb-2">清除記錄（保留學生設定）</h4>
+            <h4 className="text-md font-semibold text-orange-600 mb-2">{tKey('clear.sectionTitle')}</h4>
             <p className="text-sm text-gray-600 mb-3">
-              以下操作會刪除學生的記錄，但會保留學生設定。請謹慎操作。
+              {tKey('clear.sectionDesc')}
             </p>
             
             {/* 刪除項目選擇與日期範圍 */}
             <div className="space-y-3">
               {/* 第一行：刪除項目選擇 */}
               <div className="flex items-center gap-3 flex-wrap">
-                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">刪除項目：</label>
+                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">{tKey('clear.deleteItemLabel')}</label>
                 <select
                   value={selectedClearType}
                   onChange={(e) => {
@@ -886,11 +868,11 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                   disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer min-w-[180px]"
                 >
-                  <option value="">-- 請選擇 --</option>
-                  <option value="assessments">🗑️ 刪除評量</option>
-                  <option value="transactions">💰 刪除存摺收支</option>
-                  <option value="subjects">📚 刪除科目</option>
-                  <option value="all">🧹 清空記錄</option>
+                  <option value="">{tKey('clear.selectPlaceholder')}</option>
+                  <option value="assessments">🗑️ {tKey('clear.options.assessments')}</option>
+                  <option value="transactions">💰 {tKey('clear.options.transactions')}</option>
+                  <option value="subjects">📚 {tKey('clear.options.subjects')}</option>
+                  <option value="all">🧹 {tKey('clear.options.all')}</option>
                 </select>
                 <button
                   type="button"
@@ -898,13 +880,13 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                   disabled={loading || deleting || success || isExporting || isImporting || clearing !== null || !selectedClearType}
                   className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
                 >
-                  {clearing ? '處理中...' : '確定'}
+                  {clearing ? tKey('clear.processing') : tCommon('confirm')}
                 </button>
               </div>
 
               {/* 第二行：日期範圍選擇 */}
               <div className="flex items-center gap-3 flex-wrap">
-                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">刪除範圍：</label>
+                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">{tKey('clear.deleteRangeLabel')}</label>
                 <div className="flex items-center gap-4">
                   <label className={`flex items-center gap-2 ${selectedClearType === 'subjects' || selectedClearType === 'all' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                     <input
@@ -916,7 +898,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                       disabled={selectedClearType === 'subjects' || selectedClearType === 'all'}
                       className="cursor-pointer disabled:cursor-not-allowed"
                     />
-                    <span className="text-sm">全部</span>
+                    <span className="text-sm">{tKey('clear.range.all')}</span>
                   </label>
                   <label className={`flex items-center gap-2 ${selectedClearType === 'subjects' || selectedClearType === 'all' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                     <input
@@ -928,12 +910,12 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                       disabled={selectedClearType === 'subjects' || selectedClearType === 'all'}
                       className="cursor-pointer disabled:cursor-not-allowed"
                     />
-                    <span className="text-sm">日期範圍</span>
+                    <span className="text-sm">{tKey('clear.range.dateRange')}</span>
                   </label>
                 </div>
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-700 whitespace-nowrap">開始：</label>
+                    <label className="text-sm text-gray-700 whitespace-nowrap">{tKey('clear.startLabel')}</label>
                     <input
                       type="date"
                       value={clearStartDate}
@@ -947,7 +929,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-700 whitespace-nowrap">結束：</label>
+                    <label className="text-sm text-gray-700 whitespace-nowrap">{tKey('clear.endLabel')}</label>
                     <input
                       type="date"
                       value={clearEndDate}
@@ -967,7 +949,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
 
           {/* 刪除學生 */}
           <div className="border-t border-red-200 pt-4">
-            <h4 className="text-md font-semibold text-red-600 mb-2">刪除學生（完全移除）</h4>
+            <h4 className="text-md font-semibold text-red-600 mb-2">{tKey('deleteStudentSectionTitle')}</h4>
             <p className="text-sm text-gray-600 mb-3">
               {t('deleteWarning')}
             </p>

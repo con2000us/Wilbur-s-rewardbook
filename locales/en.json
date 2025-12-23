@@ -654,7 +654,75 @@
     "invalidBackupArrays": "Invalid backup format: The following fields should be array format ({fields})",
     "jsonParseFailed": "❌ JSON parsing failed: File content is not valid JSON format. Please confirm the file is not corrupted or incorrectly formatted.",
     "selectJSONFile": "❌ Please select a JSON format file",
-    "backupValidationFailed": "Backup format validation failed"
+    "backupValidationFailed": "Backup format validation failed",
+    "detailsPrefix": "Details: ",
+    "noEmojisInCategory": "No emojis in this category",
+    "backupSuggestionTitle": "Suggestion: Back up data before using the actions below",
+    "backupSuggestionDesc": "You can use the \"📥 Export JSON\" button above to back up student data for restoring later.",
+    "clear": {
+      "sectionTitle": "Clear Records (Keep Student Settings)",
+      "sectionDesc": "The actions below will delete the student's records but keep the student's settings. Please proceed with caution.",
+      "deleteItemLabel": "Delete:",
+      "deleteRangeLabel": "Range:",
+      "selectPlaceholder": "-- Select --",
+      "options": {
+        "assessments": "Delete assessments",
+        "transactions": "Delete passbook transactions",
+        "subjects": "Delete subjects",
+        "all": "Clear all records"
+      },
+      "processing": "Processing...",
+      "range": {
+        "all": "All",
+        "dateRange": "Date range"
+      },
+      "startLabel": "Start:",
+      "endLabel": "End:",
+      "validation": {
+        "selectType": "Please select what to delete",
+        "selectStartEndDates": "Please select a start and end date",
+        "startAfterEnd": "Start date cannot be later than end date"
+      },
+      "dialog": {
+        "title": {
+          "assessments": {
+            "all": "Delete all assessments",
+            "range": "Delete assessments in date range"
+          },
+          "transactions": {
+            "all": "Delete all passbook transactions",
+            "range": "Delete passbook transactions in date range"
+          },
+          "subjects": {
+            "all": "Delete all subjects"
+          },
+          "all": {
+            "all": "Clear all records",
+            "range": "Clear records in date range"
+          }
+        },
+        "confirm": {
+          "assessments": {
+            "all": "Are you sure you want to delete all assessments? This action cannot be undone.",
+            "range": "Are you sure you want to delete assessments from {start} to {end}? This action cannot be undone."
+          },
+          "transactions": {
+            "all": "Are you sure you want to delete all passbook transactions? This action cannot be undone.",
+            "range": "Are you sure you want to delete passbook transactions from {start} to {end}? This action cannot be undone."
+          },
+          "subjects": {
+            "all": "Are you sure you want to delete all subjects? This will also delete related assessment records. This action cannot be undone."
+          },
+          "all": {
+            "all": "Are you sure you want to clear all records? This will delete all assessments, passbook transactions, subjects, and reward rules, while keeping only the student settings. This action cannot be undone.",
+            "range": "Are you sure you want to clear all records from {start} to {end}? This will delete assessments and passbook transactions in that period, while keeping only the student settings. This action cannot be undone."
+          }
+        }
+      },
+      "operationSuccess": "Operation succeeded",
+      "operationFailed": "Operation failed"
+    },
+    "deleteStudentSectionTitle": "Delete Student (Permanent)"
   },
   "messages": {
     "saveSuccess": "Saved successfully",
