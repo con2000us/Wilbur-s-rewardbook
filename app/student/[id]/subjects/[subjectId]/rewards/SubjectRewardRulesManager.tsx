@@ -143,6 +143,18 @@ export default function SubjectRewardRulesManager({
     }
 
     try {
+      // 計算新規則的 display_order（放在列表最後）
+      let displayOrder = null
+      if (!editingRule) {
+        const targetRules = formData.is_student_specific ? sortedExclusiveRules : sortedSubjectOnlyRules
+        if (targetRules.length > 0) {
+          const maxOrder = Math.max(...targetRules.map(r => (r as any).display_order ?? 0))
+          displayOrder = maxOrder + 1
+        } else {
+          displayOrder = 1
+        }
+      }
+      
       const payload = {
         ...(editingRule ? { rule_id: editingRule.id } : {}),
         student_id: formData.is_student_specific ? studentId : null,
@@ -155,6 +167,7 @@ export default function SubjectRewardRulesManager({
         priority: formData.is_student_specific ? 40 : 30, // 自動設置優先級
         is_active: formData.is_active,
         assessment_type: formData.assessment_type || null,
+        ...(displayOrder !== null ? { display_order: displayOrder } : {}),
       }
 
       const endpoint = editingRule ? '/api/reward-rules/update' : '/api/reward-rules/create'
@@ -358,7 +371,6 @@ export default function SubjectRewardRulesManager({
   useEffect(() => {
     // 如果剛剛保存完成，不覆蓋當前狀態
     if (justSavedRef.current) {
-      justSavedRef.current = false
       return
     }
     if (!isReorderingExclusive) {
@@ -458,6 +470,14 @@ export default function SubjectRewardRulesManager({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     // drop 事件已经在 handleDragOver 中处理了顺序更新
+    
+    // 設置被移動的規則閃爍效果（拖曳放下時立即閃爍）
+    if (draggedRuleId) {
+      setJustSavedRuleId(draggedRuleId)
+      setTimeout(() => {
+        setJustSavedRuleId(null)
+      }, 750) // 0.75秒後清除閃爍效果
+    }
   }
 
   const handleDragEnd = () => {
@@ -483,7 +503,12 @@ export default function SubjectRewardRulesManager({
 
       if (response.ok) {
         // 標記剛剛保存完成，防止 useEffect 覆蓋當前順序
+        // 使用延遲確保在 router.refresh() 完成後才清除標記
         justSavedRef.current = true
+        setTimeout(() => {
+          justSavedRef.current = false
+        }, 2000) // 增加延遲時間，確保 router.refresh() 完成
+        
         // 清理狀態
         if (type === 'exclusive') {
           setIsReorderingExclusive(false)
@@ -841,34 +866,6 @@ export default function SubjectRewardRulesManager({
                 </div>
               )
             })}
-            {/* 拖拽到最底端的占位區域 */}
-            {draggedIndex !== null && isReorderingExclusive && (
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  if (draggedIndex !== null) {
-                    setDropTargetIndex(sortedExclusiveRules.length)
-                    const newRules = [...sortedExclusiveRules]
-                    const draggedRuleItem = newRules[draggedIndex]
-                    newRules.splice(draggedIndex, 1)
-                    newRules.push(draggedRuleItem)
-                    setSortedExclusiveRules(newRules)
-                    setDraggedIndex(newRules.length - 1)
-                  }
-                }}
-                onDragEnter={(e) => {
-                  e.preventDefault()
-                  if (draggedIndex !== null) {
-                    setDropTargetIndex(sortedExclusiveRules.length)
-                  }
-                }}
-                className={`h-16 mt-2 rounded-lg transition-all ${
-                  dropTargetIndex === sortedExclusiveRules.length
-                    ? 'bg-blue-100 border-2 border-dashed border-blue-500'
-                    : 'bg-transparent border-2 border-dashed border-gray-300'
-                }`}
-              ></div>
-            )}
           </div>
         ) : (
           <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
@@ -946,34 +943,6 @@ export default function SubjectRewardRulesManager({
                 </div>
               )
             })}
-            {/* 拖拽到最底端的占位區域 */}
-            {draggedIndex !== null && isReorderingSubject && (
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  if (draggedIndex !== null) {
-                    setDropTargetIndex(sortedSubjectOnlyRules.length)
-                    const newRules = [...sortedSubjectOnlyRules]
-                    const draggedRuleItem = newRules[draggedIndex]
-                    newRules.splice(draggedIndex, 1)
-                    newRules.push(draggedRuleItem)
-                    setSortedSubjectOnlyRules(newRules)
-                    setDraggedIndex(newRules.length - 1)
-                  }
-                }}
-                onDragEnter={(e) => {
-                  e.preventDefault()
-                  if (draggedIndex !== null) {
-                    setDropTargetIndex(sortedSubjectOnlyRules.length)
-                  }
-                }}
-                className={`h-16 mt-2 rounded-lg transition-all ${
-                  dropTargetIndex === sortedSubjectOnlyRules.length
-                    ? 'bg-blue-100 border-2 border-dashed border-blue-500'
-                    : 'bg-transparent border-2 border-dashed border-gray-300'
-                }`}
-              ></div>
-            )}
           </div>
         ) : (
           <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">

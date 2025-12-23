@@ -1,19 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-
-const AVATAR_EMOJIS = [
-  '😊', '😃', '😎', '🤓', '🧐', '😇', '🥳', '🤩',
-  '😄', '😁', '😆', '😋', '😍', '🤗', '🤔', '😴',
-  '😌', '😏', '😉', '🙂', '😀', '😅', '😂', '🤣',
-  '👦', '👧', '🧒', '👨‍🎓', '👩‍🎓', '🦸', '🦸‍♀️', '🧙',
-  '👨', '👩', '👶', '🧑', '👱', '👴', '👵', '🧑‍💼',
-  '🧑‍🔬', '🧑‍🏫', '🧑‍⚕️', '🧑‍🎨', '🧑‍🚀', '🧑‍✈️', '🧑‍🏭', '🧑‍💻',
-  '🤴', '👸', '🦁', '🐯', '🐰', '🐻', '🐼', '🐨',
-  '🐶', '🐱', '🐸', '🐷'
-]
+import { EMOJI_CATEGORIES, findEmojiCategory } from '@/app/lib/constants/emojiCategories'
 
 const AVATAR_COLORS = [
   'from-blue-400 to-blue-600',
@@ -227,10 +217,30 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
   const parsedAvatar = parseAvatar(student.avatar_url)
   const [selectedEmoji, setSelectedEmoji] = useState(parsedAvatar.emoji)
   const [selectedColorHex, setSelectedColorHex] = useState(parsedAvatar.hex)
-  const [showAllEmojis, setShowAllEmojis] = useState(false)
   
-  // 計算要顯示的 emoji 數量（預設只顯示 2 行，每行 10 個 = 20 個）
-  const displayedEmojis = showAllEmojis ? AVATAR_EMOJIS : AVATAR_EMOJIS.slice(0, 20)
+  // 初始化時，根據選擇的 Emoji 找到對應的分類
+  const initialCategory = findEmojiCategory(parsedAvatar.emoji) || '表情'
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory)
+  const [emojiSearchTerm, setEmojiSearchTerm] = useState('')
+  
+  // 當選擇的 Emoji 改變時，自動切換到正確的分類
+  useEffect(() => {
+    const category = findEmojiCategory(selectedEmoji)
+    if (category && category !== selectedCategory) {
+      setSelectedCategory(category)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEmoji])
+  
+  // 獲取當前分類的 Emoji，並支持搜索
+  const getFilteredEmojis = () => {
+    const categoryEmojis = EMOJI_CATEGORIES[selectedCategory] || []
+    if (!emojiSearchTerm) return categoryEmojis
+    // 簡單搜索：如果搜索詞是 Emoji 本身，直接匹配
+    return categoryEmojis.filter(emoji => emoji === emojiSearchTerm)
+  }
+  
+  const filteredEmojis = getFilteredEmojis()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -711,31 +721,37 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
 
           {/* 選擇 Emoji */}
           <div className="flex-1">
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-semibold text-gray-700">
-                {t('selectEmoji')}
-              </label>
-              {AVATAR_EMOJIS.length > 20 && (
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {t('selectEmoji')}
+            </label>
+            
+            {/* 分類標籤 */}
+            <div className="flex gap-2 mb-3 flex-wrap">
+              {Object.keys(EMOJI_CATEGORIES).map(category => (
                 <button
+                  key={category}
                   type="button"
-                  onClick={() => setShowAllEmojis(!showAllEmojis)}
-                  className="px-3 py-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 font-semibold cursor-pointer"
+                  onClick={() => {
+                    setSelectedCategory(category)
+                    setEmojiSearchTerm('')
+                  }}
+                  className={`px-3 py-1 text-xs rounded-lg transition-all duration-200 font-semibold cursor-pointer ${
+                    selectedCategory === category
+                      ? 'bg-blue-600 text-white hover:-translate-y-1 hover:shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:-translate-y-1 hover:shadow-md'
+                  }`}
                 >
-                  {showAllEmojis ? t('showLessEmojis') : t('showMoreEmojis')}
+                  {category}
                 </button>
-              )}
+              ))}
             </div>
-            <div 
-              className="overflow-y-hidden overflow-x-visible transition-all duration-500 ease-in-out"
-              style={{
-                maxHeight: showAllEmojis ? '500px' : '115px',
-                padding: '8px'
-              }}
-            >
+            
+            {/* Emoji 網格（固定高度，可滾動） */}
+            <div className="border border-gray-200 rounded-lg p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
               <div className="grid grid-cols-10 gap-2">
-                {displayedEmojis.map((emoji) => (
+                {filteredEmojis.map((emoji, index) => (
                   <button
-                    key={emoji}
+                    key={`${selectedCategory}-${index}-${emoji}`}
                     type="button"
                     onClick={() => setSelectedEmoji(emoji)}
                     className={`text-2xl p-1.5 rounded-lg border-2 transition-all hover:scale-110 flex items-center justify-center cursor-pointer ${
@@ -748,6 +764,11 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                   </button>
                 ))}
               </div>
+              {filteredEmojis.length === 0 && (
+                <div className="text-center py-4 text-gray-500 text-sm">
+                  {locale === 'zh-TW' ? '此分類暫無 Emoji' : 'No emojis in this category'}
+                </div>
+              )}
             </div>
           </div>
         </div>

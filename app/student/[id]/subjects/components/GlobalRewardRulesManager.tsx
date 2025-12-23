@@ -141,6 +141,18 @@ export default function GlobalRewardRulesManager({
     }
 
     try {
+      // 計算新規則的 display_order（放在列表最後）
+      let displayOrder = null
+      if (!editingRule) {
+        const targetRules = ruleScope === 'student' ? sortedStudentRules : sortedGlobalRules
+        if (targetRules.length > 0) {
+          const maxOrder = Math.max(...targetRules.map(r => (r as any).display_order ?? 0))
+          displayOrder = maxOrder + 1
+        } else {
+          displayOrder = 1
+        }
+      }
+      
       const payload = {
         ...(editingRule ? { rule_id: editingRule.id } : {}),
         student_id: ruleScope === 'student' ? studentId : null, // 學生規則或全局規則
@@ -153,6 +165,7 @@ export default function GlobalRewardRulesManager({
         priority: formData.priority ? parseInt(formData.priority) : (ruleScope === 'student' ? 20 : 10),
         is_active: formData.is_active,
         assessment_type: formData.assessment_type || null,
+        ...(displayOrder !== null ? { display_order: displayOrder } : {}),
       }
 
       const endpoint = editingRule ? '/api/reward-rules/update' : '/api/reward-rules/create'
@@ -349,7 +362,6 @@ export default function GlobalRewardRulesManager({
   useEffect(() => {
     // 如果剛剛保存完成，不覆蓋當前狀態
     if (justSavedRef.current) {
-      justSavedRef.current = false
       return
     }
     if (!isReorderingStudent) {
@@ -420,6 +432,14 @@ export default function GlobalRewardRulesManager({
   const handleDragOver = (e: React.DragEvent, targetIndex: number, type: 'student' | 'global') => {
     e.preventDefault()
     
+    // 檢查是否在正確的排序模式
+    if (type === 'student' && !isReorderingStudent) {
+      return
+    }
+    if (type === 'global' && !isReorderingGlobal) {
+      return
+    }
+    
     if (draggedIndex === null) {
       return
     }
@@ -453,6 +473,14 @@ export default function GlobalRewardRulesManager({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     // drop 事件已经在 handleDragOver 中处理了顺序更新
+    
+    // 設置被移動的規則閃爍效果（拖曳放下時立即閃爍）
+    if (draggedRuleId) {
+      setJustSavedRuleId(draggedRuleId)
+      setTimeout(() => {
+        setJustSavedRuleId(null)
+      }, 750) // 0.75秒後清除閃爍效果
+    }
   }
 
   const handleDragEnd = () => {
@@ -478,7 +506,12 @@ export default function GlobalRewardRulesManager({
 
       if (response.ok) {
         // 標記剛剛保存完成，防止 useEffect 覆蓋當前順序
+        // 使用延遲確保在 router.refresh() 完成後才清除標記
         justSavedRef.current = true
+        setTimeout(() => {
+          justSavedRef.current = false
+        }, 2000) // 增加延遲時間，確保 router.refresh() 完成
+        
         // 清理狀態
         if (type === 'student') {
           setIsReorderingStudent(false)
@@ -489,7 +522,9 @@ export default function GlobalRewardRulesManager({
         setDraggedIndex(null)
         setDropTargetIndex(null)
         // 不刷新頁面，直接使用當前排序狀態
-        if (onSuccess) onSuccess()
+        if (onSuccess) {
+          onSuccess()
+        }
       } else {
         setError('排序失敗，請稍後再試')
         // 恢復原順序
@@ -850,10 +885,15 @@ export default function GlobalRewardRulesManager({
           </div>
         </div>
         {sortedStudentRules.length > 0 ? (
-          <div className="space-y-2">
+          <div 
+            className="space-y-2"
+            onDragOver={(e) => {
+              e.preventDefault()
+            }}
+          >
             {sortedStudentRules.map((rule, index) => {
-              const isDragging = draggedIndex === index && dropTargetIndex !== null && draggedRuleId === rule.id
-              const showIndicator = dropTargetIndex === index && draggedIndex !== null && draggedIndex !== index
+              const isDragging = draggedIndex === index && dropTargetIndex !== null && draggedRuleId === rule.id && isReorderingStudent
+              const showIndicator = dropTargetIndex === index && draggedIndex !== null && draggedIndex !== index && isReorderingStudent
               
               return (
                 <div key={rule.id}>
@@ -889,34 +929,6 @@ export default function GlobalRewardRulesManager({
                 </div>
               )
             })}
-            {/* 拖拽到最底端的占位區域 */}
-            {draggedIndex !== null && isReorderingStudent && (
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  if (draggedIndex !== null) {
-                    setDropTargetIndex(sortedStudentRules.length)
-                    const newRules = [...sortedStudentRules]
-                    const draggedRuleItem = newRules[draggedIndex]
-                    newRules.splice(draggedIndex, 1)
-                    newRules.push(draggedRuleItem)
-                    setSortedStudentRules(newRules)
-                    setDraggedIndex(newRules.length - 1)
-                  }
-                }}
-                onDragEnter={(e) => {
-                  e.preventDefault()
-                  if (draggedIndex !== null) {
-                    setDropTargetIndex(sortedStudentRules.length)
-                  }
-                }}
-                className={`h-16 mt-2 rounded-lg transition-all ${
-                  dropTargetIndex === sortedStudentRules.length
-                    ? 'bg-blue-100 border-2 border-dashed border-blue-500'
-                    : 'bg-transparent border-2 border-dashed border-gray-300'
-                }`}
-              ></div>
-            )}
           </div>
         ) : (
           <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
@@ -994,34 +1006,6 @@ export default function GlobalRewardRulesManager({
                 </div>
               )
             })}
-            {/* 拖拽到最底端的占位區域 */}
-            {draggedIndex !== null && isReorderingGlobal && (
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  if (draggedIndex !== null) {
-                    setDropTargetIndex(sortedGlobalRules.length)
-                    const newRules = [...sortedGlobalRules]
-                    const draggedRuleItem = newRules[draggedIndex]
-                    newRules.splice(draggedIndex, 1)
-                    newRules.push(draggedRuleItem)
-                    setSortedGlobalRules(newRules)
-                    setDraggedIndex(newRules.length - 1)
-                  }
-                }}
-                onDragEnter={(e) => {
-                  e.preventDefault()
-                  if (draggedIndex !== null) {
-                    setDropTargetIndex(sortedGlobalRules.length)
-                  }
-                }}
-                className={`h-16 mt-2 rounded-lg transition-all ${
-                  dropTargetIndex === sortedGlobalRules.length
-                    ? 'bg-blue-100 border-2 border-dashed border-blue-500'
-                    : 'bg-transparent border-2 border-dashed border-gray-300'
-                }`}
-              ></div>
-            )}
           </div>
         ) : (
           <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">

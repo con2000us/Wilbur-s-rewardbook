@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
         reward_amount: body.reward_amount,
         priority: body.priority || 0,
         is_active: true,
-        assessment_type: body.assessment_type || null
+        assessment_type: body.assessment_type || null,
+        display_order: body.display_order || null
       })
       .select()
       .single()

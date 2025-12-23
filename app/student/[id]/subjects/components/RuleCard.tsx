@@ -129,21 +129,11 @@ export default function RuleCard({
 
   return (
     <div 
-      draggable={isDraggable}
-      onDragStart={(e) => {
-        if (isDraggable && onDragStart) {
-          e.dataTransfer.effectAllowed = 'move'
-          e.dataTransfer.setData('text/plain', rule.id || '')
-          onDragStart()
-        }
-      }}
-      onDragEnd={() => {
-        if (isDraggable && onDragEnd) {
-          onDragEnd()
-        }
-      }}
       onDragOver={(e) => {
-        if (isDraggable && onDragOver) {
+        // 總是調用 preventDefault 以允許拖動（用於接收其他卡片的拖曳）
+        e.preventDefault()
+        e.stopPropagation()
+        if (onDragOver) {
           onDragOver(e)
         }
       }}
@@ -162,12 +152,32 @@ export default function RuleCard({
           : rule.is_active 
           ? 'bg-white border-solid border-green-200 shadow-sm' 
           : 'bg-gray-50 border-dashed border-gray-400 opacity-70'
-      } ${isDraggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      }`}
     >
       <div className="flex items-center gap-3">
         {/* 拖拽手柄視覺指示 */}
         {showDragHandle && (
-          <div className={`flex flex-col justify-center items-center flex-shrink-0 px-2 py-3 -ml-1 rounded ${isDraggable ? 'hover:bg-gray-200' : ''}`}>
+          <div 
+            draggable={isDraggable}
+            onDragStart={(e) => {
+              if (isDraggable && onDragStart) {
+                try {
+                  e.dataTransfer.effectAllowed = 'move'
+                  e.dataTransfer.setData('text/plain', rule.id || '')
+                  onDragStart()
+                } catch (err) {
+                  // 處理可能的瀏覽器擴展錯誤
+                  console.warn('Drag start error (possibly from browser extension):', err)
+                }
+              }
+            }}
+            onDragEnd={(e) => {
+              if (isDraggable && onDragEnd) {
+                onDragEnd()
+              }
+            }}
+            className={`flex flex-col justify-center items-center flex-shrink-0 px-2 py-3 -ml-1 rounded ${isDraggable ? 'hover:bg-gray-200 cursor-grab active:cursor-grabbing' : ''}`}
+          >
             <div className="flex flex-col gap-1">
               <div className="flex gap-1">
                 <div className={`w-1.5 h-1.5 rounded-full ${isDraggable ? 'bg-gray-400' : 'bg-gray-300'}`}></div>
@@ -185,10 +195,10 @@ export default function RuleCard({
           </div>
         )}
         
-        <div className="flex-1">
+        <div className={`flex-1 ${isDraggable ? 'select-none' : ''}`}>
           <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${ruleTypeBadge}`}>
+            <div className={`flex items-center gap-2 flex-wrap ${isDraggable ? 'select-none' : ''}`}>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${ruleTypeBadge} ${isDraggable ? 'select-none' : ''}`}>
                 {ruleTypeLabel}
               </span>
               {getAssessmentTypeBadge()}
@@ -217,16 +227,22 @@ export default function RuleCard({
               )}
             </div>
             {canEdit && !isReadOnly && (
-              <div className="opacity-0 group-hover:opacity-100 flex gap-2 flex-shrink-0 transition-opacity duration-200">
+              <div 
+                className="opacity-0 group-hover:opacity-100 flex gap-2 flex-shrink-0 transition-opacity duration-200"
+              >
                 <button
-                  onClick={() => onEdit?.(rule)}
+                  onClick={(e) => {
+                    onEdit?.(rule)
+                  }}
                   disabled={loading}
                   className="text-sm px-3 py-1 rounded bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200 hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 font-semibold cursor-pointer"
                 >
                   ✏️ {tCommon('edit')}
                 </button>
                 <button
-                  onClick={() => onDelete?.(rule.id, rule.rule_name)}
+                  onClick={(e) => {
+                    onDelete?.(rule.id, rule.rule_name)
+                  }}
                   disabled={loading}
                   className="text-sm px-3 py-1 rounded bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 font-semibold cursor-pointer"
                 >
@@ -237,22 +253,36 @@ export default function RuleCard({
           </div>
           
           {/* 規則信息 - 使用固定最小寬度確保對齊 */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-6">
+          <div 
+            className={`flex items-center justify-between gap-4 ${isDraggable ? 'select-none' : ''}`}
+          >
+            <div 
+              className="flex-1 min-w-0"
+            >
+              <div 
+                className="flex items-center gap-6"
+              >
                 {/* 規則名稱 - 使用固定最小寬度確保對齊 */}
-                <span className="font-bold text-base text-gray-800 min-w-[140px]">
+                <span 
+                  className={`font-bold text-base text-gray-800 min-w-[140px] ${isDraggable ? 'select-none' : ''}`}
+                >
                   {rule.rule_name || t('unnamedRule')}
                 </span>
                 {/* 條件 - 使用固定最小寬度確保對齊 */}
-                <span className="text-gray-600 text-sm min-w-[100px]">
+                <span 
+                  className={`text-gray-600 text-sm min-w-[100px] ${isDraggable ? 'select-none' : ''}`}
+                >
                   {t('condition')}：{scoreRange || t('notSet')}
                 </span>
               </div>
             </div>
             {/* 獎金金額 - 右對齊 */}
-            <div className="text-right flex-shrink-0">
-              <p className="text-2xl font-bold text-green-600 whitespace-nowrap">+${rule.reward_amount ?? 0}</p>
+            <div 
+              className={`text-right flex-shrink-0 ${isDraggable ? 'select-none' : ''}`}
+            >
+              <p 
+                className={`text-2xl font-bold text-green-600 whitespace-nowrap ${isDraggable ? 'select-none' : ''}`}
+              >+${rule.reward_amount ?? 0}</p>
             </div>
           </div>
         </div>
