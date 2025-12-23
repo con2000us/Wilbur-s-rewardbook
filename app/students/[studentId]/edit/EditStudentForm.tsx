@@ -840,7 +840,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
             {/* 日期範圍選擇與按鈕 */}
             <div className="space-y-3">
               {/* 第一行：日期選擇器 */}
-              <div className="flex items-center gap-3 flex-wrap min-h-[40px]">
+              <div className="flex items-center gap-3 flex-wrap">
                 <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">刪除範圍：</label>
                 <div className="flex items-center gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -867,30 +867,34 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                   </label>
                 </div>
                 <div className="flex items-center gap-3 min-w-0">
-                  {clearDateMode === 'range' ? (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm text-gray-700 whitespace-nowrap">開始：</label>
-                        <input
-                          type="date"
-                          value={clearStartDate}
-                          onChange={(e) => setClearStartDate(e.target.value)}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm text-gray-700 whitespace-nowrap">結束：</label>
-                        <input
-                          type="date"
-                          value={clearEndDate}
-                          onChange={(e) => setClearEndDate(e.target.value)}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="h-[34px]"></div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-700 whitespace-nowrap">開始：</label>
+                    <input
+                      type="date"
+                      value={clearStartDate}
+                      onChange={(e) => setClearStartDate(e.target.value)}
+                      disabled={clearDateMode === 'all'}
+                      className={`px-3 py-1 border border-gray-300 rounded-lg text-sm ${
+                        clearDateMode === 'all' 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-700 whitespace-nowrap">結束：</label>
+                    <input
+                      type="date"
+                      value={clearEndDate}
+                      onChange={(e) => setClearEndDate(e.target.value)}
+                      disabled={clearDateMode === 'all'}
+                      className={`px-3 py-1 border border-gray-300 rounded-lg text-sm ${
+                        clearDateMode === 'all' 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white'
+                      }`}
+                    />
+                  </div>
                 </div>
               </div>
 
