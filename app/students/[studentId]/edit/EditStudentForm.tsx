@@ -52,6 +52,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
   const [success, setSuccess] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
+  const [clearing, setClearing] = useState<string | null>(null) // 'assessments', 'transactions', 'subjects', 'all'
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   // 將 Tailwind 漸變類名轉換為 hex 顏色
@@ -520,6 +521,61 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
     }
   }
 
+  async function handleClear(type: 'assessments' | 'transactions' | 'subjects' | 'all') {
+    const messages = {
+      assessments: {
+        confirm: '確定要刪除所有評量嗎？此操作無法復原。',
+        title: '刪除所有評量'
+      },
+      transactions: {
+        confirm: '確定要刪除所有存摺收支嗎？此操作無法復原。',
+        title: '刪除所有存摺收支'
+      },
+      subjects: {
+        confirm: '確定要刪除所有科目嗎？此操作會同時刪除相關的評量記錄。此操作無法復原。',
+        title: '刪除所有科目'
+      },
+      all: {
+        confirm: '確定要清空所有記錄嗎？此操作會刪除所有評量、存摺收支、科目和獎勵規則，只保留學生設定。此操作無法復原。',
+        title: '清空所有記錄'
+      }
+    }
+
+    const message = messages[type]
+    if (!confirm(`${message.title}\n\n${message.confirm}`)) {
+      return
+    }
+
+    setClearing(type)
+    setError('')
+
+    try {
+      const response = await fetch(`/api/students/${student.id}/clear`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        alert(result.message || '操作成功')
+        // 刷新頁面以更新數據
+        if (isModal && onSuccess) {
+          onSuccess()
+        } else {
+          router.refresh()
+        }
+      } else {
+        setError(result.error || '操作失敗')
+      }
+    } catch (err) {
+      setError('發生錯誤：' + (err as Error).message)
+    } finally {
+      setClearing(null)
+    }
+  }
+
   return (
     <>
       {/* 一般錯誤提示（非匯入相關錯誤） */}
@@ -730,7 +786,49 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
           </button>
         </div>
 
-        {/* 危險區域：刪除 */}
+        {/* 危險區域：清除記錄 */}
+        <div className="border-t-2 border-orange-200 pt-6 mt-6">
+          <h3 className="text-lg font-bold text-orange-600 mb-2">⚠️ 清除記錄</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            以下操作會刪除學生的記錄，但會保留學生設定。請謹慎操作。
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+            <button
+              type="button"
+              onClick={() => handleClear('assessments')}
+              disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+            >
+              {clearing === 'assessments' ? '刪除中...' : '🗑️ 刪除所有評量'}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClear('transactions')}
+              disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+            >
+              {clearing === 'transactions' ? '刪除中...' : '💰 刪除所有存摺收支'}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClear('subjects')}
+              disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+            >
+              {clearing === 'subjects' ? '刪除中...' : '📚 刪除所有科目'}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClear('all')}
+              disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+            >
+              {clearing === 'all' ? '清空中...' : '🧹 清空所有記錄'}
+            </button>
+          </div>
+        </div>
+
+        {/* 危險區域：刪除學生 */}
         <div className="border-t-2 border-red-200 pt-6 mt-6">
           <h3 className="text-lg font-bold text-red-600 mb-2">⚠️ {t('dangerZone')}</h3>
           <p className="text-sm text-gray-600 mb-4">
@@ -747,7 +845,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
           <button
             type="button"
             onClick={handleDelete}
-            disabled={loading || deleting || success || isExporting || isImporting}
+            disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
             className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer"
           >
             {deleting ? t('deleting') : `🗑️ ${t('deleteThisStudent')}`}
