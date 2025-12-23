@@ -786,70 +786,85 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
           </button>
         </div>
 
-        {/* 危險區域：清除記錄 */}
-        <div className="border-t-2 border-orange-200 pt-6 mt-6">
-          <h3 className="text-lg font-bold text-orange-600 mb-2">⚠️ 清除記錄</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            以下操作會刪除學生的記錄，但會保留學生設定。請謹慎操作。
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-            <button
-              type="button"
-              onClick={() => handleClear('assessments')}
-              disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
-            >
-              {clearing === 'assessments' ? '刪除中...' : '🗑️ 刪除所有評量'}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleClear('transactions')}
-              disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
-            >
-              {clearing === 'transactions' ? '刪除中...' : '💰 刪除所有存摺收支'}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleClear('subjects')}
-              disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
-            >
-              {clearing === 'subjects' ? '刪除中...' : '📚 刪除所有科目'}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleClear('all')}
-              disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
-            >
-              {clearing === 'all' ? '清空中...' : '🧹 清空所有記錄'}
-            </button>
-          </div>
-        </div>
-
-        {/* 危險區域：刪除學生 */}
+        {/* 危險區域 */}
         <div className="border-t-2 border-red-200 pt-6 mt-6">
           <h3 className="text-lg font-bold text-red-600 mb-2">⚠️ {t('dangerZone')}</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            {t('deleteWarning')}
-          </p>
-          <ul className="text-sm text-gray-600 mb-4 list-disc list-inside space-y-1">
-            <li>{t('deleteWarning1')}</li>
-            <li>{t('deleteWarning2')}</li>
-            <li>{t('deleteWarning3')}</li>
-            <li>{t('deleteWarning4')}</li>
-            <li>{t('deleteWarning5')}</li>
-            <li className="text-red-600 font-bold">{t('deleteWarningFinal')}</li>
-          </ul>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer"
-          >
-            {deleting ? t('deleting') : `🗑️ ${t('deleteThisStudent')}`}
-          </button>
+          
+          {/* 備份提醒 */}
+          <div className="mb-4 p-3 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+            <p className="text-sm text-yellow-800 font-semibold mb-1">
+              💾 建議：使用以下操作前，請先備份資料
+            </p>
+            <p className="text-xs text-yellow-700">
+              您可以使用上方的「📥 匯出 JSON」功能來備份學生資料，以便需要時可以還原。
+            </p>
+          </div>
+
+          {/* 清除記錄 */}
+          <div className="mb-6">
+            <h4 className="text-md font-semibold text-orange-600 mb-2">清除記錄（保留學生設定）</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              以下操作會刪除學生的記錄，但會保留學生設定。請謹慎操作。
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleClear('assessments')}
+                disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+              >
+                {clearing === 'assessments' ? '刪除中...' : '🗑️ 刪除所有評量'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleClear('transactions')}
+                disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+              >
+                {clearing === 'transactions' ? '刪除中...' : '💰 刪除所有存摺收支'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleClear('subjects')}
+                disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+              >
+                {clearing === 'subjects' ? '刪除中...' : '📚 刪除所有科目'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleClear('all')}
+                disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+              >
+                {clearing === 'all' ? '清空中...' : '🧹 清空所有記錄'}
+              </button>
+            </div>
+          </div>
+
+          {/* 刪除學生 */}
+          <div className="border-t border-red-200 pt-4">
+            <h4 className="text-md font-semibold text-red-600 mb-2">刪除學生（完全移除）</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              {t('deleteWarning')}
+            </p>
+            <ul className="text-sm text-gray-600 mb-4 list-disc list-inside space-y-1">
+              <li>{t('deleteWarning1')}</li>
+              <li>{t('deleteWarning2')}</li>
+              <li>{t('deleteWarning3')}</li>
+              <li>{t('deleteWarning4')}</li>
+              <li>{t('deleteWarning5')}</li>
+              <li className="text-red-600 font-bold">{t('deleteWarningFinal')}</li>
+            </ul>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer"
+            >
+              {deleting ? t('deleting') : `🗑️ ${t('deleteThisStudent')}`}
+            </button>
+          </div>
         </div>
       </form>
     </>
