@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
       .select('id')
 
     if (allSubjects && allSubjects.length > 0) {
-      const subjectIds = allSubjects.map(s => s.id)
+      // @ts-ignore - Supabase type inference issue
+      const subjectIds = (allSubjects as any[]).map(s => s.id)
 
       // 刪除所有評量
       await supabase

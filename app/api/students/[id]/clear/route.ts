@@ -42,7 +42,8 @@ export async function POST(
         .eq('student_id', id)
 
       if (subjects && subjects.length > 0) {
-        const subjectIds = subjects.map(s => s.id)
+        // @ts-ignore - Supabase type inference issue
+        const subjectIds = (subjects as any[]).map(s => s.id)
         
         // 構建評量查詢
         let assessmentQuery = supabase
@@ -146,7 +147,8 @@ export async function POST(
         .eq('student_id', id)
 
       if (subjects && subjects.length > 0) {
-        const subjectIds = subjects.map(s => s.id)
+        // @ts-ignore - Supabase type inference issue
+        const subjectIds = (subjects as any[]).map(s => s.id)
 
         // 先獲取所有評量 ID
         const { data: assessments } = await supabase
@@ -155,7 +157,8 @@ export async function POST(
           .in('subject_id', subjectIds)
 
         if (assessments && assessments.length > 0) {
-          const assessmentIds = assessments.map(a => a.id)
+          // @ts-ignore - Supabase type inference issue
+          const assessmentIds = (assessments as any[]).map(a => a.id)
           
           // 刪除相關的交易記錄（評量相關的）
           await supabase
@@ -208,7 +211,8 @@ export async function POST(
           .eq('student_id', id)
 
         if (subjects && subjects.length > 0) {
-          const subjectIds = subjects.map(s => s.id)
+          // @ts-ignore - Supabase type inference issue
+          const subjectIds = (subjects as any[]).map(s => s.id)
 
           // 3. 獲取該日期範圍內的評量
           const { data: allAssessments } = await supabase
@@ -261,7 +265,8 @@ export async function POST(
           .eq('student_id', id)
 
         if (subjects && subjects.length > 0) {
-          const subjectIds = subjects.map(s => s.id)
+          // @ts-ignore - Supabase type inference issue
+          const subjectIds = (subjects as any[]).map(s => s.id)
 
           // 3. 刪除所有評量
           await supabase
