@@ -154,6 +154,8 @@ CREATE INDEX IF NOT EXISTS idx_assessments_status ON assessments(status);
 CREATE INDEX IF NOT EXISTS idx_assessments_due_date ON assessments(due_date);
 CREATE INDEX IF NOT EXISTS idx_transactions_student_id ON transactions(student_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON transactions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_transaction_date ON transactions(transaction_date);
+CREATE INDEX IF NOT EXISTS idx_transactions_assessment_id ON transactions(assessment_id);
 
 -- ============================================
 -- PART 5: Enable Row Level Security (RLS)
