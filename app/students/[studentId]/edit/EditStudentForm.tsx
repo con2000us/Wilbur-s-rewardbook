@@ -56,6 +56,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
   const [clearDateMode, setClearDateMode] = useState<'all' | 'range'>('all')
   const [clearStartDate, setClearStartDate] = useState('')
   const [clearEndDate, setClearEndDate] = useState('')
+  const [selectedClearType, setSelectedClearType] = useState<'assessments' | 'transactions' | 'subjects' | 'all' | ''>('')
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   // 將 Tailwind 漸變類名轉換為 hex 顏色
@@ -524,6 +525,14 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
     }
   }
 
+  async function handleConfirmClear() {
+    if (!selectedClearType) {
+      alert('請選擇要刪除的項目')
+      return
+    }
+    await handleClear(selectedClearType)
+  }
+
   async function handleClear(type: 'assessments' | 'transactions' | 'subjects' | 'all') {
     // 驗證日期範圍
     if (clearDateMode === 'range') {
@@ -592,10 +601,11 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
         } else {
           router.refresh()
         }
-        // 重置日期選擇
+        // 重置日期選擇和選中的類型
         setClearDateMode('all')
         setClearStartDate('')
         setClearEndDate('')
+        setSelectedClearType('')
       } else {
         setError(result.error || '操作失敗')
       }
@@ -898,39 +908,28 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                 </div>
               </div>
 
-              {/* 第二行：按鈕 */}
+              {/* 第二行：刪除項目選擇 */}
               <div className="flex items-center gap-3 flex-wrap">
+                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">刪除項目：</label>
+                <select
+                  value={selectedClearType}
+                  onChange={(e) => setSelectedClearType(e.target.value as typeof selectedClearType)}
+                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer min-w-[180px]"
+                >
+                  <option value="">-- 請選擇 --</option>
+                  <option value="assessments">🗑️ 刪除評量</option>
+                  <option value="transactions">💰 刪除存摺收支</option>
+                  <option value="subjects">📚 刪除科目</option>
+                  <option value="all">🧹 清空記錄</option>
+                </select>
                 <button
                   type="button"
-                  onClick={() => handleClear('assessments')}
-                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                  onClick={handleConfirmClear}
+                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null || !selectedClearType}
                   className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
                 >
-                  {clearing === 'assessments' ? '刪除中...' : '🗑️ 刪除評量'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleClear('transactions')}
-                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
-                >
-                  {clearing === 'transactions' ? '刪除中...' : '💰 刪除存摺收支'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleClear('subjects')}
-                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
-                >
-                  {clearing === 'subjects' ? '刪除中...' : '📚 刪除科目'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleClear('all')}
-                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
-                >
-                  {clearing === 'all' ? '清空中...' : '🧹 清空記錄'}
+                  {clearing ? '處理中...' : '確定'}
                 </button>
               </div>
             </div>
