@@ -11,16 +11,17 @@ export default function ClearAllStudentsSettings() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   const handleClearAll = async () => {
-    const confirmMessage = '確定要刪除所有學生資料嗎？\n\n此操作將刪除：\n• 所有學生\n• 所有科目\n• 所有評量記錄\n• 所有存摺收支\n• 所有獎勵規則\n\n⚠️ 此操作無法復原！\n\n首頁設定（網站名稱、分頁設定等）將被保留。'
+    const confirmMessage = t('clearAllStudents.confirmMessage')
     
     if (!window.confirm(confirmMessage)) {
       return
     }
 
     // 二次確認
-    const confirmText = prompt('請輸入 "DELETE ALL" 以確認刪除所有學生資料：')
-    if (confirmText !== 'DELETE ALL') {
-      alert('確認文字不正確，操作已取消')
+    const requiredText = t('clearAllStudents.requiredConfirmText')
+    const confirmText = prompt(t('clearAllStudents.confirmPrompt', { text: requiredText }))
+    if (confirmText !== requiredText) {
+      alert(t('clearAllStudents.confirmTextMismatch'))
       return
     }
 
@@ -38,12 +39,12 @@ export default function ClearAllStudentsSettings() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || '刪除失敗')
+        throw new Error(result.error || t('clearAllStudents.deleteFailed'))
       }
 
       setMessage({ 
         type: 'success', 
-        text: result.message || '已成功刪除所有學生資料' 
+        text: result.message || t('clearAllStudents.deleteSuccess')
       })
       
       // 3秒後重新載入頁面
@@ -54,7 +55,7 @@ export default function ClearAllStudentsSettings() {
       console.error('Clear all error:', error)
       setMessage({ 
         type: 'error', 
-        text: `刪除失敗：${error instanceof Error ? error.message : 'Unknown error'}` 
+        text: `${t('clearAllStudents.deleteFailed')}：${error instanceof Error ? error.message : t('clearAllStudents.unknownError')}` 
       })
     } finally {
       setIsDeleting(false)
@@ -64,19 +65,19 @@ export default function ClearAllStudentsSettings() {
   return (
     <div className="mb-8 pb-8 border-b border-red-200 last:border-b-0">
       <h2 className="text-xl font-bold text-red-600 mb-4 flex items-center gap-2">
-        ⚠️ 刪除所有學生資料
+        ⚠️ {t('clearAllStudents.title')}
       </h2>
       
       <p className="text-gray-600 mb-4 text-sm">
-        此操作將刪除所有學生、科目、評量記錄、存摺收支和獎勵規則，但會保留首頁設定（網站名稱、分頁設定等）。
+        {t('clearAllStudents.description')}
       </p>
 
       <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-4">
         <p className="text-sm text-yellow-800 font-semibold mb-1">
-          💾 建議：執行此操作前，請先備份資料
+          💾 {t('clearAllStudents.backupSuggestionTitle')}
         </p>
         <p className="text-xs text-yellow-700">
-          您可以使用上方的「資料備份」功能來備份所有資料，以便需要時可以還原。
+          {t('clearAllStudents.backupSuggestionDesc')}
         </p>
       </div>
 
@@ -89,7 +90,7 @@ export default function ClearAllStudentsSettings() {
             : 'bg-red-600 text-white hover:bg-red-700 hover:shadow-lg hover:-translate-y-1 cursor-pointer'
         }`}
       >
-        {isDeleting ? '刪除中...' : '🗑️ 刪除所有學生資料'}
+        {isDeleting ? t('clearAllStudents.deleting') : `🗑️ ${t('clearAllStudents.button')}`}
       </button>
 
       {/* 訊息 */}
