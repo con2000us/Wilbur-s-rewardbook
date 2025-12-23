@@ -899,12 +899,12 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
               </div>
 
               {/* 第二行：按鈕 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <button
                   type="button"
                   onClick={() => handleClear('assessments')}
                   disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
                 >
                   {clearing === 'assessments' ? '刪除中...' : '🗑️ 刪除評量'}
                 </button>
@@ -912,7 +912,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                   type="button"
                   onClick={() => handleClear('transactions')}
                   disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
                 >
                   {clearing === 'transactions' ? '刪除中...' : '💰 刪除存摺收支'}
                 </button>
@@ -920,7 +920,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                   type="button"
                   onClick={() => handleClear('subjects')}
                   disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
                 >
                   {clearing === 'subjects' ? '刪除中...' : '📚 刪除科目'}
                 </button>
@@ -928,7 +928,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                   type="button"
                   onClick={() => handleClear('all')}
                   disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
                 >
                   {clearing === 'all' ? '清空中...' : '🧹 清空記錄'}
                 </button>
