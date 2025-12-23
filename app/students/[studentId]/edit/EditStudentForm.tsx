@@ -837,10 +837,11 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
               以下操作會刪除學生的記錄，但會保留學生設定。請謹慎操作。
             </p>
             
-            {/* 日期範圍選擇 */}
-            <div className="mb-4 p-3 bg-gray-50 border border-gray-300 rounded-lg">
-              <div className="flex items-center gap-4 mb-3">
-                <label className="text-sm font-semibold text-gray-700">刪除範圍：</label>
+            {/* 日期範圍選擇與按鈕 */}
+            <div className="space-y-3">
+              {/* 第一行：日期選擇器 */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">刪除範圍：</label>
                 <div className="flex items-center gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -865,64 +866,65 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                     <span className="text-sm">日期範圍</span>
                   </label>
                 </div>
+                {clearDateMode === 'range' && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-gray-700 whitespace-nowrap">開始：</label>
+                      <input
+                        type="date"
+                        value={clearStartDate}
+                        onChange={(e) => setClearStartDate(e.target.value)}
+                        className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-gray-700 whitespace-nowrap">結束：</label>
+                      <input
+                        type="date"
+                        value={clearEndDate}
+                        onChange={(e) => setClearEndDate(e.target.value)}
+                        className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
-              {clearDateMode === 'range' && (
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-700 whitespace-nowrap">開始日期：</label>
-                    <input
-                      type="date"
-                      value={clearStartDate}
-                      onChange={(e) => setClearStartDate(e.target.value)}
-                      className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-700 whitespace-nowrap">結束日期：</label>
-                    <input
-                      type="date"
-                      value={clearEndDate}
-                      onChange={(e) => setClearEndDate(e.target.value)}
-                      className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleClear('assessments')}
-                disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
-              >
-                {clearing === 'assessments' ? '刪除中...' : '🗑️ 刪除所有評量'}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleClear('transactions')}
-                disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
-              >
-                {clearing === 'transactions' ? '刪除中...' : '💰 刪除所有存摺收支'}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleClear('subjects')}
-                disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
-              >
-                {clearing === 'subjects' ? '刪除中...' : '📚 刪除所有科目'}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleClear('all')}
-                disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
-              >
-                {clearing === 'all' ? '清空中...' : '🧹 清空所有記錄'}
-              </button>
+              {/* 第二行：按鈕 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleClear('assessments')}
+                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+                >
+                  {clearing === 'assessments' ? '刪除中...' : '🗑️ 刪除評量'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleClear('transactions')}
+                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+                >
+                  {clearing === 'transactions' ? '刪除中...' : '💰 刪除存摺收支'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleClear('subjects')}
+                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+                >
+                  {clearing === 'subjects' ? '刪除中...' : '📚 刪除科目'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleClear('all')}
+                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm"
+                >
+                  {clearing === 'all' ? '清空中...' : '🧹 清空記錄'}
+                </button>
+              </div>
             </div>
           </div>
 
