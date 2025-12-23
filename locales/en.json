@@ -25,6 +25,12 @@
     "pageInfo": "Page {current} of {total} ({count} items)",
     "settings": "Settings"
   },
+  "auth": {
+    "logout": "Logout",
+    "loggingOut": "Logging out...",
+    "logoutConfirm": "Are you sure you want to log out?",
+    "logoutFailed": "Logout failed. Please try again."
+  },
   "nav": {
     "home": "Home",
     "students": "Students",
