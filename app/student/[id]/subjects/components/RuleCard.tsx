@@ -11,6 +11,7 @@ interface RewardRule {
   min_score: number | null
   max_score: number | null
   reward_amount: number
+  reward_formula?: string | null
   priority: number
   is_active: boolean
   assessment_type: string | null
@@ -280,9 +281,20 @@ export default function RuleCard({
             <div 
               className={`text-right flex-shrink-0 ${isDraggable ? 'select-none' : ''}`}
             >
-              <p 
-                className={`text-2xl font-bold text-green-600 whitespace-nowrap ${isDraggable ? 'select-none' : ''}`}
-              >+${rule.reward_amount ?? 0}</p>
+              {rule.reward_formula ? (
+                <div className="flex flex-col items-end">
+                  <p className={`text-xs font-semibold text-gray-500 whitespace-nowrap ${isDraggable ? 'select-none' : ''}`}>
+                    {t('formula') || '公式'}
+                  </p>
+                  <p className={`text-xl font-bold text-green-600 whitespace-nowrap ${isDraggable ? 'select-none' : ''}`}>
+                    +({rule.reward_formula})
+                  </p>
+                </div>
+              ) : (
+                <p 
+                  className={`text-2xl font-bold text-green-600 whitespace-nowrap ${isDraggable ? 'select-none' : ''}`}
+                >+${rule.reward_amount ?? 0}</p>
+              )}
             </div>
           </div>
         </div>

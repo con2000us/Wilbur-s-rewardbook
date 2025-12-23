@@ -489,7 +489,9 @@
     "scoreCondition": "Score Condition",
     "score": "Score",
     "leaveBlankForNoLimit": "Leave blank for no limit",
-    "rewardAmountPlaceholder": "e.g.: 10"
+    "rewardAmountPlaceholder": "e.g.: 10 or G*10",
+    "rewardFormulaHint": "Enter a number or a formula. Vars: G=score, P=percentage, M=max score (e.g., G*10)",
+    "formula": "Formula"
   },
   "settings": {
     "title": "System Settings",

@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
         min_score: body.min_score,
         max_score: body.max_score,
         reward_amount: body.reward_amount,
+        reward_formula: body.reward_formula || null,
         priority: body.priority || 0,
         is_active: true,
         assessment_type: body.assessment_type || null,

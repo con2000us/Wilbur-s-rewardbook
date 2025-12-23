@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { calculateRewardFromRule } from '@/lib/rewardFormula'
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,10 +94,16 @@ export async function POST(request: NextRequest) {
       // 設置獎金
       // 如果用戶手動指定了獎金，使用手動值
       if (body.manual_reward !== null && body.manual_reward !== undefined) {
-        updateData.reward_amount = body.manual_reward
+        updateData.reward_amount = Math.max(0, Math.round(Number(body.manual_reward)))
       } else if (matchedRule) {
-        // 否則使用匹配的規則
-        updateData.reward_amount = matchedRule.reward_amount
+        // 否則使用匹配的規則（支援公式）
+        updateData.reward_amount = calculateRewardFromRule({
+          ruleRewardAmount: matchedRule.reward_amount,
+          ruleRewardFormula: (matchedRule as any).reward_formula,
+          score: Number(updateData.score ?? 0),
+          percentage: Number(updateData.percentage ?? 0),
+          maxScore: Number(updateData.max_score ?? 100),
+        })
       } else {
         // 預設規則
         if (updateData.percentage >= 100) {

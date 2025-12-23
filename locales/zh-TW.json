@@ -489,7 +489,9 @@
     "scoreCondition": "分數條件",
     "score": "分數",
     "leaveBlankForNoLimit": "留空表示不限",
-    "rewardAmountPlaceholder": "例如：10"
+    "rewardAmountPlaceholder": "例如：10 或 G*10",
+    "rewardFormulaHint": "可輸入數字或公式。變數：G=得分、P=百分比、M=滿分（例：G*10）",
+    "formula": "公式"
   },
   "settings": {
     "title": "系統設置",

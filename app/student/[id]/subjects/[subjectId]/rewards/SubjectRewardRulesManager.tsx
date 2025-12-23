@@ -14,6 +14,7 @@ interface RewardRule {
   min_score: number | null
   max_score: number | null
   reward_amount: number
+  reward_formula?: string | null
   priority: number
   is_active: boolean
   assessment_type: string | null
@@ -76,6 +77,11 @@ export default function SubjectRewardRulesManager({
     assessment_type: '' as '' | 'exam' | 'quiz' | 'homework' | 'project', // 評量類型
   })
 
+  const isNumericReward = (value: string) => {
+    const v = (value ?? '').trim()
+    return v !== '' && /^[0-9]+(\.[0-9]+)?$/.test(v)
+  }
+
   const resetForm = () => {
     setFormData({
       rule_name: '',
@@ -98,7 +104,8 @@ export default function SubjectRewardRulesManager({
       condition: rule.condition as any,
       min_score: rule.min_score?.toString() || '',
       max_score: rule.max_score?.toString() || '',
-      reward_amount: rule.reward_amount?.toString() || '',
+      // 若有公式，編輯時優先顯示公式
+      reward_amount: (rule.reward_formula?.toString() || rule.reward_amount?.toString() || ''),
       is_active: rule.is_active ?? true,
       is_student_specific: rule.student_id !== null,
       assessment_type: (rule.assessment_type as any) || '',
@@ -163,7 +170,9 @@ export default function SubjectRewardRulesManager({
         condition: formData.condition,
         min_score: formData.min_score ? parseFloat(formData.min_score) : null,
         max_score: formData.max_score ? parseFloat(formData.max_score) : null,
-        reward_amount: formData.reward_amount ? parseFloat(formData.reward_amount) : 0,
+        // reward_amount 欄位支援「數字或公式」，若為公式則寫入 reward_formula
+        reward_amount: isNumericReward(formData.reward_amount) ? parseFloat(formData.reward_amount) : 0,
+        reward_formula: isNumericReward(formData.reward_amount) ? null : (formData.reward_amount.trim() || null),
         priority: formData.is_student_specific ? 40 : 30, // 自動設置優先級
         is_active: formData.is_active,
         assessment_type: formData.assessment_type || null,
@@ -763,15 +772,16 @@ export default function SubjectRewardRulesManager({
                 {t('rewardAmount')} *
               </label>
               <input
-                type="number"
+                type="text"
                 required
                 value={formData.reward_amount}
                 onChange={(e) => setFormData({ ...formData, reward_amount: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                min="0"
-                step="1"
                 placeholder={t('rewardAmountPlaceholder')}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                💡 {t('rewardFormulaHint')}
+              </p>
             </div>
 
             {/* 按鈕 */}

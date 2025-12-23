@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS reward_rules (
   min_score DECIMAL(5,2),
   max_score DECIMAL(5,2),
   reward_amount DECIMAL(10,2) DEFAULT 0,
+  reward_formula TEXT,
   priority INTEGER DEFAULT 0,
   is_active BOOLEAN DEFAULT TRUE,
   condition TEXT CHECK (condition IN ('score_equals', 'score_range', 'perfect_score')),
@@ -320,6 +321,13 @@ COMMENT ON COLUMN reward_rules.student_id IS '學生ID（NULL表示適用所有�
 -- Step 4: Add display_order to reward_rules table
 ALTER TABLE reward_rules 
 ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0;
+
+-- Step 5: Add reward_formula to reward_rules table
+ALTER TABLE reward_rules
+ADD COLUMN IF NOT EXISTS reward_formula TEXT;
+
+COMMENT ON COLUMN reward_rules.reward_formula IS
+'Reward formula. Variables: G=score, P=percentage, M=max_score. Example: G*10';
 
 UPDATE reward_rules 
 SET display_order = subquery.row_num
