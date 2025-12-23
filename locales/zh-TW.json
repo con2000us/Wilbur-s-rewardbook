@@ -722,7 +722,20 @@
       "operationSuccess": "操作成功",
       "operationFailed": "操作失敗"
     },
-    "deleteStudentSectionTitle": "刪除學生（完全移除）"
+    "deleteStudentSectionTitle": "刪除學生（完全移除）",
+    "emojiCategories": {
+      "表情": "表情",
+      "人物": "人物",
+      "角色": "角色",
+      "動物": "動物",
+      "食物": "食物",
+      "活動": "活動",
+      "獎勵": "獎勵",
+      "交通工具": "交通工具",
+      "建築": "建築",
+      "樂器": "樂器",
+      "遊戲": "遊戲"
+    }
   },
   "messages": {
     "saveSuccess": "保存成功",

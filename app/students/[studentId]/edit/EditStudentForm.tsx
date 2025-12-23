@@ -243,6 +243,9 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
   
   const filteredEmojis = getFilteredEmojis()
 
+  // Clear records: when type is not selected (or type forces all), disable range controls
+  const isClearRangeDisabled = !selectedClearType || selectedClearType === 'subjects' || selectedClearType === 'all'
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
@@ -723,7 +726,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:-translate-y-1 hover:shadow-md'
                   }`}
                 >
-                  {category}
+                  {tKey(`emojiCategories.${category}`) || category}
                 </button>
               ))}
             </div>
@@ -861,7 +864,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                     const newType = e.target.value as typeof selectedClearType
                     setSelectedClearType(newType)
                     // 如果選擇科目或全部，自動設為全部模式
-                    if (newType === 'subjects' || newType === 'all') {
+                    if (!newType || newType === 'subjects' || newType === 'all') {
                       setClearDateMode('all')
                     }
                   }}
@@ -888,26 +891,26 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
               <div className="flex items-center gap-3 flex-wrap">
                 <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">{tKey('clear.deleteRangeLabel')}</label>
                 <div className="flex items-center gap-4">
-                  <label className={`flex items-center gap-2 ${selectedClearType === 'subjects' || selectedClearType === 'all' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                  <label className={`flex items-center gap-2 ${isClearRangeDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                     <input
                       type="radio"
                       name="clearDateMode"
                       value="all"
                       checked={clearDateMode === 'all'}
                       onChange={(e) => setClearDateMode(e.target.value as 'all' | 'range')}
-                      disabled={selectedClearType === 'subjects' || selectedClearType === 'all'}
+                      disabled={isClearRangeDisabled}
                       className="cursor-pointer disabled:cursor-not-allowed"
                     />
                     <span className="text-sm">{tKey('clear.range.all')}</span>
                   </label>
-                  <label className={`flex items-center gap-2 ${selectedClearType === 'subjects' || selectedClearType === 'all' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                  <label className={`flex items-center gap-2 ${isClearRangeDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                     <input
                       type="radio"
                       name="clearDateMode"
                       value="range"
                       checked={clearDateMode === 'range'}
                       onChange={(e) => setClearDateMode(e.target.value as 'all' | 'range')}
-                      disabled={selectedClearType === 'subjects' || selectedClearType === 'all'}
+                      disabled={isClearRangeDisabled}
                       className="cursor-pointer disabled:cursor-not-allowed"
                     />
                     <span className="text-sm">{tKey('clear.range.dateRange')}</span>
@@ -920,9 +923,9 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                       type="date"
                       value={clearStartDate}
                       onChange={(e) => setClearStartDate(e.target.value)}
-                      disabled={clearDateMode === 'all' || selectedClearType === 'subjects' || selectedClearType === 'all'}
+                      disabled={clearDateMode === 'all' || isClearRangeDisabled}
                       className={`px-3 py-1 border border-gray-300 rounded-lg text-sm ${
-                        clearDateMode === 'all' || selectedClearType === 'subjects' || selectedClearType === 'all'
+                        clearDateMode === 'all' || isClearRangeDisabled
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                           : 'bg-white'
                       }`}
@@ -934,9 +937,9 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                       type="date"
                       value={clearEndDate}
                       onChange={(e) => setClearEndDate(e.target.value)}
-                      disabled={clearDateMode === 'all' || selectedClearType === 'subjects' || selectedClearType === 'all'}
+                      disabled={clearDateMode === 'all' || isClearRangeDisabled}
                       className={`px-3 py-1 border border-gray-300 rounded-lg text-sm ${
-                        clearDateMode === 'all' || selectedClearType === 'subjects' || selectedClearType === 'all'
+                        clearDateMode === 'all' || isClearRangeDisabled
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                           : 'bg-white'
                       }`}

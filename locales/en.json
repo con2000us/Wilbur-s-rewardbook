@@ -722,7 +722,20 @@
       "operationSuccess": "Operation succeeded",
       "operationFailed": "Operation failed"
     },
-    "deleteStudentSectionTitle": "Delete Student (Permanent)"
+    "deleteStudentSectionTitle": "Delete Student (Permanent)",
+    "emojiCategories": {
+      "表情": "Smileys",
+      "人物": "People",
+      "角色": "Roles",
+      "動物": "Animals",
+      "食物": "Food",
+      "活動": "Activities",
+      "獎勵": "Rewards",
+      "交通工具": "Transport",
+      "建築": "Buildings",
+      "樂器": "Music",
+      "遊戲": "Games"
+    }
   },
   "messages": {
     "saveSuccess": "Saved successfully",
