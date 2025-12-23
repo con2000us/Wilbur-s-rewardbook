@@ -54,3 +54,9 @@ Thumbs.db
 # Logs
 logs/
 *.log
+
+# Git history rewrite / commit message fix temp files
+commit_msg_fixed.txt
+COMMIT_EDITMSG
+git-rebase-todo
+.git-rebase-todo

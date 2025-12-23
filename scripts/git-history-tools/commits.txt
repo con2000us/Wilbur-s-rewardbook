@@ -1,0 +1,86 @@
+﻿d7feab86d5ab95bc3e1cd25925039c7cd95d3237|Fix drag and drop functionality for reward rules and improve UX
+c2737e1592ac73cc992077f2a04926a6c6246997|Add indexes for transaction_date and assessment_id in transactions table
+ee9831337ce539b0bc780b6df050bc07ba0e3606|Fix TypeScript type inference issues in clear routes
+764baa63b1685c320931761467cdc4ab518f8169|Add clear all students data feature in system settings
+370d7285c56d45289d9227418d9febf310589cce|Reorder delete options and disable date range for subjects/all
+9c24d5f1fafa2fe8db581cfde604f77d29bd569f|Replace four delete buttons with dropdown and confirm button
+0d1e3434b4da649ede33609ef0c2df0a6510cef8|Change button layout from grid to flex for more compact appearance
+8f6b412e944e32f1bafc46a5c26d690b66b477ec|Show date inputs as disabled instead of hiding when 'all' is selected
+c584b1ed101b3c7f09ba1325a1d8f4a2b92addc2|Fix layout jump when switching between date modes
+626a94a9eda8c5fbfe5156805e5e00c574ff0269|Improve clear records UI layout
+87334a8e74d4aae5f57b6eff69ac04fbceb7749f|Add date range selection for clearing records
+f16159f3cbeaa73ae3bbf3da531feff79ba8c1ba|Merge clear records and danger zone into single section with backup reminder
+5ca5aef47ac7c87553898d5be4c2be287dff9c2e|Add clear records functionality to student edit form
+697d1d2a07efabc16882687fdfa4f26a589fa213|Fix TypeScript type inference issue in print page
+8d2134ab334cb67416a640844eb4eb3593d30653|Remove spacer div between month picker and stats cards
+4d299092a07f050dbda59383936e7242729a7eed|Add negative margin to settlement hint div (-10px)
+1b9b8c381c6208df082c07a077bca0cdd29518b4|Add margin-bottom to month picker (8pt)
+a2cbf2a0e2c027097ede65a9d972c3f9c4671a0f|Simplify settlement hint display
+04330f6197cc7f032ed2f8ce6a3b9e6d3074fe0b|Fix settlement hint display and rename 甇賊 to 蝯?
+e714fc71780c193a8f4ca41772c973d7497c0c44|Refactor transaction stats calculation for All vs Recent Settlement
+10a75eb4640a915106cd88bc1104ef2e6b3a0ba2|Add consistent spacing below month picker
+8d80d00c818be568f2eb23d656006bb2038b9b89|Add spacing between month picker and stats cards
+30a50d869514fc826c0bd3dd4a6ad972536d5ee0|Fix extra closing div tag in TransactionRecords
+6f0af727c82b5c79e5da9e779617c7d93940639e|Fix JSX structure and indentation in TransactionRecords
+c6e3c08442c86b1f40214da4d9743057eb8e515e|Fix description box position in transaction records page
+ac0472f6527564b6f1775397559c1c72ff9a292f|Unify month picker container styling between pages
+f2d8f5fdea9f15a2fd36cf8294d69e415139dd01|Add recent settlement option to transaction records page
+a85fe9f549bba71cf042b84bed1fba4b3760202a|Refactor month selector and print page integration
+b051bd0f5eb88f836f487b1094675dfd9dee7677|Fix internationalization issues in print page
+f5c7f05e86d714a25a6d1e7c51f46bf110fab281|Add date range and subject filters to print page
+4daad6537695c9b0446c082cca44c30a662812da|Fix reset point filter using wrong date field
+bafc22e1cd83f995c5e771606d71f8a8348d46d1|Fix average scores not updating when reset point option is toggled
+ae9801ecf4301d8dc0893b690740e80b770c3a5d|Fix average scores not updating correctly when reset point option is toggled
+7a04194caf59c6ad54c5492e93426568c510a483|Fix average scores not updating when reset point option is toggled
+d5f228e44adb6b53d9cca74e10196bac5aa1d91e|Refactor reset point calculation using useMemo
+38c386663adbee71926900525993ea7545c15c34|Improve reset point filtering logic clarity
+8c8cac9f3cfce85497a3298670a10b6452b8419c|Fix assessment list filtering by reset point
+24b75a2c93393a1400b8e310ce6bb03b48832843|Filter assessments list by reset point when option is checked
+d0b427d4014f7c72d771ae2f20ae716f857ce611|Fix reset point calculation logic and UI display
+8666595064c088ff0ee36562da20c2c052946a01|Apply reset point filter to income calculation
+4b51d999c9c428c7d42985495ed28b190eb2fbff|Add 'Calculate from Last Reset Point' option for average scores
+2d174d0a79c895633b1dda2e9da1f59684049407|Fix cancel button not closing student settings modal
+0a7881644d95023e9248361e68b9188168aee2a1|Add hover effects and cursor-pointer to add student form buttons
+5af9106ff8cf90fa2451c0b309c5c96f1e471118|Add margin-top to color picker for better alignment
+51437335ed6287e4e66590892c7dd0cff2f82c51|Improve UI layout for empty state and color selection
+ca288e27ff1036d49f9feca2e237296d3e0f6716|Add security architecture documentation to setup-database.sql
+9f23f7dee69d265e6927f4d44536b13799886fb8|Add Report Issues Wiki page with templates and guidelines
+a08b2c9998b9438bb6e04bd07fa7b2d4583f0278|Fix Deploy button URLs: use correct environment variable order
+26bdfff2e911d74c06d11d3bdd0448a20ac11b14|Fix deploy button URL in WIKI_INSTALLATION_GUIDE_BILINGUAL.md: add environment variables parameter
+d3f073319602337778a9d4665d674dc7e4f8182a|Add GitHub Wiki setup guide: how to copy content to GitHub Wiki
+a71c4de813a080f2d8c9639106ecafa0f7676059|Move AI-generated project notice to the top of all Wiki pages
+e592df1d44aa54ae68f0e0edf665b24a125ad724|Add important notices to README files: AI-generated project and data backup disclaimer
+0d275ac04c9cec5351d2df1c7b78999869749228|Add important notices to Wiki: AI-generated project and data backup disclaimer
+35b41fed769429a9df21954bfeb15529c1a16a30|Sync installation instructions and add bilingual Wiki content
+4784dcc1fc34109599000d05376a623951648f1f|Add GitHub Wiki content for non-technical users
+4df14209d52ddd0efd8d9582b3163280c4c47386|Update SECURITY_WARNING.md: password protection is now implemented
+4164f7e3682a9f099f7b3f09e611f5604aa046f0|Add SITE_PASSWORD to deployment instructions in README
+54fad64058357fb174c767cfbee812d4faaa225d|Update README security warning: password protection is now implemented
+2aa1113699800d838581407ced9fe5792162a131|Update Vercel deploy link with SITE_PASSWORD
+206c5796c36218fd419cdab4d3eef0dcc5745122|Make logout button less prominent and add cursor-pointer
+622e20d492b8cfcafa4f4ef5cccba870c7185b1e|Implement simple password protection for the website
+f07bcbea41e70c69ff96e21c4425df66e1df1517|Add comprehensive authentication implementation guide with pros, cons, and complexity analysis
+b87f90b12ce4d37589bd1a63676a286f27b5d370|Add Vercel password protection guide with pros, cons, and alternatives
+119a26e7d19c02e18c0e718f1e62838085efaf0b|Add security warning: application has no authentication - anyone can access and modify data
+65a1bb3452f44dab443e6e67536de5f7ce2ed632|Add more emoji options to add student form and implement show more/less functionality
+0171c874280002b7c6aa83bc969c89f72568999d|Fix multiple features: always show student list button, redirect to home after delete, guide to add subjects when none exist, change home title to Home
+4355a1b11bd6b0c9afac3f09eff8c92f44bf518d|Update README.md
+8a21bb85e66b87961251099fdf752354803a23d6|Merge branch 'main' of https://github.com/con2000us/Wilbur-s-rewardbook
+c2c1d9d1b8b31996c19331c21c47bda9d06a00c2|?皝? README?垮????????謍唳??桀???????????踐???正???冪??餅蔭??秋撮??????SQL
+2f3d6ee2769b86ee11f535adb14ab4d793330843|Modify Vercel deploy button for environment variables
+5470228fbae00c51ca3823e0fbacc1195bc6d8dc|?皝??株???殉死??輯??批?謍望熄?蹎??堊??遴竣??????殷????橘??瑞???頦??賣?????殷????湔
+755f5a3d577cc0b59017bdaf6c836c105e468ebd|Fix: Resolve TypeScript build errors - Add Link import, fix type definitions, add type assertions for Supabase operations
+810d01e2398731908dafabf096bd17d8c729cfbb|Fix: Add type annotations for filter/map callbacks to resolve implicit any errors
+1a86d4dfe5a58c1207e5509f2ad6213511639eaf|Fix: Resolve TypeScript build errors for deployment - Add missing imports, fix type definitions, add type assertions
+b82ba20d1e58981d88f2b369f84bbf583d8d8d8c|Fix: Add @types/js-cookie to resolve TypeScript build error
+3b02e834d64df28bdc44f547ec3fd9849a34742a|Clarify GitHub account requirement and add quick deploy guide
+3689c7cf421c4fd5a2a0925f3621ff5f236aebfb|Add one-click deployment buttons and comprehensive deployment guide
+b8727e618c56c528261c59ed241856a7e9677fb3|Add badges and Cursor AI development note to README header
+6c6a031c3c170cf0149340dea30cdcc876ee9b7b|Add Cursor AI vibe coding development note to README and descriptions
+a9c654c3e3e43953df37ef0f0baed316a425c3a3|Optimize repository for better discoverability: Add keywords, badges, and optimization guide
+a1da1f4e8c98e160637319f5122742a945307bd2|Update setup-database.sql: Include all core table creation statements
+b491dd518b804336845d38272f9c23b8a35a08ca|Add unified database setup script (setup-database.sql) for easier deployment
+e2bbb5d0dc11586097f5330472e29696694f6be1|Clean up: Remove debug/test SQL files, keep only migration files
+ff42fd0f2aead46f32d8a76ac162672eed5cedd3|Add bilingual README (English and Traditional Chinese)
+bb6d132c394ed13f9c10ae156386fe86ff8b058f|Initial commit: Complete Wilbur's Reward Book application
+67c23bbaad94070411ee741745b5d5942d6650fc|Initial commit from Create Next App

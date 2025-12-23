@@ -1,0 +1,6 @@
+Fix settlement hint display and rename 歸零 to 結算
+
+- Fixed: Get lastReset from original transactions instead of filtered
+- Changed all '歸零' to '結算' in zh-TW translations
+- Changed all 'Reset' to 'Settlement' in en translations for consistency
+
