@@ -3,6 +3,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import SiteNameSettings from './SiteNameSettings'
 import PaginationSettings from './PaginationSettings'
 import BackupSettings from './BackupSettings'
+import ClearAllStudentsSettings from './ClearAllStudentsSettings'
 import HomeButton from '@/app/components/HomeButton'
 
 export default async function SettingsPage() {
@@ -50,6 +51,9 @@ export default async function SettingsPage() {
 
             {/* Backup Settings */}
             <BackupSettings />
+
+            {/* Clear All Students Settings */}
+            <ClearAllStudentsSettings />
 
             {/* Language Switcher */}
             <LanguageSwitcher />
