@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
+import { calculateRewardFromRule } from '@/lib/rewardFormula'
 
 interface Subject {
   id: string
@@ -42,6 +43,7 @@ interface RewardRule {
   min_score: number | null
   max_score: number | null
   reward_amount: number
+  reward_formula?: string | null
   priority: number
   is_active: boolean
   assessment_type?: string | null
@@ -506,6 +508,16 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                   return false
                 })()
 
+                const previewAmount = currentScore !== null && currentMaxScore
+                  ? calculateRewardFromRule({
+                      ruleRewardAmount: rule.reward_amount,
+                      ruleRewardFormula: rule.reward_formula,
+                      score: currentScore,
+                      percentage: (currentScore / currentMaxScore) * 100,
+                      maxScore: currentMaxScore,
+                    })
+                  : Math.max(0, Math.round(Number(rule.reward_amount ?? 0)))
+
                 return (
                   <li 
                     key={rule.id} 
@@ -528,8 +540,13 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                     </div>
                     <div className="text-right">
                       <p className={`text-lg font-bold ${isMatching ? 'text-green-700 text-2xl' : 'text-green-600'}`}>
-                        ${rule.reward_amount}
+                        ${previewAmount}
                       </p>
+                      {rule.reward_formula && (
+                        <p className="text-[11px] text-gray-500">
+                          {locale === 'zh-TW' ? '公式' : 'Formula'}: {rule.reward_formula}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-500">
                         {locale === 'zh-TW' ? '優先級' : 'Priority'} {rule.priority}
                       </p>

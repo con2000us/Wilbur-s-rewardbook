@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
+import { calculateRewardFromRule } from '@/lib/rewardFormula'
 
 interface Subject {
   id: string
@@ -32,6 +33,7 @@ interface RewardRule {
   min_score: number | null
   max_score: number | null
   reward_amount: number
+  reward_formula?: string | null
   priority: number
   is_active: boolean
   assessment_type: string | null
@@ -142,6 +144,16 @@ export default function AssessmentForm({
     }
     return false
   }) : undefined
+
+  const expectedReward = matchingRule && score !== null && percentage !== null
+    ? calculateRewardFromRule({
+        ruleRewardAmount: matchingRule.reward_amount,
+        ruleRewardFormula: matchingRule.reward_formula,
+        score,
+        percentage,
+        maxScore,
+      })
+    : 0
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -450,7 +462,7 @@ export default function AssessmentForm({
                     {locale === 'zh-TW' ? '預期獎金' : 'Expected Reward'}
                   </p>
                   <p className="text-2xl font-bold text-green-600">
-                    +${matchingRule.reward_amount}
+                    +${expectedReward}
                   </p>
                   <p className="text-xs text-gray-500">
                     {locale === 'zh-TW' ? '根據' : 'Based on'} "{matchingRule.rule_name}"
@@ -555,6 +567,15 @@ export default function AssessmentForm({
 
                 // 檢查是否為當前匹配的規則
                 const isMatching = matchingRule?.id === rule.id
+                const previewAmount = score !== null && percentage !== null
+                  ? calculateRewardFromRule({
+                      ruleRewardAmount: rule.reward_amount,
+                      ruleRewardFormula: rule.reward_formula,
+                      score,
+                      percentage,
+                      maxScore,
+                    })
+                  : Math.max(0, Math.round(Number(rule.reward_amount ?? 0)))
 
                 return (
                   <div 
@@ -570,7 +591,7 @@ export default function AssessmentForm({
                         {ruleTypeLabel}
                       </span>
                       <p className={`text-base font-bold ${isMatching ? 'text-green-700 text-lg' : 'text-green-600'}`}>
-                        ${rule.reward_amount}
+                        ${previewAmount}
                       </p>
                     </div>
                     <div>
@@ -578,6 +599,11 @@ export default function AssessmentForm({
                         {rule.rule_name}
                       </p>
                       <p className="text-xs text-gray-600">{scoreRange}</p>
+                      {rule.reward_formula && (
+                        <p className="text-[11px] text-gray-500">
+                          {locale === 'zh-TW' ? '公式' : 'Formula'}: {rule.reward_formula}
+                        </p>
+                      )}
                     </div>
                     <p className="text-xs text-gray-500">
                       {locale === 'zh-TW' ? '優先級' : 'Priority'} {rule.priority}
