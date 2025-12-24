@@ -273,7 +273,7 @@ When creating an issue, you may see these labels:
 - 📖 [Installation Guide / 安裝指南](https://github.com/con2000us/Wilbur-s-rewardbook/wiki/詳細安裝指南-Detailed-Installation-Guide)
 - ❓ [FAQ / 常見問題](https://github.com/con2000us/Wilbur-s-rewardbook/wiki/常見問題-FAQ)
 - 🏠 [Home / 首頁](https://github.com/con2000us/Wilbur-s-rewardbook/wiki/Home)
-- 📋 [Deployment Guide / 部署指南](https://github.com/con2000us/Wilbur-s-rewardbook/blob/main/DEPLOYMENT.md)
+- 📋 [Deployment Guide / 部署指南](https://github.com/con2000us/Wilbur-s-rewardbook/blob/main/docs/DEPLOYMENT.md)
 
 ---
 

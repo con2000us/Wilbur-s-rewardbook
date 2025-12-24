@@ -208,7 +208,7 @@
    - 確認沒有多餘的空格
 
 2. **資料庫是否設置完成**：
-   - 確認已經執行 `setup-database.sql`
+   - 確認已經執行 `database/setup-database.sql`
    - 確認 Supabase 專案已經創建完成
 
 3. **查看錯誤訊息**：

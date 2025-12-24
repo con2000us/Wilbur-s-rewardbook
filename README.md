@@ -9,7 +9,7 @@ A comprehensive student reward management system built with Next.js, TypeScript,
 
 > 💡 **Built with AI**: This project was developed using [Cursor](https://cursor.sh) with AI-powered vibe coding, demonstrating modern AI-assisted development workflows.
 
-> 🔒 **Security**: This application includes **password protection**. **Important**: Set the `SITE_PASSWORD` environment variable in your deployment to secure your site. If not set, a default password is used (not secure for production). See [PASSWORD_PROTECTION_SETUP.md](./PASSWORD_PROTECTION_SETUP.md) for setup instructions.
+> 🔒 **Security**: This application includes **password protection**. **Important**: Set the `SITE_PASSWORD` environment variable in your deployment to secure your site. If not set, a default password is used (not secure for production). See [PASSWORD_PROTECTION_SETUP.md](./docs/PASSWORD_PROTECTION_SETUP.md) for setup instructions.
 
 **Perfect for**: Teachers, Parents, Tutors, and Educators who want to track student progress, manage assessments, and implement reward systems.
 
@@ -70,7 +70,7 @@ SITE_PASSWORD=your-strong-password-here
 ```
 
 4. Run database migrations:
-Execute the `add-*.sql` files in the Supabase SQL Editor to create the necessary tables.
+Execute `database/setup-database.sql` in the Supabase SQL Editor (recommended), or run the individual migration files under `database/migrations/`.
 
 5. Start the development server:
 ```bash
@@ -109,7 +109,7 @@ wilburs-rewardbook/
 1. **Set up Supabase first** (Required):
    - Create a new project at [supabase.com](https://supabase.com)
    - Go to **SQL Editor** in your Supabase dashboard
-   - Copy and paste the entire content of `setup-database.sql`
+   - Copy and paste the entire content of `database/setup-database.sql`
    - Click **Run** to create all database tables, functions, and triggers
    - ⚠️ **Important**: This step is **required** - the app won't work without it!
    - Go to **Settings** → **API** and copy:
@@ -125,7 +125,7 @@ wilburs-rewardbook/
 5. Click "Deploy"
 6. Done! 🎉
 
-> 💡 **Note**: The database setup (`setup-database.sql`) must be run **before** or **after** deployment, but it's **required** for the app to function. Supabase doesn't automatically create tables from code - you need to run the SQL script manually.
+> 💡 **Note**: The database setup (`database/setup-database.sql`) must be run **before** or **after** deployment, but it's **required** for the app to function. Supabase doesn't automatically create tables from code - you need to run the SQL script manually.
 
 ### Deploy to Railway
 
@@ -154,7 +154,7 @@ Before deploying, you need:
 1. Go to [supabase.com](https://supabase.com) and create a new project
 2. Wait for the project to be ready
 3. Go to **SQL Editor** in your Supabase dashboard
-4. Copy and paste the entire content of `setup-database.sql`
+4. Copy and paste the entire content of `database/setup-database.sql`
 5. Click **Run** to execute the SQL
 6. Go to **Settings** → **API** and copy:
    - **Project URL** → This is your `NEXT_PUBLIC_SUPABASE_URL`
@@ -172,7 +172,7 @@ Before deploying, you need:
    SITE_PASSWORD=your-strong-password-here
    ```
    
-   > 💡 **Password Protection**: The app includes password protection. Set `SITE_PASSWORD` to protect your site. See [PASSWORD_PROTECTION_SETUP.md](./PASSWORD_PROTECTION_SETUP.md) for details.
+   > 💡 **Password Protection**: The app includes password protection. Set `SITE_PASSWORD` to protect your site. See [PASSWORD_PROTECTION_SETUP.md](./docs/PASSWORD_PROTECTION_SETUP.md) for details.
 5. Click **"Deploy"**
 6. Wait 2-3 minutes for deployment to complete
 7. Visit your deployed site! 🎉

@@ -236,7 +236,7 @@ You can switch languages in the top right corner.
    - Confirm there are no extra spaces / 確認沒有多餘的空格
 
 2. **Is database setup complete?** / **資料庫是否設置完成**：
-   - Confirm you've executed `setup-database.sql` / 確認已經執行 `setup-database.sql`
+   - Confirm you've executed `database/setup-database.sql` / 確認已經執行 `database/setup-database.sql`
    - Confirm Supabase project is created / 確認 Supabase 專案已經創建完成
 
 3. **Check error messages** / **查看錯誤訊息**：

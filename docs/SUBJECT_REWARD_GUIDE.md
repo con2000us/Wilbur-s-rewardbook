@@ -28,7 +28,7 @@ CREATE INDEX idx_reward_rules_subject_id ON reward_rules(subject_id);
 
 或直接執行腳本：
 ```
-📄 add-subject-to-reward-rules.sql
+📄 database/migrations/add-subject-to-reward-rules.sql
 ```
 
 ### 步驟 2：訪問設置頁面
@@ -135,7 +135,7 @@ END $$;
 
 或執行：
 ```
-📄 subject-specific-reward-rules.sql
+📄 database/examples/subject-specific-reward-rules.sql
 ```
 
 ---

@@ -127,9 +127,9 @@ cd Wilbur-s-rewardbook.wiki
 ```bash
 # 從專案目錄複製 Wiki 文件
 # Copy Wiki files from project directory
-cp ../wilburs-rewardbook/WIKI_HOME.md Home.md
-cp ../wilburs-rewardbook/WIKI_INSTALLATION_GUIDE_BILINGUAL.md "詳細安裝指南-Detailed-Installation-Guide.md"
-cp ../wilburs-rewardbook/WIKI_FAQ_BILINGUAL.md "常見問題-FAQ.md"
+cp ../wilburs-rewardbook/docs/wiki/WIKI_HOME.md Home.md
+cp ../wilburs-rewardbook/docs/wiki/WIKI_INSTALLATION_GUIDE_BILINGUAL.md "詳細安裝指南-Detailed-Installation-Guide.md"
+cp ../wilburs-rewardbook/docs/wiki/WIKI_FAQ_BILINGUAL.md "常見問題-FAQ.md"
 ```
 
 ### 步驟 3：創建側邊欄 / Step 3: Create Sidebar

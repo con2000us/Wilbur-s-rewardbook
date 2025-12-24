@@ -154,8 +154,8 @@ Supabase 是用來存放資料的地方。所有學生的成績、記錄都會�
 
 2. **Click "New query"** / **點擊「New query」**（新建查詢）
 
-3. **Open this file**: `setup-database.sql`  
-   **打開這個檔案**：`setup-database.sql`
+3. **Open this file**: `database/setup-database.sql`  
+   **打開這個檔案**：`database/setup-database.sql`
    - Find this file on the GitHub project page / 在 GitHub 專案頁面找到這個檔案
    - Click the file name / 點擊檔案名稱
    - Click the "Raw" button in the top right / 點擊右上角的「Raw」按鈕

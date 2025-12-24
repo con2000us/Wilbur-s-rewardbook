@@ -61,7 +61,7 @@ SITE_PASSWORD=your-strong-password-here
 ```
 
 4. 執行資料庫遷移：
-在 Supabase SQL Editor 中執行 `add-*.sql` 文件來建立必要的資料表。
+在 Supabase SQL Editor 中執行 `database/setup-database.sql`（推薦），或執行 `database/migrations/` 目錄下的單獨遷移檔案。
 
 5. 啟動開發伺服器：
 ```bash
@@ -100,7 +100,7 @@ wilburs-rewardbook/
 1. **先設置 Supabase**（必填）：
    - 在 [supabase.com](https://supabase.com) 創建新專案
    - 在 Supabase 儀表板中進入 **SQL Editor**
-   - 複製並貼上 `setup-database.sql` 的完整內容
+   - 複製並貼上 `database/setup-database.sql` 的完整內容
    - 點擊 **Run** 來創建所有資料庫表格、函數和觸發器
    - ⚠️ **重要**：此步驟是**必填**的 - 沒有它應用程式無法運作！
    - 前往 **Settings** → **API** 並複製：
@@ -116,7 +116,7 @@ wilburs-rewardbook/
 5. 點擊「Deploy」
 6. 完成！🎉
 
-> 💡 **注意**：資料庫設置（`setup-database.sql`）必須在部署前或部署後執行，但這是應用程式運作的**必填**步驟。Supabase 不會自動從程式碼創建表格 - 你需要手動執行 SQL 腳本。
+> 💡 **注意**：資料庫設置（`database/setup-database.sql`）必須在部署前或部署後執行，但這是應用程式運作的**必填**步驟。Supabase 不會自動從程式碼創建表格 - 你需要手動執行 SQL 腳本。
 
 ### 部署到 Railway
 
@@ -145,7 +145,7 @@ wilburs-rewardbook/
 1. 前往 [supabase.com](https://supabase.com) 創建新專案
 2. 等待專案準備完成
 3. 在 Supabase 儀表板中進入 **SQL Editor**
-4. 複製並貼上 `setup-database.sql` 的完整內容
+4. 複製並貼上 `database/setup-database.sql` 的完整內容
 5. 點擊 **Run** 執行 SQL
 6. 前往 **Settings** → **API** 並複製：
    - **Project URL** → 這是你的 `NEXT_PUBLIC_SUPABASE_URL`
@@ -163,7 +163,7 @@ wilburs-rewardbook/
    SITE_PASSWORD=你的強密碼
    ```
    
-   > 💡 **密碼保護**：應用程式包含密碼保護功能。設置 `SITE_PASSWORD` 來保護你的網站。詳見 [PASSWORD_PROTECTION_SETUP.md](./PASSWORD_PROTECTION_SETUP.md)。
+   > 💡 **密碼保護**：應用程式包含密碼保護功能。設置 `SITE_PASSWORD` 來保護你的網站。詳見 [PASSWORD_PROTECTION_SETUP.md](./docs/PASSWORD_PROTECTION_SETUP.md)。
 5. 點擊 **"Deploy"**
 6. 等待 2-3 分鐘完成部署
 7. 訪問你的部署網站！🎉

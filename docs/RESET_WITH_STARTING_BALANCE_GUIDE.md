@@ -233,7 +233,7 @@ $50 (起始) + $100 (收入) - $20 (支出) = $130
 #### **1. 添加 reset 類型**
 ```sql
 -- 執行這個檔案
-add-reset-transaction-type.sql
+database/migrations/add-reset-transaction-type.sql
 ```
 
 #### **2. 更新視圖**
@@ -284,7 +284,7 @@ update-student-summary-with-reset.sql
 
 | 檔案 | 說明 |
 |------|------|
-| `add-reset-transaction-type.sql` | 添加 reset 類型 |
+| `database/migrations/add-reset-transaction-type.sql` | 添加 reset 類型 |
 | `update-student-summary-with-reset.sql` | 更新視圖計算邏輯 |
 | `AddTransactionForm.tsx` | 起始金額輸入表單 |
 | `EditTransactionForm.tsx` | 編輯交易記錄表單 |
@@ -297,7 +297,7 @@ update-student-summary-with-reset.sql
 ## ✅ 功能檢查清單
 
 ### **歸零起始金額**
-- [ ] ✅ 執行 `add-reset-transaction-type.sql`
+- [ ] ✅ 執行 `database/migrations/add-reset-transaction-type.sql`
 - [ ] ✅ 執行 `update-student-summary-with-reset.sql`
 - [ ] ✅ 測試創建起始金額為0的歸零記錄
 - [ ] ✅ 測試創建起始金額為50的歸零記錄
