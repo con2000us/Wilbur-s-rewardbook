@@ -632,7 +632,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
            {/* 大頭照 */}
            <div className="flex-shrink-0" style={{ marginTop: '2%' }}>
              <div 
-               className="w-32 h-32 rounded-full flex items-center justify-center text-white text-6xl shadow-xl"
+               className="w-32 h-32 rounded-full flex items-center justify-center text-white text-[4.3rem] shadow-xl"
                style={{
                  background: `linear-gradient(to bottom right, ${selectedColorHex}, ${hexToDarker(selectedColorHex)})`
                }}

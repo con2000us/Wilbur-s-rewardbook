@@ -254,7 +254,7 @@ export default function StudentList({ initialStudents }: Props) {
                     </div>
                     {/* 頭像 */}
                     <div 
-                      className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg flex-shrink-0"
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-white text-[1.8rem] font-bold shadow-lg flex-shrink-0"
                       style={{ background: avatar.gradientStyle }}
                     >
                       {avatar.emoji}
@@ -319,7 +319,7 @@ export default function StudentList({ initialStudents }: Props) {
                   >
                     <div className="flex flex-col items-center text-center gap-3">
                       <div 
-                        className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg"
+                        className="w-20 h-20 rounded-full flex items-center justify-center text-white text-[2.25rem] font-bold shadow-lg"
                         style={{ background: avatar.gradientStyle }}
                       >
                         {avatar.emoji}
@@ -347,7 +347,7 @@ export default function StudentList({ initialStudents }: Props) {
             >
               <div className="block p-5 transition-all duration-300">
                 <div className="flex flex-col items-center text-center gap-3">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 text-5xl font-bold shadow-lg group-hover:from-purple-200 group-hover:to-purple-300 group-hover:text-purple-600 transition-all duration-300">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 text-[3.6rem] font-bold shadow-lg group-hover:from-purple-200 group-hover:to-purple-300 group-hover:text-purple-600 transition-all duration-300">
                     +
                   </div>
                   <div className="w-full">
@@ -369,7 +369,7 @@ export default function StudentList({ initialStudents }: Props) {
           >
             <div className="block p-5 transition-all duration-300">
               <div className="flex flex-col items-center text-center gap-3">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 text-5xl font-bold shadow-lg group-hover:from-purple-200 group-hover:to-purple-300 group-hover:text-purple-600 transition-all duration-300">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 text-[3.6rem] font-bold shadow-lg group-hover:from-purple-200 group-hover:to-purple-300 group-hover:text-purple-600 transition-all duration-300">
                   +
                 </div>
                 <div className="w-full">
