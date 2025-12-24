@@ -1,5 +1,7 @@
 # Wilbur's Reward Book (Wilbur 的獎勵存摺)
 
+> English version: [README.md](./README.md)
+
 一個功能完整的學生獎勵管理系統，使用 Next.js、TypeScript、Tailwind CSS 和 Supabase 構建。
 
 > 💡 **AI 協作開發**：此專案使用 [Cursor](https://cursor.sh) 配合 AI 的 vibe coding 模式開發，展示了現代 AI 輔助開發工作流程。

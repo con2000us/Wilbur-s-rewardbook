@@ -5,6 +5,9 @@
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?logo=supabase)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+> 中文說明請看：[README.zh-TW.md](./README.zh-TW.md)  
+> For Traditional Chinese, see: [README.zh-TW.md](./README.zh-TW.md)
+
 A comprehensive student reward management system built with Next.js, TypeScript, Tailwind CSS, and Supabase.
 
 > 💡 **Built with AI**: This project was developed using [Cursor](https://cursor.sh) with AI-powered vibe coding, demonstrating modern AI-assisted development workflows.
