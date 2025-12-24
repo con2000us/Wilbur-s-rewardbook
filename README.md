@@ -66,6 +66,9 @@ Use this if you're not familiar with coding. You'll deploy to Vercel and only ne
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD` (set a strong password)
 5. Click **Deploy**
+6. After deployment finishes, open your site:
+   - In Vercel, open your new project → **Deployments** (or **Project**)
+   - Click the **Production** URL (it looks like `https://your-project.vercel.app`)
 
 ### Local Development (Advanced)
 

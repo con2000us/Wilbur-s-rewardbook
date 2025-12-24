@@ -56,6 +56,9 @@
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD`（設定強密碼）
 5. 點擊 **Deploy**
+6. 部署完成後開啟網站：
+   - 在 Vercel 打開剛建立的 Project → **Deployments**
+   - 點擊 **Production** 的網址（看起來像 `https://your-project.vercel.app`）
 
 ### 本地開發（進階）
 
