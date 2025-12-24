@@ -181,7 +181,7 @@ export default function StudentHeaderWithDropdown({
           className="flex items-center gap-3 group cursor-pointer"
         >
           <div 
-            className="w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-2xl ring-4 ring-white/30 flex-shrink-0 group-hover:scale-105 transition-transform duration-200"
+            className="w-16 h-16 rounded-full flex items-center justify-center text-[2.35rem] shadow-2xl ring-4 ring-white/30 flex-shrink-0 group-hover:scale-105 transition-transform duration-200"
             style={{ 
               background: studentAvatar.gradientStyle,
               filter: 'drop-shadow(0 10px 25px rgba(0, 0, 0, 0.5))' 
@@ -234,7 +234,7 @@ export default function StudentHeaderWithDropdown({
           <div className="px-4 py-3 bg-gradient-to-r from-purple-100/80 to-blue-100/80 border-b-2 border-purple-200">
             <div className="flex items-center gap-3">
               <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-2xl ring-4 ring-white/30 flex-shrink-0"
+                className="w-16 h-16 rounded-full flex items-center justify-center text-[2.35rem] shadow-2xl ring-4 ring-white/30 flex-shrink-0"
                 style={{ background: studentAvatar.gradientStyle }}
               >
                 {studentAvatar.emoji}
@@ -371,7 +371,7 @@ export default function StudentHeaderWithDropdown({
                 >
                   {/* 學生頭像 */}
                   <div 
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-lg ring-2 ring-gray-200 group-hover:ring-purple-300 flex-shrink-0 group-hover:scale-105 transition-all duration-200"
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-[2.35rem] shadow-lg ring-2 ring-gray-200 group-hover:ring-purple-300 flex-shrink-0 group-hover:scale-105 transition-all duration-200"
                     style={{ background: avatar.gradientStyle }}
                   >
                     {avatar.emoji}
