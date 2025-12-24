@@ -149,7 +149,7 @@ export default function SubjectTabs({ subjects, assessments, studentId, summary,
           onClick={() => setSelectedSubject('')}
           className={`px-6 py-2 rounded-t-lg font-bold transition-all hover:-translate-y-0.5 cursor-pointer border-[1px] ${
             !selectedSubject || selectedSubject === ''
-              ? "bg-gray-600 text-white scale-110 border-transparent z-20 relative after:content-[''] after:pointer-events-none after:absolute after:inset-0 after:rounded-t-lg after:border-[1px] after:border-amber-300 after:border-b-0 shadow-[0_-4px_10px_rgba(251,191,36,0.55)]"
+              ? 'bg-gray-600 text-white scale-110 border-amber-300 border-b-0 z-20 shadow-[0_-4px_10px_rgba(251,191,36,0.55)]'
               : 'bg-gray-300 text-gray-700 border-transparent opacity-90 hover:opacity-100 hover:bg-gray-400'
           }`}
           style={{ 
@@ -168,7 +168,7 @@ export default function SubjectTabs({ subjects, assessments, studentId, summary,
               onClick={() => setSelectedSubject(subject.id)}
               className={`px-6 py-2 rounded-t-lg font-bold text-white transition-all hover:-translate-y-0.5 duration-200 cursor-pointer border-[1px] ${
                 selectedSubject === subject.id 
-                  ? "scale-110 border-transparent z-20 relative after:content-[''] after:pointer-events-none after:absolute after:inset-0 after:rounded-t-lg after:border-[1px] after:border-amber-300 after:border-b-0 shadow-[0_-4px_10px_rgba(251,191,36,0.55)]"
+                  ? 'scale-110 border-amber-300 border-b-0 z-20 shadow-[0_-4px_10px_rgba(251,191,36,0.55)]'
                   : 'border-transparent opacity-80 hover:opacity-100 scale-100'
               }`}
               style={{ 
