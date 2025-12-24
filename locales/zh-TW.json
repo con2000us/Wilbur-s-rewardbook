@@ -172,6 +172,12 @@
       "student": "學生",
       "global": "全局"
     },
+    "formulaLabel": "公式",
+    "formulaVars": {
+      "score": "分數",
+      "maxScore": "滿分分數",
+      "percentage": "百分比例"
+    },
     "formatDate": "{month}月{day}日"
   },
   "transaction": {

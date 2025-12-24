@@ -111,6 +111,15 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
       })
     : 0
 
+  const formatFormulaForDisplay = (formula?: string | null) => {
+    const f = (formula ?? '').trim()
+    if (!f) return ''
+    return f
+      .replace(/G/g, t('formulaVars.score'))
+      .replace(/M/g, t('formulaVars.maxScore'))
+      .replace(/P/g, t('formulaVars.percentage'))
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
@@ -495,15 +504,8 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
 
                 // 檢查是否為當前匹配的規則
                 const isMatching = matchingRule?.id === rule.id
-                const previewAmount = score !== null && percentage !== null
-                  ? calculateRewardFromRule({
-                      ruleRewardAmount: rule.reward_amount,
-                      ruleRewardFormula: rule.reward_formula,
-                      score,
-                      percentage,
-                      maxScore,
-                    })
-                  : Math.max(0, Math.round(Number(rule.reward_amount ?? 0)))
+                const formulaDisplay = rule.reward_formula ? formatFormulaForDisplay(rule.reward_formula) : ''
+                const amountDisplay = Math.max(0, Math.round(Number(rule.reward_amount ?? 0)))
 
                 return (
                   <li 
@@ -534,14 +536,14 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
                         </p>
                         {rule.reward_formula && (
                           <p className="text-xs text-gray-500">
-                            {locale === 'zh-TW' ? '公式' : 'Formula'}: {rule.reward_formula}
+                            {t('formulaLabel')}: {formulaDisplay}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="text-right">
                       <p className={`text-lg font-bold ${isMatching ? 'text-green-700 text-2xl' : 'text-green-600'}`}>
-                        +${previewAmount}
+                        {rule.reward_formula ? `+(${formulaDisplay})` : `+${amountDisplay}`}
                       </p>
                       <p className="text-xs text-gray-500">
                         {locale === 'zh-TW' ? '優先級' : 'Priority'} {rule.priority}

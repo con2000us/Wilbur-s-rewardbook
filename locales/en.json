@@ -172,6 +172,12 @@
       "student": "Student",
       "global": "Global"
     },
+    "formulaLabel": "Formula",
+    "formulaVars": {
+      "score": "Score",
+      "maxScore": "Max score",
+      "percentage": "Percentage"
+    },
     "formatDate": "{month}/{day}"
   },
   "transaction": {

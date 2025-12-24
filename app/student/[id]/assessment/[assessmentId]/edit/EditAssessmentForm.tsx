@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { calculateRewardFromRule } from '@/lib/rewardFormula'
 
 interface Subject {
   id: string
@@ -71,6 +70,15 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
   const [selectedAssessmentType, setSelectedAssessmentType] = useState(assessment.assessment_type)
   const [currentScore, setCurrentScore] = useState(assessment.score || null)
   const [currentMaxScore, setCurrentMaxScore] = useState(assessment.max_score)
+
+  const formatFormulaForDisplay = (formula?: string | null) => {
+    const f = (formula ?? '').trim()
+    if (!f) return ''
+    return f
+      .replace(/G/g, t('formulaVars.score'))
+      .replace(/M/g, t('formulaVars.maxScore'))
+      .replace(/P/g, t('formulaVars.percentage'))
+  }
 
   // 根據選中的科目和評量類型篩選適用的規則
   const getApplicableRules = () => {
@@ -507,16 +515,8 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                   }
                   return false
                 })()
-
-                const previewAmount = currentScore !== null && currentMaxScore
-                  ? calculateRewardFromRule({
-                      ruleRewardAmount: rule.reward_amount,
-                      ruleRewardFormula: rule.reward_formula,
-                      score: currentScore,
-                      percentage: (currentScore / currentMaxScore) * 100,
-                      maxScore: currentMaxScore,
-                    })
-                  : Math.max(0, Math.round(Number(rule.reward_amount ?? 0)))
+                const formulaDisplay = rule.reward_formula ? formatFormulaForDisplay(rule.reward_formula) : ''
+                const amountDisplay = Math.max(0, Math.round(Number(rule.reward_amount ?? 0)))
 
                 return (
                   <li 
@@ -540,11 +540,11 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                     </div>
                     <div className="text-right">
                       <p className={`text-lg font-bold ${isMatching ? 'text-green-700 text-2xl' : 'text-green-600'}`}>
-                        ${previewAmount}
+                        {rule.reward_formula ? `+(${formulaDisplay})` : `$${amountDisplay}`}
                       </p>
                       {rule.reward_formula && (
                         <p className="text-[11px] text-gray-500">
-                          {locale === 'zh-TW' ? '公式' : 'Formula'}: {rule.reward_formula}
+                          {t('formulaLabel')}: {formulaDisplay}
                         </p>
                       )}
                       <p className="text-xs text-gray-500">
