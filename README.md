@@ -43,6 +43,11 @@ A comprehensive student reward management system built with Next.js, TypeScript,
 
 Use this if you're not familiar with coding. You'll deploy to Vercel and only need to copy/paste one SQL file into Supabase.
 
+**Prerequisites:**
+- Supabase account (free) - [Sign up](https://supabase.com)
+- Vercel account (free) - [Sign up](https://vercel.com/signup)
+- GitHub account (free) - [Sign up](https://github.com/signup)
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD)
 
 **Steps:**

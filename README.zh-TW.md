@@ -33,6 +33,11 @@
 
 如果你不熟悉寫程式，建議使用這個方式。你只需要把一個 SQL 檔案貼到 Supabase，然後點一下 Vercel 部署按鈕即可。
 
+**先決條件：**
+- Supabase 帳號（免費）- [註冊](https://supabase.com)
+- Vercel 帳號（免費）- [註冊](https://vercel.com/signup)
+- GitHub 帳號（免費）- [註冊](https://github.com/signup)
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD)
 
 **步驟：**
