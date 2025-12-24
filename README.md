@@ -39,14 +39,33 @@ A comprehensive student reward management system built with Next.js, TypeScript,
 
 ## Getting Started
 
+### Recommended for non-technical users (One-Click Deploy)
+
+Use this if you're not familiar with coding. You'll deploy to Vercel and only need to copy/paste one SQL file into Supabase.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD)
+
+**Steps:**
+1. **Set up Supabase first** (Required):
+   - Create a new project at [supabase.com](https://supabase.com)
+   - Go to **SQL Editor**
+   - Copy and paste the entire content of `database/setup-database.sql`
+   - Click **Run**
+   - Go to **Settings** → **API** and copy:
+     - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
+     - **anon public** key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+2. Click the **Deploy with Vercel** button above
+3. Sign in with GitHub
+4. Add environment variables (Vercel will ask for them):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SITE_PASSWORD` (set a strong password)
+5. Click **Deploy**
+
+### Local Development (Advanced)
+
 ### Prerequisites
 
-**For Deployment (One-Click Deploy):**
-- GitHub account (free) - [Sign up](https://github.com/signup)
-- Vercel account (free) - [Sign up](https://vercel.com/signup) - Can use GitHub to sign in
-- Supabase account (free) - [Sign up](https://supabase.com)
-
-**For Local Development:**
 - Node.js 18+
 - npm or yarn
 - Supabase account and project

@@ -29,14 +29,33 @@
 
 ## 開始使用
 
+### 推薦給科技小白：一鍵部署（最簡單）
+
+如果你不熟悉寫程式，建議使用這個方式。你只需要把一個 SQL 檔案貼到 Supabase，然後點一下 Vercel 部署按鈕即可。
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD)
+
+**步驟：**
+1. **先設置 Supabase**（必填）：
+   - 在 [supabase.com](https://supabase.com) 創建新專案
+   - 進入 **SQL Editor**
+   - 複製並貼上 `database/setup-database.sql` 的完整內容
+   - 點擊 **Run**
+   - 前往 **Settings** → **API** 並複製：
+     - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
+     - **anon public** 金鑰 → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+2. 點擊上方的 **Deploy with Vercel** 按鈕
+3. 使用 GitHub 帳號登入
+4. 在 Vercel 填入環境變數：
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SITE_PASSWORD`（設定強密碼）
+5. 點擊 **Deploy**
+
+### 本地開發（進階）
+
 ### 環境需求
 
-**部署需求（一鍵部署）：**
-- GitHub 帳號（免費）- [註冊](https://github.com/signup)
-- Vercel 帳號（免費）- [註冊](https://vercel.com/signup) - 可使用 GitHub 登入
-- Supabase 帳號（免費）- [註冊](https://supabase.com)
-
-**本地開發需求：**
 - Node.js 18+ 
 - npm 或 yarn
 - Supabase 帳號和專案
