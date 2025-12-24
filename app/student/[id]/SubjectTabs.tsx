@@ -149,7 +149,7 @@ export default function SubjectTabs({ subjects, assessments, studentId, summary,
           onClick={() => setSelectedSubject('')}
           className={`px-6 py-2 rounded-t-lg font-bold transition-all hover:-translate-y-0.5 cursor-pointer border-2 border-transparent relative ${
             !selectedSubject || selectedSubject === ''
-              ? "bg-gray-600 text-white scale-110 shadow-[0_-4px_12px_rgba(0,0,0,0.15)] z-20 after:content-[''] after:absolute after:inset-0 after:rounded-t-lg after:border-2 after:border-white/95 after:border-b-0 after:pointer-events-none after:shadow-[0_0_0_1px_rgba(0,0,0,0.25)]"
+              ? "bg-gray-600 text-white scale-110 shadow-[0_-4px_12px_rgba(0,0,0,0.15)] z-20 after:content-[''] after:absolute after:inset-0 after:rounded-t-lg after:border-2 after:border-gray-200 after:border-b-0 after:pointer-events-none after:shadow-[0_0_0_1px_rgba(0,0,0,0.25)]"
               : 'bg-gray-300 text-gray-700 opacity-90 hover:opacity-100 hover:bg-gray-400'
           }`}
           style={{ 
@@ -168,7 +168,7 @@ export default function SubjectTabs({ subjects, assessments, studentId, summary,
               onClick={() => setSelectedSubject(subject.id)}
               className={`px-6 py-2 rounded-t-lg font-bold text-white transition-all hover:-translate-y-0.5 duration-200 cursor-pointer border-2 border-transparent relative ${
                 selectedSubject === subject.id 
-                  ? "scale-110 shadow-[0_-4px_12px_rgba(0,0,0,0.15)] z-20 after:content-[''] after:absolute after:inset-0 after:rounded-t-lg after:border-2 after:border-white/95 after:border-b-0 after:pointer-events-none after:shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" 
+                  ? "scale-110 shadow-[0_-4px_12px_rgba(0,0,0,0.15)] z-20 after:content-[''] after:absolute after:inset-0 after:rounded-t-lg after:border-2 after:border-gray-200 after:border-b-0 after:pointer-events-none after:shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" 
                   : 'opacity-80 hover:opacity-100 scale-100'
               }`}
               style={{ 
