@@ -243,78 +243,59 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 頭像預覽 */}
-        <div className="flex justify-center mb-6">
-          <div 
-            className="w-32 h-32 rounded-full flex items-center justify-center text-white text-6xl shadow-xl"
-            style={{
-              background: `linear-gradient(to bottom right, ${selectedColorHex}, ${hexToDarker(selectedColorHex)})`
-            }}
-          >
-            {selectedEmoji}
-          </div>
-        </div>
-
-        {/* 選擇 Emoji */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {locale === 'zh-TW' ? '選擇頭像 Emoji' : 'Select Avatar Emoji'}
-          </label>
-          
-          {/* 分類標籤 */}
-          <div className="flex gap-2 mb-3 flex-wrap">
-            {Object.keys(EMOJI_CATEGORIES).map(category => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => {
-                  setSelectedCategory(category)
-                  setEmojiSearchTerm('')
-                }}
-                className={`px-3 py-1 text-xs rounded-lg transition-all duration-200 font-semibold cursor-pointer ${
-                  selectedCategory === category
-                    ? 'bg-blue-600 text-white hover:-translate-y-1 hover:shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:-translate-y-1 hover:shadow-md'
-                }`}
-              >
-                {tStudentManagement(`emojiCategories.${category}` as any)}
-              </button>
-            ))}
-          </div>
-          
-          {/* Emoji 網格（固定高度，可滾動） */}
-          <div className="border border-gray-200 rounded-lg p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-            <div className="grid grid-cols-10 gap-2">
-              {filteredEmojis.map((emoji, index) => (
-                <button
-                  key={`${selectedCategory}-${index}-${emoji}`}
-                  type="button"
-                  onClick={() => setSelectedEmoji(emoji)}
-                  className={`text-2xl p-1.5 rounded-lg border-2 transition-all hover:scale-110 flex items-center justify-center cursor-pointer ${
-                    selectedEmoji === emoji
-                      ? 'border-blue-500 bg-blue-50 scale-110'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
+        {/* 第一行：頭像和基本資料（對齊 Edit Student 的版面） */}
+        <div className="flex items-start gap-6 mb-6">
+          {/* 大頭照 */}
+          <div className="flex-shrink-0" style={{ marginTop: '2%' }}>
+            <div 
+              className="w-32 h-32 rounded-full flex items-center justify-center text-white text-[4.3rem] shadow-xl"
+              style={{
+                background: `linear-gradient(to bottom right, ${selectedColorHex}, ${hexToDarker(selectedColorHex)})`
+              }}
+            >
+              {selectedEmoji}
             </div>
-            {filteredEmojis.length === 0 && (
-              <div className="text-center py-4 text-gray-500 text-sm">
-                {locale === 'zh-TW' ? '此分類暫無 Emoji' : 'No emojis in this category'}
-              </div>
-            )}
+          </div>
+
+          {/* 學生姓名和 Email */}
+          <div className="flex-1 max-w-md space-y-4">
+            {/* 學生姓名 */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {tStudentManagement('studentNameRequired')}
+              </label>
+              <input
+                name="name"
+                type="text"
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={tStudentManagement('studentNamePlaceholder')}
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {tStudentManagement('emailOptional')}
+              </label>
+              <input
+                name="email"
+                type="email"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={tStudentManagement('emailPlaceholder')}
+              />
+            </div>
           </div>
         </div>
 
-        {/* 選擇顏色 */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {locale === 'zh-TW' ? '選擇背景顏色' : 'Select Background Color'}
-          </label>
-          <div className="flex gap-4 items-start" style={{ minHeight: '131px' }}>
-            <div className="flex flex-col gap-2" style={{ marginTop: '8pt' }}>
+        {/* 第二行：選擇背景顏色和選擇 Emoji（對齊 Edit Student 的版面） */}
+        <div className="flex items-start gap-6 mb-6">
+          {/* 選擇背景顏色 */}
+          <div className="flex-shrink-0 w-32">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {tStudentManagement('selectColor')}
+            </label>
+            <div className="flex flex-col gap-2" style={{ minHeight: '131px', marginTop: '8pt' }}>
               <input
                 name="color"
                 type="color"
@@ -324,45 +305,71 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
                   const hex = e.target.value
                   setSelectedColorHex(hex)
                 }}
-                className="h-12 w-20 border border-gray-300 rounded-lg cursor-pointer"
+                className="h-12 w-full border border-gray-300 rounded-lg cursor-pointer"
               />
               <div 
-                className="px-4 py-2 rounded-full text-white font-semibold"
+                className="px-4 py-2 rounded-full text-white font-semibold text-sm text-center"
                 style={{
                   background: `linear-gradient(to bottom right, ${selectedColorHex}, ${hexToDarker(selectedColorHex)})`
                 }}
               >
-                {locale === 'zh-TW' ? '預覽' : 'Preview'}
+                {tStudentManagement('preview')}
               </div>
             </div>
           </div>
-        </div>
 
-        {/* 學生姓名 */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {locale === 'zh-TW' ? '學生姓名 *' : 'Student Name *'}
-          </label>
-          <input
-            name="name"
-            type="text"
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={locale === 'zh-TW' ? '例如：王小明' : 'e.g., John Doe'}
-          />
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {locale === 'zh-TW' ? 'Email（選填）' : 'Email (Optional)'}
-          </label>
-          <input
-            name="email"
-            type="email"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="example@email.com"
-          />
+          {/* 選擇 Emoji */}
+          <div className="flex-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {tStudentManagement('selectEmoji')}
+            </label>
+            
+            {/* 分類標籤 */}
+            <div className="flex gap-2 mb-3 flex-wrap">
+              {Object.keys(EMOJI_CATEGORIES).map(category => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(category)
+                    setEmojiSearchTerm('')
+                  }}
+                  className={`px-3 py-1 text-xs rounded-lg transition-all duration-200 font-semibold cursor-pointer ${
+                    selectedCategory === category
+                      ? 'bg-blue-600 text-white hover:-translate-y-1 hover:shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:-translate-y-1 hover:shadow-md'
+                  }`}
+                >
+                  {tStudentManagement(`emojiCategories.${category}` as any)}
+                </button>
+              ))}
+            </div>
+            
+            {/* Emoji 網格（固定高度，可滾動） */}
+            <div className="border border-gray-200 rounded-lg p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              <div className="grid grid-cols-10 gap-2">
+                {filteredEmojis.map((emoji, index) => (
+                  <button
+                    key={`${selectedCategory}-${index}-${emoji}`}
+                    type="button"
+                    onClick={() => setSelectedEmoji(emoji)}
+                    className={`text-2xl p-1.5 rounded-lg border-2 transition-all hover:scale-110 flex items-center justify-center cursor-pointer ${
+                      selectedEmoji === emoji
+                        ? 'border-blue-500 bg-blue-50 scale-110'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+              {filteredEmojis.length === 0 && (
+                <div className="text-center py-4 text-gray-500 text-sm">
+                  {tStudentManagement('noEmojisInCategory')}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* 提交按鈕 */}
@@ -372,7 +379,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
             disabled={loading}
             className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 hover:-translate-y-1 hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 text-lg cursor-pointer"
           >
-            {loading ? (locale === 'zh-TW' ? '創建中...' : 'Creating...') : (locale === 'zh-TW' ? '✅ 創建學生' : '✅ Create Student')}
+            {loading ? tMessages('creating') : `✅ ${t('addStudent')}`}
           </button>
           
           <button

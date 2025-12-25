@@ -32,8 +32,7 @@ export default function StudentModal({
       isOpen={isOpen}
       onClose={onClose}
       title={`➕ ${t('addStudent')}`}
-      size="lg"
-      widthPercent={70}
+      size="xl"
     >
       <AddStudentForm
         onSuccess={handleSuccess}
