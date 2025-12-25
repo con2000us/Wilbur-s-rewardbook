@@ -31,6 +31,17 @@
     "logoutConfirm": "Are you sure you want to log out?",
     "logoutFailed": "Logout failed. Please try again."
   },
+  "login": {
+    "title": "Site Protection",
+    "subtitle": "Enter the password to access this site",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter password",
+    "validating": "Validating...",
+    "login": "Login",
+    "invalidPassword": "Incorrect password",
+    "tryAgainLater": "Something went wrong. Please try again later.",
+    "footer": "This site is password-protected. Please contact the administrator for access."
+  },
   "nav": {
     "home": "Home",
     "students": "Students",

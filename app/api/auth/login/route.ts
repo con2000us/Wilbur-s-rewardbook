@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       
       if (password !== defaultPassword) {
         return NextResponse.json(
-          { error: '密碼錯誤' },
+          { errorCode: 'INVALID_PASSWORD', error: '密碼錯誤' },
           { status: 401 }
         )
       }
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       // 驗證密碼
       if (password !== correctPassword) {
         return NextResponse.json(
-          { error: '密碼錯誤' },
+          { errorCode: 'INVALID_PASSWORD', error: '密碼錯誤' },
           { status: 401 }
         )
       }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(
-      { error: '發生錯誤' },
+      { errorCode: 'UNKNOWN_ERROR', error: '發生錯誤' },
       { status: 500 }
     )
   }

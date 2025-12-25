@@ -31,6 +31,17 @@
     "logoutConfirm": "確定要登出嗎？",
     "logoutFailed": "登出失敗，請稍後再試"
   },
+  "login": {
+    "title": "網站保護",
+    "subtitle": "請輸入密碼以訪問此網站",
+    "passwordLabel": "密碼",
+    "passwordPlaceholder": "輸入密碼",
+    "validating": "驗證中...",
+    "login": "登入",
+    "invalidPassword": "密碼錯誤",
+    "tryAgainLater": "發生錯誤，請稍後再試",
+    "footer": "此網站受密碼保護，請聯繫管理員獲取訪問權限"
+  },
   "nav": {
     "home": "首頁",
     "students": "學生管理",

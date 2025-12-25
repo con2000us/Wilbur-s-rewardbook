@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const t = useTranslations('login')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -30,10 +32,14 @@ export default function LoginPage() {
         router.push(redirect)
         router.refresh()
       } else {
-        setError(data.error || '密碼錯誤')
+        if (data?.errorCode === 'INVALID_PASSWORD') {
+          setError(t('invalidPassword'))
+        } else {
+          setError(t('tryAgainLater'))
+        }
       }
     } catch (err) {
-      setError('發生錯誤，請稍後再試')
+      setError(t('tryAgainLater'))
     } finally {
       setLoading(false)
     }
@@ -43,14 +49,14 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-8">
       <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">🔒 網站保護</h1>
-          <p className="text-gray-600">請輸入密碼以訪問此網站</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">🔒 {t('title')}</h1>
+          <p className="text-gray-600">{t('subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              密碼
+              {t('passwordLabel')}
             </label>
             <input
               id="password"
@@ -58,7 +64,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-              placeholder="輸入密碼"
+              placeholder={t('passwordPlaceholder')}
               required
               autoFocus
               disabled={loading}
@@ -76,12 +82,12 @@ export default function LoginPage() {
             disabled={loading || !password}
             className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            {loading ? '驗證中...' : '登入'}
+            {loading ? t('validating') : t('login')}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500">
-          此網站受密碼保護，請聯繫管理員獲取訪問權限
+          {t('footer')}
         </p>
       </div>
     </div>
