@@ -24,6 +24,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
   const t = useTranslations('home')
   const tCommon = useTranslations('common')
   const tMessages = useTranslations('messages')
+  const tStudentManagement = useTranslations('studentManagement')
   const locale = useLocale()
   // 將 Tailwind 漸變類名轉換為 hex 顏色
   const gradientToHex = (gradient: string): string => {
@@ -172,7 +173,9 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
   const [error, setError] = useState('')
   const [selectedEmoji, setSelectedEmoji] = useState('😊')
   const [selectedColorHex, setSelectedColorHex] = useState('#3b82f6') // 預設藍色
-  const [selectedCategory, setSelectedCategory] = useState<string>('表情')
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    Object.keys(EMOJI_CATEGORIES)[0] || '表情'
+  )
   const [emojiSearchTerm, setEmojiSearchTerm] = useState('')
   
   // 當選擇的 Emoji 改變時，自動切換到正確的分類
@@ -274,7 +277,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:-translate-y-1 hover:shadow-md'
                 }`}
               >
-                {category}
+                {tStudentManagement(`emojiCategories.${category}` as any)}
               </button>
             ))}
           </div>
