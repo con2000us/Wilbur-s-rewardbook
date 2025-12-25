@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { EMOJI_CATEGORIES, findEmojiCategory } from '@/app/lib/constants/emojiCategories'
 
@@ -26,6 +26,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
   const tMessages = useTranslations('messages')
   const tStudentManagement = useTranslations('studentManagement')
   const locale = useLocale()
+  const importFileInputRef = useRef<HTMLInputElement>(null)
   // 將 Tailwind 漸變類名轉換為 hex 顏色
   const gradientToHex = (gradient: string): string => {
     const match = gradient.match(/from-(\w+)-(\d+)/)
@@ -170,6 +171,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
   }
 
   const [loading, setLoading] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
   const [error, setError] = useState('')
   const [selectedEmoji, setSelectedEmoji] = useState('😊')
   const [selectedColorHex, setSelectedColorHex] = useState('#3b82f6') // 預設藍色
@@ -195,6 +197,102 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
   }
   
   const filteredEmojis = getFilteredEmojis()
+
+  // 驗證備份格式（建立新學生用，不驗證 student_id）
+  const validateCreateBackupFormat = (backup: any): { valid: boolean; error?: string } => {
+    if (!backup || typeof backup !== 'object') {
+      return { valid: false, error: tStudentManagement('invalidJSONFormat') }
+    }
+    if (!backup.version) {
+      return { valid: false, error: tStudentManagement('invalidBackupVersion') }
+    }
+    if (backup.type !== 'student_export') {
+      return { valid: false, error: tStudentManagement('invalidBackupType') }
+    }
+    if (!backup.data || typeof backup.data !== 'object') {
+      return { valid: false, error: tStudentManagement('invalidBackupData') }
+    }
+
+    const requiredFields = ['student', 'subjects', 'assessments', 'transactions', 'reward_rules']
+    const missingFields = requiredFields.filter((field) => !(field in backup.data))
+    if (missingFields.length > 0) {
+      const fieldsText = missingFields.join(locale === 'zh-TW' ? '、' : ', ')
+      return { valid: false, error: tStudentManagement('invalidBackupFields', { fields: fieldsText }) }
+    }
+
+    if (!backup.data.student || typeof backup.data.student !== 'object') {
+      return { valid: false, error: tStudentManagement('invalidBackupStudentData') }
+    }
+
+    const arrayFields = ['subjects', 'assessments', 'transactions', 'reward_rules']
+    const invalidArrayFields = arrayFields.filter((field) => !Array.isArray(backup.data[field]))
+    if (invalidArrayFields.length > 0) {
+      const fieldsText = invalidArrayFields.join(locale === 'zh-TW' ? '、' : ', ')
+      return { valid: false, error: tStudentManagement('invalidBackupArrays', { fields: fieldsText }) }
+    }
+
+    return { valid: true }
+  }
+
+  const handleImportFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.name.endsWith('.json')) {
+      setError(tStudentManagement('selectJSONFile'))
+      if (importFileInputRef.current) importFileInputRef.current.value = ''
+      return
+    }
+
+    setIsImporting(true)
+    setError('')
+
+    try {
+      const text = await file.text()
+      let backup: any
+      try {
+        backup = JSON.parse(text)
+      } catch {
+        throw new Error(tStudentManagement('jsonParseFailed'))
+      }
+
+      const validation = validateCreateBackupFormat(backup)
+      if (!validation.valid) {
+        throw new Error(validation.error || tStudentManagement('backupValidationFailed'))
+      }
+
+      const name = backup?.student_name || backup?.data?.student?.name || ''
+      const confirmMessage = `${tStudentManagement('importCreateConfirm', { name })}\n\n${tStudentManagement('importCreateWarning')}`
+      if (!confirm(confirmMessage)) {
+        return
+      }
+
+      const response = await fetch('/api/students/import-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backup }),
+      })
+
+      const result = await response.json()
+      if (!response.ok) {
+        const detailsText = typeof result.details === 'string' ? result.details : JSON.stringify(result.details)
+        const errorMessage = result.details
+          ? `${result.error}\n\n${tStudentManagement('detailsPrefix')}${detailsText}`
+          : result.error || tMessages('createFailed')
+        throw new Error(errorMessage)
+      }
+
+      // 成功後沿用既有 onSuccess 行為（Modal 會關閉並刷新列表）
+      if (onSuccess) {
+        onSuccess()
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : tStudentManagement('importFailedFormat'))
+    } finally {
+      setIsImporting(false)
+      if (importFileInputRef.current) importFileInputRef.current.value = ''
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -243,6 +341,38 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* 匯入建立（從編輯學生匯出的 JSON） */}
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="font-bold text-blue-800 flex items-center gap-2">
+                📦 {tStudentManagement('importCreateTitle')}
+              </div>
+              <div className="text-sm text-blue-700 mt-1">
+                {tStudentManagement('importCreateDesc')}
+              </div>
+            </div>
+
+            <div className="flex-shrink-0">
+              <input
+                ref={importFileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleImportFileSelect}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => importFileInputRef.current?.click()}
+                disabled={loading || isImporting}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer whitespace-nowrap"
+              >
+                {isImporting ? tStudentManagement('importing') : tStudentManagement('importJSON')}
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* 第一行：頭像和基本資料（對齊 Edit Student 的版面） */}
         <div className="flex items-start gap-6 mb-6">
           {/* 大頭照 */}
@@ -376,7 +506,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
         <div className="flex gap-4 pt-4">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || isImporting}
             className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 hover:-translate-y-1 hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 text-lg cursor-pointer"
           >
             {loading ? tMessages('creating') : `✅ ${t('addStudent')}`}
@@ -385,7 +515,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
           <button
             type="button"
             onClick={onCancel || (() => {})}
-            disabled={loading}
+            disabled={loading || isImporting}
             className="px-8 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
           >
             {tCommon('cancel')}
