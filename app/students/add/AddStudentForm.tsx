@@ -341,38 +341,6 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 匯入建立（從編輯學生匯出的 JSON） */}
-        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <div className="font-bold text-blue-800 flex items-center gap-2">
-                📦 {tStudentManagement('importCreateTitle')}
-              </div>
-              <div className="text-sm text-blue-700 mt-1">
-                {tStudentManagement('importCreateDesc')}
-              </div>
-            </div>
-
-            <div className="flex-shrink-0">
-              <input
-                ref={importFileInputRef}
-                type="file"
-                accept=".json,application/json"
-                onChange={handleImportFileSelect}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => importFileInputRef.current?.click()}
-                disabled={loading || isImporting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer whitespace-nowrap"
-              >
-                {isImporting ? tStudentManagement('importing') : tStudentManagement('importJSON')}
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* 第一行：頭像和基本資料（對齊 Edit Student 的版面） */}
         <div className="flex items-start gap-6 mb-6">
           {/* 大頭照 */}
@@ -498,6 +466,38 @@ export default function AddStudentForm({ onSuccess, onCancel }: Props) {
                   {tStudentManagement('noEmojisInCategory')}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* 匯入建立（從編輯學生匯出的 JSON） */}
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="font-bold text-blue-800 flex items-center gap-2">
+                📦 {tStudentManagement('importCreateTitle')}
+              </div>
+              <div className="text-sm text-blue-700 mt-1">
+                {tStudentManagement('importCreateDesc')}
+              </div>
+            </div>
+
+            <div className="flex-shrink-0">
+              <input
+                ref={importFileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleImportFileSelect}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => importFileInputRef.current?.click()}
+                disabled={loading || isImporting}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer whitespace-nowrap"
+              >
+                {isImporting ? tStudentManagement('importing') : tStudentManagement('importJSON')}
+              </button>
             </div>
           </div>
         </div>
