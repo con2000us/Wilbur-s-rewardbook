@@ -61,12 +61,13 @@ Use this if you're not familiar with coding. You'll deploy to Vercel and only ne
      - **anon public** key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 2. Click the **Deploy with Vercel** button above
 3. Sign in with GitHub
-4. Add environment variables (Vercel will ask for them):
+4. Click **Deploy** to start the Vercel setup flow
+5. When Vercel asks for environment variables, add:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD` (set a strong password)
-5. Click **Deploy**
-6. After deployment finishes, open your site:
+6. Continue and finish the deployment
+7. After deployment finishes, open your site:
    - In Vercel, open your new project → **Deployments** (or **Project**)
    - Click the **Production** URL (it looks like `https://your-project.vercel.app`)
 
