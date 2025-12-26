@@ -51,12 +51,13 @@
      - **anon public** 金鑰 → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 2. 點擊上方的 **Deploy with Vercel** 按鈕
 3. 使用 GitHub 帳號登入
-4. 在 Vercel 填入環境變數：
+4. 點擊 **Deploy** 開始 Vercel 的部署流程
+5. 當 Vercel 要求填入環境變數時，填入：
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD`（設定強密碼）
-5. 點擊 **Deploy**
-6. 部署完成後開啟網站：
+6. 繼續完成部署
+7. 部署完成後開啟網站：
    - 在 Vercel 打開剛建立的 Project → **Deployments**
    - 點擊 **Production** 的網址（看起來像 `https://your-project.vercel.app`）
 
