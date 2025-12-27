@@ -71,9 +71,17 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     const sortedMonths = Array.from(months).sort().reverse()
     setAvailableMonths(sortedMonths)
     
-    // 如果當前月份沒有資料，預設顯示最新有資料的月份
-    if (!sortedMonths.includes(currentMonth) && sortedMonths.length > 0) {
-      setSelectedMonth(sortedMonths[0])
+    // 重要：資料更新（例如新增/編輯評量後 router.refresh）時，保留使用者原本選擇的月份
+    // - selectedMonth === '' 代表「全部」或「最近結算」，不應被自動改寫
+    // - 只有當目前選擇的月份已不存在（例如編輯後月份被移除）才自動切到合理的預設
+    if (selectedMonth === '') return
+    if (sortedMonths.length === 0) return
+
+    const hasCurrentMonth = sortedMonths.includes(currentMonth)
+    const hasSelectedMonth = selectedMonth ? sortedMonths.includes(selectedMonth) : false
+
+    if (!hasSelectedMonth) {
+      setSelectedMonth(hasCurrentMonth ? currentMonth : sortedMonths[0])
     }
 
     // 計算最常用的評量類型
@@ -84,7 +92,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     })
     const mostCommon = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]
     setMostCommonType(mostCommon ? mostCommon[0] : 'exam')
-  }, [assessments, currentMonth])
+  }, [assessments, currentMonth, selectedMonth])
 
   // Modal 控制函數
   const handleOpenAddModal = () => {

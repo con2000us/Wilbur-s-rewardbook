@@ -91,11 +91,18 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
     const sortedMonths = Array.from(months).sort().reverse()
     setAvailableMonths(sortedMonths)
     
-    // 如果當前月份沒有資料，預設顯示最新有資料的月份
-    if (!sortedMonths.includes(currentMonth) && sortedMonths.length > 0) {
-      setSelectedMonth(sortedMonths[0])
+    // 保留使用者目前選擇的月份；只有在選擇的月份已不存在時才自動切換
+    // selectedMonth === '' 代表「全部」或「最近結算」
+    if (selectedMonth === '') return
+    if (sortedMonths.length === 0) return
+
+    const hasCurrentMonth = sortedMonths.includes(currentMonth)
+    const hasSelectedMonth = selectedMonth ? sortedMonths.includes(selectedMonth) : false
+
+    if (!hasSelectedMonth) {
+      setSelectedMonth(hasCurrentMonth ? currentMonth : sortedMonths[0])
     }
-  }, [transactions, currentMonth])
+  }, [transactions, currentMonth, selectedMonth])
 
   useEffect(() => {
     // 根據選中的月份篩選交易
