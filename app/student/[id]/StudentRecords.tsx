@@ -31,6 +31,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
   const currentMonth = new Date().toISOString().slice(0, 7)
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
   const [selectedSubject, setSelectedSubject] = useState<string>('')
+  const [lastSelectedSubject, setLastSelectedSubject] = useState<string>('')
   const [availableMonths, setAvailableMonths] = useState<string[]>([])
   const [filteredAssessments, setFilteredAssessments] = useState(assessments)
   const [filteredSummary, setFilteredSummary] = useState(summary)
@@ -93,6 +94,14 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     const mostCommon = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]
     setMostCommonType(mostCommon ? mostCommon[0] : 'exam')
   }, [assessments, currentMonth, selectedMonth])
+
+  // 記住使用者「最後一次選擇的具體科目」
+  // 目的：當目前 focused tab 是「全部」時，新增評量 popup 仍可預選上次的科目
+  useEffect(() => {
+    if (selectedSubject) {
+      setLastSelectedSubject(selectedSubject)
+    }
+  }, [selectedSubject])
 
   // Modal 控制函數
   const handleOpenAddModal = () => {
@@ -664,6 +673,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
         subjects={subjects}
         rewardRules={rewardRules}
         assessment={editingAssessment}
+        initialSubjectId={selectedSubject || lastSelectedSubject || subjects?.[0]?.id || ''}
         defaultAssessmentType={mostCommonType}
         onSuccess={handleModalSuccess}
       />

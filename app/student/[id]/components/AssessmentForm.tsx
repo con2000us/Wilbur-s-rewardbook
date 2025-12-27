@@ -44,6 +44,7 @@ interface Props {
   subjects: Subject[]
   rewardRules: RewardRule[]
   assessment?: Assessment  // 如果有值就是編輯模式
+  initialSubjectId?: string // 新增模式：預選科目（例如跟學習記錄 focused tab 同步）
   defaultAssessmentType?: string
   onSuccess?: () => void  // 成功後的回調
   onCancel?: () => void  // 取消的回調
@@ -54,6 +55,7 @@ export default function AssessmentForm({
   subjects, 
   rewardRules, 
   assessment,
+  initialSubjectId,
   defaultAssessmentType = 'exam',
   onSuccess,
   onCancel
@@ -72,7 +74,7 @@ export default function AssessmentForm({
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [selectedSubjectId, setSelectedSubjectId] = useState(
-    assessment?.subject_id || subjects[0]?.id || ''
+    assessment?.subject_id || initialSubjectId || subjects[0]?.id || ''
   )
   const [selectedAssessmentType, setSelectedAssessmentType] = useState(
     assessment?.assessment_type || defaultAssessmentType

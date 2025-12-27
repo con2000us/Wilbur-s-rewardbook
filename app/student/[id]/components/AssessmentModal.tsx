@@ -44,6 +44,7 @@ interface AssessmentModalProps {
   subjects: Subject[]
   rewardRules: RewardRule[]
   assessment?: Assessment
+  initialSubjectId?: string
   defaultAssessmentType?: string
   onSuccess?: () => void
 }
@@ -55,6 +56,7 @@ export default function AssessmentModal({
   subjects,
   rewardRules,
   assessment,
+  initialSubjectId,
   defaultAssessmentType = 'exam',
   onSuccess
 }: AssessmentModalProps) {
@@ -83,6 +85,7 @@ export default function AssessmentModal({
         subjects={subjects}
         rewardRules={rewardRules}
         assessment={assessment}
+        initialSubjectId={initialSubjectId}
         defaultAssessmentType={defaultAssessmentType}
         onSuccess={handleSuccess}
         onCancel={onClose}
