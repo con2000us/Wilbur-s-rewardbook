@@ -155,15 +155,22 @@ export async function POST(request: NextRequest) {
           maxScore: Number(updateData.max_score ?? 100),
         })
       } else {
-        // 預設規則
-        if (updateData.percentage >= 100) {
-          updateData.reward_amount = 30
-        } else if (updateData.percentage >= 90) {
-          updateData.reward_amount = 10
-        } else if (updateData.percentage >= 80) {
-          updateData.reward_amount = 5
-        } else {
+        // 如果查詢到了規則但沒有匹配，返回 0 獎金（不應使用硬編碼規則）
+        // 硬編碼規則只在「完全沒有規則」的情況下使用
+        if (rules && rules.length > 0) {
+          // 有規則但沒有匹配，返回 0
           updateData.reward_amount = 0
+        } else {
+          // 完全沒有規則，使用預設的硬編碼規則
+          if (updateData.percentage >= 100) {
+            updateData.reward_amount = 30
+          } else if (updateData.percentage >= 90) {
+            updateData.reward_amount = 10
+          } else if (updateData.percentage >= 80) {
+            updateData.reward_amount = 5
+          } else {
+            updateData.reward_amount = 0
+          }
         }
       }
     } else {

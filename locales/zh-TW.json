@@ -786,6 +786,7 @@
     "updated": "已更新",
     "updateFailed": "更新失敗，請稍後再試",
     "deleteConfirm": "確定要刪除嗎？",
+    "confirmDelete": "確定要刪除",
     "deleteSuccess": "刪除成功",
     "deleting": "刪除中...",
     "deleteFailed": "刪除失敗，請稍後再試",

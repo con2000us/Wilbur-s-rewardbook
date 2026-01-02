@@ -786,6 +786,7 @@
     "updated": "Updated",
     "updateFailed": "Failed to update, please try again later",
     "deleteConfirm": "Are you sure you want to delete?",
+    "confirmDelete": "Are you sure you want to delete",
     "deleteSuccess": "Deleted successfully",
     "deleting": "Deleting...",
     "deleteFailed": "Failed to delete, please try again later",
