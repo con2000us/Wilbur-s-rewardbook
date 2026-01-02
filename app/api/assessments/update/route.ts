@@ -35,12 +35,62 @@ export async function POST(request: NextRequest) {
       updateData.completed_date = new Date().toISOString()
 
       // 從數據庫獲取獎金規則並計算獎金
-      const { data: rules } = await supabase
+      
+      // 調試：輸出實際使用的 Supabase URL（僅在開發環境）
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DEBUG] Updating assessment - Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+        console.log('[DEBUG] Assessment ID:', body.assessment_id, 'Student ID:', body.student_id, 'Subject ID:', body.subject_id)
+      }
+      
+      let { data: rules, error: rulesError } = await supabase
         .from('reward_rules')
         .select('*')
         .eq('is_active', true)
         .order('priority', { ascending: false })
-
+      
+      if (rulesError) {
+        console.error('[ERROR] Failed to fetch reward_rules:', rulesError)
+        return NextResponse.json({ error: '無法獲取獎金規則：' + rulesError.message }, { status: 500 })
+      }
+      
+      // 調試：輸出查詢到的規則數量
+      if (process.env.NODE_ENV === 'development' && rules) {
+        console.log('[DEBUG] Fetched reward_rules count:', rules.length)
+        if (rules.length > 0) {
+          // @ts-ignore - Supabase type inference issue
+          console.log('[DEBUG] Sample rule student_id:', (rules[0] as any).student_id, 'subject_id:', (rules[0] as any).subject_id)
+        }
+      }
+      
+      // 驗證：確保查詢到的資料屬於正確的專案
+      // 檢查是否有任何 rule 的 student_id 對應到當前專案的 students 表
+      if (rules && rules.length > 0) {
+        const studentIdsInRules = new Set(
+          rules
+            .map((r: any) => r.student_id)
+            .filter((id: any) => id !== null && id !== undefined)
+        )
+        
+        if (studentIdsInRules.size > 0) {
+          const { data: validStudents } = await supabase
+            .from('students')
+            .select('id')
+            .in('id', Array.from(studentIdsInRules))
+          
+          const validStudentIds = new Set(validStudents?.map((s: any) => s.id) || [])
+          const invalidRules = Array.from(studentIdsInRules).filter(id => !validStudentIds.has(id))
+          
+          if (invalidRules.length > 0) {
+            console.error('[WARNING] Found reward_rules with student_ids not in current project:', invalidRules)
+            console.error('[WARNING] This may indicate connection to wrong Supabase project!')
+            // 過濾掉無效的規則
+            rules = rules.filter((r: any) => 
+              !r.student_id || validStudentIds.has(r.student_id)
+            )
+          }
+        }
+      }
+      
       // 過濾和排序規則
       let matchedRule = null
       if (rules && rules.length > 0) {
