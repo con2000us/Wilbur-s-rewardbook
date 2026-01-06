@@ -29,6 +29,7 @@ export default function StudentList({ initialStudents }: Props) {
   const [hasReordered, setHasReordered] = useState(false)
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false)
   const [circleConfigs, setCircleConfigs] = useState<Record<string, Array<{ cx: number; cy: number; r: number }>>>({})
+  const [showCircles, setShowCircles] = useState(true)
   const { openModal, ModalComponent } = useStudentSettingsModal()
 
   // 簡單的偽隨機數生成器（使用種子）
@@ -276,7 +277,19 @@ export default function StudentList({ initialStudents }: Props) {
           🎓 {t('studentsList')}
         </h2>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* Circle 顯示開關 */}
+          <button
+            onClick={() => setShowCircles(!showCircles)}
+            className={`h-10 px-4 py-2 rounded-lg transition-all duration-200 font-semibold flex items-center gap-2 shadow-lg shadow-[inset_0_0_0_2px_rgba(255,255,255,0.3)] cursor-pointer hover:-translate-y-1 ${
+              showCircles ? 'bg-blue-500/70' : 'bg-gray-500/70'
+            }`}
+            title={showCircles ? '隱藏裝飾圓圈' : '顯示裝飾圓圈'}
+          >
+            <span>{showCircles ? '⭕' : '⚪'}</span>
+            <span className="text-white text-sm">{showCircles ? 'ON' : 'OFF'}</span>
+          </button>
+          
           {hasReordered && (
             <>
               <button
@@ -343,29 +356,31 @@ export default function StudentList({ initialStudents }: Props) {
                 </div>
                 
             {/* 裝飾性背景圓圈 */}
-                <svg
-                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                  viewBox="0 0 380 380"
-                  fill="none"
-                  preserveAspectRatio="none"
-                >
-                  <defs>
-                    <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id={`decorationGradient-${student.id}`}>
-                      <stop offset="0%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0' }} />
-                      <stop offset="50%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0.1' }} />
-                      <stop offset="100%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0.3' }} />
-                    </radialGradient>
-                  </defs>
-                  {decorationCircles.map((circle, idx) => (
-                    <circle
-                      key={idx}
-                      cx={circle.cx}
-                      cy={circle.cy}
-                      r={circle.r}
-                      fill={`url(#decorationGradient-${student.id})`}
-                    />
-                  ))}
-                </svg>
+                {showCircles && (
+                  <svg
+                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                    viewBox="0 0 380 380"
+                    fill="none"
+                    preserveAspectRatio="none"
+                  >
+                    <defs>
+                      <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id={`decorationGradient-${student.id}`}>
+                        <stop offset="0%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0' }} />
+                        <stop offset="50%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0.1' }} />
+                        <stop offset="100%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0.3' }} />
+                      </radialGradient>
+                    </defs>
+                    {decorationCircles.map((circle, idx) => (
+                      <circle
+                        key={idx}
+                        cx={circle.cx}
+                        cy={circle.cy}
+                        r={circle.r}
+                        fill={`url(#decorationGradient-${student.id})`}
+                      />
+                    ))}
+                  </svg>
+                )}
                 
                 <div className="relative z-10 flex flex-col items-center justify-between pt-[30px] pb-6 px-[18px] h-full">
                   {/* 個人資料區域 */}
@@ -487,29 +502,31 @@ export default function StudentList({ initialStudents }: Props) {
                 }`}
               >
                   {/* 裝飾性背景圓圈 */}
-                  <svg
-                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                    viewBox="0 0 380 380"
-                    fill="none"
-                    preserveAspectRatio="none"
-                  >
-                    <defs>
-                      <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id="decorationGradient-add">
-                        <stop offset="0%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0' }} />
-                        <stop offset="50%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0.15' }} />
-                        <stop offset="100%" style={{ stopColor: 'rgba(255,255,255,0.2)', stopOpacity: '0.4' }} />
-                      </radialGradient>
-                    </defs>
-                    {addStudentCircles.map((circle, idx) => (
-                      <circle
-                        key={idx}
-                        cx={circle.cx}
-                        cy={circle.cy}
-                        r={circle.r}
-                        fill="url(#decorationGradient-add)"
-                      />
-                    ))}
-                  </svg>
+                  {showCircles && (
+                    <svg
+                      className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                      viewBox="0 0 380 380"
+                      fill="none"
+                      preserveAspectRatio="none"
+                    >
+                      <defs>
+                        <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id="decorationGradient-add">
+                          <stop offset="0%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0' }} />
+                          <stop offset="50%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0.15' }} />
+                          <stop offset="100%" style={{ stopColor: 'rgba(255,255,255,0.2)', stopOpacity: '0.4' }} />
+                        </radialGradient>
+                      </defs>
+                      {addStudentCircles.map((circle, idx) => (
+                        <circle
+                          key={idx}
+                          cx={circle.cx}
+                          cy={circle.cy}
+                          r={circle.r}
+                          fill="url(#decorationGradient-add)"
+                        />
+                      ))}
+                    </svg>
+                  )}
                   
                   <div className="relative z-10 flex flex-col items-center justify-between pt-[30px] pb-6 px-[18px] h-full">
                 {/* 個人資料區域 */}
@@ -555,29 +572,31 @@ export default function StudentList({ initialStudents }: Props) {
                 className="relative w-full max-w-[380px] aspect-square overflow-hidden rounded-xl card-shadow add-student-bg group/card hover:scale-[1.01] cursor-pointer add-student-dashed-border"
               >
                 {/* 裝飾性背景圓圈 */}
-                <svg
-                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                  viewBox="0 0 380 380"
-                  fill="none"
-                  preserveAspectRatio="none"
-                >
-                  <defs>
-                    <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id="decorationGradient-empty">
-                      <stop offset="0%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0' }} />
-                      <stop offset="50%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0.15' }} />
-                      <stop offset="100%" style={{ stopColor: 'rgba(255,255,255,0.2)', stopOpacity: '0.4' }} />
-                    </radialGradient>
-                  </defs>
-                  {emptyStudentCircles.map((circle, idx) => (
-                    <circle
-                      key={idx}
-                      cx={circle.cx}
-                      cy={circle.cy}
-                      r={circle.r}
-                      fill="url(#decorationGradient-empty)"
-                    />
-                  ))}
-                </svg>
+                {showCircles && (
+                  <svg
+                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                    viewBox="0 0 380 380"
+                    fill="none"
+                    preserveAspectRatio="none"
+                  >
+                    <defs>
+                      <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id="decorationGradient-empty">
+                        <stop offset="0%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0' }} />
+                        <stop offset="50%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0.15' }} />
+                        <stop offset="100%" style={{ stopColor: 'rgba(255,255,255,0.2)', stopOpacity: '0.4' }} />
+                      </radialGradient>
+                    </defs>
+                    {emptyStudentCircles.map((circle, idx) => (
+                      <circle
+                        key={idx}
+                        cx={circle.cx}
+                        cy={circle.cy}
+                        r={circle.r}
+                        fill="url(#decorationGradient-empty)"
+                      />
+                    ))}
+                  </svg>
+                )}
                 
                 <div className="relative z-10 flex flex-col items-center justify-between pt-[30px] pb-6 px-[18px] h-full">
               {/* 個人資料區域 */}
