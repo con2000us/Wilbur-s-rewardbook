@@ -66,11 +66,18 @@ export default async function EditStudentPage({
           </h1>
           <p className="text-gray-600 mb-6">
             {/* @ts-ignore - Supabase type inference issue with select queries */}
-            {tStudent.rich('editStudentDesc', {
-              name: (chunks) => (
-                <span className="font-semibold text-blue-600">{chunks}</span>
-              ),
-            })}
+            {(() => {
+              const studentName = (student as any).name
+              const text = tStudent('editStudentDesc', { name: studentName })
+              const parts = text.split(studentName)
+              return (
+                <>
+                  {parts[0]}
+                  <span className="font-semibold text-blue-600">{studentName}</span>
+                  {parts[1]}
+                </>
+              )
+            })()}
           </p>
 
           <EditStudentForm student={student} />

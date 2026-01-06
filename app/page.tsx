@@ -55,25 +55,25 @@ export default async function Home() {
 
         {/* 功能卡片 */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200">
-            <div className="text-5xl mb-3">📝</div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">{t('features.records.title')}</h3>
-            <p className="text-gray-600 text-sm">{t('features.records.desc')}</p>
+          <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/30">
+            <div className="text-5xl mb-3 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">📝</div>
+            <h3 className="text-xl font-bold text-white mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">{t('features.records.title')}</h3>
+            <p className="text-white text-sm drop-shadow-[0_3px_6px_rgba(0,0,0,0.8)]">{t('features.records.desc')}</p>
           </div>
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200">
-            <div className="text-5xl mb-3">💎</div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">{t('features.rewards.title')}</h3>
-            <p className="text-gray-600 text-sm">{t('features.rewards.desc')}</p>
+          <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/30">
+            <div className="text-5xl mb-3 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">💎</div>
+            <h3 className="text-xl font-bold text-white mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">{t('features.rewards.title')}</h3>
+            <p className="text-white text-sm drop-shadow-[0_3px_6px_rgba(0,0,0,0.8)]">{t('features.rewards.desc')}</p>
           </div>
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200">
-            <div className="text-5xl mb-3">📚</div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">{t('features.subjects.title')}</h3>
-            <p className="text-gray-600 text-sm">{t('features.subjects.desc')}</p>
+          <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/30">
+            <div className="text-5xl mb-3 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">📚</div>
+            <h3 className="text-xl font-bold text-white mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">{t('features.subjects.title')}</h3>
+            <p className="text-white text-sm drop-shadow-[0_3px_6px_rgba(0,0,0,0.8)]">{t('features.subjects.desc')}</p>
           </div>
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200">
-            <div className="text-5xl mb-3">💰</div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">{t('features.passbook.title')}</h3>
-            <p className="text-gray-600 text-sm">{t('features.passbook.desc')}</p>
+          <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/30">
+            <div className="text-5xl mb-3 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">💰</div>
+            <h3 className="text-xl font-bold text-white mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">{t('features.passbook.title')}</h3>
+            <p className="text-white text-sm drop-shadow-[0_3px_6px_rgba(0,0,0,0.8)]">{t('features.passbook.desc')}</p>
           </div>
         </div>
       </div>

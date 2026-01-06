@@ -24,11 +24,94 @@ export default function StudentList({ initialStudents }: Props) {
   const t = useTranslations('home')
   const tCommon = useTranslations('common')
   const [students, setStudents] = useState(initialStudents)
-  const [isReordering, setIsReordering] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [hasReordered, setHasReordered] = useState(false)
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false)
+  const [circleConfigs, setCircleConfigs] = useState<Record<string, Array<{ cx: number; cy: number; r: number }>>>({})
   const { openModal, ModalComponent } = useStudentSettingsModal()
+
+  // 簡單的偽隨機數生成器（使用種子）
+  const seededRandom = (seed: number) => {
+    let value = seed
+    return () => {
+      value = (value * 9301 + 49297) % 233280
+      return value / 233280
+    }
+  }
+
+  // 檢查兩個圓圈是否重疊
+  const circlesOverlap = (circle1: { cx: number; cy: number; r: number }, circle2: { cx: number; cy: number; r: number }) => {
+    const dx = circle1.cx - circle2.cx
+    const dy = circle1.cy - circle2.cy
+    const distance = Math.sqrt(dx * dx + dy * dy)
+    // 如果兩個圓的距離小於它們半徑之和的 80%，則認為重疊
+    return distance < (circle1.r + circle2.r) * 0.8
+  }
+
+  // 生成隨機的裝飾圓圈配置
+  const generateDecorationCircles = (studentId: string) => {
+    // 使用學生 ID 的 hash + 時間戳作為種子，讓每次 reload 都不同
+    let hash = 0
+    for (let i = 0; i < studentId.length; i++) {
+      hash = ((hash << 5) - hash) + studentId.charCodeAt(i)
+      hash = hash & hash
+    }
+    // 加入時間戳，讓每次 reload 都不同
+    const timeSeed = Date.now()
+    const random = seededRandom(Math.abs(hash) + timeSeed)
+    
+    // 生成 4-7 個圓圈
+    const count = Math.floor(random() * 4) + 4
+    const circles: Array<{ cx: number; cy: number; r: number }> = []
+    
+    for (let i = 0; i < count; i++) {
+      let cx: number, cy: number, r: number
+      let attempts = 0
+      const maxAttempts = 50
+      
+      do {
+        // 隨機位置（留出邊距避免超出）
+        cx = random() * 340 + 20
+        cy = random() * 340 + 20
+        // 隨機大小（1px 到 80px）
+        r = Math.max(1, random() * 79 + 1)
+        
+        attempts++
+        
+        // 檢查是否與已存在的圓圈重疊
+        const overlaps = circles.some(existingCircle => circlesOverlap({ cx, cy, r }, existingCircle))
+        
+        // 如果重疊，有 75% 的機率重新生成位置
+        if (overlaps && random() < 0.75 && attempts < maxAttempts) {
+          continue // 重新生成
+        }
+        
+        // 如果不重疊，或者已經嘗試太多次，或者 25% 的機率接受重疊，則跳出循環
+        break
+      } while (attempts < maxAttempts)
+      
+      circles.push({ cx, cy, r })
+    }
+    
+    return circles
+  }
+
+  // 在客戶端生成 circle 配置（避免 hydration 錯誤）
+  useEffect(() => {
+    const configs: Record<string, Array<{ cx: number; cy: number; r: number }>> = {}
+    
+    // 為每個學生生成 circle 配置
+    students.forEach(student => {
+      configs[student.id] = generateDecorationCircles(student.id)
+    })
+    
+    // 為添加學生按鈕生成配置
+    configs['add-student-button'] = generateDecorationCircles('add-student-button')
+    configs['empty-student-button'] = generateDecorationCircles('empty-student-button')
+    
+    setCircleConfigs(configs)
+  }, [students])
 
   // 監聽全局事件來打開設定 Modal
   useEffect(() => {
@@ -109,6 +192,14 @@ export default function StudentList({ initialStudents }: Props) {
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index)
+    setHasReordered(true)
+    document.body.style.cursor = 'grabbing'
+    
+    // 添加動畫類到所有卡片
+    const cards = document.querySelectorAll('[data-student-card]')
+    cards.forEach(card => {
+      card.classList.add('dragging')
+    })
   }
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -130,11 +221,24 @@ export default function StudentList({ initialStudents }: Props) {
 
   const handleDragEnd = () => {
     setDraggedIndex(null)
+    document.body.style.cursor = 'default'
+
+    // 移除動畫類
+    const cards = document.querySelectorAll('[data-student-card]')
+    cards.forEach(card => {
+      card.classList.remove('dragging')
+    })
+  }
+
+  const handleCancelReorder = () => {
+    setStudents(initialStudents)
+    setHasReordered(false)
+    document.body.style.cursor = 'default'
   }
 
   const handleSaveOrder = async () => {
     setIsSaving(true)
-    
+
     try {
       // 準備更新數據
       const studentOrders = students.map((student, index) => ({
@@ -149,7 +253,8 @@ export default function StudentList({ initialStudents }: Props) {
       })
 
       if (response.ok) {
-        setIsReordering(false)
+        setHasReordered(false)
+        document.body.style.cursor = 'default'
         // 刷新頁面以確保數據同步
         window.location.reload()
       } else {
@@ -163,31 +268,26 @@ export default function StudentList({ initialStudents }: Props) {
     }
   }
 
-  const handleCancelReorder = () => {
-    setStudents(initialStudents)
-    setIsReordering(false)
-  }
-
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 mb-8">
+    <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-2xl pt-3 pl-6 pr-6 pb-6 mb-8 border-2 border-white/30 min-h-[200px]">
       {/* 標題和按鈕 */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">
+      <div className="flex justify-between items-center mb-6 min-h-[48px]">
+        <h2 className="text-3xl font-bold text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
           🎓 {t('studentsList')}
         </h2>
-        
+
         <div className="flex gap-2">
-          {/* 排序模式的保存/取消按鈕 */}
-          {isReordering ? (
+          {hasReordered && (
             <>
               <button
                 onClick={handleSaveOrder}
                 disabled={isSaving}
-                className={`px-4 py-2 rounded-lg transition-all duration-200 font-semibold flex items-center gap-2 ${
-                  isSaving
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-600 text-white hover:bg-green-700 hover:-translate-y-1 hover:shadow-lg cursor-pointer'
-                }`}
+                className="h-10 px-4 py-2 rounded-lg transition-all duration-200 font-semibold flex items-center gap-2 shadow-lg shadow-[inset_0_0_0_2px_rgba(255,255,255,0.3)] cursor-pointer hover:-translate-y-1"
+                style={{
+                  background: isSaving
+                    ? '#d1d5db'
+                    : 'linear-gradient(to bottom right, #10b981, #059669, #047857)'
+                }}
               >
                 <span>💾</span>
                 <span>{isSaving ? tCommon('loading') : tCommon('save')}</span>
@@ -195,191 +295,322 @@ export default function StudentList({ initialStudents }: Props) {
               <button
                 onClick={handleCancelReorder}
                 disabled={isSaving}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 font-semibold cursor-pointer"
+                className="h-10 px-4 py-2 rounded-lg transition-all duration-200 font-semibold flex items-center gap-2 shadow-lg shadow-[inset_0_0_0_2px_rgba(255,255,255,0.3)] cursor-pointer hover:-translate-y-1"
+                style={{
+                  background: isSaving
+                    ? '#d1d5db'
+                    : 'rgba(255, 255, 255, 0.25)'
+                }}
               >
-                {tCommon('cancel')}
+                <span>❌</span>
+                <span>{tCommon('cancel')}</span>
               </button>
             </>
-          ) : (
-            <button
-              onClick={() => setIsReordering(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 font-semibold flex items-center gap-2 cursor-pointer"
-            >
-              <span>↕️</span>
-              <span>{t('reorderStudents')}</span>
-            </button>
           )}
         </div>
       </div>
 
-      {/* 排序提示 */}
-      {isReordering && (
-        <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-700 flex items-center gap-2">
-            <span>ℹ️</span>
-            <span>{t('reorderHint')}</span>
-          </p>
-        </div>
-      )}
-
       {/* 學生列表 */}
       {students && students.length > 0 ? (
-        <div className={`grid gap-4 ${
-          isReordering 
-            ? 'grid-cols-1' 
-            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-        }`}>
+        <div className={`grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-items-center ${draggedIndex !== null ? 'grid-transition' : ''} -mt-2`}>
           {students.map((student, index) => {
             const avatar = parseAvatar(student.avatar_url, student.name)
 
-            if (isReordering) {
-              // 排序模式 - 列表式拖曳
-              return (
-                <div
-                  key={student.id}
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragEnd={handleDragEnd}
-                  className={`p-5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 transition-all cursor-move ${
-                    draggedIndex === index
-                      ? 'border-purple-500 opacity-50 scale-95'
-                      : 'border-gray-300 hover:border-purple-400 hover:shadow-lg'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    {/* 拖曳手柄 */}
-                    <div className="text-2xl text-gray-400">
-                      ⋮⋮
-                    </div>
-                    {/* 頭像 */}
-                    <div 
-                      className="w-16 h-16 rounded-full flex items-center justify-center text-white text-[2rem] font-bold shadow-lg flex-shrink-0"
-                      style={{ background: avatar.gradientStyle }}
-                    >
-                      {avatar.emoji}
-                    </div>
-                    {/* 學生資訊 */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-gray-800 truncate">
-                        {student.name}
-                      </h3>
-                      {student.email && (
-                        <p className="text-sm text-gray-600 truncate">{student.email}</p>
-                      )}
-                    </div>
-                    {/* 順序編號 */}
-                    <div className="text-lg font-bold text-purple-600 bg-purple-100 rounded-full w-10 h-10 flex items-center justify-center">
-                      {index + 1}
-                    </div>
-                  </div>
+            // 根據學生顏色創建漸變背景（只改變明暗，保持色相和彩度）
+            const darkerHex = hexToDarker(avatar.hex)
+            const darkestHex = hexToDarker(avatar.hex, 0.5) // 更暗的版本
+            const cardGradient = `linear-gradient(to bottom right, ${avatar.hex}, ${darkerHex}, ${darkestHex})`
+            
+            // 使用已生成的裝飾圓圈配置（在客戶端生成，避免 hydration 錯誤）
+            const decorationCircles = circleConfigs[student.id] || []
+            
+            return (
+              <div
+                key={student.id}
+                data-student-card
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`relative w-full max-w-[380px] aspect-square overflow-hidden rounded-xl card-shadow group/card shadow-[inset_0_0_0_2px_rgba(255,255,255,0.3)] cursor-grab active:cursor-grabbing ${
+                  draggedIndex === index ? 'opacity-50 scale-95' : ''
+                }`}
+                style={{ background: cardGradient }}
+              >
+                {/* 拖曳圖標 - 始終顯示在左上角 */}
+                <div className="absolute top-2 left-3 text-2xl text-white/80 z-20 pointer-events-none hover:text-white transition-colors drop-shadow-[0_6px_12px_rgba(0,0,0,0.8)]">
+                  ⋮⋮
                 </div>
-              )
-            } else {
-              // 正常模式 - 卡片式顯示，保留外框動畫效果
-              return (
-                <div
-                  key={student.id}
-                  className="group relative rounded-xl border-2 border-gray-300 hover:border-purple-500 hover:shadow-2xl transition-all duration-300 overflow-hidden"
+                
+            {/* 裝飾性背景圓圈 */}
+                <svg
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  viewBox="0 0 380 380"
+                  fill="none"
+                  preserveAspectRatio="none"
                 >
-                  {/* 齒輪設定按鈕 - 右上角 */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openModal(student.id)
-                    }}
-                    className="absolute top-2 right-2 z-10 p-2 bg-white/80 hover:bg-white rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 opacity-0 group-hover:opacity-100 cursor-pointer"
-                    title={tCommon('settings') || '設定'}
-                  >
-                    <svg 
-                      className="w-5 h-5 text-gray-700 hover:text-purple-600 transition-colors" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
+                  <defs>
+                    <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id={`decorationGradient-${student.id}`}>
+                      <stop offset="0%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0' }} />
+                      <stop offset="50%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0.1' }} />
+                      <stop offset="100%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0.3' }} />
+                    </radialGradient>
+                  </defs>
+                  {decorationCircles.map((circle, idx) => (
+                    <circle
+                      key={idx}
+                      cx={circle.cx}
+                      cy={circle.cy}
+                      r={circle.r}
+                      fill={`url(#decorationGradient-${student.id})`}
+                    />
+                  ))}
+                </svg>
+                
+                <div className="relative z-10 flex flex-col items-center justify-between pt-[30px] pb-6 px-[18px] h-full">
+                  {/* 個人資料區域 */}
+                  <div className="flex flex-col items-center gap-3 w-full cursor-pointer flex-shrink-0">
+                    {/* 頭像 - 點擊連結到設定頁面 */}
+                    <Link
+                      href={`/students/${student.id}/edit`}
+                      className="relative group/avatar"
                     >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" 
-                      />
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
-                      />
-                    </svg>
-                  </button>
-                  
-                  {/* 學生資訊區域 - 點擊進入學習記錄 */}
-                  <Link
-                    href={`/student/${student.id}`}
-                    className="block p-5 bg-gradient-to-br from-blue-50 to-purple-50 transition-all duration-300 cursor-pointer hover:-translate-y-1"
-                  >
-                    <div className="flex flex-col items-center text-center gap-3">
                       <div 
-                        className="w-20 h-20 rounded-full flex items-center justify-center text-white text-[2.5rem] font-bold shadow-lg"
-                        style={{ background: avatar.gradientStyle }}
+                        className="flex h-24 w-24 items-center justify-center rounded-full shadow-xl ring-4 ring-white/20 transition-transform duration-300 group-hover/avatar:scale-105"
+                        style={{ background: 'rgba(255, 255, 255, 0.7)' }}
                       >
-                        {avatar.emoji}
-                      </div>
-                      <div className="w-full">
-                        <h3 className="text-xl font-bold text-gray-800 mb-1 truncate">
-                          {student.name}
-                        </h3>
-                        {student.email && (
-                          <p className="text-sm text-gray-600 truncate">{student.email}</p>
+                        {avatar.emoji && (
+                          <span className="text-5xl">{avatar.emoji}</span>
                         )}
                       </div>
-                    </div>
-                  </Link>
-                </div>
-              )
-            }
-          })}
-          
-          {/* 添加學生按鈕（僅在非排序模式下顯示） */}
-          {!isReordering && (
-            <button
-              onClick={() => setIsAddStudentModalOpen(true)}
-              className="group relative rounded-xl border-2 border-dashed border-gray-300 hover:border-purple-500 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer"
-            >
-              <div className="block p-5 transition-all duration-300">
-                <div className="flex flex-col items-center text-center gap-3">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 text-[4rem] font-bold shadow-lg group-hover:from-purple-200 group-hover:to-purple-300 group-hover:text-purple-600 transition-all duration-300">
-                    +
+                      {/* 設定按鈕 - hover時在圖示右下方顯示 */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          e.preventDefault()
+                          router.push(`/students/${student.id}/edit`)
+                        }}
+                        aria-label="Settings"
+                        className="absolute -bottom-2 -right-2 w-8 h-8 flex items-center justify-center bg-white/60 hover:bg-white/70 rounded-full shadow-lg opacity-0 group-hover/avatar:opacity-100 transition-all duration-200 cursor-pointer z-20"
+                        title={tCommon('settings') || '設定'}
+                      >
+                        <span className="material-symbols-outlined text-gray-700 text-lg">
+                          settings
+                        </span>
+                      </button>
+                    </Link>
+                    
+                    {/* 學生資訊 - 點擊連結到學習記錄頁面 */}
+                    <Link
+                      href={`/student/${student.id}`}
+                      className="flex flex-col items-center justify-center text-center gap-1 h-16 w-full"
+                    >
+                      <h1 className="text-white text-2xl font-bold leading-tight tracking-tight drop-shadow-[0_4.5px_9px_rgba(0,0,0,0.75)]">
+                        {student.name}
+                      </h1>
+                      {student.email ? (
+                        <p className="text-blue-50/80 text-sm font-normal tracking-wide truncate max-w-full px-2 drop-shadow-[0_3px_6px_rgba(0,0,0,0.75)]">
+                          {student.email}
+                        </p>
+                      ) : (
+                        <div className="h-4"></div>
+                      )}
+                    </Link>
                   </div>
-                  <div className="w-full">
-                    <h3 className="text-xl font-bold text-gray-600 mb-1 group-hover:text-purple-600 transition-colors duration-300">
-                      {t('addStudent')}
-                    </h3>
+                  
+                  {/* 工具欄 / 導航區域 */}
+                  <div className="w-full flex-shrink-0">
+                    <div className="glass-nav flex justify-between items-center rounded-full px-8 py-4 shadow-lg">
+                      {/* 評量按鈕 */}
+                      <Link
+                        href={`/student/${student.id}`}
+                        aria-label="Assessments"
+                        className="group flex flex-col items-center justify-center transition-transform active:scale-95 cursor-pointer"
+                        title="評量"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span 
+                          className="material-symbols-outlined text-white transition-colors drop-shadow-[0_4.5px_9px_rgba(0,0,0,0.75)] group-hover:text-[#30e87a] group-hover:drop-shadow-[0_0_8px_rgba(48,232,122,0.5)]"
+                          style={{ fontSize: '2.34rem' }}
+                        >
+                          assignment
+                        </span>
+                      </Link>
+                      
+                      {/* 科目設定按鈕 */}
+                      <Link
+                        href={`/student/${student.id}/subjects`}
+                        aria-label="Subjects"
+                        className="group flex flex-col items-center justify-center transition-transform active:scale-95 cursor-pointer"
+                        title="科目設定"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span 
+                          className="material-symbols-outlined text-white transition-colors drop-shadow-[0_4.5px_9px_rgba(0,0,0,0.75)] group-hover:text-[#30e87a] group-hover:drop-shadow-[0_0_8px_rgba(48,232,122,0.5)]"
+                          style={{ fontSize: '2.34rem' }}
+                        >
+                          menu_book
+                        </span>
+                      </Link>
+                      
+                      {/* 交易/獎金存折按鈕 */}
+                      <Link
+                        href={`/student/${student.id}/transactions`}
+                        aria-label="Transactions"
+                        className="group flex flex-col items-center justify-center transition-transform active:scale-95 cursor-pointer"
+                        title="獎金存折"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span 
+                          className="material-symbols-outlined text-white transition-colors drop-shadow-[0_4.5px_9px_rgba(0,0,0,0.75)] group-hover:text-[#30e87a] group-hover:drop-shadow-[0_0_8px_rgba(48,232,122,0.5)]"
+                          style={{ fontSize: '2.34rem' }}
+                        >
+                          attach_money
+                        </span>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
-            </button>
-          )}
+            )
+          })}
+
+          {/* 添加學生按鈕（拖曳時顯示半透明但無法拖曳） */}
+          {(() => {
+            const addStudentCircles = circleConfigs['add-student-button'] || []
+            return (
+              <button
+                onClick={() => !hasReordered && setIsAddStudentModalOpen(true)}
+                disabled={hasReordered}
+                className={`relative w-full max-w-[380px] aspect-square overflow-hidden rounded-xl card-shadow add-student-bg group/card hover:scale-[1.01] cursor-pointer add-student-dashed-border ${
+                  hasReordered ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
+                }`}
+              >
+                  {/* 裝飾性背景圓圈 */}
+                  <svg
+                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                    viewBox="0 0 380 380"
+                    fill="none"
+                    preserveAspectRatio="none"
+                  >
+                    <defs>
+                      <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id="decorationGradient-add">
+                        <stop offset="0%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0' }} />
+                        <stop offset="50%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0.15' }} />
+                        <stop offset="100%" style={{ stopColor: 'rgba(255,255,255,0.2)', stopOpacity: '0.4' }} />
+                      </radialGradient>
+                    </defs>
+                    {addStudentCircles.map((circle, idx) => (
+                      <circle
+                        key={idx}
+                        cx={circle.cx}
+                        cy={circle.cy}
+                        r={circle.r}
+                        fill="url(#decorationGradient-add)"
+                      />
+                    ))}
+                  </svg>
+                  
+                  <div className="relative z-10 flex flex-col items-center justify-between pt-[30px] pb-6 px-[18px] h-full">
+                {/* 個人資料區域 */}
+                <div className="flex flex-col items-center gap-3 w-full flex-shrink-0">
+                  {/* 頭像 */}
+                  <div className="relative group">
+                    <div 
+                      className="flex h-24 w-24 items-center justify-center rounded-full shadow-xl ring-4 ring-white/20 transition-transform duration-300 group-hover:scale-105"
+                      style={{ background: 'rgba(255, 255, 255, 0.25)' }}
+                    >
+                      <span className="text-5xl text-white font-bold">+</span>
+                    </div>
+                  </div>
+                  
+                  {/* 學生資訊 - 固定高度確保對齊 */}
+                  <div className="flex flex-col items-center justify-center text-center gap-1 h-16 w-full">
+                    <h1 className="text-white text-2xl font-bold leading-tight tracking-tight drop-shadow-[0_4.5px_9px_rgba(0,0,0,0.75)]">
+                      {t('addStudent')}
+                    </h1>
+                    <div className="h-4"></div>
+                  </div>
+                </div>
+                
+                {/* 工具欄 / 導航區域 */}
+                <div className="w-full flex-shrink-0">
+                  <div className="glass-nav flex justify-center items-center rounded-full px-6 py-3 shadow-lg">
+                    <span className="text-white text-base font-medium drop-shadow-[0_3px_6px_rgba(0,0,0,0.75)]">{t('clickToAddNewStudent')}</span>
+                  </div>
+                </div>
+              </div>
+              </button>
+            )
+          })()}
         </div>
       ) : (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-items-center">
           {/* 當沒有學生時，添加學生按鈕使用與學生卡片相同的位置和大小 */}
-          <button
-            onClick={() => setIsAddStudentModalOpen(true)}
-            className="group relative rounded-xl border-2 border-dashed border-gray-300 hover:border-purple-500 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer"
-          >
-            <div className="block p-5 transition-all duration-300">
-              <div className="flex flex-col items-center text-center gap-3">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 text-[4rem] font-bold shadow-lg group-hover:from-purple-200 group-hover:to-purple-300 group-hover:text-purple-600 transition-all duration-300">
-                  +
+          {(() => {
+            const emptyStudentCircles = circleConfigs['empty-student-button'] || []
+            return (
+              <button
+                onClick={() => setIsAddStudentModalOpen(true)}
+                className="relative w-full max-w-[380px] aspect-square overflow-hidden rounded-xl card-shadow add-student-bg group/card hover:scale-[1.01] cursor-pointer add-student-dashed-border"
+              >
+                {/* 裝飾性背景圓圈 */}
+                <svg
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  viewBox="0 0 380 380"
+                  fill="none"
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id="decorationGradient-empty">
+                      <stop offset="0%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0' }} />
+                      <stop offset="50%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0.15' }} />
+                      <stop offset="100%" style={{ stopColor: 'rgba(255,255,255,0.2)', stopOpacity: '0.4' }} />
+                    </radialGradient>
+                  </defs>
+                  {emptyStudentCircles.map((circle, idx) => (
+                    <circle
+                      key={idx}
+                      cx={circle.cx}
+                      cy={circle.cy}
+                      r={circle.r}
+                      fill="url(#decorationGradient-empty)"
+                    />
+                  ))}
+                </svg>
+                
+                <div className="relative z-10 flex flex-col items-center justify-between pt-[30px] pb-6 px-[18px] h-full">
+              {/* 個人資料區域 */}
+              <div className="flex flex-col items-center gap-3 w-full flex-shrink-0">
+                {/* 頭像 */}
+                <div className="relative group">
+                  <div 
+                    className="flex h-24 w-24 items-center justify-center rounded-full shadow-xl ring-4 ring-white/20 transition-transform duration-300 group-hover:scale-105"
+                    style={{ background: 'rgba(255, 255, 255, 0.25)' }}
+                  >
+                    <span className="material-symbols-outlined text-5xl text-gray-400">add</span>
+                  </div>
                 </div>
-                <div className="w-full">
-                  <h3 className="text-xl font-bold text-gray-600 mb-1 group-hover:text-purple-600 transition-colors duration-300">
+                
+                {/* 學生資訊 - 固定高度確保對齊 */}
+                <div className="flex flex-col items-center justify-center text-center gap-1 h-16 w-full">
+                  <h1 className="text-white text-2xl font-bold leading-tight tracking-tight drop-shadow-[0_4.5px_9px_rgba(0,0,0,0.75)]">
                     {t('addStudent')}
-                  </h3>
+                  </h1>
+                  <div className="h-4"></div>
+                </div>
+              </div>
+              
+              {/* 工具欄 / 導航區域 */}
+              <div className="w-full flex-shrink-0">
+                <div className="glass-nav flex justify-center items-center rounded-full px-6 py-3 shadow-lg">
+                  <span className="text-white text-base font-medium drop-shadow-[0_3px_6px_rgba(0,0,0,0.75)]">{t('clickToAddNewStudent')}</span>
                 </div>
               </div>
             </div>
           </button>
+            )
+          })()}
         </div>
       )}
 
@@ -407,5 +638,3 @@ export default function StudentList({ initialStudents }: Props) {
     </div>
   )
 }
-
-

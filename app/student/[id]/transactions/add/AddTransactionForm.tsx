@@ -403,7 +403,7 @@ export default function AddTransactionForm({ studentId }: Props) {
             type="button"
             onClick={() => router.back()}
             disabled={loading}
-            className="px-8 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="px-8 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-800 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             {tCommon('cancel')}
           </button>

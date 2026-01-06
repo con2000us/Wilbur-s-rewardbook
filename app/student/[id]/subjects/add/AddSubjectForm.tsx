@@ -368,7 +368,7 @@ export default function AddSubjectForm({ studentId, existingSubjects }: Props) {
             type="button"
             onClick={() => router.back()}
             disabled={loading}
-            className="px-8 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 hover:-translate-y-1 hover:shadow-md transition-all duration-200 disabled:opacity-50 cursor-pointer"
+            className="px-8 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-800 hover:bg-gray-50 hover:-translate-y-1 hover:shadow-md transition-all duration-200 disabled:opacity-50 cursor-pointer"
           >
             {tCommon('cancel')}
           </button>

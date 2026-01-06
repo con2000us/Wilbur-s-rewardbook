@@ -220,7 +220,7 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                   required
                   className="w-5 h-5 text-blue-600 accent-blue-600"
                 />
-                <span className="text-lg font-medium">
+                <span className="text-lg font-medium text-gray-800">
                   {subject.icon} {subject.name}
                 </span>
               </label>
@@ -259,7 +259,7 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                 required
                 className="w-5 h-5 text-blue-600 accent-blue-600"
               />
-              <span className="text-lg font-medium">📝 {t('types.exam')}</span>
+              <span className="text-lg font-medium text-gray-800">📝 {t('types.exam')}</span>
             </label>
             
             <label className="relative flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300">
@@ -272,7 +272,7 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                 required
                 className="w-5 h-5 text-blue-600 accent-blue-600"
               />
-              <span className="text-lg font-medium">📋 {t('types.quiz')}</span>
+              <span className="text-lg font-medium text-gray-800">📋 {t('types.quiz')}</span>
             </label>
             
             <label className="relative flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300">
@@ -285,7 +285,7 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                 required
                 className="w-5 h-5 text-blue-600 accent-blue-600"
               />
-              <span className="text-lg font-medium">📓 {t('types.homework')}</span>
+              <span className="text-lg font-medium text-gray-800">📓 {t('types.homework')}</span>
             </label>
             
             <label className="relative flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300">
@@ -298,7 +298,7 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                 required
                 className="w-5 h-5 text-blue-600 accent-blue-600"
               />
-              <span className="text-lg font-medium">🎨 {t('types.project')}</span>
+              <span className="text-lg font-medium text-gray-800">🎨 {t('types.project')}</span>
             </label>
           </div>
         </div>
@@ -594,7 +594,7 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
             type="button"
             onClick={() => router.back()}
             disabled={loading || deleting}
-            className="px-8 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 hover:-translate-y-1 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
+            className="px-8 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-800 hover:bg-gray-50 hover:-translate-y-1 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
           >
             取消
           </button>

@@ -25,6 +25,47 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* 確保輸入框在深色模式下也有良好的對比度 */
+input[type="text"],
+input[type="number"],
+input[type="password"],
+input[type="email"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+textarea,
+select {
+  background-color: #ffffff !important;
+  color: #171717 !important;
+}
+
+/* 確保 select 的 option 在深色模式下也有良好的對比度 */
+select option {
+  background-color: #ffffff !important;
+  color: #171717 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  input[type="text"],
+  input[type="number"],
+  input[type="password"],
+  input[type="email"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  textarea,
+  select {
+    background-color: #ffffff !important;
+    color: #171717 !important;
+  }
+
+  /* 確保 select 的 option 在深色模式下也有良好的對比度 */
+  select option {
+    background-color: #ffffff !important;
+    color: #171717 !important;
+  }
+}
+
 /* 規則保存後的閃爍動畫 */
 @keyframes saveFlash {
   0%, 100% {
@@ -64,4 +105,64 @@ body {
 
 .rule-saved-flash {
   animation: saveFlash 2.5s ease-in-out, saveFadeOut 2s ease-out 2.5s forwards;
+}
+
+/* Custom styles for smoother gradients and glassmorphism */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-shadow {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Custom dashed border for add student card with rounded corners */
+.add-student-dashed-border {
+  position: relative;
+  border: none;
+}
+
+.add-student-dashed-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0.75rem;
+  border: 5px dashed rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+/* Add student card background with 15% opacity */
+.add-student-bg {
+  background: linear-gradient(
+    to bottom right,
+    rgba(229, 231, 235, 0.15),
+    rgba(209, 213, 219, 0.15),
+    rgba(156, 163, 175, 0.15)
+  );
+}
+
+/* Smooth drag animation */
+[data-student-card] {
+  transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+[data-student-card]:hover {
+  transform: scale(1.01);
+}
+
+[data-student-card].dragging {
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Add student button transition */
+.add-student-bg {
+  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
 }

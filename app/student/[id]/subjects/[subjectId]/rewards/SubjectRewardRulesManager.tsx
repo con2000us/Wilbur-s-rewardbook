@@ -797,7 +797,7 @@ export default function SubjectRewardRulesManager({
                 type="button"
                 onClick={resetForm}
                 disabled={loading}
-                className="px-6 py-2 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 hover:-translate-y-1 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
+                className="px-6 py-2 border-2 border-gray-300 rounded-lg font-semibold text-gray-800 hover:bg-gray-50 hover:-translate-y-1 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
               >
                 {tCommon('cancel')}
               </button>

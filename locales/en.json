@@ -55,6 +55,7 @@
     "reorderHint": "Drag student cards to adjust display order, then click Save",
     "noStudents": "No students added yet",
     "addStudent": "Add Student",
+    "clickToAddNewStudent": "Click to add new student",
     "features": {
       "records": {
         "title": "Learning Records",

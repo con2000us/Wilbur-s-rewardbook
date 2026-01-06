@@ -55,6 +55,7 @@
     "reorderHint": "拖曳學生卡片以調整顯示順序，完成後點擊保存",
     "noStudents": "尚未添加任何學生",
     "addStudent": "添加學生",
+    "clickToAddNewStudent": "點擊添加新學生",
     "features": {
       "records": {
         "title": "學習記錄",
