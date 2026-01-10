@@ -1,15 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import SubjectTabs from './SubjectTabs'
 import AssessmentModal from './components/AssessmentModal'
+import SidebarContent from './SidebarContent'
+import StudentHeaderWithDropdown from '@/app/components/StudentHeaderWithDropdown'
+import StudentSidebarHeader from './components/StudentSidebarHeader'
 import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 
 interface Props {
   studentId: string
   studentName: string
+  studentAvatar: any
+  allStudents: any[]
   subjects: any[]
   assessments: any[]
   transactions: any[]
@@ -17,8 +22,20 @@ interface Props {
   rewardRules: any[]
 }
 
-export default function StudentRecords({ studentId, studentName, subjects, assessments, transactions, summary, rewardRules }: Props) {
+export default function StudentRecords({ 
+  studentId, 
+  studentName,
+  studentAvatar,
+  allStudents,
+  subjects, 
+  assessments, 
+  transactions, 
+  summary, 
+  rewardRules
+}: Props) {
   const t = useTranslations('student')
+  const tAssessment = useTranslations('assessment')
+  const tCommon = useTranslations('common')
   const locale = useLocale()
   const router = useRouter()
   
@@ -27,9 +44,9 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
   const [editingAssessment, setEditingAssessment] = useState<any>(null)
   const [mostCommonType, setMostCommonType] = useState<string>('exam')
   
-  // 預設為當前月份
+  // 預設為當前月份（會在 useEffect 中根據最近結算調整）
   const currentMonth = new Date().toISOString().slice(0, 7)
-  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
+  const [selectedMonth, setSelectedMonth] = useState<string>('')
   const [selectedSubject, setSelectedSubject] = useState<string>('')
   const [lastSelectedSubject, setLastSelectedSubject] = useState<string>('')
   const [availableMonths, setAvailableMonths] = useState<string[]>([])
@@ -38,6 +55,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
   const [resetDate, setResetDate] = useState<Date | null>(null)
   const [calculateFromReset, setCalculateFromReset] = useState<boolean>(false)
+  const isInitialized = useRef(false)
   const [rewardBreakdown, setRewardBreakdown] = useState({
     assessmentEarned: 0,    // 評量獎金收入（保留用於向後兼容）
     assessmentSpent: 0,     // 評量相關支出（保留用於向後兼容）
@@ -72,17 +90,50 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     const sortedMonths = Array.from(months).sort().reverse()
     setAvailableMonths(sortedMonths)
     
+    // 只在第一次初始化時設定預設月份（根據最近結算）
+    if (!isInitialized.current && sortedMonths.length > 0) {
+      // 找到最近的結算記錄
+      const findLastResetTransaction = (transactionList: any[]) => {
+        const sortedTransactions = [...transactionList].sort((a, b) => {
+          const dateA = new Date(a.transaction_date || a.created_at).getTime()
+          const dateB = new Date(b.transaction_date || b.created_at).getTime()
+          return dateB - dateA
+        })
+        return sortedTransactions.find(t => t.transaction_type === 'reset')
+      }
+      
+      const lastReset = findLastResetTransaction(transactions)
+      let defaultMonth = ''
+      
+      if (lastReset) {
+        const lastResetDate = new Date(lastReset.transaction_date || lastReset.created_at)
+        const resetMonth = `${lastResetDate.getFullYear()}-${String(lastResetDate.getMonth() + 1).padStart(2, '0')}`
+        
+        // 如果結算月份在可用月份中，使用結算月份
+        if (sortedMonths.includes(resetMonth)) {
+          defaultMonth = resetMonth
+        } else {
+          // 結算月份不在可用月份中，選擇全部月份
+          defaultMonth = ''
+        }
+      } else {
+        // 沒有結算記錄，選擇全部月份
+        defaultMonth = ''
+      }
+      
+      setSelectedMonth(defaultMonth)
+      isInitialized.current = true
+    }
+    
     // 重要：資料更新（例如新增/編輯評量後 router.refresh）時，保留使用者原本選擇的月份
     // - selectedMonth === '' 代表「全部」或「最近結算」，不應被自動改寫
     // - 只有當目前選擇的月份已不存在（例如編輯後月份被移除）才自動切到合理的預設
-    if (selectedMonth === '') return
-    if (sortedMonths.length === 0) return
-
-    const hasCurrentMonth = sortedMonths.includes(currentMonth)
-    const hasSelectedMonth = selectedMonth ? sortedMonths.includes(selectedMonth) : false
-
-    if (!hasSelectedMonth) {
-      setSelectedMonth(hasCurrentMonth ? currentMonth : sortedMonths[0])
+    if (isInitialized.current && selectedMonth && sortedMonths.length > 0) {
+      const hasSelectedMonth = sortedMonths.includes(selectedMonth)
+      if (!hasSelectedMonth) {
+        const hasCurrentMonth = sortedMonths.includes(currentMonth)
+        setSelectedMonth(hasCurrentMonth ? currentMonth : sortedMonths[0])
+      }
     }
 
     // 計算最常用的評量類型
@@ -93,7 +144,7 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
     })
     const mostCommon = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]
     setMostCommonType(mostCommon ? mostCommon[0] : 'exam')
-  }, [assessments, currentMonth, selectedMonth])
+  }, [assessments, currentMonth, selectedMonth, transactions])
 
   // 記住使用者「最後一次選擇的具體科目」
   // 目的：當目前 focused tab 是「全部」時，新增評量 popup 仍可預選上次的科目
@@ -437,233 +488,80 @@ export default function StudentRecords({ studentId, studentName, subjects, asses
 
   return (
     <>
-      {/* 月份選擇器 */}
-      <div className="mb-6 no-print">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          {/* 月份控制器 */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <label className="text-sm font-bold text-gray-800 whitespace-nowrap">
-              📅 {t('selectMonth')}
-            </label>
-            
-            {/* 月份导航器 */}
-            <div className="flex items-center gap-2 bg-white border-2 border-gray-300 rounded-lg p-1">
-              {/* 上一個月按鈕 */}
-              <button
-                onClick={goToPreviousMonth}
-                disabled={!canGoPrevious}
-                className={`p-2 rounded-lg transition-all ${
-                  canGoPrevious
-                    ? 'hover:bg-gray-100 text-gray-700 cursor-pointer'
-                    : 'text-gray-300 cursor-not-allowed'
-                }`}
-                title={t('previousMonth')}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
+      {/* 側邊欄 */}
+      <div className="relative z-20 lg:w-[360px] lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
+        <header className="flex flex-col lg:items-start lg:sticky lg:top-0 w-full lg:min-w-0">
+          {/* Student Sidebar Header - 包含學生頭像和快速導覽 */}
+          <StudentSidebarHeader
+            studentId={studentId}
+            studentName={studentName}
+            studentAvatar={studentAvatar}
+            recordsTitle={t('recordsTitle')}
+            allStudents={allStudents}
+            basePath=""
+            currentPage="records"
+            showHeader={true}
+          />
 
-              {/* 當前月份顯示（可點擊打開選擇器） */}
-              <div className="relative">
-                <button
-                  onClick={() => setIsMonthPickerOpen(!isMonthPickerOpen)}
-                  className="px-4 py-2 font-semibold text-gray-800 hover:bg-gray-50 rounded-lg transition-all min-w-[140px] text-center cursor-pointer"
-                >
-                  {selectedMonth 
-                    ? formatMonth(selectedMonth) 
-                    : calculateFromReset 
-                      ? t('recentSettlement')
-                      : t('all')}
-                  {selectedMonth === currentMonth && ' 📍'}
-                </button>
-
-                {/* 月份選擇器面板 */}
-                {isMonthPickerOpen && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-10"
-                      onClick={() => setIsMonthPickerOpen(false)}
-                    />
-                    <div className="absolute top-full left-0 mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-20 p-4 min-w-[300px]">
-                      {/* 全部和最近結算選項 */}
-                      <div className="grid grid-cols-2 gap-2 mb-2">
-                        <button
-                          onClick={() => {
-                            setSelectedMonth('')
-                            setCalculateFromReset(false)
-                            setIsMonthPickerOpen(false)
-                          }}
-                          className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
-                            selectedMonth === '' && !calculateFromReset
-                              ? 'bg-blue-600 text-white'
-                              : 'hover:bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {t('all')}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedMonth('')
-                            setCalculateFromReset(true)
-                            setIsMonthPickerOpen(false)
-                          }}
-                          className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
-                            calculateFromReset && !selectedMonth
-                              ? 'bg-blue-600 text-white'
-                              : 'hover:bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {t('recentSettlement')}
-                        </button>
-                      </div>
-
-                      {/* 月份網格 */}
-                      <div 
-                        className="grid grid-cols-3 gap-2 overflow-y-auto pr-2 border border-gray-200 rounded-lg p-2"
-                        style={{
-                          maxHeight: '200px',
-                          scrollbarWidth: 'thin',
-                          scrollbarColor: '#cbd5e1 #f1f5f9'
-                        }}
-                      >
-                        {availableMonths.map(month => {
-                          const [year, monthNum] = month.split('-')
-                          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                          
-                          return (
-                            <button
-                              key={month}
-                              onClick={() => {
-                                setSelectedMonth(month)
-                                setIsMonthPickerOpen(false)
-                              }}
-                              className={`px-3 py-2 rounded-lg font-semibold transition-all flex flex-col items-center h-[85px] cursor-pointer ${
-                                selectedMonth === month
-                                  ? 'bg-blue-600 text-white'
-                                  : 'hover:bg-blue-50 text-gray-700'
-                              }`}
-                            >
-                              {locale === 'zh-TW' ? (
-                                <>
-                                  <div className="text-xs">{year}年</div>
-                                  <div className="text-lg">{parseInt(monthNum)}月</div>
-                                </>
-                              ) : (
-                                <>
-                                  <div className="text-xs">{year}</div>
-                                  <div className="text-lg">{monthNames[parseInt(monthNum) - 1]}</div>
-                                </>
-                              )}
-                              <div className="text-xs h-4 flex items-center justify-center">
-                                {month === currentMonth ? '📍' : ''}
-                              </div>
-                            </button>
-                          )
-                        })}
-                      </div>
-                      
-                      {/* 滾動提示 */}
-                      {availableMonths.length > 6 && (
-                        <div className="text-xs text-gray-500 text-center mt-2 animate-pulse">
-                          {t('scrollMoreMonths')} ↓
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* 下一個月按鈕 */}
-              <button
-                onClick={goToNextMonth}
-                disabled={!canGoNext}
-                className={`p-2 rounded-lg transition-all ${
-                  canGoNext
-                    ? 'hover:bg-gray-100 text-gray-700 cursor-pointer'
-                    : 'text-gray-300 cursor-not-allowed'
-                }`}
-                title={t('nextMonth')}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-            
-            {/* 從最後歸零點計算說明（只在選擇最近結算時顯示） */}
-            {!selectedMonth && calculateFromReset && (
-              <div className="flex items-center gap-2 bg-blue-50 border-2 border-blue-300 rounded-lg px-4 py-2">
-                <span className="text-sm font-semibold text-blue-700 whitespace-nowrap">
-                  {t('calculateFromResetDescription')}
-                </span>
-              </div>
-            )}
+          {/* 側邊欄內容（統計卡片等） */}
+          <div className="mt-3 w-full">
+            <SidebarContent
+            studentId={studentId}
+            studentName={studentName}
+            subjects={subjects}
+            assessments={assessments}
+            transactions={transactions}
+            summary={filteredSummary}
+            rewardBreakdown={rewardBreakdown}
+            selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
+            availableMonths={availableMonths}
+            currentMonth={currentMonth}
+            calculateFromReset={calculateFromReset}
+            setCalculateFromReset={setCalculateFromReset}
+            isMonthPickerOpen={isMonthPickerOpen}
+            setIsMonthPickerOpen={setIsMonthPickerOpen}
+            formatMonth={formatMonth}
+            goToPreviousMonth={goToPreviousMonth}
+            goToNextMonth={goToNextMonth}
+            canGoPrevious={canGoPrevious}
+            canGoNext={canGoNext}
+            filteredAssessments={filteredAssessments}
+            onOpenAddModal={handleOpenAddModal}
+            studentAvatar={studentAvatar}
+          />
           </div>
-
-          {/* 操作按鈕 */}
-          <div className="flex gap-2">
-            <button
-              onClick={handleOpenAddModal}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 cursor-pointer"
-            >
-              <span>➕</span>
-              <span>{t('addAssessment')}</span>
-            </button>
-            {(() => {
-              const params = new URLSearchParams()
-              
-              // 計算日期範圍（從過濾後的評量中）
-              if (filteredAssessments && filteredAssessments.length > 0) {
-                const dates = filteredAssessments
-                  .filter((a: any) => a.due_date)
-                  .map((a: any) => new Date(a.due_date).getTime())
-                  .filter((d: number) => !isNaN(d))
-                
-                if (dates.length > 0) {
-                  const minDate = new Date(Math.min(...dates))
-                  const maxDate = new Date(Math.max(...dates))
-                  params.set('startDate', minDate.toISOString().split('T')[0])
-                  params.set('endDate', maxDate.toISOString().split('T')[0])
-                }
-              }
-              
-              // 添加科目
-              if (selectedSubject) {
-                params.set('subject', selectedSubject)
-              }
-              
-              // 添加歸零點選項
-              if (calculateFromReset) {
-                params.set('calculateFromReset', 'true')
-              }
-              
-              return (
-                <Link
-                  href={`/student/${studentId}/print?${params.toString()}`}
-                  target="_blank"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2"
-                >
-                  🖨️ {t('printReport')}
-                </Link>
-              )
-            })()}
-          </div>
-        </div>
+        </header>
       </div>
 
-      {/* 科目標籤和評量列表 */}
-      <SubjectTabs 
-        subjects={subjects} 
-        assessments={filteredAssessments} 
-        studentId={studentId}
-        summary={filteredSummary}
-        selectedSubject={selectedSubject}
-        setSelectedSubject={setSelectedSubject}
-        resetDate={resetDate}
-        rewardBreakdown={rewardBreakdown}
-        onEditAssessment={handleOpenEditModal}
-      />
+      {/* 主內容區 */}
+      <main className="relative z-10 flex-1">
+        {/* 科目標籤和評量列表 */}
+        <SubjectTabs
+          subjects={subjects}
+          assessments={filteredAssessments}
+          studentId={studentId}
+          summary={filteredSummary}
+          selectedSubject={selectedSubject}
+          setSelectedSubject={setSelectedSubject}
+          resetDate={resetDate}
+          rewardBreakdown={rewardBreakdown}
+          onEditAssessment={handleOpenEditModal}
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
+          availableMonths={availableMonths}
+          currentMonth={currentMonth}
+          calculateFromReset={calculateFromReset}
+          setCalculateFromReset={setCalculateFromReset}
+          isMonthPickerOpen={isMonthPickerOpen}
+          setIsMonthPickerOpen={setIsMonthPickerOpen}
+          formatMonth={formatMonth}
+          goToPreviousMonth={goToPreviousMonth}
+          goToNextMonth={goToNextMonth}
+          canGoPrevious={canGoPrevious}
+          canGoNext={canGoNext}
+        />
+      </main>
 
       {/* 評量表單 Modal */}
       <AssessmentModal

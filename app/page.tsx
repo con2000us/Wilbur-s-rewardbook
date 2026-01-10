@@ -25,27 +25,27 @@ export default async function Home() {
   const siteName = (siteNameSetting as any)?.value || t('title')
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-5xl mx-auto">
         {/* 語言切換與設置按鈕 - 右上角 */}
-        <div className="flex justify-end items-center gap-4 mb-6">
+        <div className="flex justify-end items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Link 
             href="/settings"
-            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 font-bold text-gray-800 text-base"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 bg-white rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 font-bold text-gray-800 text-sm sm:text-base"
           >
-            <span className="text-2xl">⚙️</span>
-            <span>{tNav('settings')}</span>
+            <span className="text-xl sm:text-2xl">⚙️</span>
+            <span className="hidden sm:inline">{tNav('settings')}</span>
           </Link>
           <LanguageToggle />
           <LogoutButton />
         </div>
 
         {/* 主標題區域 - 大而突出 */}
-        <div className="text-center mb-8">
-          <h1 className="text-8xl font-bold text-white mb-4 drop-shadow-2xl animate-fade-in">
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[41.4px] font-bold text-white mb-3 md:mb-4 drop-shadow-2xl animate-fade-in">
             📚 {siteName}
           </h1>
-          <p className="text-2xl text-purple-100 font-medium mb-8">
+          <p className="text-base sm:text-lg text-purple-100 mb-6 md:mb-8">
             {t('subtitle')}
           </p>
         </div>
@@ -54,26 +54,26 @@ export default async function Home() {
         <StudentList initialStudents={students || []} />
 
         {/* 功能卡片 */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/30">
-            <div className="text-5xl mb-3 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">📝</div>
-            <h3 className="text-xl font-bold text-white mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">{t('features.records.title')}</h3>
-            <p className="text-white text-sm drop-shadow-[0_3px_6px_rgba(0,0,0,0.8)]">{t('features.records.desc')}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/50">
+            <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">📝</div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">{t('features.records.title')}</h3>
+            <p className="text-xs sm:text-sm text-gray-800">{t('features.records.desc')}</p>
           </div>
-          <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/30">
-            <div className="text-5xl mb-3 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">💎</div>
-            <h3 className="text-xl font-bold text-white mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">{t('features.rewards.title')}</h3>
-            <p className="text-white text-sm drop-shadow-[0_3px_6px_rgba(0,0,0,0.8)]">{t('features.rewards.desc')}</p>
+          <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/50">
+            <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">💎</div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">{t('features.rewards.title')}</h3>
+            <p className="text-xs sm:text-sm text-gray-800">{t('features.rewards.desc')}</p>
           </div>
-          <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/30">
-            <div className="text-5xl mb-3 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">📚</div>
-            <h3 className="text-xl font-bold text-white mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">{t('features.subjects.title')}</h3>
-            <p className="text-white text-sm drop-shadow-[0_3px_6px_rgba(0,0,0,0.8)]">{t('features.subjects.desc')}</p>
+          <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/50">
+            <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">📚</div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">{t('features.subjects.title')}</h3>
+            <p className="text-xs sm:text-sm text-gray-800">{t('features.subjects.desc')}</p>
           </div>
-          <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/30">
-            <div className="text-5xl mb-3 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">💰</div>
-            <h3 className="text-xl font-bold text-white mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">{t('features.passbook.title')}</h3>
-            <p className="text-white text-sm drop-shadow-[0_3px_6px_rgba(0,0,0,0.8)]">{t('features.passbook.desc')}</p>
+          <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/50">
+            <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">💰</div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">{t('features.passbook.title')}</h3>
+            <p className="text-xs sm:text-sm text-gray-800">{t('features.passbook.desc')}</p>
           </div>
         </div>
       </div>

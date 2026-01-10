@@ -163,7 +163,7 @@ export default async function PrintPage({
   }
 
   return (
-    <div className="max-w-[210mm] mx-auto bg-white p-8" style={{fontFamily: 'system-ui, sans-serif'}}>
+    <div className="max-w-[210mm] mx-auto bg-white p-8" style={{fontFamily: "'Noto Sans TC', sans-serif"}}>
         {/* 打印按鈕 */}
         <PrintButtons />
         

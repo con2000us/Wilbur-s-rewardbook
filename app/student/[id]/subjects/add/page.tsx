@@ -78,7 +78,7 @@ export default async function AddSubjectPage({
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-xl font-bold text-gray-800 mb-2">
             ➕ {t('addSubject')}
           </h1>
           <p className="text-gray-600 mb-6">

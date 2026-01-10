@@ -69,12 +69,12 @@ export default async function EditSubjectPage({
       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-purple-200/30"></div>
       
       {/* 內容區域 */}
-      <div className="relative z-10 p-8">
+      <div className="relative z-10 p-4 sm:p-6 md:p-8">
         <div className="max-w-2xl mx-auto">
-        <div className="mb-6 flex items-center gap-4">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
           <Link 
             href={`/student/${id}/subjects`}
-            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold inline-flex items-center gap-2"
+            className="px-3 sm:px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold inline-flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             <span>←</span>
             <span>{t('returnToManage')}</span>
@@ -90,11 +90,11 @@ export default async function EditSubjectPage({
           />
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
+          <h1 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">
             ✏️ {t('editSubject')}
           </h1>
-          <p className="text-gray-600 mb-6">
+          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
             {/* @ts-ignore - Supabase type inference issue with select queries */}
             {t('editOrDeleteSubject', { name: (subject as any).name })}
           </p>

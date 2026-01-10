@@ -90,6 +90,7 @@
     "totalBonus": "Total Rewards",
     "income": "Income",
     "expense": "Expense",
+    "balance": "Balance",
     "totalSubjects": "Total Subjects",
     "totalAssessments": "Total Assessments",
     "allAssessments": "All Assessments",
@@ -110,7 +111,7 @@
     "returnToStudent": "Back to {name}'s Page",
     "noRecords": "No records for this period",
     "selectOtherMonth": "Select another month or add new records",
-    "addNewRecord": "Click '➕ Add Assessment' in the top right to start recording",
+    "addNewRecord": "Click '➕ Add Assessment' to create a new record",
     "today": "Today",
     "yesterday": "Yesterday",
     "noDate": "No Date",
@@ -120,7 +121,14 @@
     "otherRewards": "Other Rewards (Non-assessment)",
     "assessmentReward": "Assessment",
     "passbookReward": "Passbook",
-    "resetBase": "Settlement Base"
+    "resetBase": "Settlement Base",
+    "totalAverageScore": "Total Average",
+    "financialOverview": "Financial Overview",
+    "points": "pts",
+    "addRecordDesc": "Create new record",
+    "exportPDF": "Export PDF",
+    "unit": "Unit",
+    "selectAssessmentMonth": "Select Assessment Month"
   },
   "assessment": {
     "title": "Assessment Title",
@@ -382,7 +390,8 @@
     "newLabel": "NEW",
     "currentLabel": "Current",
     "insertHere": "Insert here",
-    "moveHere": "Move here"
+    "moveHere": "Move here",
+    "quickAddSubject": "Quick Add Subject"
   },
   "students": {
     "addStudent": "Add Student",

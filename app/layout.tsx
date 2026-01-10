@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { cookies } from 'next/headers';
@@ -16,6 +16,17 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+// Viewport 設置 - 確保手機正確顯示
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1.0,
+  maximumScale: 5.0,
+  userScalable: true,
+  // 添加以下屬性以更好地支援移動設備
+  themeColor: '#6a99e0',
+  viewportFit: 'cover',
+}
 
 // 動態生成 metadata
 export async function generateMetadata(): Promise<Metadata> {
@@ -51,12 +62,14 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <head>
-        {/* Google Fonts: Spline Sans */}
+        {/* Google Fonts: Noto Sans TC */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
         {/* Material Symbols */}
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+        {/* Material Icons Round */}
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

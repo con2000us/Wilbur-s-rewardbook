@@ -19,6 +19,9 @@ interface Props {
   allStudents: Student[]
   basePath?: string
   currentPage?: 'records' | 'transactions' | 'subjects' | 'settings'
+  isOpen?: boolean
+  setIsOpen?: (value: boolean) => void
+  showHeader?: boolean
 }
 
 export default function StudentHeaderWithDropdown({ 
@@ -28,9 +31,15 @@ export default function StudentHeaderWithDropdown({
   recordsTitle,
   allStudents,
   basePath = '',
-  currentPage = 'records'
+  currentPage = 'records',
+  isOpen: externalIsOpen,
+  setIsOpen: externalSetIsOpen,
+  showHeader = true
 }: Props) {
-  const [isOpen, setIsOpen] = useState(false)
+  // 科目設定頁面預設展開學生列表
+  const [internalIsOpen, setInternalIsOpen] = useState(currentPage === 'subjects')
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen
+  const setIsOpen = externalSetIsOpen || setInternalIsOpen
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const t = useTranslations('common')
@@ -87,16 +96,29 @@ export default function StudentHeaderWithDropdown({
   // 點擊外部關閉下拉選單
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (containerRef.current && !containerRef.current.contains(target)) {
+        // 檢查是否點擊了切換學生按鈕容器
+        const buttonContainer = document.getElementById('student-switch-button-container')
+        if (buttonContainer && buttonContainer.contains(target)) {
+          // 如果點擊了按鈕容器，不關閉下拉選單（讓按鈕的 onClick 處理）
+          return
+        }
         setIsOpen(false)
       }
     }
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
+      // 使用 setTimeout 確保在按鈕的 onClick 之後執行
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside)
+      }, 0)
+      return () => {
+        clearTimeout(timeoutId)
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
     }
-  }, [isOpen])
+  }, [isOpen, setIsOpen])
 
   // 將 hex 顏色轉換為較深的版本（用於漸變效果）
   const hexToDarker = (hex: string, factor: number = 0.7): string => {
@@ -173,286 +195,31 @@ export default function StudentHeaderWithDropdown({
   // 即使只有一個學生，也顯示下拉按鈕，以便訪問各個功能頁面和返回首頁
 
   return (
-    <div className="relative" ref={containerRef}>
-      <div className="flex items-center gap-4">
-        {/* 學生頭像和名稱 */}
-        <button
-          onClick={(e) => handleOpenSettings(e, studentId)}
-          className="flex items-center gap-3 group cursor-pointer"
-        >
-          <div 
-            className="w-16 h-16 rounded-full flex items-center justify-center text-[2.35rem] shadow-2xl ring-4 ring-white/30 flex-shrink-0 group-hover:scale-105 transition-transform duration-200"
-            style={{ 
-              background: studentAvatar.gradientStyle,
-              filter: 'drop-shadow(0 10px 25px rgba(0, 0, 0, 0.5))' 
-            }}
-          >
-            {studentAvatar.emoji}
+    <div className="relative w-full min-w-0" ref={containerRef} style={{ opacity: 0.8 }}>
+      {showHeader && (
+        <div className="flex items-center gap-5 w-full min-w-0">
+          {/* 學生頭像 - 採用 code.html 的設計 */}
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-300 to-primary rounded-full blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+            <button
+              onClick={(e) => handleOpenSettings(e, studentId)}
+              className="relative w-16 h-16 rounded-full bg-white/40 flex items-center justify-center border border-white/60 cursor-pointer"
+            >
+            <span className="text-3xl leading-none" style={{ transform: 'translateY(-3px)' }}>
+              {studentAvatar.emoji}
+            </span>
+            </button>
           </div>
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white break-words group-hover:text-purple-200 transition-colors duration-200" style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.3)' }}>
+          
+          {/* 學生名稱和學習記錄 */}
+          <div className="min-w-0 flex-1">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-1 truncate">
               {studentName}
             </h1>
-          </div>
-        </button>
-        
-        {/* 學習記錄文字和下拉按鈕 */}
-        <div className="flex items-center gap-2">
-          <p className="text-purple-300 text-base md:text-xl font-semibold whitespace-nowrap" style={{ textShadow: '1px 1px 3px rgba(0, 0, 0, 0.5)' }}>
-            {recordsTitle}
-          </p>
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all duration-200 backdrop-blur-sm cursor-pointer"
-            style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.3)' }}
-            title={t('switchStudent')}
-          >
-            <svg 
-              className={`w-5 h-5 text-white transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* 下拉選單 - 與學生頭像完美對齊 */}
-      {isOpen && (
-        <div 
-          className="absolute left-0 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border-2 border-white/30 z-50 max-h-[500px] overflow-y-auto [&::-webkit-scrollbar-corner]:bg-transparent"
-          style={{ 
-            top: 'calc(100% + 0.5rem)',
-            minWidth: `${dropdownWidth}px`,
-            scrollbarColor: 'rgb(209 213 219) transparent',
-            scrollbarWidth: 'thin'
-          }}
-        >
-          {/* 當前學生 - 顯示學習記錄與設定 */}
-          <div className="px-4 py-3 bg-gradient-to-r from-purple-100/80 to-blue-100/80 border-b-2 border-purple-200">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center text-[2.35rem] shadow-2xl ring-4 ring-white/30 flex-shrink-0"
-                style={{ background: studentAvatar.gradientStyle }}
-              >
-                {studentAvatar.emoji}
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-2xl font-bold text-gray-800 mb-1">
-                  {studentName}
-                </p>
-                {/* 第一行：學習記錄和獎金存摺連結 */}
-                <div className="text-sm flex items-center gap-2">
-                  {currentPage === 'records' ? (
-                    <span className="flex items-center gap-1 text-blue-700 font-semibold min-w-[90px]">
-                      <span className="text-blue-600">📊</span>
-                      {tStudent('recordsTitle')}
-                    </span>
-                  ) : (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        router.push(`/student/${studentId}`)
-                        setIsOpen(false)
-                      }}
-                      className="flex items-center gap-1 text-gray-500 hover:text-blue-700 transition-colors cursor-pointer min-w-[90px]"
-                    >
-                      <span className="text-blue-600">📊</span>
-                      {tStudent('recordsTitle')}
-                    </button>
-                  )}
-                  <span className="text-gray-400">|</span>
-                  {currentPage === 'transactions' ? (
-                    <span className="flex items-center gap-1 text-green-700 font-semibold min-w-[90px]">
-                      <span className="text-green-600">💰</span>
-                      {tTransaction('passbook')}
-                    </span>
-                  ) : (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        router.push(`/student/${studentId}/transactions`)
-                        setIsOpen(false)
-                      }}
-                      className="flex items-center gap-1 text-gray-500 hover:text-green-700 transition-colors cursor-pointer min-w-[90px]"
-                    >
-                      <span className="text-green-600">💰</span>
-                      {tTransaction('passbook')}
-                    </button>
-                  )}
-                </div>
-                {/* 第二行：科目管理和設定連結 */}
-                <div className="text-sm flex items-center gap-2 mt-1">
-                  {currentPage === 'subjects' ? (
-                    <span className="flex items-center gap-1 text-orange-700 font-semibold min-w-[90px]">
-                      <span className="text-orange-600">📚</span>
-                      {tHome('features.subjects.title')}
-                    </span>
-                  ) : (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        router.push(`/student/${studentId}/subjects`)
-                        setIsOpen(false)
-                      }}
-                      className="flex items-center gap-1 text-gray-500 hover:text-orange-700 transition-colors cursor-pointer min-w-[90px]"
-                    >
-                      <span className="text-orange-600">📚</span>
-                      {tHome('features.subjects.title')}
-                    </button>
-                  )}
-                  <span className="text-gray-400">|</span>
-                  {currentPage === 'settings' ? (
-                    <span className="flex items-center gap-1 text-purple-700 font-semibold min-w-[90px]">
-                      <span className="text-purple-600">⚙️</span>
-                      {tNav('settings')}
-                    </span>
-                  ) : (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleOpenSettings(e, studentId)
-                        setIsOpen(false)
-                      }}
-                      className="flex items-center gap-1 text-gray-500 hover:text-purple-700 transition-colors cursor-pointer min-w-[90px]"
-                    >
-                      <span className="text-purple-600">⚙️</span>
-                      {tNav('settings')}
-                    </button>
-                  )}
-                </div>
-              </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="text-primary truncate">{recordsTitle}</span>
             </div>
           </div>
-          
-          {/* 返回首頁選項 - 當只有一個學生時特別有用 */}
-          {otherStudents.length === 0 && (
-            <div className="px-4 py-3 border-t-2 border-gray-200">
-              <button
-                onClick={() => {
-                  router.push('/')
-                  setIsOpen(false)
-                }}
-                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-200 group rounded-lg"
-              >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-2xl shadow-lg flex-shrink-0 group-hover:scale-105 transition-all duration-200">
-                  🏠
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-lg font-bold text-gray-800 group-hover:text-indigo-700 transition-colors">
-                    {tHome('title') || '返回首頁'}
-                  </p>
-                </div>
-                <svg 
-                  className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          )}
-          
-          {/* 其他學生列表 - hover 時顯示學習記錄文字 */}
-          {otherStudents.length > 0 && (
-            <div className="py-2">
-              {otherStudents.map((student) => {
-              const avatar = parseAvatar(student.avatar_url, student.name)
-              
-              return (
-                <div
-                  key={student.id}
-                  className="w-full px-4 py-2 flex items-center gap-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 transition-all duration-200 group cursor-pointer"
-                  onClick={() => handleSwitchStudent(student.id)}
-                >
-                  {/* 學生頭像 */}
-                  <div 
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-[2.35rem] shadow-lg ring-2 ring-gray-200 group-hover:ring-purple-300 flex-shrink-0 group-hover:scale-105 transition-all duration-200"
-                    style={{ background: avatar.gradientStyle }}
-                  >
-                    {avatar.emoji}
-                  </div>
-                  
-                  {/* 學生名稱和學習記錄文字 */}
-                  <div className="flex-1 text-left flex items-center gap-4">
-                    <div className="relative h-20 flex items-center pt-10 flex-1 min-w-0">
-                      <div className="transition-transform duration-200 group-hover:-translate-y-6 w-full">
-                        <p className="text-2xl font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
-                          {student.name}
-                        </p>
-                        {/* hover 時顯示第一行：學習記錄和獎金存摺連結 */}
-                        <div className="text-sm text-gray-500 flex items-center gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleSwitchStudent(student.id)
-                            }}
-                            className="flex items-center gap-1 hover:text-blue-700 transition-colors cursor-pointer min-w-[90px]"
-                          >
-                            <span className="text-blue-600">📊</span>
-                            {tStudent('recordsTitle')}
-                          </button>
-                          <span className="text-gray-400">|</span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              router.push(`/student/${student.id}/transactions`)
-                              setIsOpen(false)
-                            }}
-                            className="flex items-center gap-1 hover:text-green-700 transition-colors cursor-pointer min-w-[90px]"
-                          >
-                            <span className="text-green-600">💰</span>
-                            {tTransaction('passbook')}
-                          </button>
-                        </div>
-                        {/* hover 時顯示第二行：科目管理和設定連結 */}
-                        <div className="text-sm text-gray-500 flex items-center gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              router.push(`/student/${student.id}/subjects`)
-                              setIsOpen(false)
-                            }}
-                            className="flex items-center gap-1 hover:text-orange-700 transition-colors cursor-pointer min-w-[90px]"
-                          >
-                            <span className="text-orange-600">📚</span>
-                            {tHome('features.subjects.title')}
-                          </button>
-                          <span className="text-gray-400">|</span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleOpenSettings(e, student.id)
-                              setIsOpen(false)
-                            }}
-                            className="flex items-center gap-1 hover:text-purple-700 transition-colors cursor-pointer min-w-[90px]"
-                          >
-                            <span className="text-purple-600">⚙️</span>
-                            {tNav('settings')}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    {/* 箭頭圖示 */}
-                    <svg
-                      className="w-6 h-6 text-gray-400 group-hover:translate-x-1 transition-transform duration-200 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                  </div>
-                </div>
-              )
-            })}
-            </div>
-          )}
         </div>
       )}
     </div>

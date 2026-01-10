@@ -10,6 +10,13 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-primary: #6a99e0;
+  --color-accent-gold: #F59E0B;
+  --color-accent-green: #10B981;
+  --color-accent-purple: #A855F7;
+  --color-accent-blue: #3B82F6;
+  --color-accent-rose: #F43F5E;
+  --color-accent-cyan: #06B6D4;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,7 +29,77 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Noto Sans TC', 'Poppins', sans-serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.6); }
+
+/* Glass panel style - matching passwook.html */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Glass card style - matching passwook.html */
+.glass-card {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.55);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 15px 30px -5px rgba(0,0,0,0.08);
+}
+
+.dark .glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Glass button style - matching passwook.html */
+.glass-btn {
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.2s;
+}
+
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.glass-btn:active {
+  transform: scale(0.98);
 }
 
 /* 確保輸入框在深色模式下也有良好的對比度 */
@@ -165,4 +242,126 @@ select option {
 /* Add student button transition */
 .add-student-bg {
   transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Bonus highlight style from assessment_2 code.html */
+.bonus-highlight {
+  background-color: rgba(140, 158, 255, 0.15);
+  border-color: rgba(140, 158, 255, 0.5);
+  color: #5d6ed4;
+  font-weight: 600;
+}
+
+/* Log card styles */
+.log-icon-base {
+  width: 72px;
+  height: 72px;
+  font-size: 2.5rem;
+}
+
+.log-score-text {
+  font-size: 2.8rem;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.log-date-text {
+  font-size: 1rem;
+}
+
+.log-bonus-tag {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.text-primary {
+  --tw-text-opacity: 1;
+  color: rgb(106 153 224 / var(--tw-text-opacity, 1)) !important;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scaleY(0.95);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    max-height: 500px;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    max-height: 500px;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scaleY(0.95);
+    max-height: 0;
+  }
+}
+
+/* Subject page styles - matching subject.htm */
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Sunrise theme colors - matching subject.htm */
+.sunrise-gradient {
+  background: linear-gradient(-45deg, #BAE6FD, #FBCFE8, #FECACA, #DDD6FE);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+.dark .sunrise-gradient {
+  background: linear-gradient(-45deg, #0f172a, #312e81, #4c1d95, #1e1b4b);
+}
+
+.sunrise-pink {
+  --tw-bg-opacity: 1;
+  background-color: rgb(251 207 232 / var(--tw-bg-opacity, 1));
+}
+
+.sunrise-blue {
+  --tw-bg-opacity: 1;
+  background-color: rgb(186 230 253 / var(--tw-bg-opacity, 1));
+}
+
+.sunrise-peach {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 202 202 / var(--tw-bg-opacity, 1));
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }

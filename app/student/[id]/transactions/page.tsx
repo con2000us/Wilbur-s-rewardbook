@@ -2,9 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import TransactionPageClient from './TransactionPageClient'
 import { getTranslations } from 'next-intl/server'
-import { parseStudentAvatar, getStudentBackgroundGradient } from '@/lib/utils/studentTheme'
-import StudentHeaderWithDropdown from '@/app/components/StudentHeaderWithDropdown'
-import HomeButton from '@/app/components/HomeButton'
+import { parseStudentAvatar } from '@/lib/utils/studentTheme'
+import StudentSidebarHeader from '../components/StudentSidebarHeader'
 
 export default async function TransactionsPage({ 
   params 
@@ -42,43 +41,43 @@ export default async function TransactionsPage({
 
   // @ts-ignore - Supabase type inference issue with select queries
   const avatar = parseStudentAvatar((student as any).avatar_url, (student as any).name)
-  // @ts-ignore - Supabase type inference issue with select queries
-  const backgroundGradient = getStudentBackgroundGradient((student as any).avatar_url, (student as any).name)
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* 背景漸層 - 多層效果 */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${backgroundGradient}`}></div>
-      <div className="absolute inset-0 bg-gradient-to-tl from-white/20 via-transparent to-transparent"></div>
-      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-purple-200/30"></div>
-      
-      {/* 內容區域 */}
-      <div className="relative z-10 p-8">
-        <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-8">
-          <StudentHeaderWithDropdown
-            studentId={id}
-            studentName={(student as any).name}
-            studentAvatar={avatar}
-            recordsTitle={t('passbook')}
-            allStudents={allStudents || []}
-            basePath="/transactions"
-            currentPage="transactions"
-          />
-          <HomeButton />
+    <div className="min-h-screen p-4 md:p-10 flex justify-center items-start text-gray-800" style={{
+      background: 'linear-gradient(135deg, #a7d9ef 0%, #f7b2c9 50%, #fcd6b6 100%)'
+    }}>
+      <div className="w-full max-w-7xl glass-panel rounded-3xl p-6 md:p-10 min-h-[90vh] relative overflow-hidden flex flex-col lg:flex-row">
+        {/* 裝飾性背景圓圈 */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-f7b2c9/40 rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-a7d9ef/30 rounded-full blur-[90px] translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+
+        {/* 左側欄 - 學生資訊和快速導覽 */}
+        <div className="relative z-20 lg:w-[360px] lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
+          <header className="flex flex-col lg:items-start lg:sticky lg:top-0 w-full lg:min-w-0">
+            <StudentSidebarHeader
+              studentId={id}
+              studentName={(student as any).name}
+              studentAvatar={avatar}
+              recordsTitle={t('passbook')}
+              allStudents={allStudents || []}
+              basePath="/transactions"
+              currentPage="transactions"
+              showHeader={true}
+            />
+          </header>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                💰 {t('passbook')}
-              </h1>
-              <p className="text-gray-600">
-                {/* @ts-ignore - Supabase type inference issue with select queries */}
-                {t('description', { name: (student as any).name })}
-              </p>
-            </div>
+        {/* 右側主內容區 - 獎金存摺 */}
+        <div className="relative z-10 flex-1">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <span className="text-amber-500 material-symbols-outlined text-3xl drop-shadow-sm">account_balance_wallet</span>
+              {t('passbook')}
+            </h2>
+            <p className="text-gray-600 mt-1 pl-1">
+              {/* @ts-ignore - Supabase type inference issue with select queries */}
+              {t('description', { name: (student as any).name })}
+            </p>
           </div>
 
           {/* 月份選擇器和記錄列表（包含 Modal） */}
@@ -87,7 +86,6 @@ export default async function TransactionsPage({
             transactions={transactions || []}
           />
         </div>
-      </div>
       </div>
     </div>
   )

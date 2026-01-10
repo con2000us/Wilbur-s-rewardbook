@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import ReactDOM from 'react-dom'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import TransactionModal from './components/TransactionModal'
@@ -17,16 +18,73 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
   const tStudent = useTranslations('student')
   const tCommon = useTranslations('common')
   const locale = useLocale()
-  
+
   // 預設為當前月份
   const currentMonth = new Date().toISOString().slice(0, 7)
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
   const [availableMonths, setAvailableMonths] = useState<string[]>([])
   const [filteredTransactions, setFilteredTransactions] = useState(transactions)
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState<number | null>(25)
   const [calculateFromReset, setCalculateFromReset] = useState<boolean>(false)
+  const monthPickerButtonRef = useRef<HTMLButtonElement>(null)
+  const monthPickerContainerRef = useRef<HTMLDivElement>(null)
+  const monthNavigationContainerRef = useRef<HTMLDivElement>(null)
+  const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 })
+  const [canInteractWithBackground, setCanInteractWithBackground] = useState(false)
+  const pickerPanelRef = useRef<HTMLDivElement>(null)
+
+  // 計算月份選擇器面板位置
+  useEffect(() => {
+    if (isMonthPickerOpen && monthNavigationContainerRef.current) {
+      // 延遲允許背景交互，避免當前點擊事件立即觸發
+      setTimeout(() => {
+        setCanInteractWithBackground(true)
+      }, 100)
+      requestAnimationFrame(() => {
+        const navContainerRect = monthNavigationContainerRef.current?.getBoundingClientRect()
+        const buttonRect = monthPickerButtonRef.current?.getBoundingClientRect()
+        if (navContainerRect && monthNavigationContainerRef.current) {
+          const top = buttonRect ? buttonRect.bottom + 8 : navContainerRect.bottom + 8
+          // 直接對齊導航器容器和選單的左邊外框
+          const panelWidth = 320 // 選單最大寬度
+          let left = navContainerRect.left
+          
+          if (left + panelWidth > window.innerWidth) {
+            left = window.innerWidth - panelWidth - 16 // 16px padding
+          }
+          setPickerPosition({ top, left })
+        }
+      })
+    } else {
+      setCanInteractWithBackground(false)
+    }
+  }, [isMonthPickerOpen])
+
+  // 監聽窗口大小變化，更新選單位置
+  useEffect(() => {
+    const handleResize = () => {
+      if (isMonthPickerOpen && monthPickerButtonRef.current && monthNavigationContainerRef.current) {
+        const buttonRect = monthPickerButtonRef.current.getBoundingClientRect()
+        const navContainerRect = monthNavigationContainerRef.current.getBoundingClientRect()
+        if (navContainerRect && monthNavigationContainerRef.current) {
+          const top = buttonRect.bottom + 8
+          // 直接對齊導航器容器和選單的左邊外框
+          const panelWidth = 320 // 選單最大寬度
+          let left = navContainerRect.left
+          
+          if (left + panelWidth > window.innerWidth) {
+            left = window.innerWidth - panelWidth - 16 // 16px padding
+          }
+          setPickerPosition({ top, left })
+        }
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [isMonthPickerOpen])
 
   // 載入分頁設定
   useEffect(() => {
@@ -49,7 +107,7 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
     loadPaginationSettings()
   }, [])
 
-  // 自定義排序：同一天的歸零記錄視為當天最後發生（在倒序列表中排在當天最上方）
+  // 自訂義排序：同一天的歸零記錄視為當天最後發生（在倒序列表中排在當天最上方）
   const sortTransactions = (txs: any[]) => {
     return [...txs].sort((a, b) => {
       const aDate = new Date(a.transaction_date || a.created_at)
@@ -136,91 +194,17 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
     }
     
     setFilteredTransactions(result)
-    // 月份變更時重置頁碼
-    setCurrentPage(1)
-    
-    // 當選擇具體月份時，自動取消勾選"最近結算"
-    if (selectedMonth && calculateFromReset) {
-      setCalculateFromReset(false)
-    }
   }, [selectedMonth, transactions, calculateFromReset])
 
   // 找到最近的歸零記錄
   const findLastResetTransaction = (transactionList: any[]) => {
-    // 按日期排序，找最近的歸零記錄
     const sortedTransactions = [...transactionList].sort((a, b) => {
       const dateA = new Date(a.transaction_date || a.created_at).getTime()
       const dateB = new Date(b.transaction_date || b.created_at).getTime()
       return dateB - dateA
     })
-    
     return sortedTransactions.find(t => t.transaction_type === 'reset')
   }
-
-  // 計算當前顯示的統計
-  const calculateStats = () => {
-    // 決定使用哪個交易列表
-    const transactionsToUse = calculateFromReset && !selectedMonth 
-      ? filteredTransactions 
-      : (selectedMonth ? filteredTransactions : transactions)
-    
-    // "全部" 模式：不考慮歸零日期，計算所有交易
-    if (!selectedMonth && !calculateFromReset) {
-      // 排除歸零記錄，計算全部交易
-      const allTransactions = transactionsToUse.filter(t => t.transaction_type !== 'reset')
-      const earned = allTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0) || 0
-      const spent = allTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
-      
-      return { 
-        earned, 
-        spent, 
-        balance: earned - spent,
-        lastResetDate: null,
-        startingBalance: 0
-      }
-    }
-    
-    // "最近結算" 或特定月份模式：考慮結算日期
-    // 注意：要從原始 transactions 找結算記錄，因為 filteredTransactions 可能已過濾掉
-    const lastReset = findLastResetTransaction(transactions)
-    
-    let transactionsToCalculate = transactionsToUse
-    let startingBalance = 0 // 起始金額
-    
-    // 如果有歸零記錄，只計算歸零之後的交易
-    if (lastReset) {
-      startingBalance = lastReset.amount || 0 // 歸零記錄的金額就是起始金額
-      
-      // 如果選擇特定月份，需要手動過濾
-      if (selectedMonth) {
-        // 獲取歸零記錄的日期和時間戳
-        const resetDate = new Date(lastReset.transaction_date || lastReset.created_at)
-        const resetDateOnly = new Date(resetDate.getFullYear(), resetDate.getMonth(), resetDate.getDate()).getTime()
-        
-        transactionsToCalculate = transactionsToCalculate.filter(t => {
-          if (t.transaction_type === 'reset') return false // 排除歸零記錄本身
-          
-          const tDate = new Date(t.transaction_date || t.created_at)
-          const tDateOnly = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate()).getTime()
-          
-          return tDateOnly > resetDateOnly
-        })
-      }
-    }
-    
-    const earned = transactionsToCalculate.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0) || 0
-    const spent = transactionsToCalculate.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
-    
-    return { 
-      earned, 
-      spent, 
-      balance: startingBalance + earned - spent, // 餘額 = 起始金額 + 收入 - 支出
-      lastResetDate: lastReset?.transaction_date,
-      startingBalance
-    }
-  }
-
-  const { earned: totalEarned, spent: totalSpent, balance, lastResetDate, startingBalance } = calculateStats()
 
   const formatMonth = (monthKey: string) => {
     const [year, month] = monthKey.split('-')
@@ -232,54 +216,10 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
     }
   }
 
-  const formatRelativeDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const today = new Date()
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-    
-    const dateStr = locale === 'zh-TW' 
-      ? date.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })
-      : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    
-    if (date.toDateString() === today.toDateString()) {
-      return `${t('today')} ${dateStr}`
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return `${t('yesterday')} ${dateStr}`
-    } else {
-      return locale === 'zh-TW' 
-        ? `${date.getFullYear()}/${dateStr}`
-        : `${dateStr}, ${date.getFullYear()}`
-    }
-  }
-
-  // 簡單日期格式（用於結算提示）
-  const formatSimpleDate = (dateString: string) => {
-    const date = new Date(dateString)
-    // 計算隔日
-    const nextDay = new Date(date)
-    nextDay.setDate(nextDay.getDate() + 1)
-    
-    return locale === 'zh-TW' 
-      ? `${nextDay.getFullYear()}/${nextDay.getMonth() + 1}/${nextDay.getDate()}`
-      : `${nextDay.getMonth() + 1}/${nextDay.getDate()}/${nextDay.getFullYear()}`
-  }
-
-  // 分頁邏輯
-  // 分頁邏輯（支援「不限」）
-  const isUnlimited = itemsPerPage === null
-  const totalPages = isUnlimited ? 1 : Math.ceil(filteredTransactions.length / itemsPerPage)
-  const paginatedTransactions = isUnlimited
-    ? filteredTransactions
-    : filteredTransactions.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-      )
-  const showPagination = !isUnlimited && filteredTransactions.length > itemsPerPage
-
   // 切換到上一個月
   const goToPreviousMonth = () => {
     if (!selectedMonth && availableMonths.length > 0) {
+      // 如果當前是"全部"，切換到最新月份
       setSelectedMonth(availableMonths[0])
     } else {
       const currentIndex = availableMonths.indexOf(selectedMonth)
@@ -306,56 +246,99 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
 
   const canGoNext = selectedMonth && availableMonths.indexOf(selectedMonth) > 0
 
+  // 分頁邏輯（支援「不限」）
+  const [itemsPerPage, setItemsPerPage] = useState<number | null>(25)
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const isUnlimited = itemsPerPage === null
+  const totalPages = isUnlimited ? 1 : Math.ceil(filteredTransactions.length / itemsPerPage)
+  const paginatedTransactions = isUnlimited
+    ? filteredTransactions
+    : filteredTransactions.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+      )
+  const showPagination = !isUnlimited && filteredTransactions.length > itemsPerPage
+
   return (
     <>
       {/* 月份選擇器和添加記錄按鈕 */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between gap-4 flex-wrap" style={{ marginBottom: '8pt' }}>
-          <div className="flex items-center gap-3 flex-wrap">
-            <label className="text-sm font-bold text-gray-800 whitespace-nowrap">
-              📅 {tStudent('selectMonth')}
-            </label>
-            
-            {/* 月份导航器 */}
-            <div className="flex items-center gap-2 bg-white border-2 border-gray-300 rounded-lg p-1">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <span className="text-sm font-medium text-gray-700 bg-white/40 px-2 py-2.5 rounded-xl border border-white/50 flex items-center gap-1 h-[40px]">
+            <span className="material-symbols-outlined text-lg">calendar_month</span>
+            {tStudent('selectMonth')}
+          </span>
+          
+          {/* 月份導航器 */}
+          <div
+            ref={monthNavigationContainerRef}
+            className="relative flex items-center bg-white/50 rounded-xl p-1 border border-white/70 shadow-sm backdrop-blur-sm"
+            style={{ height: '40px' }}
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+          >
             {/* 上一個月按鈕 */}
             <button
               onClick={goToPreviousMonth}
               disabled={!canGoPrevious}
-              className={`p-2 rounded-lg transition-all ${
+              className={`p-2 rounded-lg transition-colors ${
                 canGoPrevious
-                  ? 'hover:bg-gray-100 text-gray-700 cursor-pointer'
+                  ? 'hover:bg-white/60 text-gray-600 hover:text-gray-900 cursor-pointer'
                   : 'text-gray-300 cursor-not-allowed'
               }`}
               title={tStudent('previousMonth')}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <span className="material-symbols-outlined text-xl">chevron_left</span>
             </button>
 
             {/* 當前月份顯示（可點擊打開選擇器） */}
-            <div className="relative">
+            <div className="relative" ref={monthPickerContainerRef}>
               <button
-                onClick={() => setIsMonthPickerOpen(!isMonthPickerOpen)}
-                className="px-4 py-2 font-semibold text-gray-800 hover:bg-gray-50 rounded-lg transition-all min-w-[140px] text-center cursor-pointer"
+                ref={monthPickerButtonRef}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsMonthPickerOpen(!isMonthPickerOpen)
+                }}
+                className="px-6 text-sm font-bold text-gray-900 tabular-nums text-center min-w-[100px] cursor-pointer"
               >
                 {selectedMonth 
                   ? formatMonth(selectedMonth) 
                   : calculateFromReset 
                     ? tStudent('recentSettlement')
                     : tStudent('all')}
-                {selectedMonth === currentMonth && ' 📍'}
               </button>
 
               {/* 月份選擇器面板 */}
-              {isMonthPickerOpen && (
+              {isMonthPickerOpen && ReactDOM.createPortal(
                 <>
-                  <div 
-                    className="fixed inset-0 z-10"
-                    onClick={() => setIsMonthPickerOpen(false)}
+                  <div
+                    className="fixed inset-0 z-[9999] bg-black/20"
+                    onClick={(e) => {
+                      if (canInteractWithBackground) {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setIsMonthPickerOpen(false)
+                      }
+                    }}
                   />
-                  <div className="absolute top-full left-0 mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-20 p-4 min-w-[300px]">
+                  <div
+                    ref={pickerPanelRef}
+                    className="fixed bg-white/95 backdrop-blur-sm border border-white/70 rounded-xl shadow-2xl z-[10000] p-3 min-w-[280px] max-w-[320px]"
+                    style={{
+                      top: `${pickerPosition.top}px`,
+                      left: `${pickerPosition.left}px`,
+                      opacity: 1,
+                      visibility: 'visible',
+                      position: 'fixed',
+                      zIndex: 10000
+                    }}
+                    onClick={(e) => {
+                      // 阻止点击事件冒泡到背景遮罩
+                      e.stopPropagation()
+                    }}
+                  >
                     {/* 全部和最近結算選項 */}
                     <div className="grid grid-cols-2 gap-2 mb-2">
                       <button
@@ -364,7 +347,7 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
                           setCalculateFromReset(false)
                           setIsMonthPickerOpen(false)
                         }}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                           selectedMonth === '' && !calculateFromReset
                             ? 'bg-blue-600 text-white'
                             : 'hover:bg-gray-100 text-gray-700'
@@ -378,7 +361,7 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
                           setCalculateFromReset(true)
                           setIsMonthPickerOpen(false)
                         }}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                           calculateFromReset && !selectedMonth
                             ? 'bg-blue-600 text-white'
                             : 'hover:bg-gray-100 text-gray-700'
@@ -390,27 +373,27 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
 
                     {/* 月份網格 */}
                     <div 
-                      className="grid grid-cols-3 gap-2 overflow-y-auto pr-2 border border-gray-200 rounded-lg p-2"
+                      className="grid grid-cols-3 gap-1.5 overflow-y-auto pr-1 border border-gray-200 rounded-lg p-1.5"
                       style={{
-                        maxHeight: '200px',
+                        maxHeight: '180px',
                         scrollbarWidth: 'thin',
                         scrollbarColor: '#cbd5e1 #f1f5f9'
                       }}
                     >
-                      {availableMonths.map(month => {
-                        const [year, monthNum] = month.split('-')
+                      {availableMonths.map(monthKey => {
+                        const [year, monthNum] = monthKey.split('-')
                         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                         
                         return (
                           <button
-                            key={month}
+                            key={monthKey}
                             onClick={() => {
-                              setSelectedMonth(month)
+                              setSelectedMonth(monthKey)
                               setCalculateFromReset(false)
                               setIsMonthPickerOpen(false)
                             }}
-                            className={`px-3 py-2 rounded-lg font-semibold transition-all flex flex-col items-center h-[85px] cursor-pointer ${
-                              selectedMonth === month
+                            className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all flex flex-col items-center justify-center h-[50px] cursor-pointer ${
+                              selectedMonth === monthKey
                                 ? 'bg-blue-600 text-white'
                                 : 'hover:bg-blue-50 text-gray-700'
                             }`}
@@ -426,22 +409,13 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
                                 <div className="text-lg">{monthNames[parseInt(monthNum) - 1]}</div>
                               </>
                             )}
-                            <div className="text-xs h-4 flex items-center justify-center">
-                              {month === currentMonth ? '📍' : ''}
-                            </div>
                           </button>
                         )
                       })}
                     </div>
-                    
-                    {/* 滾動提示 */}
-                    {availableMonths.length > 6 && (
-                      <div className="text-xs text-gray-500 text-center mt-2 animate-pulse">
-                        {tStudent('scrollMoreMonths')} ↓
-                      </div>
-                    )}
                   </div>
-                </>
+                </>,
+                document.body
               )}
             </div>
 
@@ -449,267 +423,174 @@ export default function TransactionRecords({ studentId, transactions, onEditTran
             <button
               onClick={goToNextMonth}
               disabled={!canGoNext}
-              className={`p-2 rounded-lg transition-all ${
-                canGoNext
-                  ? 'hover:bg-gray-100 text-gray-700 cursor-pointer'
+              className={`p-2 rounded-lg transition-colors ${
+                canGoNext 
+                  ? 'hover:bg-white/60 text-gray-600 hover:text-gray-900 cursor-pointer'
                   : 'text-gray-300 cursor-not-allowed'
               }`}
               title={tStudent('nextMonth')}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <span className="material-symbols-outlined text-xl">chevron_right</span>
             </button>
           </div>
-          </div>
-          
-          {/* 添加記錄按鈕 */}
-          {onAddTransaction && (
-            <button
-              onClick={onAddTransaction}
-              className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap cursor-pointer"
-            >
-              <span>➕</span>
-              <span>{t('addRecord')}</span>
-            </button>
-          )}
         </div>
+        <button
+          onClick={onAddTransaction}
+          className="bg-emerald-400 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl shadow-[0_4px_12px_rgba(52,211,153,0.3)] hover:shadow-[0_6px_16px_rgba(52,211,153,0.4)] transition-all flex items-center justify-center gap-2 font-bold tracking-wide"
+        >
+          <span className="material-symbols-outlined">add_circle</span> {t('addRecord')}
+        </button>
+      </div>
 
-        {/* 結算提示 - 只在選擇"最近結算"時顯示 */}
-        {lastResetDate && !selectedMonth && calculateFromReset && (
-          <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg" style={{ marginBottom: '-10px' }}>
-            <p className="text-sm text-blue-700 flex items-center gap-2">
-              <span>ℹ️</span>
-              <span>
-                {t('statsFrom', { date: formatSimpleDate(lastResetDate) })}
-                {locale === 'zh-TW' ? '，' : ', '}
-                {t('startingBalance')}: <span className="font-bold">${startingBalance}</span>
-              </span>
-            </p>
+      {/* 統計卡片 */}
+      <div
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"
+        onClick={() => {
+          console.log('[DEBUG] Statistics grid clicked')
+        }}
+      >
+        <div className="glass-card p-8 rounded-2xl flex flex-col items-center justify-center gap-3 border-t-4 border-t-emerald-400 hover:-translate-y-1">
+          <div className="text-gray-600 font-medium tracking-wide">{t('totalIncome')}</div>
+          <div className="text-4xl lg:text-5xl font-bold text-emerald-600 drop-shadow-sm tabular-nums tracking-tight">
+            {selectedMonth || calculateFromReset
+              ? '+$' + filteredTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
+              : '+$' + transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
+            }
           </div>
-        )}
-
-        {/* 統計卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 mt-6">
-          <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center">
-            <p className="text-gray-600 font-semibold mb-2">
-              {selectedMonth ? `${formatMonth(selectedMonth)} ${t('income')}` : t('totalIncome')}
-            </p>
-            <p className="text-4xl font-bold text-green-600">+${totalEarned}</p>
+        </div>
+        <div className="glass-card p-8 rounded-2xl flex flex-col items-center justify-center gap-3 border-t-4 border-t-rose-400 hover:-translate-y-1">
+          <div className="text-gray-600 font-medium tracking-wide">{t('totalExpense')}</div>
+          <div className="text-4xl lg:text-5xl font-bold text-rose-500 drop-shadow-sm tabular-nums tracking-tight">
+            {selectedMonth || calculateFromReset
+              ? '-$' + Math.abs(filteredTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0))
+              : '-$' + Math.abs(transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0))
+            }
           </div>
-          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 text-center">
-            <p className="text-gray-600 font-semibold mb-2">
-              {selectedMonth ? `${formatMonth(selectedMonth)} ${t('expense')}` : t('totalExpense')}
-            </p>
-            <p className="text-4xl font-bold text-red-600">-${totalSpent}</p>
-          </div>
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 text-center">
-            <p className="text-gray-600 font-semibold mb-2">
-              {selectedMonth ? t('monthBalance') : t('currentBalance')}
-            </p>
-            <p className="text-4xl font-bold text-blue-600">${balance}</p>
+        </div>
+        <div className="glass-card p-8 rounded-2xl flex flex-col items-center justify-center gap-3 border-t-4 border-t-blue-400 hover:-translate-y-1 bg-blue-50/20">
+          <div className="text-gray-600 font-medium tracking-wide">{t('currentBalance')}</div>
+          <div className="text-4xl lg:text-5xl font-bold text-blue-600 drop-shadow-sm tabular-nums tracking-tight">
+            {selectedMonth || calculateFromReset
+              ? filteredTransactions.reduce((sum, t) => sum + t.amount, 0)
+              : transactions.reduce((sum, t) => sum + t.amount, 0)
+            }
           </div>
         </div>
       </div>
 
-      {/* 存摺記錄 */}
-      {filteredTransactions && filteredTransactions.length > 0 ? (
-        <>
-        <div className="space-y-3">
-          {paginatedTransactions.map((transaction: any) => {
-            // 檢查是否有同一天的其他記錄
-            const hasSameDayRecords = transaction.transaction_type === 'reset' && 
-              filteredTransactions.some((t: any) => {
-                if (t.id === transaction.id || t.transaction_type === 'reset') return false
-                const tDate = new Date(t.transaction_date || t.created_at).toDateString()
-                const resetDate = new Date(transaction.transaction_date || transaction.created_at).toDateString()
-                return tDate === resetDate
-              })
-
-            return (
-              <div
-                key={transaction.id}
-                className={`group p-5 rounded-lg border-2 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 ${
-                  transaction.transaction_type === 'reset'
-                    ? 'bg-blue-50 border-blue-300 hover:border-blue-400'
-                    : transaction.amount > 0 
-                      ? 'bg-green-50 border-green-200 hover:border-green-400' 
-                      : 'bg-red-50 border-red-200 hover:border-red-400'
-                }`}
-              >
-                <div className="flex justify-between items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className={`text-3xl`}>
-                        {transaction.transaction_type === 'reset' ? '🔄' :
-                         transaction.transaction_type === 'earn' ? '💰' :
-                         transaction.transaction_type === 'spend' ? '🛍️' :
-                         transaction.transaction_type === 'bonus' ? '🎁' : '⚠️'}
-                      </span>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2 flex-wrap">
-                          {transaction.description}
-                          {transaction.transaction_type === 'reset' && (
-                            <span className="text-xs px-2 py-1 bg-blue-500 text-white rounded-full">
-                              {t('reset')}
-                            </span>
-                          )}
-                          {hasSameDayRecords && (
-                            <span className="text-xs px-2 py-1 bg-yellow-500 text-white rounded-full">
-                              {t('lastOfDay')}
-                            </span>
-                          )}
-                        </h3>
-                        {hasSameDayRecords && (
-                          <p className="text-xs text-gray-600 mt-1">
-                            ℹ️ {t('resetIsLast')}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-sm text-gray-600">
-                            {transaction.category || t('categories.other')}
-                          </span>
-                          <span className="text-sm text-gray-400">
-                            {transaction.transaction_date 
-                              ? formatRelativeDate(transaction.transaction_date)
-                              : new Date(transaction.created_at).toLocaleString('zh-TW')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                <div className="text-right flex flex-col items-end gap-2">
-                  {transaction.transaction_type === 'reset' ? (
-                    <div>
-                      <div className="text-sm text-gray-600 mb-1">{t('startingBalance')}</div>
-                      <div className="text-3xl font-bold text-blue-600">
-                        ${transaction.amount || 0}
-                      </div>
-                    </div>
+      {/* 交易記錄列表 */}
+      <div className="space-y-4">
+        {paginatedTransactions.map(transaction => {
+          // 如果是測驗獎金，顯示事件名稱（title），否則顯示分類標籤
+          const categoryLabel = transaction.category === '測驗獎金' 
+            ? (transaction.title || transaction.description || '測驗獎金')
+            : (transaction.category || '其他')
+          return (
+            <div
+              key={transaction.id}
+              className="glass-card p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group hover:bg-rose-50/40 transition-colors"
+              onClick={() => onEditTransaction && onEditTransaction(transaction)}
+            >
+              <div className="flex items-center gap-5 w-full md:w-auto">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border group-hover:scale-105 transition-transform shadow-sm ${
+                  transaction.amount > 0 
+                    ? 'bg-emerald-200/50 text-emerald-600 border-emerald-300/30' 
+                    : 'bg-rose-200/50 text-rose-500 border-rose-300/30'
+                }`}>
+                  {transaction.category === 'shopping' ? (
+                    <span className="material-symbols-outlined text-3xl">shopping_bag</span>
+                  ) : transaction.amount > 0 ? (
+                    <span className="material-symbols-outlined text-3xl">paid</span>
                   ) : (
-                    <div className={`text-3xl font-bold ${
-                      transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.amount > 0 ? '+' : ''}${transaction.amount}
-                    </div>
-                  )}
-                  
-                  {/* 編輯按鈕 - 預設隱藏，hover 時顯示 */}
-                  {onEditTransaction ? (
-                    <button
-                      onClick={() => onEditTransaction(transaction)}
-                      className="opacity-0 group-hover:opacity-100 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 font-semibold cursor-pointer"
-                    >
-                      ✏️ {tCommon('edit')}
-                    </button>
-                  ) : (
-                    <Link
-                      href={`/student/${studentId}/transactions/${transaction.id}/edit`}
-                      className="opacity-0 group-hover:opacity-100 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 font-semibold cursor-pointer"
-                    >
-                      ✏️ {tCommon('edit')}
-                    </Link>
+                    <span className="material-symbols-outlined text-3xl">account_balance_wallet</span>
                   )}
                 </div>
+                <div>
+                  <div className="font-bold text-gray-900 text-lg mb-0.5 group-hover:text-rose-600 transition-colors">
+                    {transaction.title}
+                  </div>
+                  <div className="text-sm text-gray-500 font-medium flex items-center gap-2">
+                    <span className={`bg-white/50 px-2 py-0.5 rounded border border-white/60 text-xs`}>
+                      {categoryLabel}
+                    </span>
+                    <span>
+                      {transaction.transaction_date 
+                        ? new Date(transaction.transaction_date).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { month: 'short', day: 'numeric' })
+                        : new Date(transaction.created_at).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { month: 'short', day: 'numeric' })
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className={`text-3xl font-bold tabular-nums text-right md:text-right w-full md:w-auto pl-0 md:pl-0 ${transaction.amount > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                {transaction.amount > 0 ? '+' : ''}{transaction.amount}
               </div>
             </div>
-            )
-          })}
-        </div>
+          )
+        })}
+      </div>
 
-        {/* 分頁控制 */}
-        {showPagination && (
-          <div className="mt-6 flex items-center justify-center gap-2 flex-wrap">
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-2 rounded-lg font-semibold transition-all ${
-                currentPage === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              ⏮️
-            </button>
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className={`px-3 py-2 rounded-lg font-semibold transition-all ${
-                currentPage === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              ◀️ {tCommon('prevPage')}
-            </button>
-            
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum
-                if (totalPages <= 5) {
-                  pageNum = i + 1
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i
-                } else {
-                  pageNum = currentPage - 2 + i
-                }
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`w-10 h-10 rounded-lg font-bold transition-all ${
-                      currentPage === pageNum
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                )
-              })}
-            </div>
-
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-2 rounded-lg font-semibold transition-all ${
-                currentPage === totalPages
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {tCommon('nextPage')} ▶️
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-2 rounded-lg font-semibold transition-all ${
-                currentPage === totalPages
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              ⏭️
-            </button>
-            
-            <span className="ml-4 text-sm text-gray-500">
-              {tCommon('pageInfo', { current: currentPage, total: totalPages, count: filteredTransactions.length })}
-            </span>
+      {/* 分頁控制 */}
+      {showPagination && (
+        <div className="flex justify-center items-center gap-4 mt-8">
+          <button
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            className={`p-2 rounded-lg transition-colors ${
+              currentPage === 1
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'hover:bg-white/60 text-gray-600 hover:text-gray-900 cursor-pointer'
+            }`}
+          >
+            <span className="material-symbols-outlined">⏮️</span>
+          </button>
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className={`p-2 rounded-lg transition-colors ${
+              currentPage === 1
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'hover:bg-white/60 text-gray-600 hover:text-gray-900 cursor-pointer'
+            }`}
+          >
+            <span className="material-symbols-outlined">◀️ Previous</span>
+          </button>
+          <div className="px-4 text-sm font-medium text-gray-500">
+            Page {currentPage} of {totalPages} ({paginatedTransactions.length} items)
           </div>
-        )}
-        </>
-      ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-          <p className="text-gray-500 text-lg mb-2">📭 {selectedMonth ? t('noRecordsThisMonth') : t('emptyPassbook')}</p>
-          <p className="text-gray-400 text-sm mb-4">
-            {selectedMonth ? t('selectOtherMonthOrAdd') : t('clickToAddRecord')}
-          </p>
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className={`p-2 rounded-lg transition-colors ${
+              currentPage === totalPages
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'hover:bg-white/60 text-gray-600 hover:text-gray-900 cursor-pointer'
+            }`}
+          >
+            <span className="material-symbols-outlined">Next ▶️</span>
+          </button>
+          <button
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className={`p-2 rounded-lg transition-colors ${
+              currentPage === totalPages
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'hover:bg-white/60 text-gray-600 hover:text-gray-900 cursor-pointer'
+            }`}
+          >
+            <span className="material-symbols-outlined">⏭️</span>
+          </button>
         </div>
       )}
+
+      {/* Transaction Modal */}
+      <TransactionModal
+        isOpen={false}
+        onClose={() => {}}
+        studentId={studentId}
+        transaction={null}
+        onSuccess={() => {}}
+      />
     </>
   )
 }
-

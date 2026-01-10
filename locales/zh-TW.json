@@ -90,6 +90,7 @@
     "totalBonus": "獎金總額",
     "income": "收入",
     "expense": "支出",
+    "balance": "結餘",
     "totalSubjects": "總科目數",
     "totalAssessments": "總評量數",
     "allAssessments": "全部評量數",
@@ -110,7 +111,7 @@
     "returnToStudent": "返回 {name} 的頁面",
     "noRecords": "此期間無評量記錄",
     "selectOtherMonth": "選擇其他月份或添加新記錄",
-    "addNewRecord": "點擊右上角「➕ 添加評量」開始記錄",
+    "addNewRecord": "點擊「➕ 添加評量」新增記錄",
     "today": "今天",
     "yesterday": "昨天",
     "noDate": "未指定日期",
@@ -120,7 +121,14 @@
     "otherRewards": "其他獎金（非考試）",
     "assessmentReward": "評量獎金",
     "passbookReward": "存摺收支",
-    "resetBase": "結算基準"
+    "resetBase": "結算基準",
+    "totalAverageScore": "總平均分數",
+    "financialOverview": "收支概況",
+    "points": "分",
+    "addRecordDesc": "新增一筆記錄",
+    "exportPDF": "匯出 PDF",
+    "unit": "單元",
+    "selectAssessmentMonth": "選擇評量月份"
   },
   "assessment": {
     "title": "評量名稱",
@@ -382,7 +390,8 @@
     "newLabel": "新增",
     "currentLabel": "當前",
     "insertHere": "插入這裡",
-    "moveHere": "移動到這裡"
+    "moveHere": "移動到這裡",
+    "quickAddSubject": "快速添加新科目"
   },
   "students": {
     "addStudent": "添加學生",

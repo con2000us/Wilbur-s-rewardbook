@@ -342,16 +342,36 @@ export default function StudentList({ initialStudents }: Props) {
                 key={student.id}
                 data-student-card
                 draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
+                onDragStart={(e) => {
+                  handleDragStart(index)
+                  // 設置拖曳數據
+                  e.dataTransfer.effectAllowed = 'move'
+                  e.dataTransfer.setData('text/html', '')
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  handleDragOver(e, index)
+                }}
                 onDragEnd={handleDragEnd}
-                className={`relative w-full max-w-[380px] aspect-square overflow-hidden rounded-xl card-shadow group/card shadow-[inset_0_0_0_2px_rgba(255,255,255,0.3)] cursor-grab active:cursor-grabbing ${
+                onClick={(e) => {
+                  // 如果點擊的是內部連結、按鈕或拖曳圖標，不觸發卡片連結
+                  const target = e.target as HTMLElement
+                  if (target.closest('a, button') || target.closest('[data-drag-handle]')) {
+                    return
+                  }
+                  // 點擊卡片其他區域，導航到學生評量記錄頁面
+                  router.push(`/student/${student.id}`)
+                }}
+                className={`relative w-full max-w-[380px] aspect-square overflow-hidden rounded-xl card-shadow group/card shadow-[inset_0_0_0_2px_rgba(255,255,255,0.3)] cursor-pointer hover:scale-[1.01] transition-transform ${
                   draggedIndex === index ? 'opacity-50 scale-95' : ''
                 }`}
                 style={{ background: cardGradient }}
               >
                 {/* 拖曳圖標 - 始終顯示在左上角 */}
-                <div className="absolute top-2 left-3 text-2xl text-white/80 z-20 pointer-events-none hover:text-white transition-colors drop-shadow-[0_6px_12px_rgba(0,0,0,0.8)]">
+                <div 
+                  data-drag-handle
+                  className="absolute top-2 left-3 text-2xl text-white/80 z-20 pointer-events-auto hover:text-white transition-colors drop-shadow-[0_6px_12px_rgba(0,0,0,0.8)] cursor-grab active:cursor-grabbing"
+                >
                   ⋮⋮
                 </div>
                 

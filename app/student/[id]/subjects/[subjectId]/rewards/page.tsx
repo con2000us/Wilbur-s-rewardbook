@@ -84,7 +84,7 @@ export default async function SubjectRewardsPage({
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+            <h1 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-3">
               {/* @ts-ignore - Supabase type inference issue with select queries */}
               {(subject as any).icon} {(subject as any).name} - {t('manageRules')}
             </h1>

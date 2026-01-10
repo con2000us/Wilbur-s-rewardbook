@@ -63,6 +63,55 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
   const [loading, setLoading] = useState(false)
   const justSavedRef = useRef(false) // 使用 ref 標記是否剛剛保存完成，避免重複渲染
   
+  // 響應式佈局狀態 - 檢測視窗寬度
+  const [isDesktopLayout, setIsDesktopLayout] = useState(false)
+  
+  // 檢測視窗寬度並更新佈局狀態
+  useEffect(() => {
+    // 確保在客戶端執行
+    if (typeof window === 'undefined') return
+    
+    const checkLayout = () => {
+      // #region agent log
+      const width = window.innerWidth;
+      const shouldBeDesktop = width >= 1100;
+      fetch('http://127.0.0.1:7242/ingest/4e31ed8f-606c-4d4a-840c-4dfd29aa46a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SubjectsPageClient.tsx:76',message:'Window width check',data:{windowInnerWidth:width,shouldBeDesktop,currentState:isDesktopLayout,userAgent:navigator.userAgent},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B,C'})}).catch(()=>{});
+      // #endregion
+      // 使用 window.innerWidth 來檢測實際視窗寬度
+      setIsDesktopLayout(shouldBeDesktop)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/4e31ed8f-606c-4d4a-840c-4dfd29aa46a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SubjectsPageClient.tsx:78',message:'Layout state updated',data:{newState:shouldBeDesktop},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+    }
+    
+    // 初始檢查
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4e31ed8f-606c-4d4a-840c-4dfd29aa46a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SubjectsPageClient.tsx:85',message:'Initial layout check starting',data:{initialState:isDesktopLayout},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B,E'})}).catch(()=>{});
+    // #endregion
+    checkLayout()
+    
+    // 監聽視窗大小變化
+    window.addEventListener('resize', checkLayout)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4e31ed8f-606c-4d4a-840c-4dfd29aa46a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SubjectsPageClient.tsx:92',message:'Resize listener added',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    
+    // 也監聽設備方向變化（手機旋轉）
+    const handleOrientationChange = () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/4e31ed8f-606c-4d4a-840c-4dfd29aa46a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SubjectsPageClient.tsx:96',message:'Orientation change detected',data:{windowInnerWidth:window.innerWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      // 延遲一下確保寬度已更新
+      setTimeout(checkLayout, 100)
+    }
+    window.addEventListener('orientationchange', handleOrientationChange)
+    
+    return () => {
+      window.removeEventListener('resize', checkLayout)
+      window.removeEventListener('orientationchange', handleOrientationChange)
+    }
+  }, [isDesktopLayout])
+  
   // 排序後的科目列表
   const sortedSubjects = useMemo(() => {
     return [...subjects].sort((a, b) => a.order_index - b.order_index)
@@ -224,22 +273,30 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
   return (
     <>
       {/* 添加按鈕 */}
-      <div className="flex justify-end gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 mb-6">
         {/* 完成排序按鈕 - 只在排序模式時顯示 */}
         {isReordering && (
           <>
             <button
-              onClick={handleSaveOrder}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleSaveOrder()
+              }}
               disabled={loading}
-              className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
+              data-reorder-action="save"
+              className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
             >
               <span>✓</span>
               <span>{tCommon('done') || '完成排序'}</span>
             </button>
             <button
-              onClick={handleCancelReorder}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleCancelReorder()
+              }}
               disabled={loading}
-              className="px-6 py-2.5 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
+              data-reorder-action="cancel"
+              className="px-6 py-2.5 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
             >
               <span>✕</span>
               <span>{tCommon('cancel')}</span>
@@ -247,17 +304,25 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
           </>
         )}
         <button
-          onClick={() => setIsGlobalRewardRulesModalOpen(true)}
-          className="px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            setIsGlobalRewardRulesModalOpen(true)
+          }}
+          data-subject-action="global-rules"
+          className="bg-accent-gold hover:bg-amber-400 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/30 flex items-center gap-2 font-medium transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
         >
-          <span>💎</span>
+          <span className="material-icons-round" style={{ fontSize: '0.875rem' }}>diamond</span>
           <span>{tRewardRules('manageGlobalRules') || '通用獎金規則'}</span>
         </button>
         <button
-          onClick={handleOpenAddModal}
-          className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleOpenAddModal()
+          }}
+          data-subject-action="add-subject"
+          className="bg-accent-green hover:bg-emerald-400 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/30 flex items-center gap-2 font-medium transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
         >
-          <span>➕</span>
+          <span className="material-icons-round" style={{ fontSize: '1.25rem' }}>add</span>
           <span>{t('addSubject')}</span>
         </button>
       </div>
@@ -270,6 +335,9 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
             const isDragging = draggedIndex === index && dropTargetIndex !== null
             // 拖拽指示器：在目標位置顯示
             const showIndicator = dropTargetIndex === index && draggedIndex !== null && draggedIndex !== index
+            
+            // 判斷是否為特殊樣式（例如數學科目可能有特殊背景）
+            const isSpecialStyle = false // 可以根據需要調整
             
             return (
               <div key={subject.id}>
@@ -284,108 +352,86 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDrop={handleDrop}
                   onDragEnd={handleDragEnd}
-                  className={`p-6 rounded-lg border-2 transition-all duration-200 ${
+                  className={`glass-card p-4 rounded-2xl flex items-center gap-4 transition-all hover:bg-white/60 dark:hover:bg-white/10 hover:shadow-lg group ${
                     isDragging
-                      ? 'cursor-move border-blue-400 bg-blue-50 opacity-50 scale-95 shadow-lg' 
-                      : isReordering
-                      ? 'cursor-move border-gray-200 hover:border-blue-400' 
-                      : 'border-gray-200 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1'
-                  }`}
-                  style={{ 
-                    backgroundColor: isDragging 
-                      ? 'rgba(59, 130, 246, 0.1)' 
-                      : `${subject.color}10` 
-                  }}
+                      ? 'opacity-50 scale-95'
+                      : ''
+                  } ${isDesktopLayout ? 'flex-row' : 'flex-col'}`}
                 >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      {/* 拖拽手柄 */}
-                      <div className="flex flex-col gap-1 cursor-move">
-                        <div className="flex gap-1">
-                          <div className="w-1 h-1 rounded-full bg-gray-400"></div>
-                          <div className="w-1 h-1 rounded-full bg-gray-400"></div>
-                        </div>
-                        <div className="flex gap-1">
-                          <div className="w-1 h-1 rounded-full bg-gray-400"></div>
-                          <div className="w-1 h-1 rounded-full bg-gray-400"></div>
-                        </div>
-                        <div className="flex gap-1">
-                          <div className="w-1 h-1 rounded-full bg-gray-400"></div>
-                          <div className="w-1 h-1 rounded-full bg-gray-400"></div>
-                        </div>
-                      </div>
-                      
-                      <div 
-                        className="text-5xl"
-                        style={{ filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.1))' }}
-                      >
-                        {subject.icon}
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-800">
-                          {subject.name}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span 
-                            className="px-3 py-1 rounded-full text-white text-sm font-semibold"
-                            style={{ backgroundColor: subject.color }}
-                          >
-                            {t('colorTag')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {!isReordering && (
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => handleOpenRewardRulesModal(subject)}
-                          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold cursor-pointer"
-                        >
-                          💎 {t('rewardRules')}
-                        </button>
-                        <button
-                          onClick={() => handleOpenEditModal(subject)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:-translate-y-0.5 transition-all duration-200 font-semibold cursor-pointer"
-                        >
-                          ✏️ {tCommon('edit')}
-                        </button>
-                      </div>
-                    )}
+                  {/* #region agent log */}
+                  {(() => {
+                    if (index === 0) {
+                      fetch('http://127.0.0.1:7242/ingest/4e31ed8f-606c-4d4a-840c-4dfd29aa46a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SubjectsPageClient.tsx:310',message:'Rendering subject card',data:{isDesktopLayout,windowInnerWidth:typeof window !== 'undefined' ? window.innerWidth : 'N/A',layoutClass:isDesktopLayout ? 'flex-row' : 'flex-col'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                    }
+                    return null;
+                  })()}
+                  {/* #endregion */}
+                  {/* 拖拽指示器 */}
+                  <div className={`text-gray-400 cursor-grab active:cursor-grabbing p-2 ${isDesktopLayout ? 'block' : 'hidden'}`}>
+                    <span className="material-icons-round text-3xl">drag_indicator</span>
                   </div>
+                  
+                  {/* 科目圖示 */}
+                  <div className="w-16 h-16 flex-shrink-0 bg-blue-100 rounded-xl flex items-center justify-center shadow-inner relative overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-200 to-indigo-100 opacity-50"></div>
+                    <span className="text-[2.59rem] relative z-10 leading-none flex items-center justify-center">{subject.icon}</span>
+                  </div>
+                  
+                  {/* 科目資訊 */}
+                  <div className={`flex-grow ${isDesktopLayout ? 'text-left' : 'text-center'}`}>
+                    <h3 className="text-xl font-bold mb-1 subject-name-text" style={{ color: '#1f2937' }}>{subject.name}</h3>
+                    <div
+                      className="inline-flex items-center px-3 py-1 rounded-full text-white text-xs font-medium shadow-sm"
+                      style={{
+                        backgroundColor: subject.color || '#3B82F6',
+                        boxShadow: `0 1px 2px 0 ${subject.color || '#3B82F6'}30`
+                      }}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-white mr-2 opacity-70"></span>
+                      {t('colorTag')}
+                    </div>
+                  </div>
+
+                  {/* 操作按鈕 */}
+                  {!isReordering && (
+                    <div className={`flex gap-3 ${isDesktopLayout ? 'w-auto justify-end mt-0' : 'w-full justify-center mt-2'} opacity-90 group-hover:opacity-100 transition-opacity`}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleOpenRewardRulesModal(subject)
+                        }}
+                        data-subject-action="reward-rules"
+                        className="bg-accent-purple hover:bg-purple-400 text-white px-4 py-2 rounded-full shadow-md shadow-purple-500/20 flex items-center gap-2 text-sm font-medium transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <span className="material-icons-round" style={{ fontSize: '0.875rem' }}>diamond</span>
+                        {t('rewardRules')}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleOpenEditModal(subject)
+                        }}
+                        data-subject-action="edit-subject"
+                        className="bg-accent-blue hover:bg-blue-400 text-white px-4 py-2 rounded-full shadow-md shadow-blue-500/20 flex items-center gap-2 text-sm font-medium transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <span className="material-icons-round" style={{ fontSize: '0.875rem' }}>edit</span>
+                        {tCommon('edit')}
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
               </div>
             )
           })}
-          {/* 拖拽到最底端的占位區域 - 只在拖拽時顯示 */}
-          {draggedIndex !== null && (
-            <div
-              onDragOver={(e) => {
-                e.preventDefault()
-                if (draggedIndex !== null && draggedIndex < sortedSubjectsState.length - 1) {
-                  setDropTargetIndex(sortedSubjectsState.length)
-                  const newSubjects = [...sortedSubjectsState]
-                  const draggedSubjectItem = newSubjects[draggedIndex]
-                  newSubjects.splice(draggedIndex, 1)
-                  newSubjects.push(draggedSubjectItem)
-                  setSortedSubjectsState(newSubjects)
-                  setDraggedIndex(newSubjects.length - 1)
-                }
-              }}
-              onDragEnter={(e) => {
-                e.preventDefault()
-                if (draggedIndex !== null) {
-                  setDropTargetIndex(sortedSubjectsState.length)
-                }
-              }}
-              className={`h-16 mt-2 rounded-lg transition-all ${
-                dropTargetIndex === sortedSubjectsState.length
-                  ? 'bg-blue-100 border-2 border-dashed border-blue-500'
-                  : 'bg-transparent border-2 border-dashed border-gray-300'
-              }`}
-            ></div>
-          )}
+          
+          {/* 快速添加新科目按鈕 */}
+          <div className="border-2 border-dashed rounded-2xl p-4 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors group" style={{ borderColor: 'rgba(107, 114, 128, 0.5)' }} onClick={handleOpenAddModal}>
+            <span className="font-medium flex items-center gap-2 quick-add-subject-text" style={{ color: '#1f2937' }}>
+              <span className="material-icons-round">add_circle_outline</span>
+              {t('quickAddSubject') || '快速添加新科目'}
+            </span>
+          </div>
         </div>
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
@@ -431,6 +477,16 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
         studentRules={studentRules}
         onSuccess={handleRewardRulesModalSuccess}
       />
+      
+      {/* 確保科目名稱文字顏色在所有設備上都是深色 */}
+      <style jsx global>{`
+        .subject-name-text {
+          color: #1f2937 !important;
+        }
+        .quick-add-subject-text {
+          color: #1f2937 !important;
+        }
+      `}</style>
     </>
   )
 }

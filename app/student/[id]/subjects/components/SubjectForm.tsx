@@ -231,7 +231,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                 }`}
                 style={{ backgroundColor: selectedPreset === index ? `${preset.color}20` : undefined }}
               >
-                <div className="text-3xl mb-1">{preset.icon}</div>
+                <div className="text-xl mb-1">{preset.icon}</div>
                 <div className="text-sm font-semibold text-gray-800">{preset.name}</div>
               </button>
             ))}
