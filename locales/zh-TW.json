@@ -128,7 +128,13 @@
     "addRecordDesc": "新增一筆記錄",
     "exportPDF": "匯出 PDF",
     "unit": "單元",
-    "selectAssessmentMonth": "選擇評量月份"
+    "unitLabel": "單元: ",
+    "selectAssessmentMonth": "選擇評量月份",
+    "year": "年",
+    "month": "月",
+    "day": "日",
+    "noRecordsForSubject": "目前沒有此類型的評量記錄",
+    "noAssessmentRecords": "目前沒有評量記錄"
   },
   "assessment": {
     "title": "評量名稱",

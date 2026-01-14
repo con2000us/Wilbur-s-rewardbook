@@ -15,6 +15,7 @@ interface Props {
   onClose: () => void
   currentStudentId: string
   allStudents: Student[]
+  currentPage?: 'records' | 'transactions' | 'subjects' | 'settings'
 }
 
 type HoverAction = 'records' | 'transactions' | 'subjects' | 'settings' | null
@@ -23,7 +24,8 @@ export default function StudentSwitchModal({
   isOpen, 
   onClose, 
   currentStudentId, 
-  allStudents 
+  allStudents,
+  currentPage = 'records'
 }: Props) {
   const router = useRouter()
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -36,7 +38,6 @@ export default function StudentSwitchModal({
 
   // 追蹤每個學生的 hover 狀態
   const [hoveredActions, setHoveredActions] = useState<Record<string, HoverAction>>({})
-  const [hoveringHomeSettings, setHoveringHomeSettings] = useState(false)
 
   const getActionText = (action: HoverAction) => {
     switch (action) {
@@ -203,18 +204,27 @@ export default function StudentSwitchModal({
         <div className="mb-4">
           {/* 學習記錄 */}
           <button
-            onClick={() => handleQuickNav('records')}
-            className="w-full flex items-center justify-between p-3.5 transition-all duration-300 cursor-pointer group hover:translate-y-[-4px] quick-nav-button"
+            onClick={() => currentPage !== 'records' && handleQuickNav('records')}
+            disabled={currentPage === 'records'}
+            className={`w-full flex items-center justify-between p-2.5 transition-all duration-300 quick-nav-button border-b border-transparent ${
+              currentPage === 'records' 
+                ? 'cursor-default' 
+                : 'cursor-pointer group hover:translate-y-[-4px] hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
           >
             <div className="flex items-center gap-4">
-              <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 transition-colors">
+              <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-blue-200 dark:bg-blue-700 text-blue-700 dark:text-blue-200 transition-colors">
                 <span className="material-symbols-outlined text-lg">assessment</span>
               </div>
-              <span className="text-base font-medium transition-colors quick-nav-text" style={{ color: '#1f2937' }}>
-                {tStudent('recordsTitle')}
+              <span className="text-base font-medium transition-all quick-nav-text group-hover:text-blue-600 dark:group-hover:text-blue-400" style={{ color: '#1f2937', textShadow: 'transparent' }}>
+                <span className="group-hover:drop-shadow-[0_2px_4px_rgba(59,130,246,0.4)]">{tStudent('recordsTitle')}</span>
               </span>
             </div>
+            {currentPage === 'records' ? (
+              <span className="text-xl font-bold text-blue-600 dark:text-blue-400 transition-all" style={{ textShadow: '0 2px 4px rgba(59, 130, 246, 0.5)' }}>▶</span>
+            ) : (
             <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
+            )}
           </button>
 
           {/* 分隔線 */}
@@ -222,18 +232,27 @@ export default function StudentSwitchModal({
 
           {/* 獎金存摺 */}
           <button
-            onClick={() => handleQuickNav('transactions')}
-            className="w-full flex items-center justify-between p-4 transition-all duration-300 cursor-pointer group hover:translate-y-[-4px] quick-nav-button"
+            onClick={() => currentPage !== 'transactions' && handleQuickNav('transactions')}
+            disabled={currentPage === 'transactions'}
+            className={`w-full flex items-center justify-between p-2.5 transition-all duration-300 quick-nav-button border-b border-transparent ${
+              currentPage === 'transactions' 
+                ? 'cursor-default' 
+                : 'cursor-pointer group hover:translate-y-[-4px] hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
           >
             <div className="flex items-center gap-4">
               <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300 transition-colors">
                 <span className="material-symbols-outlined text-lg">attach_money</span>
               </div>
-              <span className="text-base font-medium transition-colors quick-nav-text" style={{ color: '#1f2937' }}>
-                {tTransaction('passbook')}
+              <span className="text-base font-medium transition-all quick-nav-text group-hover:text-green-600 dark:group-hover:text-green-400" style={{ color: '#1f2937', textShadow: 'transparent' }}>
+                <span className="group-hover:drop-shadow-[0_2px_4px_rgba(22,163,74,0.4)]">{tTransaction('passbook')}</span>
               </span>
             </div>
+            {currentPage === 'transactions' ? (
+              <span className="text-xl font-bold text-green-600 dark:text-green-400 transition-all" style={{ textShadow: '0 2px 4px rgba(22, 163, 74, 0.5)' }}>▶</span>
+            ) : (
             <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
+            )}
           </button>
 
           {/* 分隔線 */}
@@ -241,34 +260,73 @@ export default function StudentSwitchModal({
 
           {/* 科目管理 */}
           <button
-            onClick={() => handleQuickNav('subjects')}
-            className="w-full flex items-center justify-between p-3.5 transition-all duration-300 cursor-pointer group hover:translate-y-[-4px] quick-nav-button"
+            onClick={() => currentPage !== 'subjects' && handleQuickNav('subjects')}
+            disabled={currentPage === 'subjects'}
+            className={`w-full flex items-center justify-between p-2.5 transition-all duration-300 quick-nav-button border-b border-transparent ${
+              currentPage === 'subjects' 
+                ? 'cursor-default' 
+                : 'cursor-pointer group hover:translate-y-[-4px] hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
           >
             <div className="flex items-center gap-4">
               <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-orange-100 dark:bg-orange-800 text-orange-600 dark:text-orange-300 transition-colors">
                 <span className="material-symbols-outlined text-lg">menu_book</span>
               </div>
-              <span className="text-base font-medium transition-colors quick-nav-text" style={{ color: '#1f2937' }}>
-                {tHome('features.subjects.title')}
+              <span className="text-base font-medium transition-all quick-nav-text group-hover:text-orange-600 dark:group-hover:text-orange-400" style={{ color: '#1f2937', textShadow: 'transparent' }}>
+                <span className="group-hover:drop-shadow-[0_2px_4px_rgba(234,88,12,0.4)]">{tHome('features.subjects.title')}</span>
               </span>
             </div>
+            {currentPage === 'subjects' ? (
+              <span className="text-xl font-bold text-orange-600 dark:text-orange-400 transition-all" style={{ textShadow: '0 2px 4px rgba(234, 88, 12, 0.5)' }}>▶</span>
+            ) : (
             <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
+            )}
           </button>
 
           {/* 分隔線 */}
           <div className="h-[0.5px] mx-4" style={{ backgroundColor: '#e2e8f0' }}></div>
 
-          {/* 設定 */}
+          {/* 學生設置 */}
           <button
-            onClick={() => handleQuickNav('settings')}
-            className="w-full flex items-center justify-between p-3.5 transition-all duration-300 cursor-pointer group hover:translate-y-[-4px] quick-nav-button"
+            onClick={() => currentPage !== 'settings' && handleQuickNav('settings')}
+            disabled={currentPage === 'settings'}
+            className={`w-full flex items-center justify-between p-2.5 transition-all duration-300 quick-nav-button border-b border-transparent ${
+              currentPage === 'settings' 
+                ? 'cursor-default' 
+                : 'cursor-pointer group hover:translate-y-[-4px] hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
           >
             <div className="flex items-center gap-4">
               <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-300 transition-colors">
                 <span className="material-symbols-outlined text-lg">settings</span>
               </div>
-              <span className="text-base font-medium transition-colors quick-nav-text" style={{ color: '#1f2937' }}>
-                {tNav('settings')}
+              <span className="text-base font-medium transition-all quick-nav-text group-hover:text-purple-600 dark:group-hover:text-purple-400" style={{ color: '#1f2937', textShadow: 'transparent' }}>
+                <span className="group-hover:drop-shadow-[0_2px_4px_rgba(147,51,234,0.4)]">{locale === 'zh-TW' ? '學生設置' : 'Student Settings'}</span>
+              </span>
+            </div>
+            {currentPage === 'settings' ? (
+              <span className="text-xl font-bold text-purple-600 dark:text-purple-400 transition-all" style={{ textShadow: '0 2px 4px rgba(147, 51, 234, 0.5)' }}>▶</span>
+            ) : (
+              <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
+            )}
+          </button>
+
+          {/* 分隔線 */}
+          <div className="h-[0.5px] mx-4" style={{ backgroundColor: '#e2e8f0' }}></div>
+
+          {/* 返回首頁 */}
+          <button
+            onClick={() => {
+              router.push('/')
+            }}
+            className="w-full flex items-center justify-between p-2.5 transition-all duration-300 cursor-pointer group hover:translate-y-[-4px] quick-nav-button border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-indigo-500 dark:bg-indigo-600 text-white transition-colors shadow-sm">
+                <span className="material-icons-outlined text-xl">home</span>
+              </div>
+              <span className="text-base font-medium transition-all quick-nav-text group-hover:text-indigo-600 dark:group-hover:text-indigo-400" style={{ color: '#1f2937', textShadow: 'transparent' }}>
+                <span className="group-hover:drop-shadow-[0_2px_4px_rgba(99,102,241,0.4)]">{locale === 'zh-TW' ? '返回首頁' : 'Back to Home'}</span>
               </span>
             </div>
             <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
@@ -371,49 +429,6 @@ export default function StudentSwitchModal({
               </p>
             </div>
           )}
-
-          {/* 返回首頁按鈕 - 使用與頁面一致的玻璃態樣式 */}
-          <div className="glass-card-base w-full relative overflow-hidden rounded-2xl transition-all duration-300 group hover:translate-y-[-4px] hover:bg-white/35 hover:border-white/60 hover:shadow-lg">
-            <button
-              onClick={() => {
-                router.push('/')
-                onClose()
-              }}
-              className="w-full flex items-center justify-between p-4 relative z-10 cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-2xl">📚</span>
-                </div>
-                <div className="text-left">
-                  <h3 className="text-base font-bold home-link-text transition-colors" style={{ color: '#1f2937' }}>
-                    Wilbur's Reward Book
-                  </h3>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">
-                    {hoveringHomeSettings ? (locale === 'zh-TW' ? '網站設定' : 'Site Settings') : (locale === 'zh-TW' ? '返回首頁' : 'Back to Home')}
-                  </p>
-                </div>
-              </div>
-              <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 group-hover:text-indigo-400 dark:group-hover:text-indigo-500 group-hover:translate-x-[30px] transition-all">chevron_right</span>
-            </button>
-
-            {/* Hover 覆蓋層 - 只顯示設定連結 icon */}
-            <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-pink-50/90 to-transparent dark:from-pink-900/30 flex items-center justify-center space-x-1 px-2 translate-x-full opacity-0 transition-all duration-300 list-item-actions group-hover:translate-x-[0px] group-hover:opacity-100 z-20">
-              <button
-                onMouseEnter={() => setHoveringHomeSettings(true)}
-                onMouseLeave={() => setHoveringHomeSettings(false)}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  router.push('/settings')
-                  onClose()
-                }}
-                className="w-10 h-10 rounded-full flex items-center justify-center border border-white/80 hover:bg-indigo-100 dark:hover:bg-indigo-800 text-indigo-600 dark:text-indigo-300 transition-colors cursor-pointer"
-                title={tNav('settings')}
-              >
-                <span className="material-symbols-outlined text-lg">settings</span>
-              </button>
-            </div>
-          </div>
 
         </div>
       </div>

@@ -86,7 +86,22 @@ export default async function SubjectRewardsPage({
           <div className="mb-6">
             <h1 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-3">
               {/* @ts-ignore - Supabase type inference issue with select queries */}
-              {(subject as any).icon} {(subject as any).name} - {t('manageRules')}
+              {(() => {
+                const icon = (subject as any).icon
+                const isEmoji = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(icon) || 
+                               icon.length <= 2 || 
+                               !/^[a-z_]+$/i.test(icon)
+                return (
+                  <>
+                    {isEmoji ? (
+                      <span>{icon}</span>
+                    ) : (
+                      <span className="material-icons-outlined">{icon}</span>
+                    )}
+                    <span>{(subject as any).name} - {t('manageRules')}</span>
+                  </>
+                )
+              })()}
             </h1>
             <p className="text-gray-600">
               {/* @ts-ignore - Supabase type inference issue with select queries */}

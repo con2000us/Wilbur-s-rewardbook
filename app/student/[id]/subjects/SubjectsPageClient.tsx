@@ -374,7 +374,19 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
                   {/* 科目圖示 */}
                   <div className="w-16 h-16 flex-shrink-0 bg-blue-100 rounded-xl flex items-center justify-center shadow-inner relative overflow-hidden group-hover:scale-105 transition-transform duration-300">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-200 to-indigo-100 opacity-50"></div>
+                    {(() => {
+                      // 判斷是否為 emoji（用於向後兼容）
+                      const isEmoji = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(subject.icon) || 
+                                     subject.icon.length <= 2 || 
+                                     !/^[a-z_]+$/i.test(subject.icon)
+                      return isEmoji ? (
                     <span className="text-[2.59rem] relative z-10 leading-none flex items-center justify-center">{subject.icon}</span>
+                      ) : (
+                        <span className="material-icons-outlined relative z-10" style={{ fontSize: '2.59rem', color: subject.color }}>
+                          {subject.icon}
+                        </span>
+                      )
+                    })()}
                   </div>
                   
                   {/* 科目資訊 */}
@@ -424,14 +436,6 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
               </div>
             )
           })}
-          
-          {/* 快速添加新科目按鈕 */}
-          <div className="border-2 border-dashed rounded-2xl p-4 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors group" style={{ borderColor: 'rgba(107, 114, 128, 0.5)' }} onClick={handleOpenAddModal}>
-            <span className="font-medium flex items-center gap-2 quick-add-subject-text" style={{ color: '#1f2937' }}>
-              <span className="material-icons-round">add_circle_outline</span>
-              {t('quickAddSubject') || '快速添加新科目'}
-            </span>
-          </div>
         </div>
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
@@ -481,9 +485,6 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
       {/* 確保科目名稱文字顏色在所有設備上都是深色 */}
       <style jsx global>{`
         .subject-name-text {
-          color: #1f2937 !important;
-        }
-        .quick-add-subject-text {
           color: #1f2937 !important;
         }
       `}</style>

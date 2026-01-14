@@ -32,8 +32,8 @@ export default function StudentSidebarHeader({
   currentPage = 'records',
   showHeader = true
 }: Props) {
-  // 科目設定和獎金存摺頁面預設展開快速導覽
-  const [isStudentDropdownOpen, setIsStudentDropdownOpen] = useState(currentPage === 'subjects' || currentPage === 'transactions')
+  // 快速導覽預設展開
+  const [isStudentDropdownOpen, setIsStudentDropdownOpen] = useState(true)
   const t = useTranslations('common')
   const locale = useLocale()
 
@@ -74,6 +74,7 @@ export default function StudentSidebarHeader({
           onClose={() => setIsStudentDropdownOpen(false)}
           currentStudentId={studentId}
           allStudents={allStudents}
+          currentPage={currentPage}
         />
       </div>
     </div>

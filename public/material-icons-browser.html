@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Material Icons Outlined 圖標瀏覽器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Material Icons Outlined 樣式 */
+    .material-icons-outlined {
+      font-family: 'Material Icons Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .search-section {
+      padding: 30px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .search-box {
+      position: relative;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 15px 50px 15px 20px;
+      font-size: 1.1rem;
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      transition: all 0.3s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6c757d;
+      pointer-events: none;
+    }
+
+    .categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .category-btn {
+      padding: 8px 16px;
+      background: white;
+      border: 2px solid #dee2e6;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .category-btn:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .category-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .stats {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #6c757d;
+      font-size: 1rem;
+    }
+
+    .icons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .icon-card {
+      background: white;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .icon-card:hover {
+      border-color: #667eea;
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+    }
+
+    .icon-card.copied {
+      border-color: #28a745;
+      background: #f0fff4;
+    }
+
+    .icon-display {
+      font-size: 48px;
+      color: #495057;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .icon-name {
+      font-size: 0.9rem;
+      color: #495057;
+      font-weight: 500;
+      word-break: break-all;
+      font-family: 'Courier New', monospace;
+    }
+
+    .copy-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #28a745;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .icon-card.copied .copy-badge {
+      opacity: 1;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6c757d;
+    }
+
+    .no-results-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
+
+    .subject-icons-section {
+      background: #f8f9fa;
+      padding: 30px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .subject-icons-section h2 {
+      margin-bottom: 20px;
+      color: #495057;
+      font-size: 1.5rem;
+    }
+
+    .subject-icons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+    }
+
+    .subject-icon-card {
+      background: white;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .subject-icon-card:hover {
+      border-color: #667eea;
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+    }
+
+    .subject-icon-display {
+      font-size: 36px;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .subject-icon-name {
+      font-size: 0.85rem;
+      color: #495057;
+      font-family: 'Courier New', monospace;
+    }
+
+    @media (max-width: 768px) {
+      .icons-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>
+        <span class="material-icons-outlined" style="font-size: 2.5rem;">apps</span>
+        Material Icons Outlined 圖標瀏覽器
+      </h1>
+      <p>點擊圖標卡片即可複製圖標名稱</p>
+    </div>
+
+    <div class="subject-icons-section">
+      <h2>📚 範例：科目相關圖標（來自學生學習評量儀表板）</h2>
+      <div class="subject-icons-grid" id="subjectIconsGrid"></div>
+    </div>
+
+    <div class="search-section">
+      <div class="search-box">
+        <input type="text" class="search-input" id="searchInput" placeholder="搜尋圖標名稱（例如：calculate, book, school...）">
+        <span class="material-icons-outlined search-icon">search</span>
+      </div>
+      <div class="categories">
+        <button class="category-btn active" data-category="all">全部</button>
+        <button class="category-btn" data-category="education">教育</button>
+        <button class="category-btn" data-category="subject">學科</button>
+        <button class="category-btn" data-category="action">操作</button>
+        <button class="category-btn" data-category="navigation">導航</button>
+        <button class="category-btn" data-category="ui">介面</button>
+        <button class="category-btn" data-category="other">其他</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="stats" id="stats"></div>
+      <div class="icons-grid" id="iconsGrid"></div>
+      <div class="no-results" id="noResults" style="display: none;">
+        <span class="material-icons-outlined no-results-icon">search_off</span>
+        <p>找不到符合的圖標</p>
+        <p style="margin-top: 10px; font-size: 0.9rem;">試試其他關鍵字或選擇不同分類</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 科目相關圖標（來自範例）
+    const subjectIcons = [
+      { name: 'auto_stories', label: '國語' },
+      { name: 'public', label: '英文' },
+      { name: 'calculate', label: '數學' },
+      { name: 'newspaper', label: '社會' },
+      { name: 'apps', label: '全部' },
+      { name: 'history_edu', label: '歷史教育' },
+      { name: 'science', label: '科學' },
+      { name: 'palette', label: '美術' },
+      { name: 'music_note', label: '音樂' },
+      { name: 'sports_soccer', label: '體育' }
+    ];
+
+    // 圖標分類
+    const iconCategories = {
+      education: [
+        'school', 'menu_book', 'auto_stories', 'history_edu', 'science', 'calculate',
+        'quiz', 'assignment', 'article', 'description', 'note', 'book', 'library_books',
+        'class', 'groups', 'person', 'person_outline', 'account_circle', 'supervisor_account'
+      ],
+      subject: [
+        'auto_stories', 'public', 'calculate', 'newspaper', 'science', 'palette',
+        'music_note', 'sports_soccer', 'language', 'translate', 'code', 'computer',
+        'psychology', 'biotech', 'eco', 'architecture'
+      ],
+      action: [
+        'add', 'add_circle', 'edit', 'delete', 'save', 'cancel', 'check', 'close',
+        'done', 'done_all', 'refresh', 'update', 'sync', 'download', 'upload',
+        'print', 'share', 'copy', 'cut', 'paste', 'undo', 'redo'
+      ],
+      navigation: [
+        'home', 'arrow_back', 'arrow_forward', 'chevron_left', 'chevron_right',
+        'arrow_upward', 'arrow_downward', 'menu', 'more_vert', 'more_horiz',
+        'expand_more', 'expand_less', 'navigate_before', 'navigate_next'
+      ],
+      ui: [
+        'apps', 'dashboard', 'view_list', 'view_module', 'grid_view', 'list',
+        'settings', 'tune', 'filter_list', 'sort', 'search', 'clear',
+        'visibility', 'visibility_off', 'lock', 'lock_open', 'star', 'favorite'
+      ],
+      other: [
+        'calendar_today', 'schedule', 'access_time', 'event', 'notifications',
+        'account_balance_wallet', 'attach_money', 'payment', 'shopping_cart',
+        'favorite', 'favorite_border', 'thumb_up', 'thumb_down', 'comment',
+        'chat', 'email', 'phone', 'location_on', 'map', 'directions'
+      ]
+    };
+
+    // 所有圖標（合併所有分類）
+    const allIcons = [
+      ...iconCategories.education,
+      ...iconCategories.subject,
+      ...iconCategories.action,
+      ...iconCategories.navigation,
+      ...iconCategories.ui,
+      ...iconCategories.other
+    ];
+
+    // 去重並排序
+    const uniqueIcons = [...new Set(allIcons)].sort();
+
+    let currentCategory = 'all';
+    let searchTerm = '';
+
+    // 渲染科目圖標
+    function renderSubjectIcons() {
+      const grid = document.getElementById('subjectIconsGrid');
+      grid.innerHTML = subjectIcons.map(icon => `
+        <div class="subject-icon-card" onclick="copyIconName('${icon.name}')">
+          <span class="material-icons-outlined subject-icon-display">${icon.name}</span>
+          <div class="subject-icon-name">${icon.name}</div>
+          <div style="font-size: 0.75rem; color: #6c757d; margin-top: 5px;">${icon.label}</div>
+        </div>
+      `).join('');
+    }
+
+    // 渲染圖標網格
+    function renderIcons() {
+      const grid = document.getElementById('iconsGrid');
+      const noResults = document.getElementById('noResults');
+      const stats = document.getElementById('stats');
+
+      let filteredIcons = uniqueIcons;
+
+      // 分類過濾
+      if (currentCategory !== 'all') {
+        filteredIcons = iconCategories[currentCategory] || [];
+      }
+
+      // 搜索過濾
+      if (searchTerm) {
+        filteredIcons = filteredIcons.filter(icon => 
+          icon.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      // 更新統計
+      stats.textContent = `顯示 ${filteredIcons.length} 個圖標`;
+
+      // 顯示/隱藏無結果提示
+      if (filteredIcons.length === 0) {
+        grid.style.display = 'none';
+        noResults.style.display = 'block';
+      } else {
+        grid.style.display = 'grid';
+        noResults.style.display = 'none';
+      }
+
+      // 渲染圖標卡片
+      grid.innerHTML = filteredIcons.map(icon => `
+        <div class="icon-card" onclick="copyIconName('${icon}')">
+          <span class="copy-badge">已複製！</span>
+          <span class="material-icons-outlined icon-display">${icon}</span>
+          <div class="icon-name">${icon}</div>
+        </div>
+      `).join('');
+    }
+
+    // 複製圖標名稱
+    function copyIconName(iconName) {
+      navigator.clipboard.writeText(iconName).then(() => {
+        // 顯示複製成功動畫
+        const cards = document.querySelectorAll('.icon-card');
+        cards.forEach(card => {
+          if (card.querySelector('.icon-name').textContent === iconName) {
+            card.classList.add('copied');
+            setTimeout(() => {
+              card.classList.remove('copied');
+            }, 2000);
+          }
+        });
+
+        // 也檢查科目圖標卡片
+        const subjectCards = document.querySelectorAll('.subject-icon-card');
+        subjectCards.forEach(card => {
+          if (card.querySelector('.subject-icon-name').textContent === iconName) {
+            card.style.borderColor = '#28a745';
+            card.style.background = '#f0fff4';
+            setTimeout(() => {
+              card.style.borderColor = '';
+              card.style.background = '';
+            }, 2000);
+          }
+        });
+      });
+    }
+
+    // 搜索功能
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      searchTerm = e.target.value;
+      renderIcons();
+    });
+
+    // 分類按鈕
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategory = btn.dataset.category;
+        renderIcons();
+      });
+    });
+
+    // 初始化
+    renderSubjectIcons();
+    renderIcons();
+  </script>
+</body>
+</html>

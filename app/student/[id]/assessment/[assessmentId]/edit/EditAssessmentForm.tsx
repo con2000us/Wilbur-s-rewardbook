@@ -220,8 +220,18 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                   required
                   className="w-5 h-5 text-blue-600 accent-blue-600"
                 />
-                <span className="text-lg font-medium text-gray-800">
-                  {subject.icon} {subject.name}
+                <span className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                  {(() => {
+                    const isEmoji = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(subject.icon) || 
+                                   subject.icon.length <= 2 || 
+                                   !/^[a-z_]+$/i.test(subject.icon)
+                    return isEmoji ? (
+                      <span>{subject.icon}</span>
+                    ) : (
+                      <span className="material-icons-outlined">{subject.icon}</span>
+                    )
+                  })()}
+                  {subject.name}
                 </span>
               </label>
             ))}

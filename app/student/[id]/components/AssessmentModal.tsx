@@ -76,7 +76,17 @@ export default function AssessmentModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={assessment ? `✏️ ${t('editAssessment')}` : `➕ ${t('addAssessment')}`}
+      title={assessment ? (
+        <>
+          <span className="material-icons-outlined align-middle mr-1">edit</span>
+          {t('editAssessment')}
+        </>
+      ) : (
+        <>
+          <span className="material-icons-outlined align-middle mr-1">add_circle</span>
+          {t('addAssessment')}
+        </>
+      )}
       size="xl"
       widthPercent={70}
     >

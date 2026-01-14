@@ -4,6 +4,7 @@ import TransactionPageClient from './TransactionPageClient'
 import { getTranslations } from 'next-intl/server'
 import { parseStudentAvatar } from '@/lib/utils/studentTheme'
 import StudentSidebarHeader from '../components/StudentSidebarHeader'
+import PassbookSidebarContent from './components/PassbookSidebarContent'
 
 export default async function TransactionsPage({ 
   params 
@@ -42,6 +43,16 @@ export default async function TransactionsPage({
   // @ts-ignore - Supabase type inference issue with select queries
   const avatar = parseStudentAvatar((student as any).avatar_url, (student as any).name)
 
+  // 計算收支概況
+  const totalEarned = transactions?.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0) || 0
+  const totalSpent = transactions?.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
+  const balance = totalEarned - totalSpent
+  const summary = {
+    total_earned: totalEarned,
+    total_spent: totalSpent,
+    balance: balance
+  }
+
   return (
     <div className="min-h-screen p-4 md:p-10 flex justify-center items-start text-gray-800" style={{
       background: 'linear-gradient(135deg, #a7d9ef 0%, #f7b2c9 50%, #fcd6b6 100%)'
@@ -64,6 +75,14 @@ export default async function TransactionsPage({
               currentPage="transactions"
               showHeader={true}
             />
+            
+            {/* 月份選擇器和收支概況 */}
+            <div className="mt-3 w-full">
+              <PassbookSidebarContent
+                transactions={transactions || []}
+                summary={summary}
+              />
+            </div>
           </header>
         </div>
 

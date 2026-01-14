@@ -489,7 +489,7 @@ export default function StudentRecords({
   return (
     <>
       {/* 側邊欄 */}
-      <div className="relative z-20 lg:w-[360px] lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
+      <div className="relative z-20 lg:w-80 lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
         <header className="flex flex-col lg:items-start lg:sticky lg:top-0 w-full lg:min-w-0">
           {/* Student Sidebar Header - 包含學生頭像和快速導覽 */}
           <StudentSidebarHeader
@@ -547,6 +547,7 @@ export default function StudentRecords({
           resetDate={resetDate}
           rewardBreakdown={rewardBreakdown}
           onEditAssessment={handleOpenEditModal}
+          onOpenAddModal={handleOpenAddModal}
           selectedMonth={selectedMonth}
           setSelectedMonth={setSelectedMonth}
           availableMonths={availableMonths}

@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import AssessmentRecordCard from './components/AssessmentRecordCard'
 
 interface Subject {
   id: string
@@ -69,6 +70,7 @@ interface Props {
   resetDate: Date | null
   rewardBreakdown: RewardBreakdown
   onEditAssessment?: (assessment: Assessment) => void
+  onOpenAddModal?: () => void
   selectedMonth?: string
   setSelectedMonth?: (month: string) => void
   availableMonths?: string[]
@@ -94,6 +96,7 @@ export default function SubjectTabs({
   resetDate, 
   rewardBreakdown, 
   onEditAssessment,
+  onOpenAddModal,
   selectedMonth,
   setSelectedMonth,
   availableMonths = [],
@@ -116,6 +119,7 @@ export default function SubjectTabs({
   const router = useRouter()
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState<number | null>(25)
+  const subjectButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({})
 
   // 載入分頁設定
   useEffect(() => {
@@ -164,201 +168,248 @@ export default function SubjectTabs({
     ? subjects.find(s => s.id === selectedSubject)
     : null
 
-  // 計算歸零日期（只取日期部分）用於比較
-  const resetDateOnly = resetDate 
-    ? new Date(resetDate.getFullYear(), resetDate.getMonth(), resetDate.getDate()).getTime()
-    : null
-
-  // 檢查評量是否在歸零日期之前（不計入獎金）
-  const isBeforeReset = (assessment: Assessment) => {
-    if (!resetDateOnly || !assessment.due_date) return false
-    const assessmentDate = new Date(assessment.due_date)
-    const assessmentDateOnly = new Date(assessmentDate.getFullYear(), assessmentDate.getMonth(), assessmentDate.getDate()).getTime()
-    // 歸零日期當天及之前的記錄都不計入
-    return assessmentDateOnly <= resetDateOnly
-  }
 
   return (
     <>
-      {/* 評量記錄標題和科目過濾器 */}
-      <div className="flex flex-col md:flex-row justify-between items-start mb-2 gap-4" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
-        {/* 左側：評量記錄標題 */}
-        <div className="flex items-center gap-3" style={{ paddingTop: '5px' }}>
-          <div className="bg-primary w-1 h-6 rounded-full shadow-[0_0_10px_rgba(106,153,224,0.8)]"></div>
-          <h2 className="text-xl font-bold text-gray-900">
-            {t('recordsTitle')}
-          </h2>
-        </div>
-
-        {/* 右側：科目過濾器和返回首頁按鈕 */}
-        <div className="flex items-center gap-3">
-          {/* 科目過濾器 */}
-          <div className="flex flex-wrap gap-2 p-1 glass-btn rounded-xl backdrop-blur-md">
-          {/* 全部 */}
-          <button
-            onClick={() => setSelectedSubject('')}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-              !selectedSubject || selectedSubject === ''
-                ? 'bg-white/60 text-gray-900 shadow-sm ring-1 ring-white/70'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-            }`}
-          >
-            {locale === 'zh-TW' ? '全部' : 'All'}
-          </button>
-
-          {subjects && subjects.length > 0 && subjects.map(subject => (
-            <button
-              key={subject.id}
-              onClick={() => setSelectedSubject(subject.id)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
-                selectedSubject === subject.id
-                  ? 'bg-white/60 text-gray-900 shadow-sm ring-1 ring-white/70'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: subject.color }}></span>
-              {subject.icon} {subject.name}
-            </button>
-          ))}
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+            <h1 className="text-2xl font-black tracking-tight">{t('recordsTitle')}</h1>
           </div>
           
-          {/* 返回首頁按鈕 */}
-          <button 
-            onClick={() => router.push('/')}
-            className="glass-btn rounded-xl flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 group cursor-pointer overflow-hidden"
-            style={{ 
-              paddingLeft: '12px', 
-              paddingRight: '6px', 
-              paddingTop: '10px',
-              paddingBottom: '10px',
-              gap: '6px',
-              minWidth: 'auto',
-              width: 'auto'
-            }}
-          >
-            <span 
-              className="material-symbols-outlined group-hover:text-primary transition-colors flex-shrink-0"
-              style={{ 
-                width: '24px', 
-                height: '24px', 
-                fontSize: '24px', 
-                lineHeight: '24px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* 添加評量按鈕 */}
+            {onOpenAddModal && (
+              <button 
+                onClick={onOpenAddModal}
+                className="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <span className="material-icons-outlined text-lg">add_circle</span>
+                {t('addAssessment')}
+              </button>
+            )}
+            
+            {/* 返回首頁按鈕 */}
+            <button 
+              onClick={() => router.push('/')}
+              className="bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer flex items-center justify-center w-10 h-10 hover:scale-105 active:scale-95"
             >
-              home
-            </span>
-            <span className="max-w-0 group-hover:max-w-[200px] transition-all duration-300 whitespace-nowrap overflow-hidden">
-              {tCommon('backToHome')}
-            </span>
-          </button>
+              <span className="material-icons-outlined text-lg">home</span>
+            </button>
+          </div>
+        </div>
+        
+        {/* 科目過濾器和月份選擇器 */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          {/* 科目過濾器 */}
+          <div className="w-full lg:w-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 dark:border-slate-700/40 shadow-sm overflow-hidden overflow-x-auto">
+            {/* 全部 */}
+            <button
+              onClick={() => setSelectedSubject('')}
+              className={`px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+                !selectedSubject || selectedSubject === ''
+                  ? 'bg-white dark:bg-slate-700 shadow-sm font-bold text-slate-800 dark:text-white'
+                  : 'font-medium text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700/50'
+              }`}
+            >
+              {t('all')}
+            </button>
+
+            {subjects && subjects.length > 0 && subjects.map(subject => {
+              const isSelected = selectedSubject === subject.id
+              return (
+                <button
+                  key={subject.id}
+                  ref={(el) => { subjectButtonRefs.current[subject.id] = el }}
+                  onClick={() => {
+                    // 清除所有按鈕的 hover 樣式
+                    Object.values(subjectButtonRefs.current).forEach(btn => {
+                      if (btn) {
+                        btn.style.borderColor = 'transparent'
+                        btn.style.backgroundColor = ''
+                      }
+                    })
+                    setSelectedSubject(subject.id)
+                  }}
+                  className={`px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+                    isSelected
+                      ? 'bg-white dark:bg-slate-700 shadow-sm font-bold text-slate-800 dark:text-white'
+                      : 'font-medium text-slate-500'
+                  }`}
+                  style={isSelected ? {
+                    border: '2px solid transparent'
+                  } : {
+                    border: '1px solid transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.borderColor = subject.color
+                      e.currentTarget.style.backgroundColor = `${subject.color}15`
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.borderColor = 'transparent'
+                      e.currentTarget.style.backgroundColor = ''
+                    }
+                  }}
+                >
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: subject.color }}></span>
+                  {subject.name}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* 月份選擇器 */}
+          <div className="w-full lg:w-auto flex items-center gap-3 justify-end lg:justify-start lg:ml-auto">
+            <span className="text-xs font-bold text-slate-400 whitespace-nowrap">{t('selectAssessmentMonth')}</span>
+            <div className="relative min-w-[180px]">
+              <div className="flex items-center bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-1.5 rounded-full border border-white/40 dark:border-slate-700/40 shadow-sm">
+                <div className="flex items-center justify-between bg-white dark:bg-slate-700 px-4 py-1.5 rounded-full border border-slate-100 dark:border-slate-600 gap-6 w-full">
+                  <button
+                    onClick={goToPreviousMonth}
+                    disabled={!canGoPrevious}
+                    className="material-icons-outlined text-slate-400 cursor-pointer text-lg hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  >
+                    chevron_left
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsMonthPickerOpen && setIsMonthPickerOpen(!isMonthPickerOpen)
+                    }}
+                    className="font-bold text-sm min-w-[6rem] text-center cursor-pointer hover:text-primary transition-colors whitespace-nowrap"
+                  >
+                    {selectedMonth ? (formatMonth ? formatMonth(selectedMonth) : selectedMonth) : (calculateFromReset ? t('recentSettlement') : t('all'))}
+                  </button>
+                  <button
+                    onClick={goToNextMonth}
+                    disabled={!canGoNext}
+                    className="material-icons-outlined text-slate-400 cursor-pointer text-lg hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  >
+                    chevron_right
+                  </button>
+                </div>
+              </div>
+
+              {/* Month picker dropdown */}
+              {isMonthPickerOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10 cursor-pointer"
+                    onClick={() => setIsMonthPickerOpen && setIsMonthPickerOpen(false)}
+                  />
+                  <div
+                    className={`absolute top-full right-0 mt-2 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl p-4 min-w-[280px] transition-all duration-300 ease-in-out ${
+                      isMonthPickerOpen 
+                        ? 'opacity-100 translate-y-0 pointer-events-auto' 
+                        : 'opacity-0 -translate-y-2 pointer-events-none'
+                    }`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* 全部和最近結算選項 */}
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <button
+                        onClick={() => {
+                          setSelectedMonth && setSelectedMonth('')
+                          setCalculateFromReset && setCalculateFromReset(false)
+                          setIsMonthPickerOpen && setIsMonthPickerOpen(false)
+                        }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                          selectedMonth === '' && !calculateFromReset
+                            ? 'bg-blue-600 text-white'
+                            : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        {t('all')}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedMonth && setSelectedMonth('')
+                          setCalculateFromReset && setCalculateFromReset(true)
+                          setIsMonthPickerOpen && setIsMonthPickerOpen(false)
+                        }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                          calculateFromReset && !selectedMonth
+                            ? 'bg-blue-600 text-white'
+                            : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        {t('recentSettlement')}
+                      </button>
+                    </div>
+
+                    {/* 月份網格 */}
+                    {availableMonths && availableMonths.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-2 border border-gray-200 dark:border-slate-700 rounded-lg p-2 max-h-[240px]">
+                        {availableMonths.map(month => {
+                          const [year, monthNum] = month.split('-')
+                          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+                          return (
+                            <button
+                              key={month}
+                              onClick={() => {
+                                setSelectedMonth && setSelectedMonth(month)
+                                setIsMonthPickerOpen && setIsMonthPickerOpen(false)
+                              }}
+                              className={`px-3 py-2 rounded-lg font-semibold transition-all flex flex-col items-center h-[85px] cursor-pointer ${
+                                selectedMonth === month
+                                  ? 'bg-blue-600 text-white'
+                                  : 'hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-300'
+                              }`}
+                            >
+                              {locale === 'zh-TW' ? (
+                                <>
+                                  <div className="text-xs">{year}{t('year')}</div>
+                                  <div className="text-lg">{parseInt(monthNum)}{t('month')}</div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="text-xs">{year}</div>
+                                  <div className="text-lg">{monthNames[parseInt(monthNum) - 1]}</div>
+                                </>
+                              )}
+                              <div className="text-xs h-4 flex items-center justify-center">
+                                {month === currentMonth ? '📍' : ''}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 評量卡片列表 */}
+      {/* Grid of Records */}
       {filteredAssessments && filteredAssessments.length > 0 ? (
         <>
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {paginatedAssessments.map((assessment) => {
-            const beforeReset = isBeforeReset(assessment)
-
-            // 評量類型映射
-            const typeMap: Record<string, { icon: string; label: string; colorClass: string; borderClass: string }> = {
-              'exam': { icon: 'calculate', label: tAssessment('types.exam'), colorClass: 'bg-rose-300/40', borderClass: 'border-rose-400/50', hoverClass: 'hover:bg-rose-300/50', textColor: 'text-rose-600', leftBorder: 'border-l-rose-500' },
-              'quiz': { icon: 'assignment_turned_in', label: tAssessment('types.quiz'), colorClass: 'bg-emerald-300/40', borderClass: 'border-emerald-400/50', hoverClass: 'hover:bg-emerald-300/50', textColor: 'text-emerald-600', leftBorder: 'border-l-emerald-500' },
-              'homework': { icon: 'menu_book', label: tAssessment('types.homework'), colorClass: 'bg-blue-300/40', borderClass: 'border-blue-400/50', hoverClass: 'hover:bg-blue-300/50', textColor: 'text-blue-600', leftBorder: 'border-l-blue-500' },
-              'project': { icon: 'psychology', label: tAssessment('types.project'), colorClass: 'bg-violet-300/40', borderClass: 'border-violet-400/50', hoverClass: 'hover:bg-violet-300/50', textColor: 'text-violet-600', leftBorder: 'border-l-violet-500' }
-            }
-            const typeInfo = assessment.assessment_type ? typeMap[assessment.assessment_type] : null
-
-            // 根據科目顏色決定樣式
-            const subjectColor = assessment.subjects?.color || '#6b7280'
-
             return (
-              <div
+              <AssessmentRecordCard
                 key={assessment.id}
-                className="glass-card rounded-2xl p-4 group cursor-pointer border-l-[3px]"
-                style={{ borderLeftColor: subjectColor }}
+                record={{
+                  id: assessment.id,
+                  subject_id: assessment.subject_id,
+                  title: assessment.title,
+                  score: assessment.score,
+                  due_date: assessment.due_date,
+                  reward_amount: assessment.reward_amount,
+                  assessment_type: assessment.assessment_type,
+                  subjects: assessment.subjects,
+                  description: assessment.description || assessment.title
+                }}
                 onClick={() => onEditAssessment && onEditAssessment(assessment)}
-              >
-                {/* 頂部：評量類型和狀態 */}
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex gap-4">
-                    <div
-                      className="w-16 h-16 log-icon-base rounded-xl flex items-center justify-center border group-hover:scale-110 transition-colors overflow-hidden"
-                      style={{ 
-                        borderColor: `${subjectColor}80`,
-                        backgroundColor: `${subjectColor}40`
-                      }}
-                    >
-                      <span className="text-5xl leading-none select-none" style={{ fontSize: '2.5rem', lineHeight: '1', display: 'block', transform: 'translateY(-3px)' }}>
-                        {assessment.subjects?.icon || '📄'}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-xl text-gray-900 group-hover:text-purple-600 transition-colors">
-                        {assessment.due_date ? new Date(assessment.due_date).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { month: 'short', day: 'numeric' }) : assessment.title}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        {assessment.subjects && (
-                          <span
-                            className="text-xs px-2 py-0.5 rounded border uppercase tracking-wide font-bold"
-                            style={{
-                              backgroundColor: `${subjectColor}40`,
-                              color: subjectColor,
-                              borderColor: `${subjectColor}80`
-                            }}
-                          >
-                            {assessment.subjects.icon} {assessment.subjects.name}
-                          </span>
-                        )}
-                        {typeInfo && (
-                          <span className="text-sm text-gray-600">
-                            {locale === 'zh-TW' ? '單元: ' : 'Unit: '}{assessment.description || assessment.title}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    {assessment.reward_amount > 0 && (
-                      <span className="log-bonus-tag rounded-full shadow-sm" style={{ 
-                        color: '#d97706', 
-                        backgroundColor: '#fef3c7', 
-                        borderColor: '#fbbf24',
-                        borderWidth: '1px',
-                        borderStyle: 'solid'
-                      }}>
-                        ${assessment.reward_amount}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 分隔線 */}
-                <div className="my-3 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-
-                {/* 底部：日期、分數和獎金 */}
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 log-date-text font-medium text-emerald-600">
-                    <span className="material-symbols-outlined text-base text-emerald-500">event</span>
-                    {assessment.due_date ? new Date(assessment.due_date).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US') : '-'}
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span 
-                      className="log-score-text font-bold text-gray-900 group-hover:scale-105 transition-transform origin-right"
-                      style={{ opacity: 0.7 }}
-                    >
-                      {assessment.score ?? '-'}
-                    </span>
-                    <span className="text-sm text-gray-600 font-medium mb-1">
-                      {locale === 'zh-TW' ? '分' : 'pts'}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              />
             )
           })}
         </div>
@@ -458,13 +509,13 @@ export default function SubjectTabs({
         )}
         </>
       ) : (
-        <div className="text-center py-12 glass-card rounded-2xl border-2 border-dashed border-white/40">
-          <p className="text-gray-500 text-lg mb-2">
-            📭 {selectedSubject
-              ? (locale === 'zh-TW' ? '此科目尚無評量記錄' : 'No records for this subject')
-              : t('noRecords')}
+        <div className="col-span-full py-20 text-center bg-white dark:bg-slate-800/40 rounded-4xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+          <span className="material-icons-outlined text-6xl text-slate-200 mb-4">folder_off</span>
+          <p className="text-slate-400 font-medium">
+            {selectedSubject
+              ? t('noRecordsForSubject')
+              : t('noAssessmentRecords')}
           </p>
-          <p className="text-gray-400 text-sm">{t('addNewRecord')}</p>
         </div>
       )}
     </>

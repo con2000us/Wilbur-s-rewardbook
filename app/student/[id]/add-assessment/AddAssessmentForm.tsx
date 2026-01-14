@@ -197,13 +197,19 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
     <>
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700">❌ {error}</p>
+          <p className="text-red-700 flex items-center gap-2">
+            <span className="material-icons-outlined">error</span>
+            {error}
+          </p>
         </div>
       )}
 
       {success && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-700">✅ {tMessages('createSuccess')}! {locale === 'zh-TW' ? '正在返回...' : 'Redirecting...'}</p>
+          <p className="text-green-700 flex items-center gap-2">
+            <span className="material-icons-outlined">check_circle</span>
+            {tMessages('createSuccess')}! {locale === 'zh-TW' ? '正在返回...' : 'Redirecting...'}
+          </p>
         </div>
       )}
 
@@ -228,8 +234,73 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
                   required
                   className="w-5 h-5 text-blue-600 accent-blue-600"
                 />
-                <span className="text-lg font-medium text-gray-800">
-                  {subject.icon} {subject.name}
+                <span className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                  {(() => {
+                    // Emoji 到 Material Icons Outlined 的映射表
+                    const emojiToMaterialIcon: Record<string, string> = {
+                      '📖': 'auto_stories',
+                      '📚': 'menu_book',
+                      '🔢': 'calculate',
+                      '🧮': 'calculate',
+                      '🌍': 'public',
+                      '🌏': 'school',
+                      '🔬': 'science',
+                      '🧪': 'science',
+                      '🎵': 'music_note',
+                      '🎹': 'piano',
+                      '🎸': 'guitar',
+                      '🎨': 'palette',
+                      '🖌️': 'brush',
+                      '⚽': 'sports_soccer',
+                      '🏀': 'sports_basketball',
+                      '🏐': 'sports_volleyball',
+                      '🎾': 'sports_tennis',
+                      '✏️': 'edit',
+                      '📝': 'description',
+                      '💻': 'computer',
+                      '🖥️': 'desktop_windows',
+                      '🌱': 'eco',
+                      '🌿': 'nature',
+                      '🌳': 'park',
+                      '📜': 'article',
+                      '📰': 'school',
+                      '🎭': 'theater_comedy',
+                      '🩰': 'ballet',
+                      '🥁': 'drum_kit',
+                      '📐': 'square_foot',
+                      '⚗️': 'science',
+                      '🔭': 'biotech',
+                      '📄': 'description',
+                      '📋': 'description',
+                      '🎯': 'gps_fixed',
+                      '🏫': 'school',
+                      '📗': 'menu_book',
+                      '📘': 'menu_book',
+                      '📙': 'menu_book',
+                      '📕': 'menu_book',
+                    }
+                    
+                    // 將 emoji 轉換為 Material Icon
+                    const convertEmojiToMaterialIcon = (icon: string): string => {
+                      // 如果已經是 Material Icon 名稱，直接返回
+                      if (/^[a-z_]+$/i.test(icon) && icon.length > 2) {
+                        return icon
+                      }
+                      // 如果是 emoji，查找映射表
+                      return emojiToMaterialIcon[icon] || 'description'
+                    }
+                    
+                    const subjectIcon = convertEmojiToMaterialIcon(subject.icon)
+                    return (
+                      <span 
+                        className="material-icons-outlined" 
+                        style={{ color: subject.color }}
+                      >
+                        {subjectIcon}
+                      </span>
+                    )
+                  })()}
+                  {subject.name}
                 </span>
               </label>
             ))}
@@ -247,8 +318,9 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder={locale === 'zh-TW' ? '留空則自動生成：日期 科目 類型' : 'Auto-generate if left blank: Date Subject Type'}
           />
-          <p className="text-xs text-gray-500 mt-1">
-            💡 {locale === 'zh-TW' ? '例如：12/16 國語 考試' : 'e.g.: 12/16 Chinese Exam'}
+          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+            <span className="material-icons-outlined text-sm">lightbulb</span>
+            {locale === 'zh-TW' ? '例如：12/16 國語 考試' : 'e.g.: 12/16 Chinese Exam'}
           </p>
         </div>
 
@@ -268,7 +340,10 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
                 required
                 className="w-5 h-5 text-blue-600 accent-blue-600"
               />
-              <span className="text-lg font-medium text-gray-800">📝 {t('types.exam')}</span>
+              <span className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                <span className="material-icons-outlined text-red-600">assignment</span>
+                {t('types.exam')}
+              </span>
             </label>
             
             <label className="relative flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300">
@@ -281,7 +356,10 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
                 required
                 className="w-5 h-5 text-blue-600 accent-blue-600"
               />
-              <span className="text-lg font-medium text-gray-800">📋 {t('types.quiz')}</span>
+              <span className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                <span className="material-icons-outlined text-blue-600">checklist_rtl</span>
+                {t('types.quiz')}
+              </span>
             </label>
             
             <label className="relative flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300">
@@ -294,7 +372,10 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
                 required
                 className="w-5 h-5 text-blue-600 accent-blue-600"
               />
-              <span className="text-lg font-medium text-gray-800">📓 {t('types.homework')}</span>
+              <span className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                <span className="material-icons-outlined text-green-600">edit_note</span>
+                {t('types.homework')}
+              </span>
             </label>
             
             <label className="relative flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300">
@@ -307,7 +388,10 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
                 required
                 className="w-5 h-5 text-blue-600 accent-blue-600"
               />
-              <span className="text-lg font-medium text-gray-800">🎨 {t('types.project')}</span>
+              <span className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                <span className="material-icons-outlined text-purple-600">palette</span>
+                {t('types.project')}
+              </span>
             </label>
           </div>
         </div>
@@ -329,8 +413,9 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={locale === 'zh-TW' ? '例如：95' : 'e.g.: 95'}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              💡 {locale === 'zh-TW' ? '留空表示尚未完成' : 'Leave blank if not completed'}
+            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+              <span className="material-icons-outlined text-sm">lightbulb</span>
+              {locale === 'zh-TW' ? '留空表示尚未完成' : 'Leave blank if not completed'}
             </p>
           </div>
 
@@ -401,8 +486,9 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder={t('manualRewardHint')}
           />
-          <p className="text-xs text-gray-500 mt-1">
-            💡 {t('manualRewardHint')}
+          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+            <span className="material-icons-outlined text-sm">lightbulb</span>
+            {t('manualRewardHint')}
           </p>
         </div>
 
@@ -434,7 +520,7 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
             >
               <div className="flex items-center gap-2">
                 <span 
-                  className={`text-xl transition-transform duration-300 ${
+                  className={`text-xl text-blue-600 transition-transform duration-300 ${
                     showRules ? 'rotate-90' : 'rotate-0'
                   }`}
                 >
@@ -554,11 +640,14 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
               })}
                 </ul>
                 <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-xs text-yellow-800">
-                    <strong>💡 {locale === 'zh-TW' ? '提示：' : 'Note:'}</strong>
+                  <p className="text-xs text-yellow-800 flex items-start gap-1">
+                    <span className="material-icons-outlined text-sm mt-0.5">lightbulb</span>
+                    <span>
+                      <strong>{locale === 'zh-TW' ? '提示：' : 'Note:'}</strong>
                     {locale === 'zh-TW' 
                       ? '系統會自動選擇最高優先級的符合規則來計算獎金。優先級：專屬規則 > 科目規則 > 學生規則 > 全局規則' 
                       : 'The system will automatically select the highest priority matching rule to calculate rewards. Priority: Exclusive > Subject > Student > Global'}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -566,8 +655,9 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
           </div>
         ) : selectedSubjectId ? (
           <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <p className="text-gray-600 text-sm">
-              ℹ️ {t('noRules')}
+            <p className="text-gray-600 text-sm flex items-center gap-2">
+              <span className="material-icons-outlined text-sm">info</span>
+              {t('noRules')}
             </p>
           </div>
         ) : null}
@@ -582,8 +672,18 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
             {loading 
               ? (locale === 'zh-TW' ? '添加中...' : 'Adding...')
               : success 
-              ? (locale === 'zh-TW' ? '✅ 已添加' : '✅ Added')
-              : (locale === 'zh-TW' ? '✅ 添加評量' : `✅ ${tCommon('add')} ${t('type')}`)}
+              ? (
+                  <>
+                    <span className="material-icons-outlined align-middle mr-1">check_circle</span>
+                    {locale === 'zh-TW' ? '已添加' : 'Added'}
+                  </>
+                )
+              : (
+                  <>
+                    <span className="material-icons-outlined align-middle mr-1">check_circle</span>
+                    {locale === 'zh-TW' ? '添加評量' : `${tCommon('add')} ${t('type')}`}
+                  </>
+                )}
           </button>
           
           <button

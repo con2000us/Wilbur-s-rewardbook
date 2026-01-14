@@ -154,12 +154,67 @@ export default async function PrintPage({
   // @ts-ignore - Supabase type inference issue with select queries
   const avgScore = assessments?.filter((a: any) => a.status === 'completed' && a.percentage !== null).reduce((sum: number, a: any, _: any, arr: any[]) => sum + (a.percentage || 0) / arr.length, 0) || 0
 
-  // 評量類型映射
-  const typeMap: Record<string, string> = {
-    'exam': `📝 ${tAssessment('types.exam')}`,
-    'quiz': `📋 ${tAssessment('types.quiz')}`,
-    'homework': `📓 ${tAssessment('types.homework')}`,
-    'project': `🎨 ${tAssessment('types.project')}`
+  // Emoji 到 Material Icons Outlined 的映射表
+  const emojiToMaterialIcon: Record<string, string> = {
+    '📖': 'auto_stories',
+    '📚': 'menu_book',
+    '🔢': 'calculate',
+    '🧮': 'calculate',
+    '🌍': 'public',
+    '🌏': 'school',
+    '🔬': 'science',
+    '🧪': 'science',
+    '🎵': 'music_note',
+    '🎹': 'piano',
+    '🎸': 'guitar',
+    '🎨': 'palette',
+    '🖌️': 'brush',
+    '⚽': 'sports_soccer',
+    '🏀': 'sports_basketball',
+    '🏐': 'sports_volleyball',
+    '🎾': 'sports_tennis',
+    '✏️': 'edit',
+    '📝': 'description',
+    '💻': 'computer',
+    '🖥️': 'desktop_windows',
+    '🌱': 'eco',
+    '🌿': 'nature',
+    '🌳': 'park',
+    '📜': 'article',
+    '📰': 'school',
+    '🎭': 'theater_comedy',
+    '🩰': 'ballet',
+    '🥁': 'drum_kit',
+    '📐': 'square_foot',
+    '⚗️': 'science',
+    '🔭': 'biotech',
+    '📄': 'description',
+    '📋': 'description',
+    '🎯': 'gps_fixed',
+    '🏫': 'school',
+    '📗': 'menu_book',
+    '📘': 'menu_book',
+    '📙': 'menu_book',
+    '📕': 'menu_book',
+  }
+
+  // 將 emoji 轉換為 Material Icon
+  const convertEmojiToMaterialIcon = (icon: string): string => {
+    if (/^[a-z_]+$/i.test(icon) && icon.length > 2) {
+      return icon
+    }
+    return emojiToMaterialIcon[icon] || 'description'
+  }
+
+  // 評量類型映射（包含 Material Icon 和顏色）
+  const getAssessmentTypeDisplay = (type: string) => {
+    const typeConfig: Record<string, { icon: string; color: string; text: string }> = {
+      'exam': { icon: 'assignment', color: 'text-red-600', text: tAssessment('types.exam') },
+      'quiz': { icon: 'checklist_rtl', color: 'text-blue-600', text: tAssessment('types.quiz') },
+      'homework': { icon: 'edit_note', color: 'text-green-600', text: tAssessment('types.homework') },
+      'project': { icon: 'palette', color: 'text-purple-600', text: tAssessment('types.project') }
+    }
+    return typeConfig[type] || { icon: 'description', color: 'text-gray-600', text: type }
   }
 
   return (
@@ -190,9 +245,24 @@ export default async function PrintPage({
               {/* @ts-ignore - Supabase type inference issue with select queries */}
               <h1 className="text-3xl font-bold">{t('title', { name: (student as any).name })}</h1>
             </div>
-            <p className="text-gray-600">
+            <p className="text-gray-600 flex items-center gap-2">
               {/* @ts-ignore - Supabase type inference issue with select queries */}
-              {selectedSubject && `${(selectedSubject as any).icon} ${(selectedSubject as any).name} - `}
+              {selectedSubject && (() => {
+                const icon = (selectedSubject as any).icon
+                const color = (selectedSubject as any).color || '#6b7280'
+                const subjectIcon = convertEmojiToMaterialIcon(icon)
+                return (
+                  <>
+                    <span 
+                      className="material-icons-outlined" 
+                      style={{ color: color }}
+                    >
+                      {subjectIcon}
+                    </span>
+                    <span>{(selectedSubject as any).name} - </span>
+                  </>
+                )
+              })()}
               {startDate && endDate 
                 ? t('dateRangeReport', { 
                     startDate: new Date(startDate).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
@@ -255,11 +325,33 @@ export default async function PrintPage({
                         ? new Date(assessment.due_date).toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { month: 'short', day: 'numeric' })
                         : '-'}
                     </td>
-                    <td className="border border-gray-300 p-2">
-                      {assessment.subjects?.icon} {assessment.subjects?.name}
+                    <td className="border border-gray-300 p-2 flex items-center gap-1">
+                      {(() => {
+                        const icon = assessment.subjects?.icon
+                        const color = assessment.subjects?.color || '#6b7280'
+                        if (!icon) return null
+                        const subjectIcon = convertEmojiToMaterialIcon(icon)
+                        return (
+                          <span 
+                            className="material-icons-outlined text-sm" 
+                            style={{ color: color }}
+                          >
+                            {subjectIcon}
+                          </span>
+                        )
+                      })()}
+                      <span>{assessment.subjects?.name}</span>
                     </td>
                     <td className="border border-gray-300 p-2 text-xs">
-                      {typeMap[assessment.assessment_type] || '-'}
+                      {(() => {
+                        const typeDisplay = getAssessmentTypeDisplay(assessment.assessment_type)
+                        return (
+                          <span className={`flex items-center gap-1 ${typeDisplay.color}`}>
+                            <span className="material-icons-outlined text-sm">{typeDisplay.icon}</span>
+                            {typeDisplay.text}
+                          </span>
+                        )
+                      })()}
                     </td>
                     <td className="border border-gray-300 p-2">
                       {assessment.title}

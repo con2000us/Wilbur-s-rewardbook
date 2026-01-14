@@ -115,7 +115,7 @@ export default function PrintFilters({ subjects }: Props) {
           <option value="">{t('allSubjects')}</option>
           {subjects.map((subject) => (
             <option key={subject.id} value={subject.id}>
-              {subject.icon} {subject.name}
+              {subject.name}
             </option>
           ))}
         </select>

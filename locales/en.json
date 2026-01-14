@@ -128,7 +128,13 @@
     "addRecordDesc": "Create new record",
     "exportPDF": "Export PDF",
     "unit": "Unit",
-    "selectAssessmentMonth": "Select Assessment Month"
+    "unitLabel": "Unit: ",
+    "selectAssessmentMonth": "Select Assessment Month",
+    "year": "",
+    "month": "",
+    "day": "",
+    "noRecordsForSubject": "No records for this subject",
+    "noAssessmentRecords": "No assessment records"
   },
   "assessment": {
     "title": "Assessment Title",

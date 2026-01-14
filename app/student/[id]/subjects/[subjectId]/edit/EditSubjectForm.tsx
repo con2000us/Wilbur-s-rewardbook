@@ -25,12 +25,13 @@ interface Props {
   allSubjects: SubjectBasic[]
 }
 
-// 預設 emoji 選項
-const PRESET_EMOJIS = [
-  '📖', '🔢', '🌍', '🔬', '🌏', '🎵', '🎨', '⚽',
-  '📚', '✏️', '🧮', '🔭', '🌱', '🎹', '🖌️', '🏀',
-  '📝', '💻', '🧪', '🌿', '📜', '🎸', '🎭', '🏐',
-  '📐', '🖥️', '⚗️', '🌳', '📰', '🥁', '🩰', '🎾',
+// 預設 Material Icons Outlined 選項（教育相關）
+const PRESET_ICONS = [
+  'auto_stories', 'calculate', 'public', 'science', 'newspaper', 'music_note', 'palette', 'sports_soccer',
+  'menu_book', 'edit', 'calculate', 'biotech', 'eco', 'piano', 'brush', 'fitness_center',
+  'description', 'computer', 'science', 'nature', 'article', 'guitar', 'theater_comedy', 'sports_volleyball',
+  'square_foot', 'desktop_windows', 'science', 'park', 'newspaper', 'drum_kit', 'ballet', 'sports_tennis',
+  'history_edu', 'language', 'translate', 'code', 'psychology', 'architecture', 'account_balance', 'school',
 ]
 
 export default function EditSubjectForm({ studentId, subject, allSubjects }: Props) {
@@ -43,10 +44,17 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   
-  // Emoji 相關狀態
-  const [selectedEmoji, setSelectedEmoji] = useState(subject.icon)
-  const [customEmoji, setCustomEmoji] = useState('')
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  // Icon 相關狀態
+  const [selectedIcon, setSelectedIcon] = useState(subject.icon)
+  const [customIcon, setCustomIcon] = useState('')
+  const [showIconPicker, setShowIconPicker] = useState(false)
+  
+  // 判斷是否為 emoji（用於向後兼容）
+  const isEmoji = (str: string) => {
+    return /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(str) || 
+           str.length <= 2 || 
+           !/^[a-z_]+$/i.test(str)
+  }
   
   // 排序相關狀態
   const currentIndex = allSubjects.findIndex(s => s.id === subject.id)
@@ -64,7 +72,7 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
     setSuccess(false)
 
     const formData = new FormData(e.currentTarget)
-    const icon = customEmoji || selectedEmoji
+    const icon = customIcon || selectedIcon
     
     try {
       const response = await fetch('/api/subjects/update', {
@@ -130,13 +138,14 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
     }
   }
 
-  function handleEmojiSelect(emoji: string) {
-    setSelectedEmoji(emoji)
-    setCustomEmoji('')
-    setShowEmojiPicker(false)
+  function handleIconSelect(icon: string) {
+    setSelectedIcon(icon)
+    setCustomIcon('')
+    setShowIconPicker(false)
   }
 
-  const currentIcon = customEmoji || selectedEmoji
+  const currentIcon = customIcon || selectedIcon
+  const iconIsEmoji = isEmoji(currentIcon)
 
   return (
     <>
@@ -178,55 +187,68 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
           {/* 當前選擇的圖標 */}
           <div className="flex items-center gap-4 mb-3">
             <div 
-              className="text-5xl p-3 rounded-lg border-2 border-gray-300"
+              className="text-5xl p-3 rounded-lg border-2 border-gray-300 flex items-center justify-center"
               style={{ backgroundColor: `${subjectColor}20` }}
             >
-              {currentIcon}
+              {iconIsEmoji ? (
+                currentIcon
+              ) : (
+                <span className="material-icons-outlined" style={{ fontSize: '3rem', color: subjectColor }}>
+                  {currentIcon}
+                </span>
+              )}
             </div>
             <div className="flex-1">
               <p className="text-sm text-gray-600 mb-2">{t('currentIcon')}</p>
               <button
                 type="button"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                onClick={() => setShowIconPicker(!showIconPicker)}
                 className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-semibold text-sm"
               >
-                {showEmojiPicker ? t('hideEmojiPicker') : t('selectEmoji')}
+                {showIconPicker ? t('hideEmojiPicker') : t('selectEmoji')}
               </button>
             </div>
           </div>
 
-          {/* Emoji 選擇器 */}
-          {showEmojiPicker && (
+          {/* Icon 選擇器 */}
+          {showIconPicker && (
             <div className="p-4 bg-gray-50 rounded-lg border-2 border-gray-200 mb-3">
-              <p className="text-sm font-semibold text-gray-700 mb-2">{t('presetEmojis')}</p>
-              <div className="grid grid-cols-8 gap-2 mb-4">
-                {PRESET_EMOJIS.map((emoji, index) => (
+              <p className="text-sm font-semibold text-gray-700 mb-2">選擇圖標</p>
+              <div className="grid grid-cols-8 gap-2 mb-4 max-h-64 overflow-y-auto">
+                {PRESET_ICONS.map((icon, index) => (
                   <button
                     key={index}
                     type="button"
-                    onClick={() => handleEmojiSelect(emoji)}
-                    className={`text-2xl p-2 rounded-lg transition-all hover:bg-blue-100 ${
-                      selectedEmoji === emoji && !customEmoji
+                    onClick={() => handleIconSelect(icon)}
+                    className={`p-2 rounded-lg transition-all hover:bg-blue-100 flex items-center justify-center ${
+                      selectedIcon === icon && !customIcon
                         ? 'bg-blue-200 ring-2 ring-blue-500'
                         : 'bg-white'
                     }`}
+                    title={icon}
                   >
-                    {emoji}
+                    <span className="material-icons-outlined text-2xl">{icon}</span>
                   </button>
                 ))}
               </div>
 
               {/* 自訂輸入 */}
               <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">{t('customEmoji')}</p>
+                <p className="text-sm font-semibold text-gray-700 mb-2">自訂圖標名稱（Material Icon 名稱）</p>
                 <input
                   type="text"
-                  value={customEmoji}
-                  onChange={(e) => setCustomEmoji(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl"
-                  placeholder={t('typeEmoji')}
-                  maxLength={4}
+                  value={customIcon}
+                  onChange={(e) => setCustomIcon(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="例如: auto_stories, calculate, public..."
                 />
+                {customIcon && !isEmoji(customIcon) && (
+                  <div className="mt-2 p-2 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <span className="material-icons-outlined text-3xl" style={{ color: subjectColor }}>
+                      {customIcon}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -270,7 +292,11 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
                 className="flex items-center gap-2 p-3 rounded-lg border-2 border-blue-400"
                 style={{ backgroundColor: `${subjectColor}20` }}
               >
-                <span className="text-2xl">{currentIcon}</span>
+                {iconIsEmoji ? (
+                  <span className="text-2xl">{currentIcon}</span>
+                ) : (
+                  <span className="material-icons-outlined text-2xl">{currentIcon}</span>
+                )}
                 <span className="font-semibold text-gray-800">
                   {subjectName || subject.name}
                 </span>
@@ -293,7 +319,11 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
                   <div className="flex items-center gap-2">
                     {selectedPosition === 0 && (
                       <>
-                        <span className="text-2xl">{currentIcon}</span>
+                        {iconIsEmoji ? (
+                  <span className="text-2xl">{currentIcon}</span>
+                ) : (
+                  <span className="material-icons-outlined text-2xl">{currentIcon}</span>
+                )}
                         <span className="font-semibold text-blue-800">
                           {subjectName || subject.name}
                         </span>
@@ -312,7 +342,11 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
                   <div key={s.id}>
                     {/* 其他科目 */}
                     <div className="p-3 bg-white border-2 border-gray-200 rounded-lg flex items-center gap-2">
-                      <span className="text-2xl">{s.icon}</span>
+                      {isEmoji(s.icon) ? (
+                        <span className="text-2xl">{s.icon}</span>
+                      ) : (
+                        <span className="material-icons-outlined text-2xl">{s.icon}</span>
+                      )}
                       <span className="font-semibold text-gray-800">{s.name}</span>
                     </div>
 
@@ -329,7 +363,11 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
                       <div className="flex items-center gap-2">
                         {selectedPosition === index + 1 && (
                           <>
-                            <span className="text-2xl">{currentIcon}</span>
+                            {iconIsEmoji ? (
+                  <span className="text-2xl">{currentIcon}</span>
+                ) : (
+                  <span className="material-icons-outlined text-2xl">{currentIcon}</span>
+                )}
                             <span className="font-semibold text-blue-800">
                               {subjectName || subject.name}
                             </span>
