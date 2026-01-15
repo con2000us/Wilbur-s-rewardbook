@@ -44,6 +44,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: siteName,
     description: "Learning Reward Tracking System",
+    icons: {
+      icon: [
+        { url: '/icon.svg', type: 'image/svg+xml' },
+        { url: '/favicon.ico', sizes: 'any' },
+      ],
+    },
   }
 }
 
@@ -62,6 +68,9 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <head>
+        {/* Favicon */}
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="alternate icon" href="/favicon.ico" />
         {/* Google Fonts: Noto Sans TC */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

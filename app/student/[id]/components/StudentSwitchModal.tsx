@@ -16,6 +16,7 @@ interface Props {
   currentStudentId: string
   allStudents: Student[]
   currentPage?: 'records' | 'transactions' | 'subjects' | 'settings'
+  displayMode?: 'navigation' | 'students'
 }
 
 type HoverAction = 'records' | 'transactions' | 'subjects' | 'settings' | null
@@ -25,7 +26,8 @@ export default function StudentSwitchModal({
   onClose, 
   currentStudentId, 
   allStudents,
-  currentPage = 'records'
+  currentPage = 'records',
+  displayMode = 'navigation'
 }: Props) {
   const router = useRouter()
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -184,6 +186,7 @@ export default function StudentSwitchModal({
     <div
       ref={dropdownRef}
       className="relative w-full min-w-0"
+      style={{ paddingTop: '5px' }}
     >
       {/* 學生列表 - 無外層包裝，直接向下展開，有展開/收起動畫 */}
       {/* 高度設定位置：下方 max-h-[600px] 可調整下拉選單的最大高度 */}
@@ -200,8 +203,10 @@ export default function StudentSwitchModal({
           transition: 'max-height 0.3s ease-out, opacity 0.3s ease-out'
         }}
       >
-        {/* 快速導覽按鈕 - 學習記錄、獎金存摺、科目管理、設定 */}
-        <div className="mb-4">
+        {/* 根據 displayMode 顯示不同內容 */}
+        {displayMode === 'navigation' ? (
+          /* 快速導覽按鈕 - 學習記錄、獎金存摺、科目管理、設定 */
+          <div className="mb-4">
           {/* 學習記錄 */}
           <button
             onClick={() => currentPage !== 'records' && handleQuickNav('records')}
@@ -332,19 +337,9 @@ export default function StudentSwitchModal({
             <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
           </button>
         </div>
-        
-        {/* 其他學生標題 */}
-        {otherStudents.length > 0 && (
-          <div className="flex items-center gap-4 mb-4 px-2 -mt-2">
-            <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
-            <span className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              {locale === 'zh-TW' ? '其他學生' : 'Other Students'}
-            </span>
-            <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
-          </div>
-        )}
-
-        <div className="space-y-3">
+        ) : (
+          /* 學生列表 */
+          <div className="space-y-3 pt-3">
           {/* 其他學生列表 - 使用與頁面一致的玻璃態樣式 */}
           {otherStudents.map((student) => {
             const avatar = parseAvatar(student.avatar_url, student.name)
@@ -430,7 +425,8 @@ export default function StudentSwitchModal({
             </div>
           )}
 
-        </div>
+          </div>
+        )}
       </div>
       {/* 自定義樣式 */}
       <style jsx>{`

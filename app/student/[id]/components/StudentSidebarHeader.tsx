@@ -32,8 +32,8 @@ export default function StudentSidebarHeader({
   currentPage = 'records',
   showHeader = true
 }: Props) {
-  // 快速導覽預設展開
-  const [isStudentDropdownOpen, setIsStudentDropdownOpen] = useState(true)
+  // 顯示模式：'navigation' = 快速導覽, 'students' = 學生列表
+  const [displayMode, setDisplayMode] = useState<'navigation' | 'students'>('navigation')
   const t = useTranslations('common')
   const locale = useLocale()
 
@@ -53,28 +53,48 @@ export default function StudentSidebarHeader({
         />
       </div>
 
-      {/* 快速導覽按鈕和下拉選單 */}
-      <div className="relative w-full mt-3" id="student-switch-button-container">
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            setTimeout(() => {
-              setIsStudentDropdownOpen(!isStudentDropdownOpen)
-            }, 0)
-          }}
-          className="glass-btn px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 group w-full justify-center lg:justify-start cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">swap_horiz</span>
-          {locale === 'zh-TW' ? '快速導覽' : 'Quick Navigation'}
-        </button>
+      {/* 快速導覽/學生列表切換按鈕 */}
+      <div className="relative w-full mt-3 pb-4" id="student-switch-button-container">
+        <div className="w-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 dark:border-slate-700/40 shadow-sm overflow-hidden overflow-x-auto">
+          {/* 快速導覽按鈕 */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setDisplayMode('navigation')
+            }}
+            className={`flex-1 px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+              displayMode === 'navigation'
+                ? 'bg-white dark:bg-slate-700 shadow-sm font-bold text-slate-800 dark:text-white'
+                : 'font-medium text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700/50'
+            }`}
+          >
+            {locale === 'zh-TW' ? '快速導覽' : 'Quick Navigation'}
+          </button>
+
+          {/* 學生列表按鈕 */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setDisplayMode('students')
+            }}
+            className={`flex-1 px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+              displayMode === 'students'
+                ? 'bg-white dark:bg-slate-700 shadow-sm font-bold text-slate-800 dark:text-white'
+                : 'font-medium text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700/50'
+            }`}
+          >
+            {locale === 'zh-TW' ? '學生列表' : 'Student List'}
+          </button>
+        </div>
 
         {/* 切換學生下拉選單 */}
         <StudentSwitchModal
-          isOpen={isStudentDropdownOpen}
-          onClose={() => setIsStudentDropdownOpen(false)}
+          isOpen={true}
+          onClose={() => {}}
           currentStudentId={studentId}
           allStudents={allStudents}
           currentPage={currentPage}
+          displayMode={displayMode}
         />
       </div>
     </div>

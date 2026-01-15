@@ -63,7 +63,7 @@ export default async function TransactionsPage({
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-a7d9ef/30 rounded-full blur-[90px] translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
 
         {/* 左側欄 - 學生資訊和快速導覽 */}
-        <div className="relative z-20 lg:w-[360px] lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
+        <div className="relative z-20 lg:w-80 lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
           <header className="flex flex-col lg:items-start lg:sticky lg:top-0 w-full lg:min-w-0">
             <StudentSidebarHeader
               studentId={id}
@@ -87,24 +87,14 @@ export default async function TransactionsPage({
         </div>
 
         {/* 右側主內容區 - 獎金存摺 */}
-        <div className="relative z-10 flex-1">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="text-amber-500 material-symbols-outlined text-3xl drop-shadow-sm">account_balance_wallet</span>
-              {t('passbook')}
-            </h2>
-            <p className="text-gray-600 mt-1 pl-1">
-              {/* @ts-ignore - Supabase type inference issue with select queries */}
-              {t('description', { name: (student as any).name })}
-            </p>
-          </div>
-
+        <main className="relative z-10 flex-1">
           {/* 月份選擇器和記錄列表（包含 Modal） */}
           <TransactionPageClient 
             studentId={id} 
             transactions={transactions || []}
+            studentName={(student as any).name}
           />
-        </div>
+        </main>
       </div>
     </div>
   )

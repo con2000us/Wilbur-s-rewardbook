@@ -9,9 +9,10 @@ import TransactionModal from './components/TransactionModal'
 interface Props {
   studentId: string
   transactions: any[]
+  studentName?: string
 }
 
-export default function TransactionPageClient({ studentId, transactions }: Props) {
+export default function TransactionPageClient({ studentId, transactions, studentName }: Props) {
   const router = useRouter()
   const t = useTranslations('transaction')
   
@@ -44,7 +45,8 @@ export default function TransactionPageClient({ studentId, transactions }: Props
       {/* 月份選擇器和記錄列表 */}
       <TransactionRecords 
         studentId={studentId} 
-        transactions={transactions} 
+        transactions={transactions}
+        studentName={studentName}
         onEditTransaction={handleOpenEditModal}
         onAddTransaction={handleOpenAddModal}
       />

@@ -541,6 +541,7 @@ export default function StudentRecords({
           subjects={subjects}
           assessments={filteredAssessments}
           studentId={studentId}
+          studentName={studentName}
           summary={filteredSummary}
           selectedSubject={selectedSubject}
           setSelectedSubject={setSelectedSubject}

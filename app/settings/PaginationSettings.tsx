@@ -14,8 +14,8 @@ export default function PaginationSettings() {
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
-  const MIN_ITEMS = 10
-  const MAX_ITEMS = 200
+  const MIN_ITEMS = 8
+  const MAX_ITEMS = 100
 
   // 載入設定
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function PaginationSettings() {
                   type="range"
                   min={MIN_ITEMS}
                   max={MAX_ITEMS}
-                  step="5"
+                  step="2"
                   value={itemsPerPage}
                   onChange={handleInputChange}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
@@ -157,6 +157,7 @@ export default function PaginationSettings() {
                   type="number"
                   min={MIN_ITEMS}
                   max={MAX_ITEMS}
+                  step="2"
                   value={itemsPerPage}
                   onChange={handleInputChange}
                   className="w-24 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none text-gray-800 text-center font-semibold"

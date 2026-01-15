@@ -64,6 +64,7 @@ interface Props {
   subjects: Subject[]
   assessments: Assessment[]
   studentId: string
+  studentName?: string
   summary: Summary | null
   selectedSubject: string
   setSelectedSubject: (subject: string) => void
@@ -90,6 +91,7 @@ export default function SubjectTabs({
   subjects, 
   assessments, 
   studentId, 
+  studentName,
   summary, 
   selectedSubject, 
   setSelectedSubject, 
@@ -174,9 +176,19 @@ export default function SubjectTabs({
       {/* Header */}
       <div className="mb-6">
         <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-            <h1 className="text-2xl font-black tracking-tight">{t('recordsTitle')}</h1>
+          <div className="flex items-start gap-3">
+            <span className="text-blue-500 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">menu_book</span>
+            <div className="flex flex-col gap-1">
+              <h1 className="text-2xl font-black tracking-tight">{t('recordsTitle')}</h1>
+              {studentName && (
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {locale === 'zh-TW' 
+                    ? `記錄${studentName}的評量與作業表現`
+                    : `Tracking ${studentName}'s assessments and homework performance`
+                  }
+                </p>
+              )}
+            </div>
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
