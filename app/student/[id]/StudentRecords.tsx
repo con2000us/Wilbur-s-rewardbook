@@ -50,7 +50,7 @@ export default function StudentRecords({
   const [selectedSubject, setSelectedSubject] = useState<string>('')
   const [lastSelectedSubject, setLastSelectedSubject] = useState<string>('')
   const [availableMonths, setAvailableMonths] = useState<string[]>([])
-  const [filteredAssessments, setFilteredAssessments] = useState(assessments)
+  const [filteredAssessments, setFilteredAssessments] = useState(assessments || [])
   const [filteredSummary, setFilteredSummary] = useState(summary)
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
   const [resetDate, setResetDate] = useState<Date | null>(null)
@@ -79,7 +79,7 @@ export default function StudentRecords({
   useEffect(() => {
     // 從評量記錄中提取所有月份
     const months = new Set<string>()
-    assessments.forEach(assessment => {
+    ;(assessments || []).forEach(assessment => {
       if (assessment.due_date) {
         const date = new Date(assessment.due_date)
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
@@ -189,8 +189,15 @@ export default function StudentRecords({
   }
 
   useEffect(() => {
+    // 確保 assessments 有值
+    if (!assessments) {
+      setFilteredAssessments([])
+      return
+    }
+
     // 找到最近的歸零記錄
     const findLastResetTransaction = (transactionList: any[]) => {
+      if (!transactionList || transactionList.length === 0) return null
       const sortedTransactions = [...transactionList].sort((a, b) => {
         const dateA = new Date(a.transaction_date || a.created_at).getTime()
         const dateB = new Date(b.transaction_date || b.created_at).getTime()
@@ -199,7 +206,7 @@ export default function StudentRecords({
       return sortedTransactions.find(t => t.transaction_type === 'reset')
     }
     
-    const lastReset = findLastResetTransaction(transactions)
+    const lastReset = findLastResetTransaction(transactions || [])
     const lastResetDate = lastReset 
       ? new Date(lastReset.transaction_date || lastReset.created_at)
       : null
@@ -208,9 +215,9 @@ export default function StudentRecords({
       : null
     
     // 根據選中的月份篩選評量
-    let filtered = assessments
+    let filtered = assessments || []
     if (selectedMonth) {
-      filtered = assessments.filter(assessment => {
+      filtered = (assessments || []).filter(assessment => {
         if (!assessment.due_date) return false
         const date = new Date(assessment.due_date)
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`

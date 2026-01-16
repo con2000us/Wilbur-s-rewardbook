@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { GRADE_OPTIONS, DEFAULT_GRADE_TO_SCORE, parseSubjectGradeMapping, type Grade, type GradeScoreRange } from '@/lib/gradeConverter'
 
 interface Subject {
   id: string
@@ -10,6 +11,7 @@ interface Subject {
   icon: string
   color: string
   order_index: number
+  grade_mapping?: any
 }
 
 interface SubjectBasic {
@@ -39,6 +41,7 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
   const t = useTranslations('subject')
   const tCommon = useTranslations('common')
   const tMessages = useTranslations('messages')
+  const locale = useLocale()
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
@@ -48,6 +51,22 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
   const [selectedIcon, setSelectedIcon] = useState(subject.icon)
   const [customIcon, setCustomIcon] = useState('')
   const [showIconPicker, setShowIconPicker] = useState(false)
+  
+  // 等級對應相關狀態
+  const [useCustomGradeMapping, setUseCustomGradeMapping] = useState(false)
+  const [gradeMapping, setGradeMapping] = useState<Record<Grade, GradeScoreRange>>(DEFAULT_GRADE_TO_SCORE)
+  const [showGradeMapping, setShowGradeMapping] = useState(false)
+  
+  // 初始化等級對應
+  useEffect(() => {
+    if (subject.grade_mapping) {
+      const parsed = parseSubjectGradeMapping(subject.grade_mapping)
+      if (parsed) {
+        setGradeMapping(parsed)
+        setUseCustomGradeMapping(true)
+      }
+    }
+  }, [subject.grade_mapping])
   
   // 判斷是否為 emoji（用於向後兼容）
   const isEmoji = (str: string) => {
@@ -84,6 +103,7 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
           icon: icon,
           color: formData.get('color'),
           order_index: selectedPosition,
+          grade_mapping: useCustomGradeMapping ? gradeMapping : null,
         })
       })
 
@@ -276,6 +296,148 @@ export default function EditSubjectForm({ studentId, subject, allSubjects }: Pro
             </div>
           </div>
         </div>
+
+        {/* 等級對應設定 */}
+        <div className="border-2 border-gray-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                {locale === 'zh-TW' ? '等級制成績對應' : 'Letter Grade Mapping'}
+              </label>
+              <p className="text-xs text-gray-500">
+                {locale === 'zh-TW' 
+                  ? '設定此科目的等級（A+ ~ F）對應的數字分數範圍，用於計算獎金（使用最高分數）'
+                  : 'Set the numeric score range for each letter grade (A+ ~ F) for this subject, used for reward calculation (using max score)'}
+              </p>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useCustomGradeMapping}
+                onChange={(e) => {
+                  setUseCustomGradeMapping(e.target.checked)
+                  if (!e.target.checked) {
+                    setGradeMapping(DEFAULT_GRADE_TO_SCORE)
+                  }
+                }}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm font-semibold text-gray-700">
+                {locale === 'zh-TW' ? '使用自訂對應' : 'Use Custom Mapping'}
+              </span>
+            </label>
+          </div>
+
+          {useCustomGradeMapping && (
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+              {GRADE_OPTIONS.map((grade) => (
+                <div key={grade} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="w-16 text-center">
+                    <span className="text-2xl font-bold text-gray-800">{grade}</span>
+                  </div>
+                  <div className="flex-1 grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">
+                        {locale === 'zh-TW' ? '最低' : 'Min'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={gradeMapping[grade].min}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 0
+                          setGradeMapping({
+                            ...gradeMapping,
+                            [grade]: { ...gradeMapping[grade], min: value }
+                          })
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">
+                        {locale === 'zh-TW' ? '平均' : 'Average'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={gradeMapping[grade].average}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 0
+                          setGradeMapping({
+                            ...gradeMapping,
+                            [grade]: { ...gradeMapping[grade], average: value }
+                          })
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">
+                        {locale === 'zh-TW' ? '最高' : 'Max'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={gradeMapping[grade].max}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 100
+                          setGradeMapping({
+                            ...gradeMapping,
+                            [grade]: { ...gradeMapping[grade], max: value }
+                          })
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                <span className="material-icons-outlined text-sm align-middle mr-1">info</span>
+                {locale === 'zh-TW' 
+                  ? '提示：系統會使用「最高」值來計算獎金。如果未設定自訂對應，將使用系統預設值。'
+                  : 'Tip: The system uses the "Max" value to calculate rewards. If no custom mapping is set, the system default will be used.'}
+              </div>
+            </div>
+          )}
+
+          {!useCustomGradeMapping && (
+            <div className="p-3 bg-gray-50 rounded text-sm text-gray-600">
+              {locale === 'zh-TW' 
+                ? '目前使用系統預設等級對應。勾選「使用自訂對應」可為此科目設定專屬的等級對應。'
+                : 'Currently using system default grade mapping. Check "Use Custom Mapping" to set a subject-specific grade mapping.'}
+            </div>
+          )}
+        </div>
+
+        {/* 自定義滾動條樣式 */}
+        <style jsx>{`
+          .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgb(148 163 184) rgb(241 245 249);
+          }
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgb(241 245 249);
+            border-radius: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgb(148 163 184);
+            border-radius: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgb(100 116 139);
+          }
+        `}</style>
 
         {/* 順序選擇 */}
         <div>

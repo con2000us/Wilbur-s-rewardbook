@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import SubjectsPageClient from './SubjectsPageClient'
 import { getTranslations } from 'next-intl/server'
 import { parseStudentAvatar, getStudentBackgroundGradient } from '@/lib/utils/studentTheme'
 import StudentSidebarHeader from '@/app/student/[id]/components/StudentSidebarHeader'
+import SubjectsHeaderClient from './SubjectsHeaderClient'
 
 export default async function SubjectsManagementPage({ 
   params 
@@ -77,7 +77,7 @@ export default async function SubjectsManagementPage({
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-a7d9ef/20 rounded-full blur-[90px] translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
 
         {/* 側邊欄 */}
-        <div className="relative z-20 lg:w-[360px] lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
+        <div className="relative z-20 lg:w-80 lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
           <header className="flex flex-col lg:items-start lg:sticky lg:top-0 w-full lg:min-w-0">
             {/* Student Sidebar Header - 包含學生頭像和快速導覽 */}
             <StudentSidebarHeader
@@ -95,25 +95,14 @@ export default async function SubjectsManagementPage({
 
         {/* 主內容區 */}
         <main className="relative z-10 flex-1">
-          {/* 標題區域 */}
-          <div className="flex flex-col md:flex-row justify-between items-start mb-2 gap-4" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
-            {/* 左側：管理科目標題 */}
-            <div className="flex items-center gap-3" style={{ paddingTop: '5px' }}>
-              <div className="bg-primary w-1 h-6 rounded-full shadow-[0_0_10px_rgba(106,153,224,0.8)]"></div>
-              <h2 className="text-xl font-bold text-gray-900">
-                {t('manageSubjects')}
-              </h2>
-            </div>
-          </div>
-
-          {/* 科目列表和 Modal */}
-          <SubjectsPageClient 
-            studentId={id} 
+          {/* 標題區域、按鈕和科目列表 */}
+          <SubjectsHeaderClient
+            studentId={id}
             studentName={(student as any).name}
-            subjects={subjects || []}
-            allRewardRules={allRewardRules || []}
             globalRules={globalRules || []}
             studentRules={studentRules || []}
+            subjects={subjects || []}
+            allRewardRules={allRewardRules || []}
           />
         </main>
       </div>

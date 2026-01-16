@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import SubjectModal from './components/SubjectModal'
 import SubjectRewardRulesModal from './components/SubjectRewardRulesModal'
-import GlobalRewardRulesModal from './components/GlobalRewardRulesModal'
 
 interface Subject {
   id: string
@@ -38,7 +37,11 @@ interface Props {
   studentRules: RewardRule[]
 }
 
-export default function SubjectsPageClient({ studentId, studentName, subjects, allRewardRules, globalRules, studentRules }: Props) {
+export interface SubjectsPageClientRef {
+  handleOpenAddModal: () => void
+}
+
+const SubjectsPageClient = forwardRef<SubjectsPageClientRef, Props>(({ studentId, studentName, subjects, allRewardRules, globalRules, studentRules }, ref) => {
   const router = useRouter()
   const t = useTranslations('subject')
   const tCommon = useTranslations('common')
@@ -52,8 +55,6 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
   const [isRewardRulesModalOpen, setIsRewardRulesModalOpen] = useState(false)
   const [selectedSubjectForRules, setSelectedSubjectForRules] = useState<Subject | null>(null)
   
-  // 通用獎金規則 Modal 狀態
-  const [isGlobalRewardRulesModalOpen, setIsGlobalRewardRulesModalOpen] = useState(false)
   
   // 排序相關狀態
   const [isReordering, setIsReordering] = useState(false)
@@ -136,6 +137,11 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
     setEditingSubject(null)
     setIsSubjectModalOpen(true)
   }
+
+  // 暴露方法給父組件
+  useImperativeHandle(ref, () => ({
+    handleOpenAddModal
+  }))
 
   const handleOpenEditModal = (subject: Subject) => {
     setEditingSubject(subject)
@@ -272,61 +278,6 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
 
   return (
     <>
-      {/* 添加按鈕 */}
-      <div className="flex flex-col sm:flex-row justify-end gap-3 mb-6">
-        {/* 完成排序按鈕 - 只在排序模式時顯示 */}
-        {isReordering && (
-          <>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleSaveOrder()
-              }}
-              disabled={loading}
-              data-reorder-action="save"
-              className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
-            >
-              <span>✓</span>
-              <span>{tCommon('done') || '完成排序'}</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleCancelReorder()
-              }}
-              disabled={loading}
-              data-reorder-action="cancel"
-              className="px-6 py-2.5 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
-            >
-              <span>✕</span>
-              <span>{tCommon('cancel')}</span>
-            </button>
-          </>
-        )}
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            setIsGlobalRewardRulesModalOpen(true)
-          }}
-          data-subject-action="global-rules"
-          className="bg-accent-gold hover:bg-amber-400 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/30 flex items-center gap-2 font-medium transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-        >
-          <span className="material-icons-round" style={{ fontSize: '0.875rem' }}>diamond</span>
-          <span>{tRewardRules('manageGlobalRules') || '通用獎金規則'}</span>
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            handleOpenAddModal()
-          }}
-          data-subject-action="add-subject"
-          className="bg-accent-green hover:bg-emerald-400 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/30 flex items-center gap-2 font-medium transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-        >
-          <span className="material-icons-round" style={{ fontSize: '1.25rem' }}>add</span>
-          <span>{t('addSubject')}</span>
-        </button>
-      </div>
-
       {/* 科目列表 */}
       {sortedSubjectsState && sortedSubjectsState.length > 0 ? (
         <div className="space-y-4">
@@ -368,7 +319,7 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
                   {/* #endregion */}
                   {/* 拖拽指示器 */}
                   <div className={`text-gray-400 cursor-grab active:cursor-grabbing p-2 ${isDesktopLayout ? 'block' : 'hidden'}`}>
-                    <span className="material-icons-round text-3xl">drag_indicator</span>
+                    <span className="material-icons-outlined text-3xl">drag_indicator</span>
                   </div>
                   
                   {/* 科目圖示 */}
@@ -415,7 +366,7 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
                         data-subject-action="reward-rules"
                         className="bg-accent-purple hover:bg-purple-400 text-white px-4 py-2 rounded-full shadow-md shadow-purple-500/20 flex items-center gap-2 text-sm font-medium transition-transform active:scale-95 cursor-pointer"
                       >
-                        <span className="material-icons-round" style={{ fontSize: '0.875rem' }}>diamond</span>
+                        <span className="material-icons-outlined" style={{ fontSize: '0.875rem' }}>diamond</span>
                         {t('rewardRules')}
                       </button>
                       <button
@@ -426,7 +377,7 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
                         data-subject-action="edit-subject"
                         className="bg-accent-blue hover:bg-blue-400 text-white px-4 py-2 rounded-full shadow-md shadow-blue-500/20 flex items-center gap-2 text-sm font-medium transition-transform active:scale-95 cursor-pointer"
                       >
-                        <span className="material-icons-round" style={{ fontSize: '0.875rem' }}>edit</span>
+                        <span className="material-icons-outlined" style={{ fontSize: '0.875rem' }}>edit</span>
                         {tCommon('edit')}
                       </button>
                     </div>
@@ -441,6 +392,36 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <p className="text-gray-500 text-lg mb-2">📭 {t('noSubjectsAdded')}</p>
           <p className="text-gray-400 text-sm mb-4">{t('clickToAddSubject')}</p>
+        </div>
+      )}
+
+      {/* 完成排序按鈕 - 只在排序模式時顯示，放在列表底部 */}
+      {isReordering && (
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleSaveOrder()
+            }}
+            disabled={loading}
+            data-reorder-action="save"
+            className="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="material-icons-outlined text-lg">check_circle</span>
+            <span>{tCommon('done') || '完成排序'}</span>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleCancelReorder()
+            }}
+            disabled={loading}
+            data-reorder-action="cancel"
+            className="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="material-icons-outlined text-lg">cancel</span>
+            <span>{tCommon('cancel')}</span>
+          </button>
         </div>
       )}
 
@@ -471,17 +452,6 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
         />
       )}
 
-      {/* 通用獎金規則 Modal */}
-      <GlobalRewardRulesModal
-        isOpen={isGlobalRewardRulesModalOpen}
-        onClose={() => setIsGlobalRewardRulesModalOpen(false)}
-        studentId={studentId}
-        studentName={studentName}
-        globalRules={globalRules}
-        studentRules={studentRules}
-        onSuccess={handleRewardRulesModalSuccess}
-      />
-      
       {/* 確保科目名稱文字顏色在所有設備上都是深色 */}
       <style jsx global>{`
         .subject-name-text {
@@ -490,5 +460,9 @@ export default function SubjectsPageClient({ studentId, studentName, subjects, a
       `}</style>
     </>
   )
-}
+})
+
+SubjectsPageClient.displayName = 'SubjectsPageClient'
+
+export default SubjectsPageClient
 

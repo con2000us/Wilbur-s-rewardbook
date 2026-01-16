@@ -11,6 +11,7 @@ interface Subject {
   name: string
   color: string
   icon: string
+  grade_mapping?: any
 }
 
 interface Assessment {
@@ -24,10 +25,13 @@ interface Assessment {
   reward_amount: number
   due_date: string | null
   assessment_type?: string
+  grade?: string | null
+  score_type?: string | null
   subjects?: {
     name: string
     color: string
     icon: string
+    grade_mapping?: any
   }
 }
 
@@ -177,7 +181,7 @@ export default function SubjectTabs({
       <div className="mb-6">
         <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between gap-4 mb-4">
           <div className="flex items-start gap-3">
-            <span className="text-blue-500 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">menu_book</span>
+            <span className="text-blue-600 dark:text-blue-400 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">assessment</span>
             <div className="flex flex-col gap-1">
               <h1 className="text-2xl font-black tracking-tight">{t('recordsTitle')}</h1>
               {studentName && (
@@ -417,6 +421,8 @@ export default function SubjectTabs({
                   due_date: assessment.due_date,
                   reward_amount: assessment.reward_amount,
                   assessment_type: assessment.assessment_type,
+                  grade: assessment.grade,
+                  score_type: assessment.score_type,
                   subjects: assessment.subjects,
                   description: assessment.description || assessment.title
                 }}

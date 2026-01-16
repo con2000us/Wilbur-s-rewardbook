@@ -4,12 +4,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { calculateRewardFromRule } from '@/lib/rewardFormula'
+import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
 
 interface Subject {
   id: string
   name: string
   color: string
   icon: string
+  grade_mapping?: any
 }
 
 interface RewardRule {
@@ -45,7 +47,9 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
   const [success, setSuccess] = useState(false)
   const [selectedSubjectId, setSelectedSubjectId] = useState(subjects[0]?.id || '')
   const [selectedAssessmentType, setSelectedAssessmentType] = useState(defaultAssessmentType)
+  const [scoreType, setScoreType] = useState<'numeric' | 'letter'>('numeric')
   const [score, setScore] = useState<number | null>(null)
+  const [grade, setGrade] = useState<Grade | null>(null)
   const [maxScore, setMaxScore] = useState(100)
   const [showRules, setShowRules] = useState(false)
 
@@ -75,23 +79,36 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
 
   const applicableRules = getApplicableRules()
 
-  // 計算百分比分數
-  const percentage = score !== null && maxScore > 0 ? (score / maxScore) * 100 : null
+  // 獲取當前選中科目的等級對應
+  const selectedSubject = subjects.find(s => s.id === selectedSubjectId)
+  const subjectGradeMapping = selectedSubject?.grade_mapping
 
-  // 找到當前分數對應的規則
+  // 計算實際用於獎金計算的分數和百分比
+  let actualScore: number | null = null
+  let actualPercentage: number | null = null
+
+  if (scoreType === 'letter' && grade) {
+    actualScore = gradeToScore(grade, subjectGradeMapping)
+    actualPercentage = gradeToPercentage(grade, maxScore, subjectGradeMapping)
+  } else if (scoreType === 'numeric' && score !== null) {
+    actualScore = score
+    actualPercentage = maxScore > 0 ? (score / maxScore) * 100 : null
+  }
+
+  // 找到當前分數對應的規則（使用實際百分比）
   const getMatchingRule = () => {
-    if (percentage === null) return null
+    if (actualPercentage === null) return null
     
     for (const rule of applicableRules) {
       let matches = false
       
       if (rule.condition === 'perfect_score') {
-        matches = percentage === 100
+        matches = actualPercentage === 100
       } else if (rule.condition === 'score_equals') {
-        matches = percentage === rule.min_score
+        matches = actualPercentage === rule.min_score
       } else if (rule.condition === 'score_range') {
-        const minOk = rule.min_score === null || percentage >= rule.min_score
-        const maxOk = rule.max_score === null || percentage <= rule.max_score
+        const minOk = rule.min_score === null || actualPercentage >= rule.min_score
+        const maxOk = rule.max_score === null || actualPercentage <= rule.max_score
         matches = minOk && maxOk
       }
       
@@ -101,15 +118,22 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
   }
 
   const matchingRule = getMatchingRule()
-  const expectedReward = matchingRule && score !== null && percentage !== null
+  const expectedReward = matchingRule && actualScore !== null && actualPercentage !== null
     ? calculateRewardFromRule({
         ruleRewardAmount: matchingRule.reward_amount,
         ruleRewardFormula: matchingRule.reward_formula,
-        score,
-        percentage,
+        score: actualScore,
+        percentage: actualPercentage,
         maxScore,
       })
     : 0
+
+  // 用於顯示的百分比
+  const displayPercentage = scoreType === 'letter' && grade
+    ? actualPercentage
+    : score !== null && maxScore > 0
+    ? (score / maxScore) * 100
+    : null
 
   const formatFormulaForDisplay = (formula?: string | null) => {
     const f = (formula ?? '').trim()
@@ -159,20 +183,42 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
       }
       
       const manualReward = formData.get('manual_reward')
+      
+      // 根據評分方式設定分數或等級
+      const payload: any = {
+        student_id: studentId,
+        subject_id: formData.get('subject_id'),
+        title: title,
+        assessment_type: formData.get('assessment_type'),
+        score_type: scoreType,
+        max_score: parseFloat(formData.get('max_score') as string) || 100,
+        due_date: formData.get('due_date') || null,
+        manual_reward: manualReward ? parseFloat(manualReward as string) : null,
+      }
+
+      // 獲取當前選中科目的等級對應
+      const selectedSubject = subjects.find(s => s.id === formData.get('subject_id') as string)
+      const subjectGradeMapping = selectedSubject?.grade_mapping
+
+      if (scoreType === 'letter') {
+        // 等級制：必須選擇等級
+        if (!grade) {
+          setError(locale === 'zh-TW' ? '請選擇等級' : 'Please select a grade')
+          setLoading(false)
+          return
+        }
+        payload.grade = grade
+        // 等級制時，score 只作為內部計算用，不應該在顯示時使用
+        payload.score = gradeToScore(grade, subjectGradeMapping)
+      } else {
+        payload.score = formData.get('score') ? parseFloat(formData.get('score') as string) : null
+        payload.grade = null
+      }
+
       const response = await fetch('/api/assessments/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          student_id: studentId,
-          subject_id: formData.get('subject_id'),
-          title: title,
-          assessment_type: formData.get('assessment_type'),
-          score: formData.get('score') ? parseFloat(formData.get('score') as string) : null,
-          max_score: parseFloat(formData.get('max_score') as string) || 100,
-          due_date: formData.get('due_date') || null,
-          status: formData.get('score') ? 'completed' : 'upcoming',
-          manual_reward: manualReward ? parseFloat(manualReward as string) : null,
-        })
+        body: JSON.stringify(payload)
       })
 
       const result = await response.json()
@@ -396,27 +442,74 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
           </div>
         </div>
 
+        {/* 評分方式選擇 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            {locale === 'zh-TW' ? '評分方式' : 'Scoring Method'}
+          </label>
+          <select
+            value={scoreType}
+            onChange={(e) => {
+              const newType = e.target.value as 'numeric' | 'letter'
+              setScoreType(newType)
+              if (newType === 'letter') {
+                setScore(null) // 清除數字分數
+              } else {
+                setGrade(null) // 清除等級
+              }
+            }}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="numeric">{locale === 'zh-TW' ? '數字分數' : 'Numeric Score'}</option>
+            <option value="letter">{locale === 'zh-TW' ? '等級制 (A+ ~ F)' : 'Letter Grade (A+ ~ F)'}</option>
+          </select>
+        </div>
+
         {/* 分數 */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {t('score')} ({locale === 'zh-TW' ? '選填' : 'Optional'})
+              {scoreType === 'letter' 
+                ? (locale === 'zh-TW' ? '等級' : 'Grade')
+                : `${t('score')} (${locale === 'zh-TW' ? '選填' : 'Optional'})`
+              }
             </label>
-            <input
-              name="score"
-              type="number"
-              min="0"
-              max="150"
-              step="0.5"
-              value={score ?? ''}
-              onChange={(e) => setScore(e.target.value ? parseFloat(e.target.value) : null)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder={locale === 'zh-TW' ? '例如：95' : 'e.g.: 95'}
-            />
-            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-              <span className="material-icons-outlined text-sm">lightbulb</span>
-              {locale === 'zh-TW' ? '留空表示尚未完成' : 'Leave blank if not completed'}
-            </p>
+            {scoreType === 'numeric' ? (
+              <>
+                <input
+                  name="score"
+                  type="number"
+                  min="0"
+                  max="150"
+                  step="0.5"
+                  value={score ?? ''}
+                  onChange={(e) => setScore(e.target.value ? parseFloat(e.target.value) : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={locale === 'zh-TW' ? '例如：95' : 'e.g.: 95'}
+                />
+                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                  <span className="material-icons-outlined text-sm">lightbulb</span>
+                  {locale === 'zh-TW' ? '留空表示尚未完成' : 'Leave blank if not completed'}
+                </p>
+              </>
+            ) : (
+              <>
+                <select
+                  value={grade || ''}
+                  onChange={(e) => setGrade(e.target.value ? (e.target.value as Grade) : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">{locale === 'zh-TW' ? '請選擇等級' : 'Select Grade'}</option>
+                  {GRADE_OPTIONS.map(g => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                  <span className="material-icons-outlined text-sm">lightbulb</span>
+                  {locale === 'zh-TW' ? '選擇等級後會自動轉換為分數計算獎金' : 'Grade will be converted to score for reward calculation'}
+                </p>
+              </>
+            )}
           </div>
 
           <div>
@@ -435,7 +528,7 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
         </div>
 
         {/* 分數預覽與預期獎金 */}
-        {score !== null && percentage !== null && (
+        {((scoreType === 'numeric' && score !== null) || (scoreType === 'letter' && grade)) && displayPercentage !== null && (
           <div className={`p-4 rounded-lg border-2 ${
             matchingRule 
               ? 'bg-green-50 border-green-300' 
@@ -444,7 +537,20 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">
-                  {locale === 'zh-TW' ? '分數' : 'Score'}: <span className="font-bold text-gray-800">{score}/{maxScore}</span> ({percentage.toFixed(1)}%)
+                  {scoreType === 'letter' ? (
+                    <>
+                      {locale === 'zh-TW' ? '等級' : 'Grade'}: <span className="font-bold text-gray-800 text-xl">{grade}</span>
+                      {actualScore !== null && (
+                        <span className="ml-2 text-gray-500">
+                          ({locale === 'zh-TW' ? '相當於' : 'equivalent to'} {actualScore.toFixed(1)}/{maxScore}, {displayPercentage.toFixed(1)}%)
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {locale === 'zh-TW' ? '分數' : 'Score'}: <span className="font-bold text-gray-800">{score}/{maxScore}</span> ({displayPercentage.toFixed(1)}%)
+                    </>
+                  )}
                 </p>
               </div>
               {matchingRule ? (

@@ -109,8 +109,10 @@ export default function Modal({ isOpen, onClose, title, children, size = 'lg', w
         </div>
 
         {/* Body - 可滾動 */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {children}
+        <div className="flex-1 overflow-y-auto p-0">
+          <div className="p-6">
+            {children}
+          </div>
         </div>
       </div>
 

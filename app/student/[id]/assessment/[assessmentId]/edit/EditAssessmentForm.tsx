@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
+import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
 
 interface Subject {
   id: string
   name: string
   color: string
   icon: string
+  grade_mapping?: any
 }
 
 interface Assessment {
@@ -25,6 +27,8 @@ interface Assessment {
   description?: string | null
   notes?: string | null
   completed_date?: string | null
+  grade?: string | null
+  score_type?: string | null
   subjects?: {
     id: string
     name: string
@@ -68,7 +72,13 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
   const [showRules, setShowRules] = useState(false)
   const [selectedSubjectId, setSelectedSubjectId] = useState(assessment.subject_id)
   const [selectedAssessmentType, setSelectedAssessmentType] = useState(assessment.assessment_type)
+  const [scoreType, setScoreType] = useState<'numeric' | 'letter'>(
+    (assessment.score_type as 'numeric' | 'letter') || 'numeric'
+  )
   const [currentScore, setCurrentScore] = useState(assessment.score || null)
+  const [grade, setGrade] = useState<Grade | null>(
+    (assessment.grade as Grade) || null
+  )
   const [currentMaxScore, setCurrentMaxScore] = useState(assessment.max_score)
 
   const formatFormulaForDisplay = (formula?: string | null) => {
@@ -116,21 +126,43 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
     
     try {
       const manualReward = formData.get('manual_reward')
+      
+      // 根據評分方式設定分數或等級
+      const payload: any = {
+        assessment_id: assessment.id,
+        student_id: studentId,
+        subject_id: formData.get('subject_id'),
+        title: formData.get('title'),
+        assessment_type: formData.get('assessment_type'),
+        score_type: scoreType,
+        max_score: parseFloat(formData.get('max_score') as string) || 100,
+        due_date: formData.get('due_date') || null,
+        manual_reward: manualReward ? parseFloat(manualReward as string) : null,
+      }
+
+      // 獲取當前選中科目的等級對應
+      const selectedSubject = subjects.find(s => s.id === selectedSubjectId)
+      const subjectGradeMapping = selectedSubject?.grade_mapping
+
+      if (scoreType === 'letter') {
+        // 等級制：必須選擇等級
+        if (!grade) {
+          setError(locale === 'zh-TW' ? '請選擇等級' : 'Please select a grade')
+          setLoading(false)
+          return
+        }
+        payload.grade = grade
+        // 等級制時，score 只作為內部計算用，不應該在顯示時使用
+        payload.score = gradeToScore(grade, subjectGradeMapping)
+      } else {
+        payload.score = formData.get('score') ? parseFloat(formData.get('score') as string) : null
+        payload.grade = null
+      }
+
       const response = await fetch('/api/assessments/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          assessment_id: assessment.id,
-          student_id: studentId,
-          subject_id: formData.get('subject_id'),
-          title: formData.get('title'),
-          assessment_type: formData.get('assessment_type'),
-          score: formData.get('score') ? parseFloat(formData.get('score') as string) : null,
-          max_score: parseFloat(formData.get('max_score') as string) || 100,
-          due_date: formData.get('due_date') || null,
-          status: formData.get('score') ? 'completed' : 'upcoming',
-          manual_reward: manualReward ? parseFloat(manualReward as string) : null,
-        })
+        body: JSON.stringify(payload)
       })
 
       const result = await response.json()
@@ -313,37 +345,83 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
           </div>
         </div>
 
+        {/* 評分方式選擇 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            {locale === 'zh-TW' ? '評分方式' : 'Scoring Method'}
+          </label>
+          <select
+            value={scoreType}
+            onChange={(e) => {
+              const newType = e.target.value as 'numeric' | 'letter'
+              setScoreType(newType)
+              if (newType === 'letter') {
+                setCurrentScore(null) // 清除數字分數
+              } else {
+                setGrade(null) // 清除等級
+              }
+            }}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="numeric">{locale === 'zh-TW' ? '數字分數' : 'Numeric Score'}</option>
+            <option value="letter">{locale === 'zh-TW' ? '等級制 (A+ ~ F)' : 'Letter Grade (A+ ~ F)'}</option>
+          </select>
+        </div>
+
         {/* 分數 */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              得分（選填）
+              {scoreType === 'letter' 
+                ? (locale === 'zh-TW' ? '等級' : 'Grade')
+                : (locale === 'zh-TW' ? '得分（選填）' : 'Score (Optional)')
+              }
             </label>
-            <input
-              name="score"
-              type="number"
-              min="0"
-              max="150"
-              step="0.5"
-              defaultValue={assessment.score || ''}
-              onChange={(e) => setCurrentScore(e.target.value ? parseFloat(e.target.value) : null)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="例如：95"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              💡 留空表示尚未完成
-            </p>
+            {scoreType === 'numeric' ? (
+              <>
+                <input
+                  name="score"
+                  type="number"
+                  min="0"
+                  max="150"
+                  step="0.5"
+                  value={currentScore !== null ? currentScore : ''}
+                  onChange={(e) => setCurrentScore(e.target.value ? parseFloat(e.target.value) : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={locale === 'zh-TW' ? '例如：95' : 'e.g.: 95'}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 {locale === 'zh-TW' ? '留空表示尚未完成' : 'Leave blank if not completed'}
+                </p>
+              </>
+            ) : (
+              <>
+                <select
+                  value={grade || ''}
+                  onChange={(e) => setGrade(e.target.value ? (e.target.value as Grade) : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">{locale === 'zh-TW' ? '請選擇等級' : 'Select Grade'}</option>
+                  {GRADE_OPTIONS.map(g => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 {locale === 'zh-TW' ? '選擇等級後會自動轉換為分數計算獎金' : 'Grade will be converted to score for reward calculation'}
+                </p>
+              </>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              滿分
+              {locale === 'zh-TW' ? '滿分' : 'Max Score'}
             </label>
             <input
               name="max_score"
               type="number"
               min="1"
-              defaultValue={assessment.max_score}
+              value={currentMaxScore}
               onChange={(e) => setCurrentMaxScore(parseInt(e.target.value) || 100)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />

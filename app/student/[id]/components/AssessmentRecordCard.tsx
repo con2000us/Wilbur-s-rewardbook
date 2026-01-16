@@ -11,6 +11,8 @@ interface AssessmentRecord {
   due_date: string | null
   reward_amount: number
   assessment_type?: string
+  grade?: string | null
+  score_type?: string | null
   subjects?: {
     name: string
     color: string
@@ -96,7 +98,23 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
     return 'text-slate-400'
   }
 
+  // 確定等級顏色
+  const getGradeColor = (grade: string | null | undefined) => {
+    if (!grade) return 'text-slate-400'
+    if (grade.startsWith('A')) return 'text-emerald-500'
+    if (grade.startsWith('B')) return 'text-blue-500'
+    if (grade.startsWith('C')) return 'text-yellow-500'
+    if (grade.startsWith('D')) return 'text-orange-500'
+    return 'text-red-500' // F
+  }
+
   const scoreColor = getScoreColor(record.score)
+  const gradeColor = getGradeColor(record.grade)
+  
+  // 判斷是否使用等級制
+  // 優先級：score_type === 'letter' > grade 存在 > score 存在
+  // 如果 score_type 是 'letter'，無論 score 是否有值，都應該顯示 grade
+  const isLetterGrade = record.score_type === 'letter' && record.grade
   
   // 格式化日期顯示
   const formatDisplayDate = (dateString: string | null) => {
@@ -195,8 +213,14 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
           {formatDate(record.due_date)}
         </div>
         <div className="flex items-baseline gap-1">
-          <span className={`text-5xl font-black ${scoreColor}`}>{record.score ?? '-'}</span>
-          <span className="text-slate-400 font-bold">{t('points')}</span>
+          {isLetterGrade ? (
+            <span className={`text-5xl font-black ${gradeColor}`}>{record.grade}</span>
+          ) : (
+            <>
+              <span className={`text-5xl font-black ${scoreColor}`}>{record.score ?? '-'}</span>
+              <span className="text-slate-400 font-bold">{t('points')}</span>
+            </>
+          )}
         </div>
       </div>
     </div>

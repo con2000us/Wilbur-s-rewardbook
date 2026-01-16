@@ -222,7 +222,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
       <div className="mb-6">
         <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between gap-4 mb-4">
           <div className="flex items-start gap-3">
-            <span className="text-green-500 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">account_balance_wallet</span>
+            <span className="text-green-600 dark:text-green-300 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">attach_money</span>
             <div className="flex flex-col gap-1">
               <h1 className="text-2xl font-black tracking-tight">{t('passbook')}</h1>
               {studentName && (

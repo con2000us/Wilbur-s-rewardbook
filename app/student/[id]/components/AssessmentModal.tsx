@@ -63,13 +63,16 @@ export default function AssessmentModal({
   const t = useTranslations('assessment')
 
   const handleSuccess = () => {
+    // 先關閉 modal，避免 router.refresh() 導致狀態不一致
+    onClose()
+    
+    // 然後調用 onSuccess（會觸發 router.refresh）
     if (onSuccess) {
-      onSuccess()
+      // 稍微延遲以確保 modal 關閉動畫完成
+      setTimeout(() => {
+        onSuccess()
+      }, 100)
     }
-    // 延遲關閉以顯示成功訊息
-    setTimeout(() => {
-      onClose()
-    }, 1000)
   }
 
   return (

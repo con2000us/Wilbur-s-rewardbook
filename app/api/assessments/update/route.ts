@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { calculateRewardFromRule } from '@/lib/rewardFormula'
+import { gradeToScore, gradeToPercentage } from '@/lib/gradeConverter'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,8 @@ export async function POST(request: NextRequest) {
       assessment_type: body.assessment_type,
       max_score: body.max_score || 100,
       due_date: body.due_date || null,
+      score_type: body.score_type || 'numeric',
+      grade: body.grade || null,
     }
 
     // 獲取舊的評量數據（用於比較獎金變化）
@@ -27,10 +30,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '評量不存在' }, { status: 404 })
     }
 
-    // 如果有分數，計算獎金
-    if (body.score !== null && body.score !== undefined) {
-      updateData.score = body.score
-      updateData.percentage = (body.score / updateData.max_score) * 100
+    // 獲取科目的等級對應設定
+    let subjectGradeMapping = null
+    if (body.subject_id) {
+      const { data: subjectData } = await supabase
+        .from('subjects')
+        .select('grade_mapping')
+        .eq('id', body.subject_id)
+        .single()
+      
+      if (subjectData?.grade_mapping) {
+        subjectGradeMapping = subjectData.grade_mapping
+      }
+    }
+
+    // 計算實際用於獎金計算的分數和百分比
+    let actualScore: number | null = null
+    let actualPercentage: number | null = null
+
+    if (updateData.score_type === 'letter') {
+      // 等級制：必須有等級
+      if (!body.grade) {
+        return NextResponse.json({ error: '等級制評量必須選擇等級' }, { status: 400 })
+      }
+      actualScore = gradeToScore(body.grade, subjectGradeMapping)
+      actualPercentage = gradeToPercentage(body.grade, updateData.max_score, subjectGradeMapping)
+      // 等級制時，score 只作為內部計算用（用於獎金計算），顯示時應該使用 grade
+      updateData.score = actualScore
+      updateData.percentage = actualPercentage
+      updateData.grade = body.grade
+    } else if (updateData.score_type === 'numeric') {
+      // 數字制：清除等級，使用數字分數
+      updateData.grade = null
+      if (body.score !== null && body.score !== undefined) {
+        actualScore = body.score
+        actualPercentage = (body.score / updateData.max_score) * 100
+        updateData.score = body.score
+        updateData.percentage = actualPercentage
+      } else {
+        updateData.score = null
+        updateData.percentage = null
+      }
+    }
+
+    // 如果有分數或等級，計算獎金
+    if (actualScore !== null && actualPercentage !== null) {
       updateData.status = 'completed'
       updateData.completed_date = new Date().toISOString()
 
@@ -122,16 +166,18 @@ export async function POST(request: NextRequest) {
         ]
 
         for (const rule of orderedRules) {
-          // 檢查分數是否匹配
+          // 檢查分數是否匹配（使用實際百分比）
           let scoreMatches = false
-          if (rule.condition === 'perfect_score') {
-            scoreMatches = updateData.percentage === 100
-          } else if (rule.condition === 'score_equals') {
-            scoreMatches = updateData.percentage === rule.min_score
-          } else if (rule.condition === 'score_range') {
-            const min = rule.min_score !== null ? rule.min_score : 0
-            const max = rule.max_score !== null ? rule.max_score : 100
-            scoreMatches = updateData.percentage >= min && updateData.percentage <= max
+          if (actualPercentage !== null) {
+            if (rule.condition === 'perfect_score') {
+              scoreMatches = actualPercentage === 100
+            } else if (rule.condition === 'score_equals') {
+              scoreMatches = actualPercentage === rule.min_score
+            } else if (rule.condition === 'score_range') {
+              const min = rule.min_score !== null ? rule.min_score : 0
+              const max = rule.max_score !== null ? rule.max_score : 100
+              scoreMatches = actualPercentage >= min && actualPercentage <= max
+            }
           }
           
           if (scoreMatches) {
@@ -145,13 +191,13 @@ export async function POST(request: NextRequest) {
       // 如果用戶手動指定了獎金，使用手動值
       if (body.manual_reward !== null && body.manual_reward !== undefined) {
         updateData.reward_amount = Math.max(0, Math.round(Number(body.manual_reward)))
-      } else if (matchedRule) {
+      } else if (matchedRule && actualScore !== null && actualPercentage !== null) {
         // 否則使用匹配的規則（支援公式）
         updateData.reward_amount = calculateRewardFromRule({
           ruleRewardAmount: matchedRule.reward_amount,
           ruleRewardFormula: (matchedRule as any).reward_formula,
-          score: Number(updateData.score ?? 0),
-          percentage: Number(updateData.percentage ?? 0),
+          score: actualScore,
+          percentage: actualPercentage,
           maxScore: Number(updateData.max_score ?? 100),
         })
       } else {
@@ -160,30 +206,33 @@ export async function POST(request: NextRequest) {
         if (rules && rules.length > 0) {
           // 有規則但沒有匹配，返回 0
           updateData.reward_amount = 0
-        } else {
+        } else if (actualPercentage !== null) {
           // 完全沒有規則，使用預設的硬編碼規則
-          if (updateData.percentage >= 100) {
+          if (actualPercentage >= 100) {
             updateData.reward_amount = 30
-          } else if (updateData.percentage >= 90) {
+          } else if (actualPercentage >= 90) {
             updateData.reward_amount = 10
-          } else if (updateData.percentage >= 80) {
+          } else if (actualPercentage >= 80) {
             updateData.reward_amount = 5
           } else {
             updateData.reward_amount = 0
           }
+        } else {
+          updateData.reward_amount = 0
         }
       }
     } else {
-      // 沒有分數，設為待完成
+      // 沒有分數或等級，設為待完成
       updateData.score = null
       updateData.percentage = null
+      updateData.grade = null
       updateData.status = 'upcoming'
       updateData.completed_date = null
       updateData.reward_amount = 0
     }
 
     // 更新評量
-    const { data: assessment, error } = await supabase
+    let { data: assessment, error } = await supabase
       .from('assessments')
       // @ts-ignore - Supabase type inference issue with update operations
       .update(updateData)
@@ -191,9 +240,33 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
+    // 如果錯誤是因為缺少 grade 或 score_type 欄位，移除這些欄位重試（向後兼容）
+    if (error && error.code === 'PGRST204' && (error.message.includes('grade') || error.message.includes('score_type'))) {
+      // 移除新欄位，只使用現有欄位
+      const fallbackData = { ...updateData }
+      delete fallbackData.grade
+      delete fallbackData.score_type
+      
+      const retryResult = await supabase
+        .from('assessments')
+        // @ts-ignore - Supabase type inference issue with update operations
+        .update(fallbackData)
+        .eq('id', body.assessment_id)
+        .select()
+        .single()
+      
+      assessment = retryResult.data
+      error = retryResult.error
+    }
+
     if (error) {
       console.error('Error updating assessment:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      // 如果錯誤是因為缺少欄位，提供更清楚的錯誤訊息
+      let errorMessage = error.message
+      if (error.code === 'PGRST204' && error.message.includes('grade')) {
+        errorMessage = "Could not find the 'grade' column of 'assessments' in the schema cache"
+      }
+      return NextResponse.json({ error: errorMessage }, { status: 500 })
     }
 
     // 更新交易記錄

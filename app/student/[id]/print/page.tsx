@@ -357,7 +357,18 @@ export default async function PrintPage({
                       {assessment.title}
                     </td>
                     <td className="border border-gray-300 p-2 text-center font-semibold">
-                      {assessment.score !== null ? `${assessment.score}/${assessment.max_score}` : '-'}
+                      {assessment.score_type === 'letter' && assessment.grade ? (
+                        <span className="text-lg font-bold">
+                          {assessment.grade}
+                          {assessment.score !== null && (
+                            <span className="text-xs text-gray-500 ml-1">
+                              ({assessment.score.toFixed(1)}/{assessment.max_score})
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        assessment.score !== null ? `${assessment.score}/${assessment.max_score}` : '-'
+                      )}
                     </td>
                     <td className="border border-gray-300 p-2 text-center">
                       {assessment.percentage !== null ? `${assessment.percentage.toFixed(1)}%` : '-'}

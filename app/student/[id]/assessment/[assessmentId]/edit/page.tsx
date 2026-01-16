@@ -48,7 +48,7 @@ export default async function EditAssessmentPage({
     notFound()
   }
 
-  // 獲取該學生的所有科目
+  // 獲取該學生的所有科目（包含 grade_mapping）
   const { data: subjects } = await supabase
     .from('subjects')
     .select('*')

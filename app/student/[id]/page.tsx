@@ -42,7 +42,8 @@ export default async function StudentPage({
     .single()
 
   // 獲取評量列表
-  const { data: assessments } = await supabase
+  // 使用基本查詢，grade_mapping 會在需要時從 subjects 中獲取
+  const { data: assessments, error: assessmentError } = await supabase
     .from('assessments')
     .select(`
       *,
@@ -55,6 +56,22 @@ export default async function StudentPage({
     // @ts-ignore - Supabase type inference issue with select queries
     .in('subject_id', subjects?.map((s: any) => s.id) || [])
     .order('due_date', { ascending: false })
+  
+  if (assessmentError) {
+    console.error('Error fetching assessments:', assessmentError)
+  }
+  
+  // 如果有評量資料，為每個評量添加對應科目的 grade_mapping
+  if (assessments && subjects) {
+    assessments.forEach((assessment: any) => {
+      if (assessment.subjects && assessment.subject_id) {
+        const subject = subjects.find((s: any) => s.id === assessment.subject_id)
+        if (subject && subject.grade_mapping) {
+          assessment.subjects.grade_mapping = subject.grade_mapping
+        }
+      }
+    })
+  }
 
   // 獲取交易記錄（用於計算累積獎金）
   const { data: transactions } = await supabase
