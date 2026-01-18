@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import Modal from '@/app/components/Modal'
 import TransactionForm from './TransactionForm'
@@ -29,6 +30,19 @@ export default function TransactionModal({
   onSuccess
 }: TransactionModalProps) {
   const t = useTranslations('transaction')
+  const [widthPercent, setWidthPercent] = useState(70)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateWidth = () => {
+        const newWidthPercent = window.innerWidth < 600 ? 96 : 70
+        setWidthPercent(newWidthPercent)
+      }
+      updateWidth()
+      window.addEventListener('resize', updateWidth)
+      return () => window.removeEventListener('resize', updateWidth)
+    }
+  }, [])
 
   const handleSuccess = () => {
     if (onSuccess) {
@@ -46,7 +60,7 @@ export default function TransactionModal({
       onClose={onClose}
       title={transaction ? `✏️ ${t('editRecord')}` : `➕ ${t('addRecord')}`}
       size="xl"
-      widthPercent={70}
+      widthPercent={widthPercent}
     >
       <TransactionForm
         studentId={studentId}

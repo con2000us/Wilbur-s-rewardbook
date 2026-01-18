@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import Modal from '@/app/components/Modal'
 import AssessmentForm from './AssessmentForm'
@@ -21,6 +22,8 @@ interface Assessment {
   due_date: string | null
   status: string
   reward_amount: number | null
+  grade: string | null
+  score_type: string | null
 }
 
 interface RewardRule {
@@ -62,10 +65,22 @@ export default function AssessmentModal({
 }: AssessmentModalProps) {
   const t = useTranslations('assessment')
 
+  // 偵測視窗寬度，動態調整 modal 寬度
+  const [windowWidth, setWindowWidth] = useState(0)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const handleSuccess = () => {
     // 先關閉 modal，避免 router.refresh() 導致狀態不一致
     onClose()
-    
+
     // 然後調用 onSuccess（會觸發 router.refresh）
     if (onSuccess) {
       // 稍微延遲以確保 modal 關閉動畫完成
@@ -74,6 +89,9 @@ export default function AssessmentModal({
       }, 100)
     }
   }
+
+  // 在寬度 600px 以下時，使用 96% 寬度；否則使用 70%
+  const modalWidthPercent = windowWidth < 600 ? 96 : 70
 
   return (
     <Modal
@@ -91,7 +109,7 @@ export default function AssessmentModal({
         </>
       )}
       size="xl"
-      widthPercent={70}
+      widthPercent={modalWidthPercent}
     >
       <AssessmentForm
         studentId={studentId}

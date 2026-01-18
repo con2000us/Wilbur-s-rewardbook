@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import Modal from '@/app/components/Modal'
 import GlobalRewardRulesManager from './GlobalRewardRulesManager'
@@ -38,6 +39,19 @@ export default function GlobalRewardRulesModal({
   onSuccess
 }: GlobalRewardRulesModalProps) {
   const t = useTranslations('rewardRules')
+  const [widthPercent, setWidthPercent] = useState(70)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateWidth = () => {
+        const newWidthPercent = window.innerWidth < 600 ? 96 : 70
+        setWidthPercent(newWidthPercent)
+      }
+      updateWidth()
+      window.addEventListener('resize', updateWidth)
+      return () => window.removeEventListener('resize', updateWidth)
+    }
+  }, [])
 
   const handleSuccess = () => {
     if (onSuccess) {
@@ -51,7 +65,7 @@ export default function GlobalRewardRulesModal({
       onClose={onClose}
       title={`💎 ${t('manageGlobalRules') || '通用獎金規則管理'}`}
       size="xl"
-      widthPercent={70}
+      widthPercent={widthPercent}
     >
       <GlobalRewardRulesManager
         studentId={studentId}

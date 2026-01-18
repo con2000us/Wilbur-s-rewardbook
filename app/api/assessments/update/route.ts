@@ -38,9 +38,11 @@ export async function POST(request: NextRequest) {
         .select('grade_mapping')
         .eq('id', body.subject_id)
         .single()
-      
-      if (subjectData?.grade_mapping) {
-        subjectGradeMapping = subjectData.grade_mapping
+
+      // Type assertion to handle Supabase type inference
+      const subjectDataTyped = subjectData as any
+      if (subjectDataTyped?.grade_mapping) {
+        subjectGradeMapping = subjectDataTyped.grade_mapping
       }
     }
 
@@ -62,10 +64,10 @@ export async function POST(request: NextRequest) {
     } else if (updateData.score_type === 'numeric') {
       // 數字制：清除等級，使用數字分數
       updateData.grade = null
-      if (body.score !== null && body.score !== undefined) {
+    if (body.score !== null && body.score !== undefined) {
         actualScore = body.score
         actualPercentage = (body.score / updateData.max_score) * 100
-        updateData.score = body.score
+      updateData.score = body.score
         updateData.percentage = actualPercentage
       } else {
         updateData.score = null
@@ -169,13 +171,13 @@ export async function POST(request: NextRequest) {
           // 檢查分數是否匹配（使用實際百分比）
           let scoreMatches = false
           if (actualPercentage !== null) {
-            if (rule.condition === 'perfect_score') {
+          if (rule.condition === 'perfect_score') {
               scoreMatches = actualPercentage === 100
-            } else if (rule.condition === 'score_equals') {
+          } else if (rule.condition === 'score_equals') {
               scoreMatches = actualPercentage === rule.min_score
-            } else if (rule.condition === 'score_range') {
-              const min = rule.min_score !== null ? rule.min_score : 0
-              const max = rule.max_score !== null ? rule.max_score : 100
+          } else if (rule.condition === 'score_range') {
+            const min = rule.min_score !== null ? rule.min_score : 0
+            const max = rule.max_score !== null ? rule.max_score : 100
               scoreMatches = actualPercentage >= min && actualPercentage <= max
             }
           }

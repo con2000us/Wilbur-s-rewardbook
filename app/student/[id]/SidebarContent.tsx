@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
@@ -60,6 +61,21 @@ export default function SidebarContent({
   const tCommon = useTranslations('common')
   const locale = useLocale()
   const router = useRouter()
+  const totalAverageRef = useRef<HTMLSpanElement | null>(null)
+
+  useEffect(() => {
+    const prefersDark = typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    const hasDarkClass = typeof document !== 'undefined' &&
+      document.documentElement.classList.contains('dark')
+    const totalAverageEl = totalAverageRef.current
+    const totalAverageStyles = totalAverageEl ? window.getComputedStyle(totalAverageEl) : null
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4e31ed8f-606c-4d4a-840c-4dfd29aa46a1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'run1', hypothesisId: 'H3', location: 'SidebarContent.tsx', message: 'total average styles', data: { prefersDark, hasDarkClass, totalAverage: totalAverageEl ? { className: totalAverageEl.className, color: totalAverageStyles?.color, backgroundColor: totalAverageStyles?.backgroundColor } : null }, timestamp: Date.now() }) }).catch(() => {})
+    // #endregion
+  }, [rewardBreakdown?.totalAverage])
 
   return (
     <aside className="w-full lg:w-80 flex flex-col gap-6">
@@ -72,10 +88,10 @@ export default function SidebarContent({
           <span className="text-xs font-bold">{t('totalAverageScore')}</span>
         </div>
         <div className="flex items-baseline gap-1 mb-4">
-          <span className="text-5xl font-black text-slate-700 dark:text-white">{rewardBreakdown.totalAverage?.toFixed(1) || '0.0'}</span>
-          <span className="text-slate-400 font-medium">{t('points')}</span>
+          <span ref={totalAverageRef} className="text-5xl font-black text-slate-700 dark:text-slate-700">{rewardBreakdown.totalAverage?.toFixed(1) || '0.0'}</span>
+          <span className="text-slate-400 dark:text-slate-400 font-medium">{t('points')}</span>
         </div>
-        <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-slate-100 dark:bg-slate-100 rounded-full overflow-hidden">
           <div 
             className="h-full bg-cyan-400 transition-all duration-1000" 
             style={{ width: `${Math.min(rewardBreakdown.totalAverage || 0, 100)}%` }}
@@ -86,15 +102,15 @@ export default function SidebarContent({
       {/* Mini Stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="glass-card p-4 rounded-3xl text-center border border-blue-50/50 dark:border-slate-700/50">
-          <span className="block text-xs text-slate-400 mb-1">{t('totalSubjects')}</span>
-          <span className="text-xl font-black">{subjects.length}</span>
+          <span className="block text-xs text-slate-400 dark:text-slate-400 mb-1">{t('totalSubjects')}</span>
+          <span className="text-xl font-black text-slate-700 dark:text-slate-700">{subjects.length}</span>
         </div>
         <div className="glass-card p-4 rounded-3xl text-center border border-blue-50/50 dark:border-slate-700/50">
-          <span className="block text-xs text-slate-400 mb-1">{t('totalAssessments')}</span>
-          <span className="text-xl font-black">{filteredAssessments.length}</span>
+          <span className="block text-xs text-slate-400 dark:text-slate-400 mb-1">{t('totalAssessments')}</span>
+          <span className="text-xl font-black text-slate-700 dark:text-slate-700">{filteredAssessments.length}</span>
         </div>
         <div className="glass-card p-4 rounded-3xl text-center border border-blue-50/50 dark:border-slate-700/50">
-          <span className="block text-xs text-slate-400 mb-1">{t('completed')}</span>
+          <span className="block text-xs text-slate-400 dark:text-slate-400 mb-1">{t('completed')}</span>
           <span className="text-xl font-black text-emerald-500">
             {filteredAssessments.length > 0
               ? `${Math.round((filteredAssessments.filter(a => a.status === 'completed').length / filteredAssessments.length) * 100)}%`

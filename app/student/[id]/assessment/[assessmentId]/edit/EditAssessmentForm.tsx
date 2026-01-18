@@ -129,15 +129,15 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
       
       // 根據評分方式設定分數或等級
       const payload: any = {
-        assessment_id: assessment.id,
-        student_id: studentId,
-        subject_id: formData.get('subject_id'),
-        title: formData.get('title'),
-        assessment_type: formData.get('assessment_type'),
+          assessment_id: assessment.id,
+          student_id: studentId,
+          subject_id: formData.get('subject_id'),
+          title: formData.get('title'),
+          assessment_type: formData.get('assessment_type'),
         score_type: scoreType,
-        max_score: parseFloat(formData.get('max_score') as string) || 100,
-        due_date: formData.get('due_date') || null,
-        manual_reward: manualReward ? parseFloat(manualReward as string) : null,
+          max_score: parseFloat(formData.get('max_score') as string) || 100,
+          due_date: formData.get('due_date') || null,
+          manual_reward: manualReward ? parseFloat(manualReward as string) : null,
       }
 
       // 獲取當前選中科目的等級對應
@@ -379,20 +379,20 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
             </label>
             {scoreType === 'numeric' ? (
               <>
-                <input
-                  name="score"
-                  type="number"
-                  min="0"
-                  max="150"
-                  step="0.5"
+            <input
+              name="score"
+              type="number"
+              min="0"
+              max="150"
+              step="0.5"
                   value={currentScore !== null ? currentScore : ''}
-                  onChange={(e) => setCurrentScore(e.target.value ? parseFloat(e.target.value) : null)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => setCurrentScore(e.target.value ? parseFloat(e.target.value) : null)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={locale === 'zh-TW' ? '例如：95' : 'e.g.: 95'}
-                />
-                <p className="text-xs text-gray-500 mt-1">
+            />
+            <p className="text-xs text-gray-500 mt-1">
                   💡 {locale === 'zh-TW' ? '留空表示尚未完成' : 'Leave blank if not completed'}
-                </p>
+            </p>
               </>
             ) : (
               <>

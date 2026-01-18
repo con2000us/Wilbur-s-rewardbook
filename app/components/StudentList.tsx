@@ -28,91 +28,7 @@ export default function StudentList({ initialStudents }: Props) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [hasReordered, setHasReordered] = useState(false)
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false)
-  const [circleConfigs, setCircleConfigs] = useState<Record<string, Array<{ cx: number; cy: number; r: number }>>>({})
-  const [showCircles, setShowCircles] = useState(true)
   const { openModal, ModalComponent } = useStudentSettingsModal()
-
-  // 簡單的偽隨機數生成器（使用種子）
-  const seededRandom = (seed: number) => {
-    let value = seed
-    return () => {
-      value = (value * 9301 + 49297) % 233280
-      return value / 233280
-    }
-  }
-
-  // 檢查兩個圓圈是否重疊
-  const circlesOverlap = (circle1: { cx: number; cy: number; r: number }, circle2: { cx: number; cy: number; r: number }) => {
-    const dx = circle1.cx - circle2.cx
-    const dy = circle1.cy - circle2.cy
-    const distance = Math.sqrt(dx * dx + dy * dy)
-    // 如果兩個圓的距離小於它們半徑之和的 80%，則認為重疊
-    return distance < (circle1.r + circle2.r) * 0.8
-  }
-
-  // 生成隨機的裝飾圓圈配置
-  const generateDecorationCircles = (studentId: string) => {
-    // 使用學生 ID 的 hash + 時間戳作為種子，讓每次 reload 都不同
-    let hash = 0
-    for (let i = 0; i < studentId.length; i++) {
-      hash = ((hash << 5) - hash) + studentId.charCodeAt(i)
-      hash = hash & hash
-    }
-    // 加入時間戳，讓每次 reload 都不同
-    const timeSeed = Date.now()
-    const random = seededRandom(Math.abs(hash) + timeSeed)
-    
-    // 生成 4-7 個圓圈
-    const count = Math.floor(random() * 4) + 4
-    const circles: Array<{ cx: number; cy: number; r: number }> = []
-    
-    for (let i = 0; i < count; i++) {
-      let cx: number, cy: number, r: number
-      let attempts = 0
-      const maxAttempts = 50
-      
-      do {
-        // 隨機位置（留出邊距避免超出）
-        cx = random() * 340 + 20
-        cy = random() * 340 + 20
-        // 隨機大小（1px 到 80px）
-        r = Math.max(1, random() * 79 + 1)
-        
-        attempts++
-        
-        // 檢查是否與已存在的圓圈重疊
-        const overlaps = circles.some(existingCircle => circlesOverlap({ cx, cy, r }, existingCircle))
-        
-        // 如果重疊，有 75% 的機率重新生成位置
-        if (overlaps && random() < 0.75 && attempts < maxAttempts) {
-          continue // 重新生成
-        }
-        
-        // 如果不重疊，或者已經嘗試太多次，或者 25% 的機率接受重疊，則跳出循環
-        break
-      } while (attempts < maxAttempts)
-      
-      circles.push({ cx, cy, r })
-    }
-    
-    return circles
-  }
-
-  // 在客戶端生成 circle 配置（避免 hydration 錯誤）
-  useEffect(() => {
-    const configs: Record<string, Array<{ cx: number; cy: number; r: number }>> = {}
-    
-    // 為每個學生生成 circle 配置
-    students.forEach(student => {
-      configs[student.id] = generateDecorationCircles(student.id)
-    })
-    
-    // 為添加學生按鈕生成配置
-    configs['add-student-button'] = generateDecorationCircles('add-student-button')
-    configs['empty-student-button'] = generateDecorationCircles('empty-student-button')
-    
-    setCircleConfigs(configs)
-  }, [students])
 
   // 監聽全局事件來打開設定 Modal
   useEffect(() => {
@@ -278,18 +194,6 @@ export default function StudentList({ initialStudents }: Props) {
         </h2>
 
         <div className="flex gap-2 items-center">
-          {/* Circle 顯示開關 */}
-          <button
-            onClick={() => setShowCircles(!showCircles)}
-            className={`h-10 px-4 py-2 rounded-lg transition-all duration-200 font-semibold flex items-center gap-2 shadow-lg shadow-[inset_0_0_0_2px_rgba(255,255,255,0.3)] cursor-pointer hover:-translate-y-1 ${
-              showCircles ? 'bg-blue-500/70' : 'bg-gray-500/70'
-            }`}
-            title={showCircles ? '隱藏裝飾圓圈' : '顯示裝飾圓圈'}
-          >
-            <span>{showCircles ? '⭕' : '⚪'}</span>
-            <span className="text-white text-sm">{showCircles ? 'ON' : 'OFF'}</span>
-          </button>
-          
           {hasReordered && (
             <>
               <button
@@ -334,9 +238,6 @@ export default function StudentList({ initialStudents }: Props) {
             const darkestHex = hexToDarker(avatar.hex, 0.5) // 更暗的版本
             const cardGradient = `linear-gradient(to bottom right, ${avatar.hex}, ${darkerHex}, ${darkestHex})`
             
-            // 使用已生成的裝飾圓圈配置（在客戶端生成，避免 hydration 錯誤）
-            const decorationCircles = circleConfigs[student.id] || []
-            
             return (
               <div
                 key={student.id}
@@ -374,34 +275,7 @@ export default function StudentList({ initialStudents }: Props) {
                 >
                   ⋮⋮
                 </div>
-                
-            {/* 裝飾性背景圓圈 */}
-                {showCircles && (
-                  <svg
-                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                    viewBox="0 0 380 380"
-                    fill="none"
-                    preserveAspectRatio="none"
-                  >
-                    <defs>
-                      <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id={`decorationGradient-${student.id}`}>
-                        <stop offset="0%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0' }} />
-                        <stop offset="50%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0.1' }} />
-                        <stop offset="100%" style={{ stopColor: `${avatar.hex}`, stopOpacity: '0.3' }} />
-                      </radialGradient>
-                    </defs>
-                    {decorationCircles.map((circle, idx) => (
-                      <circle
-                        key={idx}
-                        cx={circle.cx}
-                        cy={circle.cy}
-                        r={circle.r}
-                        fill={`url(#decorationGradient-${student.id})`}
-                      />
-                    ))}
-                  </svg>
-                )}
-                
+
                 <div className="relative z-10 flex flex-col items-center justify-between pt-[30px] pb-6 px-[18px] h-full">
                   {/* 個人資料區域 */}
                   <div className="flex flex-col items-center gap-3 w-full cursor-pointer flex-shrink-0">
@@ -512,7 +386,6 @@ export default function StudentList({ initialStudents }: Props) {
 
           {/* 添加學生按鈕（拖曳時顯示半透明但無法拖曳） */}
           {(() => {
-            const addStudentCircles = circleConfigs['add-student-button'] || []
             return (
               <button
                 onClick={() => !hasReordered && setIsAddStudentModalOpen(true)}
@@ -521,33 +394,6 @@ export default function StudentList({ initialStudents }: Props) {
                   hasReordered ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
                 }`}
               >
-                  {/* 裝飾性背景圓圈 */}
-                  {showCircles && (
-                    <svg
-                      className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                      viewBox="0 0 380 380"
-                      fill="none"
-                      preserveAspectRatio="none"
-                    >
-                      <defs>
-                        <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id="decorationGradient-add">
-                          <stop offset="0%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0' }} />
-                          <stop offset="50%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0.15' }} />
-                          <stop offset="100%" style={{ stopColor: 'rgba(255,255,255,0.2)', stopOpacity: '0.4' }} />
-                        </radialGradient>
-                      </defs>
-                      {addStudentCircles.map((circle, idx) => (
-                        <circle
-                          key={idx}
-                          cx={circle.cx}
-                          cy={circle.cy}
-                          r={circle.r}
-                          fill="url(#decorationGradient-add)"
-                        />
-                      ))}
-                    </svg>
-                  )}
-                  
                   <div className="relative z-10 flex flex-col items-center justify-between pt-[30px] pb-6 px-[18px] h-full">
                 {/* 個人資料區域 */}
                 <div className="flex flex-col items-center gap-3 w-full flex-shrink-0">
@@ -585,39 +431,11 @@ export default function StudentList({ initialStudents }: Props) {
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-items-center">
           {/* 當沒有學生時，添加學生按鈕使用與學生卡片相同的位置和大小 */}
           {(() => {
-            const emptyStudentCircles = circleConfigs['empty-student-button'] || []
             return (
               <button
                 onClick={() => setIsAddStudentModalOpen(true)}
                 className="relative w-full max-w-[380px] aspect-square overflow-hidden rounded-xl card-shadow add-student-bg group/card hover:scale-[1.01] cursor-pointer add-student-dashed-border"
               >
-                {/* 裝飾性背景圓圈 */}
-                {showCircles && (
-                  <svg
-                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                    viewBox="0 0 380 380"
-                    fill="none"
-                    preserveAspectRatio="none"
-                  >
-                    <defs>
-                      <radialGradient cx="50%" cy="50%" fx="50%" fy="50%" id="decorationGradient-empty">
-                        <stop offset="0%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0' }} />
-                        <stop offset="50%" style={{ stopColor: 'rgba(255,255,255,0.1)', stopOpacity: '0.15' }} />
-                        <stop offset="100%" style={{ stopColor: 'rgba(255,255,255,0.2)', stopOpacity: '0.4' }} />
-                      </radialGradient>
-                    </defs>
-                    {emptyStudentCircles.map((circle, idx) => (
-                      <circle
-                        key={idx}
-                        cx={circle.cx}
-                        cy={circle.cy}
-                        r={circle.r}
-                        fill="url(#decorationGradient-empty)"
-                      />
-                    ))}
-                  </svg>
-                )}
-                
                 <div className="relative z-10 flex flex-col items-center justify-between pt-[30px] pb-6 px-[18px] h-full">
               {/* 個人資料區域 */}
               <div className="flex flex-col items-center gap-3 w-full flex-shrink-0">

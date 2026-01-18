@@ -37,7 +37,7 @@ export default function SubjectsHeader({ studentId, studentName, globalRules, st
   return (
     <>
       <div className="mb-6">
-        <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between gap-4 mb-4">
+        <div className="flex flex-col min-[360px]:flex-row min-[360px]:items-center justify-between gap-4 mb-4">
           <div className="flex items-start gap-3">
             <span className="text-orange-600 dark:text-orange-300 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">menu_book</span>
             <div className="flex flex-col gap-1">
@@ -77,10 +77,10 @@ export default function SubjectsHeader({ studentId, studentName, globalRules, st
               </button>
             )}
             
-            {/* 返回首頁按鈕 */}
+            {/* 返回首頁按鈕 - 在手機寬度下隱藏 */}
             <button 
               onClick={() => router.push('/')}
-              className="bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer flex items-center justify-center w-10 h-10 hover:scale-105 active:scale-95"
+              className="hidden md:flex bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer items-center justify-center w-10 h-10 hover:scale-105 active:scale-95"
             >
               <span className="material-icons-outlined text-lg">home</span>
             </button>
@@ -95,6 +95,7 @@ export default function SubjectsHeader({ studentId, studentName, globalRules, st
         globalRules={globalRules}
         studentRules={studentRules}
         studentId={studentId}
+        studentName={studentName}
       />
     </>
   )

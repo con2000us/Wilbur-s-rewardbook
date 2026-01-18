@@ -19,11 +19,9 @@
   --color-accent-cyan: #06B6D4;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
@@ -35,6 +33,23 @@ body {
 /* Material Icons Outlined */
 .material-icons-outlined {
   font-family: 'Material Icons Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Material Icons Round */
+.material-icons-round {
+  font-family: 'Material Icons Round';
   font-weight: normal;
   font-style: normal;
   font-size: 24px;
@@ -104,19 +119,48 @@ body {
 }
 
 /* Glass button style - matching passwook.html */
-.glass-btn {
-  background: rgba(255, 255, 255, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+.glass-button {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   transition: all 0.2s;
 }
 
-.glass-btn:hover {
-  background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(255, 255, 255, 0.8);
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
 }
 
-.glass-btn:active {
-  transform: scale(0.98);
+.glass-button:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+button.glass-button:active {
+  background: rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Glass nav style - matching passwook.html */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* 確保輸入框在深色模式下也有良好的對比度 */
@@ -202,11 +246,19 @@ select option {
 }
 
 /* Custom styles for smoother gradients and glassmorphism */
-.glass-nav {
+.glass {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass:hover {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
 }
 
 .card-shadow {
@@ -296,6 +348,28 @@ select option {
   color: rgb(106 153 224 / var(--tw-text-opacity, 1)) !important;
 }
 
+/* 修復深色模式下按鈕和標籤的文字顏色問題 - 僅在 .dark 模式啟用 */
+
+/* 使用 .dark 類別作為備用方案 */
+.dark #student-switch-button-container button.bg-white.shadow-sm {
+  background-color: rgb(51 65 85) !important; /* slate-700 */
+  color: rgb(255 255 255) !important;
+}
+
+.dark button.bg-white.shadow-sm.text-slate-800 {
+  background-color: rgb(51 65 85) !important; /* slate-700 */
+  color: rgb(255 255 255) !important;
+}
+
+.dark div.bg-white.dark\:bg-slate-700 button,
+.dark div[class*="dark:bg-slate-700"] button.text-slate-800 {
+  color: rgb(255 255 255) !important;
+}
+
+.dark .glass-card span.text-5xl.text-slate-700 {
+  color: rgb(255 255 255) !important;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -381,4 +455,26 @@ select option {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+/* 功能卡片網格佈局 - 覆蓋 Tailwind 預設行為 */
+/* 小於 360px：1 列 */
+@media (max-width: 359px) {
+  .features-grid {
+    grid-template-columns: repeat(1, 1fr) !important;
+  }
+}
+
+/* 360px - 1023px：2 列 */
+@media (min-width: 360px) and (max-width: 1023px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* 1024px 以上：4 列 */
+@media (min-width: 1024px) {
+  .features-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
 }

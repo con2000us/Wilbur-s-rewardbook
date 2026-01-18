@@ -63,10 +63,13 @@ export default async function StudentPage({
   
   // 如果有評量資料，為每個評量添加對應科目的 grade_mapping
   if (assessments && subjects) {
+    // @ts-ignore - Type inference issue with Supabase queries
     assessments.forEach((assessment: any) => {
       if (assessment.subjects && assessment.subject_id) {
         const subject = subjects.find((s: any) => s.id === assessment.subject_id)
+        // @ts-ignore - Type inference issue with Supabase queries
         if (subject && subject.grade_mapping) {
+          // @ts-ignore - Type assertion for grade_mapping
           assessment.subjects.grade_mapping = subject.grade_mapping
         }
       }

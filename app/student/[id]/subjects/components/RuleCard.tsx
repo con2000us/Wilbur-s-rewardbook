@@ -1,6 +1,28 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { useEffect, useRef, useState } from 'react'
+
+// Debug logging
+const LOG_ENDPOINT = 'http://127.0.0.1:7242/ingest/4e31ed8f-606c-4d4a-840c-4dfd29aa46a1'
+
+function debugLog(location: string, message: string, data: any = {}) {
+  if (typeof window !== 'undefined') {
+    fetch(LOG_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location,
+        message,
+        data,
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'rule-card-layout',
+        hypothesisId: 'A'
+      })
+    }).catch(() => {})
+  }
+}
 
 interface RewardRule {
   id: string
@@ -56,6 +78,58 @@ export default function RuleCard({
   const t = useTranslations('rewardRules')
   const tAssessment = useTranslations('assessment')
   const tCommon = useTranslations('common')
+  
+  // Debug: Track window width and responsive classes
+  const logRef = useRef(false)
+  const rewardContainerRef = useRef<HTMLDivElement>(null)
+  const [isNarrowScreen, setIsNarrowScreen] = useState(false)
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkWidth = () => {
+        const width = window.innerWidth
+        const isNarrow = width < 600
+        setIsNarrowScreen(isNarrow)
+        
+        if (rewardContainerRef.current) {
+          if (isNarrow) {
+            rewardContainerRef.current.style.display = 'block'
+            rewardContainerRef.current.style.width = '100%'
+            rewardContainerRef.current.style.marginTop = '0.5rem'
+            rewardContainerRef.current.style.textAlign = 'right'
+          } else {
+            rewardContainerRef.current.style.display = 'flex'
+            rewardContainerRef.current.style.flexDirection = 'row'
+            rewardContainerRef.current.style.justifyContent = 'flex-end'
+            rewardContainerRef.current.style.width = 'auto'
+            rewardContainerRef.current.style.marginTop = '0'
+          }
+        }
+        
+        if (!logRef.current) {
+          debugLog('RuleCard:effect', 'Component mounted, window width', { width, isLessThan600: isNarrow })
+          logRef.current = true
+        } else {
+          debugLog('RuleCard:resize', 'Window resized', { newWidth: width, isLessThan600: isNarrow })
+        }
+      }
+      
+      checkWidth()
+      window.addEventListener('resize', checkWidth)
+      return () => window.removeEventListener('resize', checkWidth)
+    }
+  }, [])
+
+  // Debug: Log rule card render
+  useEffect(() => {
+    debugLog('RuleCard:render', 'Rule card rendered', {
+      ruleId: rule.id,
+      ruleName: rule.rule_name,
+      rewardAmount: rule.reward_amount,
+      rewardFormula: rule.reward_formula,
+      hasFormula: !!rule.reward_formula
+    })
+  }, [rule.id])
 
   // 判斷規則類型
   let ruleTypeLabel = ''
@@ -229,7 +303,7 @@ export default function RuleCard({
             </div>
             {canEdit && !isReadOnly && (
               <div 
-                className="opacity-0 group-hover:opacity-100 flex gap-2 flex-shrink-0 transition-opacity duration-200"
+                className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex gap-2 flex-shrink-0 transition-opacity duration-200"
               >
                 <button
                   onClick={(e) => {
@@ -254,8 +328,18 @@ export default function RuleCard({
           </div>
           
           {/* 規則信息 - 使用固定最小寬度確保對齊 */}
-          <div 
-            className={`flex items-center justify-between gap-4 ${isDraggable ? 'select-none' : ''}`}
+          <div
+            className={`flex items-center justify-between gap-4 flex-wrap w-full ${isDraggable ? 'select-none' : ''}`}
+            ref={(ref) => {
+              if (typeof window !== 'undefined') {
+                const width = window.innerWidth
+                debugLog('RuleCard:info-container', 'Rule info container', {
+                  width,
+                  isLessThan600: width < 600,
+                  className: `flex items-center justify-between gap-4 flex-wrap w-full ${isDraggable ? 'select-none' : ''}`
+                })
+              }
+            }}
           >
             <div 
               className="flex-1 min-w-0"
@@ -277,23 +361,24 @@ export default function RuleCard({
                 </span>
               </div>
             </div>
-            {/* 獎金金額 - 右對齊 */}
+            {/* 獎金金額 - 使用 ref 動態設置樣式以確保換行 */}
             <div 
-              className={`text-right flex-shrink-0 ${isDraggable ? 'select-none' : ''}`}
+              ref={rewardContainerRef}
+              className={`text-right ${isDraggable ? 'select-none' : ''}`}
             >
               {rule.reward_formula ? (
                 <div className="flex flex-col items-end">
-                  <p className={`text-xs font-semibold text-gray-500 whitespace-nowrap ${isDraggable ? 'select-none' : ''}`}>
+                  <p className={`text-xs font-semibold text-gray-500 ${isDraggable ? 'select-none' : ''}`}>
                     {t('formula') || '公式'}
                   </p>
-                  <p className={`text-xl font-bold text-green-600 whitespace-nowrap ${isDraggable ? 'select-none' : ''}`}>
-                    +({rule.reward_formula})
+                  <p className={`text-xl font-bold text-green-600 ${isDraggable ? 'select-none' : ''}`}>
+                    {rule.reward_formula}
                   </p>
                 </div>
               ) : (
-                <p 
-                  className={`text-2xl font-bold text-green-600 whitespace-nowrap ${isDraggable ? 'select-none' : ''}`}
-                >+${rule.reward_amount ?? 0}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  ${rule.reward_amount ?? 0}
+                </p>
               )}
             </div>
           </div>

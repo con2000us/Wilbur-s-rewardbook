@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { defaultLocale } from '@/lib/i18n/config';
 import { createClient } from '@/lib/supabase/server';
 import StudentSettingsModalProvider from './components/StudentSettingsModalProvider';
+import ThemeDebugProbe from './components/ThemeDebugProbe';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,7 +21,7 @@ const geistMono = Geist_Mono({
 // Viewport 設置 - 確保手機正確顯示
 export const viewport: Viewport = {
   width: 'device-width',
-  initialScale: 1.0,
+  initialScale: 0.8, // 首頁之外的頁面使用較小的縮放
   maximumScale: 5.0,
   userScalable: true,
   // 添加以下屬性以更好地支援移動設備
@@ -86,6 +87,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeDebugProbe />
           {children}
           <StudentSettingsModalProvider />
         </NextIntlClientProvider>

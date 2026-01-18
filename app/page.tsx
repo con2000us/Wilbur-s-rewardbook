@@ -5,6 +5,16 @@ import LanguageToggle from './components/LanguageToggle'
 import LogoutButton from './components/LogoutButton'
 import StudentList from './components/StudentList'
 
+// 首頁獨立的 viewport 設置 - 使用原本的 initialScale
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1.0,
+  maximumScale: 5.0,
+  userScalable: true,
+  themeColor: '#6a99e0',
+  viewportFit: 'cover',
+}
+
 export default async function Home() {
   const supabase = createClient()
   const t = await getTranslations('home')
@@ -29,12 +39,11 @@ export default async function Home() {
       <div className="max-w-5xl mx-auto">
         {/* 語言切換與設置按鈕 - 右上角 */}
         <div className="flex justify-end items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <Link 
+          <Link
             href="/settings"
-            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 bg-white rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 font-bold text-gray-800 text-sm sm:text-base"
+            className="glass w-12 h-12 flex items-center justify-center gap-2 px-4 rounded-2xl active:scale-95 transition-all text-white/90 hover:text-white"
           >
-            <span className="text-xl sm:text-2xl">⚙️</span>
-            <span className="hidden sm:inline">{tNav('settings')}</span>
+            <span className="material-icons-round text-2xl sm:text-2xl">settings</span>
           </Link>
           <LanguageToggle />
           <LogoutButton />
@@ -54,7 +63,7 @@ export default async function Home() {
         <StudentList initialStudents={students || []} />
 
         {/* 功能卡片 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 features-grid">
           <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/50">
             <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">📝</div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">{t('features.records.title')}</h3>

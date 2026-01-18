@@ -220,13 +220,13 @@ export default function TransactionRecords({ studentId, transactions, studentNam
     <>
       {/* Header */}
       <div className="mb-6">
-        <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between gap-4 mb-4">
+        <div className="flex flex-col min-[360px]:flex-row min-[360px]:items-center justify-between gap-4 mb-4">
           <div className="flex items-start gap-3">
-            <span className="text-green-600 dark:text-green-300 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">attach_money</span>
+            <span className="text-green-600 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">attach_money</span>
             <div className="flex flex-col gap-1">
               <h1 className="text-2xl font-black tracking-tight">{t('passbook')}</h1>
               {studentName && (
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm text-slate-500">
                   {locale === 'zh-TW' 
                     ? `記錄${studentName}的獎金收支明細`
                     : `Tracking ${studentName}'s reward income and expenses`
@@ -248,10 +248,10 @@ export default function TransactionRecords({ studentId, transactions, studentNam
               </button>
             )}
             
-            {/* 返回首頁按鈕 */}
+            {/* 返回首頁按鈕 - 在手機寬度下隱藏 */}
             <button 
               onClick={() => router.push('/')}
-              className="bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer flex items-center justify-center w-10 h-10 hover:scale-105 active:scale-95"
+              className="hidden md:flex bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer items-center justify-center w-10 h-10 hover:scale-105 active:scale-95"
             >
               <span className="material-icons-outlined text-lg">home</span>
             </button>
@@ -259,16 +259,16 @@ export default function TransactionRecords({ studentId, transactions, studentNam
         </div>
         
         {/* 分類過濾器和月份選擇器 */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* 分類過濾器 */}
-          <div className="w-full lg:w-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 dark:border-slate-700/40 shadow-sm overflow-hidden overflow-x-auto">
+          <div className="w-full md:w-auto bg-white/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 shadow-sm overflow-hidden overflow-x-auto">
             {/* 全部 */}
             <button
               onClick={() => setSelectedCategory('')}
               className={`px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                 !selectedCategory || selectedCategory === ''
-                  ? 'bg-white dark:bg-slate-700 shadow-sm font-bold text-slate-800 dark:text-white'
-                  : 'font-medium text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                  ? 'bg-white shadow-sm font-bold text-slate-800'
+                  : 'font-medium text-slate-500 hover:bg-white/50'
               }`}
             >
               {locale === 'zh-TW' ? '全部' : 'All'}
@@ -288,7 +288,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
               }}
               className={`px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                 selectedCategory === '評量獎金'
-                  ? 'bg-white dark:bg-slate-700 shadow-sm font-bold text-slate-800 dark:text-white'
+                  ? 'bg-white shadow-sm font-bold text-slate-800'
                   : 'font-medium text-slate-500'
               }`}
               style={selectedCategory === '評量獎金' ? {
@@ -327,7 +327,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
               }}
               className={`px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                 selectedCategory === '課外表現'
-                  ? 'bg-white dark:bg-slate-700 shadow-sm font-bold text-slate-800 dark:text-white'
+                  ? 'bg-white shadow-sm font-bold text-slate-800'
                   : 'font-medium text-slate-500'
               }`}
               style={selectedCategory === '課外表現' ? {
@@ -353,11 +353,11 @@ export default function TransactionRecords({ studentId, transactions, studentNam
             </button>
           </div>
 
-          <div className="w-full lg:w-auto flex items-center gap-3 lg:ml-auto justify-end lg:justify-start">
+          <div className="w-full md:w-auto flex items-center gap-3 md:ml-auto justify-end md:justify-start">
             <span className="text-xs font-bold text-slate-400 whitespace-nowrap">{tStudent('selectAssessmentMonth')}</span>
             <div className="relative min-w-[180px]">
-              <div className="flex items-center bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-1.5 rounded-full border border-white/40 dark:border-slate-700/40 shadow-sm">
-                <div className="flex items-center justify-between bg-white dark:bg-slate-700 px-4 py-1.5 rounded-full border border-slate-100 dark:border-slate-600 gap-6 w-full">
+              <div className="flex items-center bg-white/60 backdrop-blur-sm p-1.5 rounded-full border border-white/40 shadow-sm">
+                <div className="flex items-center justify-between bg-white px-4 py-1.5 rounded-full border border-slate-100 gap-6 w-full">
                   <button
                     onClick={goToPreviousMonth}
                     disabled={!canGoPrevious}
@@ -395,7 +395,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                       onClick={() => setIsMonthPickerOpen(false)}
                     />
                     <div
-                      className="absolute top-full right-0 mt-2 z-50 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl p-4 min-w-[280px] transition-all duration-300 ease-in-out"
+                      className="absolute top-full right-0 mt-2 z-50 bg-white/95 backdrop-blur-xl rounded-xl border border-slate-200 shadow-2xl p-4 min-w-[280px] transition-all duration-300 ease-in-out"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* 全部和最近結算選項 */}
@@ -409,7 +409,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                           className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
                             selectedMonth === '' && !calculateFromReset
                               ? 'bg-blue-600 text-white'
-                              : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
+                              : 'hover:bg-gray-100 text-gray-700'
                           }`}
                         >
                           {tStudent('all')}
@@ -423,7 +423,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                           className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
                             calculateFromReset && !selectedMonth
                               ? 'bg-blue-600 text-white'
-                              : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
+                              : 'hover:bg-gray-100 text-gray-700'
                           }`}
                         >
                           {tStudent('recentSettlement')}
@@ -432,7 +432,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                       
                       {/* 月份網格 */}
                       {availableMonths && availableMonths.length > 0 && (
-                        <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-2 border border-gray-200 dark:border-slate-700 rounded-lg p-2 max-h-[240px]">
+                        <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-2 border border-gray-200 rounded-lg p-2 max-h-[240px]">
                           {availableMonths.map(month => {
                             const [year, monthNum] = month.split('-')
                             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -448,7 +448,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                                 className={`px-3 py-2 rounded-lg font-semibold transition-all flex flex-col items-center h-[85px] cursor-pointer ${
                                   selectedMonth === month
                                     ? 'bg-blue-600 text-white'
-                                    : 'hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-300'
+                                    : 'hover:bg-blue-50 text-gray-900'
                                 }`}
                               >
                                 {locale === 'zh-TW' ? (
@@ -478,27 +478,27 @@ export default function TransactionRecords({ studentId, transactions, studentNam
 
       {/* 統計卡片 */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-white dark:bg-slate-800 p-3 rounded-3xl shadow-sm border border-pink-50 dark:border-slate-700 text-center">
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-1">{t('totalIncome')}</p>
-          <p className="text-emerald-600 dark:text-emerald-400 text-xl font-bold">
+        <div className="bg-white p-3 rounded-3xl shadow-sm border border-pink-50 text-center">
+          <p className="text-[10px] text-slate-400 font-medium mb-1">{t('totalIncome')}</p>
+          <p className="text-emerald-600 text-xl font-bold">
             ${selectedMonth || calculateFromReset
               ? filteredTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
               : transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
             }
           </p>
         </div>
-        <div className="bg-white dark:bg-slate-800 p-3 rounded-3xl shadow-sm border border-pink-50 dark:border-slate-700 text-center">
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-1">{t('totalExpense')}</p>
-          <p className="text-rose-500 dark:text-rose-400 text-xl font-bold">
+        <div className="bg-white p-3 rounded-3xl shadow-sm border border-pink-50 text-center">
+          <p className="text-[10px] text-slate-400 font-medium mb-1">{t('totalExpense')}</p>
+          <p className="text-rose-500 text-xl font-bold">
             ${selectedMonth || calculateFromReset
               ? Math.abs(filteredTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0))
               : Math.abs(transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0))
             }
           </p>
         </div>
-        <div className="bg-white dark:bg-slate-800 p-3 rounded-3xl shadow-sm border border-pink-50 dark:border-slate-700 text-center">
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-1">{t('currentBalance')}</p>
-          <p className="text-blue-600 dark:text-blue-400 text-xl font-bold">
+        <div className="bg-white p-3 rounded-3xl shadow-sm border border-pink-50 text-center">
+          <p className="text-[10px] text-slate-400 font-medium mb-1">{t('currentBalance')}</p>
+          <p className="text-blue-600 text-xl font-bold">
             ${selectedMonth || calculateFromReset
               ? filteredTransactions.reduce((sum, t) => sum + t.amount, 0)
               : transactions.reduce((sum, t) => sum + t.amount, 0)
@@ -543,15 +543,15 @@ export default function TransactionRecords({ studentId, transactions, studentNam
           return (
             <div
               key={transaction.id}
-              className="bg-white dark:bg-slate-800 p-4 rounded-[2rem] shadow-sm border border-pink-50 dark:border-slate-700 flex items-center gap-4 group transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+              className="bg-white p-4 rounded-[2rem] shadow-sm border border-pink-50 flex items-center gap-4 group transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer"
               onClick={() => onEditTransaction && onEditTransaction(transaction)}
             >
               <div className="flex items-center gap-4 w-full md:w-auto flex-1 min-w-0">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
                   transaction.amount > 0 
-                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' 
-                    : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'
-                }`}>
+                  ? 'bg-emerald-100 text-emerald-600' 
+                    : 'bg-rose-100 text-rose-600'
+                  }`}>
                   {transaction.category === 'shopping' ? (
                     <span className="material-icons-outlined text-2xl">shopping_bag</span>
                   ) : transaction.amount > 0 ? (
@@ -562,7 +562,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-[10px] font-bold text-slate-500 dark:text-slate-300">
+                    <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-500">
                       {(() => {
                         const date = transaction.transaction_date 
                           ? new Date(transaction.transaction_date)
@@ -578,13 +578,13 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                       {categoryLabel}
                     </span>
                   </div>
-                  <p className="text-sm font-medium truncate text-slate-600 dark:text-slate-400">
+                  <p className="text-sm font-medium truncate text-slate-600">
                     {transaction.description || transaction.title || ''}
                   </p>
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <span className={`font-bold tabular-nums ${transaction.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`} style={{ fontSize: '1.6875rem' }}>
+                <span className={`font-bold tabular-nums ${transaction.amount > 0 ? 'text-emerald-600' : 'text-rose-500'}`} style={{ fontSize: '1.6875rem' }}>
                   ${Math.abs(transaction.amount)}
                 </span>
               </div>
@@ -692,7 +692,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
         isOpen={false}
         onClose={() => {}}
         studentId={studentId}
-        transaction={null}
+        transaction={undefined}
         onSuccess={() => {}}
       />
     </>

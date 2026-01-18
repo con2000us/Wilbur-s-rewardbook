@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import Modal from '@/app/components/Modal'
 import SubjectRewardRulesManager from '../[subjectId]/rewards/SubjectRewardRulesManager'
@@ -46,6 +47,19 @@ export default function SubjectRewardRulesModal({
   onSuccess
 }: SubjectRewardRulesModalProps) {
   const t = useTranslations('rewardRules')
+  const [widthPercent, setWidthPercent] = useState(70)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handleResize = () => {
+        const newWidth = window.innerWidth
+        setWidthPercent(newWidth < 600 ? 96 : 70)
+      }
+      handleResize()
+      window.addEventListener('resize', handleResize)
+      return () => window.removeEventListener('resize', handleResize)
+    }
+  }, [])
 
   const handleSuccess = () => {
     if (onSuccess) {
@@ -53,13 +67,28 @@ export default function SubjectRewardRulesModal({
     }
   }
 
+  // 判斷是否為 emoji（用於向後兼容）
+  const isEmoji = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(subjectIcon) ||
+                 subjectIcon.length <= 2 ||
+                 !/^[a-z_]+$/i.test(subjectIcon)
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`💎 ${subjectIcon} ${subjectName} - ${t('manageRules')}`}
+      title={
+        <span className="flex items-center gap-2">
+          💎
+          {isEmoji ? (
+            <span>{subjectIcon}</span>
+          ) : (
+            <span className="material-icons-outlined" style={{ fontSize: '1.5rem' }}>{subjectIcon}</span>
+          )}
+          <span>{subjectName} - {t('manageRules')}</span>
+        </span>
+      }
       size="xl"
-      widthPercent={70}
+      widthPercent={widthPercent}
     >
       <SubjectRewardRulesManager
         studentId={studentId}

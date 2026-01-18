@@ -868,78 +868,82 @@ export default function GlobalRewardRulesManager({
 
       {/* 學生規則列表 */}
       <div>
-        <div className="flex items-center justify-between mb-3 min-h-[48px]">
-          <h3 className="text-xl font-bold text-green-800 flex items-center gap-2">
-            <span>🟢</span>
-            <span>{t('studentGeneralRules', { studentName }) || `${studentName} 的通用規則`}</span>
-            <span className="text-sm font-normal text-gray-600">({sortedStudentRules.length} {t('rulesCount', { count: sortedStudentRules.length })})</span>
+        <div className="mb-3">
+          <h3 className="text-xl font-bold text-green-800 flex items-center gap-2 min-w-0">
+            <span className="flex-shrink-0">🟢</span>
+            <span className="truncate min-w-0">{t('studentGeneralRules', { studentName }) || `${studentName} 的通用規則`}</span>
+            <span className="text-sm font-normal text-gray-600 whitespace-nowrap flex-shrink-0">({sortedStudentRules.length} {t('rulesCount', { count: sortedStudentRules.length })})</span>
           </h3>
-          {/* 完成排序按鈕 - 始終渲染但在非排序模式時隱藏，避免佈局跳動 */}
-          <div className={`flex gap-2 transition-opacity duration-200 ${isReorderingStudent ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <button
-              onClick={() => handleSaveOrder('student')}
-              disabled={loading}
-              className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
-            >
-              <span>✓</span>
-              <span>{tCommon('done') || '完成排序'}</span>
-            </button>
-            <button
-              onClick={() => handleCancelReorder('student')}
-              disabled={loading}
-              className="px-6 py-2.5 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
-            >
-              <span>✕</span>
-              <span>{tCommon('cancel')}</span>
-            </button>
-          </div>
         </div>
         {sortedStudentRules.length > 0 ? (
-          <div 
-            className="space-y-2"
-            onDragOver={(e) => {
-              e.preventDefault()
-            }}
-          >
-            {sortedStudentRules.map((rule, index) => {
-              const isDragging = draggedIndex === index && dropTargetIndex !== null && draggedRuleId === rule.id && isReorderingStudent
-              const showIndicator = dropTargetIndex === index && draggedIndex !== null && draggedIndex !== index && isReorderingStudent
-              
-              return (
-                <div key={rule.id}>
-                  {/* 拖拽指示器 - 在目標位置顯示 */}
-                  {showIndicator && (
-                    <div className="h-1.5 mb-2 bg-blue-500 rounded-full shadow-lg animate-pulse"></div>
-                  )}
-                  
-                  <div
-                    className={`transition-all duration-200 ${
-                      isDragging
-                        ? 'opacity-50 scale-95' 
-                        : ''
-                    }`}
-                  >
-                    <RuleCard 
-                      rule={rule} 
-                      canEdit={!isReorderingStudent}
-                      onToggleActive={toggleActive}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      loading={loading}
-                      showDragHandle={true}
-                      isEditing={editingRule?.id === rule.id}
-                      isJustSaved={justSavedRuleId === rule.id}
-                      isDraggable={true}
-                      onDragStart={() => handleDragStart(rule.id, index, 'student')}
-                      onDragOver={(e) => handleDragOver(e, index, 'student')}
-                      onDrop={handleDrop}
-                      onDragEnd={() => handleDragEnd()}
-                    />
+          <>
+            <div 
+              className="space-y-2"
+              onDragOver={(e) => {
+                e.preventDefault()
+              }}
+            >
+              {sortedStudentRules.map((rule, index) => {
+                const isDragging = draggedIndex === index && dropTargetIndex !== null && draggedRuleId === rule.id && isReorderingStudent
+                const showIndicator = dropTargetIndex === index && draggedIndex !== null && draggedIndex !== index && isReorderingStudent
+                
+                return (
+                  <div key={rule.id}>
+                    {/* 拖拽指示器 - 在目標位置顯示 */}
+                    {showIndicator && (
+                      <div className="h-1.5 mb-2 bg-blue-500 rounded-full shadow-lg animate-pulse"></div>
+                    )}
+                    
+                    <div
+                      className={`transition-all duration-200 ${
+                        isDragging
+                          ? 'opacity-50 scale-95' 
+                          : ''
+                      }`}
+                    >
+                      <RuleCard 
+                        rule={rule} 
+                        canEdit={!isReorderingStudent}
+                        onToggleActive={toggleActive}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        loading={loading}
+                        showDragHandle={true}
+                        isEditing={editingRule?.id === rule.id}
+                        isJustSaved={justSavedRuleId === rule.id}
+                        isDraggable={true}
+                        onDragStart={() => handleDragStart(rule.id, index, 'student')}
+                        onDragOver={(e) => handleDragOver(e, index, 'student')}
+                        onDrop={handleDrop}
+                        onDragEnd={() => handleDragEnd()}
+                      />
+                    </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+            {/* 完成排序按鈕 - 使用條件渲染來隱藏，不佔空間 */}
+            {isReorderingStudent && (
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => handleSaveOrder('student')}
+                  disabled={loading}
+                  className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
+                >
+                  <span>✓</span>
+                  <span>{tCommon('done') || '完成排序'}</span>
+                </button>
+                <button
+                  onClick={() => handleCancelReorder('student')}
+                  disabled={loading}
+                  className="px-6 py-2.5 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
+                >
+                  <span>✕</span>
+                  <span>{tCommon('cancel')}</span>
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
             <p className="text-gray-600">{t('noStudentRules')}</p>
@@ -950,73 +954,77 @@ export default function GlobalRewardRulesManager({
 
       {/* 全局規則列表 */}
       <div>
-        <div className="flex items-center justify-between mb-3 min-h-[48px]">
-          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <span>⚪</span>
-            <span>{t('globalRulesReference')}</span>
-            <span className="text-sm font-normal text-gray-600">({sortedGlobalRules.length} {t('rulesCount', { count: sortedGlobalRules.length })})</span>
+        <div className="mb-3">
+          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2 min-w-0">
+            <span className="flex-shrink-0">⚪</span>
+            <span className="truncate min-w-0">{t('globalRulesReference')}</span>
+            <span className="text-sm font-normal text-gray-600 whitespace-nowrap flex-shrink-0">({sortedGlobalRules.length} {t('rulesCount', { count: sortedGlobalRules.length })})</span>
           </h3>
-          {/* 完成排序按鈕 - 始終渲染但在非排序模式時隱藏，避免佈局跳動 */}
-          <div className={`flex gap-2 transition-opacity duration-200 ${isReorderingGlobal ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <button
-              onClick={() => handleSaveOrder('global')}
-              disabled={loading}
-              className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
-            >
-              <span>✓</span>
-              <span>{tCommon('done') || '完成排序'}</span>
-            </button>
-            <button
-              onClick={() => handleCancelReorder('global')}
-              disabled={loading}
-              className="px-6 py-2.5 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
-            >
-              <span>✕</span>
-              <span>{tCommon('cancel')}</span>
-            </button>
-          </div>
         </div>
         {sortedGlobalRules.length > 0 ? (
-          <div className="space-y-2">
-            {sortedGlobalRules.map((rule, index) => {
-              const isDragging = draggedIndex === index && dropTargetIndex !== null && draggedRuleId === rule.id && isReorderingGlobal
-              const showIndicator = dropTargetIndex === index && draggedIndex !== null && draggedIndex !== index && isReorderingGlobal
-              
-              return (
-                <div key={rule.id}>
-                  {/* 拖拽指示器 - 在目標位置顯示 */}
-                  {showIndicator && (
-                    <div className="h-1.5 mb-2 bg-blue-500 rounded-full shadow-lg animate-pulse"></div>
-                  )}
-                  
-                  <div
-                    className={`transition-all duration-200 ${
-                      isDragging
-                        ? 'opacity-50 scale-95' 
-                        : ''
-                    }`}
-                  >
-                    <RuleCard 
-                      rule={rule} 
-                      canEdit={!isReorderingGlobal}
-                      onToggleActive={toggleActive}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      loading={loading}
-                      showDragHandle={true}
-                      isEditing={editingRule?.id === rule.id}
-                      isJustSaved={justSavedRuleId === rule.id}
-                      isDraggable={true}
-                      onDragStart={() => handleDragStart(rule.id, index, 'global')}
-                      onDragOver={(e) => handleDragOver(e, index, 'global')}
-                      onDrop={handleDrop}
-                      onDragEnd={() => handleDragEnd()}
-                    />
+          <>
+            <div className="space-y-2">
+              {sortedGlobalRules.map((rule, index) => {
+                const isDragging = draggedIndex === index && dropTargetIndex !== null && draggedRuleId === rule.id && isReorderingGlobal
+                const showIndicator = dropTargetIndex === index && draggedIndex !== null && draggedIndex !== index && isReorderingGlobal
+                
+                return (
+                  <div key={rule.id}>
+                    {/* 拖拽指示器 - 在目標位置顯示 */}
+                    {showIndicator && (
+                      <div className="h-1.5 mb-2 bg-blue-500 rounded-full shadow-lg animate-pulse"></div>
+                    )}
+                    
+                    <div
+                      className={`transition-all duration-200 ${
+                        isDragging
+                          ? 'opacity-50 scale-95' 
+                          : ''
+                      }`}
+                    >
+                      <RuleCard 
+                        rule={rule} 
+                        canEdit={!isReorderingGlobal}
+                        onToggleActive={toggleActive}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        loading={loading}
+                        showDragHandle={true}
+                        isEditing={editingRule?.id === rule.id}
+                        isJustSaved={justSavedRuleId === rule.id}
+                        isDraggable={true}
+                        onDragStart={() => handleDragStart(rule.id, index, 'global')}
+                        onDragOver={(e) => handleDragOver(e, index, 'global')}
+                        onDrop={handleDrop}
+                        onDragEnd={() => handleDragEnd()}
+                      />
+                    </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+            {/* 完成排序按鈕 - 使用條件渲染來隱藏，不佔空間 */}
+            {isReorderingGlobal && (
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => handleSaveOrder('global')}
+                  disabled={loading}
+                  className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
+                >
+                  <span>✓</span>
+                  <span>{tCommon('done') || '完成排序'}</span>
+                </button>
+                <button
+                  onClick={() => handleCancelReorder('global')}
+                  disabled={loading}
+                  className="px-6 py-2.5 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
+                >
+                  <span>✕</span>
+                  <span>{tCommon('cancel')}</span>
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
             <p className="text-gray-600">{t('noGlobalRules')}</p>

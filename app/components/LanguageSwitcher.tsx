@@ -49,10 +49,6 @@ export default function LanguageSwitcher() {
               className="sr-only"
             />
             <div className="text-center">
-              {/* 語言圖標 */}
-              <div className="text-4xl mb-3">
-                {loc === 'zh-TW' ? '🇹🇼' : '🇺🇸'}
-              </div>
               {/* 語言名稱 */}
               <div className={`text-lg font-bold ${locale === loc ? 'text-blue-600' : 'text-gray-800'}`}>
                 {localeNames[loc]}

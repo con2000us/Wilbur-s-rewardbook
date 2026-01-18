@@ -44,8 +44,10 @@ export default async function TransactionsPage({
   const avatar = parseStudentAvatar((student as any).avatar_url, (student as any).name)
 
   // 計算收支概況
-  const totalEarned = transactions?.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0) || 0
-  const totalSpent = transactions?.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
+  // @ts-ignore - Supabase type inference issue with transactions
+  const totalEarned = transactions?.filter((t: any) => t.amount > 0).reduce((sum: number, t: any) => sum + t.amount, 0) || 0
+  // @ts-ignore - Supabase type inference issue with transactions
+  const totalSpent = transactions?.filter((t: any) => t.amount < 0).reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0) || 0
   const balance = totalEarned - totalSpent
   const summary = {
     total_earned: totalEarned,

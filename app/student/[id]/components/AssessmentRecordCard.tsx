@@ -94,7 +94,7 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
   const getScoreColor = (score: number | null) => {
     if (score === null) return 'text-slate-400'
     if (score === 100) return 'text-emerald-500'
-    if (score >= 90) return 'text-slate-700 dark:text-white'
+    if (score >= 90) return 'text-slate-700 dark:text-slate-700'
     return 'text-slate-400'
   }
 
@@ -201,8 +201,8 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
         
         {/* 獎金標籤 */}
         {record.reward_amount > 0 && (
-          <div className="bg-orange-50 dark:bg-orange-900/20 px-3 py-1 rounded-full border border-orange-200 dark:border-orange-800">
-            <span className="text-orange-600 dark:text-orange-400 font-bold text-sm">${record.reward_amount}</span>
+          <div className="bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
+            <span className="text-orange-600 font-bold text-sm">${record.reward_amount}</span>
           </div>
         )}
       </div>

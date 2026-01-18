@@ -574,21 +574,21 @@ export default function AssessmentForm({
             </label>
             {scoreType === 'numeric' ? (
               <>
-                <input
-                  name="score"
-                  type="number"
-                  min="0"
-                  max="150"
-                  step="0.5"
-                  value={score !== null ? score : ''}
-                  onChange={(e) => setScore(e.target.value ? parseFloat(e.target.value) : null)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder={t('scorePlaceholder') || '例如：95'}
-                />
-                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                  <span className="material-icons-outlined text-sm">lightbulb</span>
-                  {t('scoreHint') || '留空表示尚未完成'}
-                </p>
+            <input
+              name="score"
+              type="number"
+              min="0"
+              max="150"
+              step="0.5"
+              value={score !== null ? score : ''}
+              onChange={(e) => setScore(e.target.value ? parseFloat(e.target.value) : null)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder={t('scorePlaceholder') || '例如：95'}
+            />
+            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+              <span className="material-icons-outlined text-sm">lightbulb</span>
+              {t('scoreHint') || '留空表示尚未完成'}
+            </p>
               </>
             ) : (
               <>

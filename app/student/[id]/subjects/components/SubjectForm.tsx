@@ -240,14 +240,14 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
     <>
       {/* Error/Success Messages */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-xl">
-          <p className="text-red-700 dark:text-red-400 text-sm">❌ {error}</p>
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <p className="text-red-700 text-sm">❌ {error}</p>
         </div>
       )}
 
       {success && (
-        <div className="mb-6 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 rounded-xl">
-          <p className="text-green-700 dark:text-green-400 text-sm">
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+          <p className="text-green-700 text-sm">
             ✅ {isEditMode ? tMessages('updateSuccess') : tMessages('createSuccess')}
           </p>
         </div>
@@ -258,7 +258,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
           {/* 預設科目選擇（僅新增模式） */}
           {!isEditMode && (
             <div className="space-y-3">
-              <label className="text-sm font-semibold text-slate-600 dark:text-slate-400">{t('quickSelect')}</label>
+              <label className="text-sm font-semibold text-slate-600">{t('quickSelect')}</label>
               <div className="grid grid-cols-4 gap-3">
                 {PRESET_SUBJECTS.map((preset, index) => (
                   <button
@@ -267,8 +267,8 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                     onClick={() => handlePresetClick(index)}
                     className={`p-3 rounded-xl border-2 transition-all hover:-translate-y-1 hover:shadow-lg cursor-pointer ${
                       selectedPreset === index
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-slate-200 hover:border-slate-300'
                     }`}
                     style={{ backgroundColor: selectedPreset === index ? `${preset.color}20` : undefined }}
                   >
@@ -277,7 +277,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                         {preset.icon}
                       </span>
                     </div>
-                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">{preset.name}</div>
+                    <div className="text-sm font-semibold text-slate-800">{preset.name}</div>
                   </button>
                 ))}
               </div>
@@ -293,7 +293,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                 </label>
                 <input 
                   name="name"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white" 
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-800/50 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white" 
                   placeholder={t('namePlaceholder')} 
                   type="text" 
                   value={subjectName}
@@ -306,12 +306,12 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-600 dark:text-slate-400">{t('colorTag')}</label>
+                <label className="text-sm font-semibold text-slate-600">{t('colorTag')}</label>
                 <div className="flex items-center gap-3">
                   <div className="relative group">
                     <input 
                       name="color"
-                      className="h-12 w-20 p-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer overflow-hidden" 
+                      className="h-12 w-20 p-1 rounded-lg border border-slate-200 bg-white cursor-pointer overflow-hidden" 
                       type="color" 
                       value={subjectColor}
                       onChange={(e) => setSubjectColor(e.target.value)}
@@ -329,7 +329,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             </div>
 
             {/* Current Icon Preview Box */}
-            <div className="bg-slate-50 dark:bg-slate-900/40 rounded-2xl p-6 flex flex-col items-center justify-center border border-dashed border-slate-300 dark:border-slate-600 transition-all">
+            <div className="bg-slate-50 dark:bg-900/40 rounded-2xl p-6 flex flex-col items-center justify-center border border-dashed border-slate-300 dark:border-slate-600 transition-all">
               <div 
                 className="w-32 h-32 rounded-2xl flex items-center justify-center mb-4 shadow-sm"
                 style={{ backgroundColor: `${subjectColor}15`, color: subjectColor }}
@@ -340,7 +340,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
               <button 
                 type="button"
                 onClick={() => setIsPickerVisible(!isPickerVisible)}
-                className="px-6 py-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full text-sm font-semibold shadow-sm hover:shadow-md active:scale-95 transition-all border border-slate-200 dark:border-slate-600 cursor-pointer"
+                className="px-6 py-2 bg-white text-slate-700 rounded-full text-sm font-semibold shadow-sm hover:shadow-md active:scale-95 transition-all border border-slate-200 cursor-pointer"
               >
                 {isPickerVisible ? t('hideEmojiPicker') : t('selectEmoji')}
               </button>
@@ -369,7 +369,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                   className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                     selectedCategory === category 
                       ? 'bg-primary text-white shadow-md shadow-primary/20' 
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      : 'bg-slate-100 dark:bg-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   {category}
@@ -378,7 +378,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             </div>
 
             {/* Icon Grid */}
-            <div className="p-4 bg-white/60 dark:bg-slate-950/40 rounded-2xl border border-slate-200 dark:border-slate-700 max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(203 213 225) transparent' }}>
+            <div className="p-4 bg-white/60 dark:bg-950/40 rounded-2xl border border-slate-200 dark:border-slate-700 max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(203 213 225) transparent' }}>
               <div className="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-10 gap-3">
                 {getCategoryIcons().map((icon) => (
                   <button
@@ -401,7 +401,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             <div className="relative group">
               <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
               <input 
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white text-sm" 
+                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-800/50 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white text-sm" 
                 placeholder="自訂圖標名稱 (例如: auto_stories, calculate, public...)" 
                 type="text"
                 value={customIconInput}
@@ -411,7 +411,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
           </div>
 
           {/* 等級對應設定 */}
-          <div className="border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-6 bg-white dark:bg-slate-800/50">
+          <div className="border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-6 bg-white dark:bg-800/50">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -444,7 +444,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             {useCustomGradeMapping && (
               <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
                 {GRADE_OPTIONS.map((grade) => (
-                  <div key={grade} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/40 rounded-lg">
+                  <div key={grade} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-900/40 rounded-lg">
                     <div className="w-16 text-center">
                       <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{grade}</span>
                     </div>
@@ -466,7 +466,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                               [grade]: { ...gradeMapping[grade], min: value }
                             })
                           }}
-                          className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                          className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-800 text-slate-900 dark:text-slate-100"
                         />
                       </div>
                       <div>
@@ -486,7 +486,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                               [grade]: { ...gradeMapping[grade], average: value }
                             })
                           }}
-                          className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 font-semibold bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                          className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 font-semibold bg-white dark:bg-800 text-slate-900 dark:text-slate-100"
                         />
                       </div>
                       <div>
@@ -506,7 +506,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                               [grade]: { ...gradeMapping[grade], max: value }
                             })
                           }}
-                          className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                          className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-800 text-slate-900 dark:text-slate-100"
                         />
                       </div>
                     </div>
@@ -522,7 +522,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             )}
 
             {!useCustomGradeMapping && (
-              <div className="p-3 bg-slate-50 dark:bg-slate-900/40 rounded text-sm text-slate-600 dark:text-slate-400">
+              <div className="p-3 bg-slate-50 dark:bg-900/40 rounded text-sm text-slate-600 dark:text-slate-400">
                 {locale === 'zh-TW' 
                   ? '目前使用系統預設等級對應。勾選「使用自訂對應」可為此科目設定專屬的等級對應。'
                   : 'Currently using system default grade mapping. Check "Use Custom Mapping" to set a subject-specific grade mapping.'}
@@ -588,12 +588,12 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
         `}</style>
 
         {/* Footer Actions */}
-        <div className="px-8 py-6 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-200/60 dark:border-slate-700/60 flex flex-col-reverse sm:flex-row gap-4 justify-end flex-shrink-0">
+        <div className="px-8 py-6 bg-slate-50/50 dark:bg-900/50 border-t border-slate-200/60 dark:border-slate-700/60 flex flex-col-reverse sm:flex-row gap-4 justify-end flex-shrink-0">
           <button 
             type="button"
             onClick={() => onCancel ? onCancel() : router.back()}
             disabled={loading || deleting}
-            className="px-8 py-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+            className="px-8 py-3 bg-white dark:bg-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             {tCommon('cancel')}
           </button>

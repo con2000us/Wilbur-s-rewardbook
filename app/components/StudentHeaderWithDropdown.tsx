@@ -212,10 +212,19 @@ export default function StudentHeaderWithDropdown({
           </div>
           
           {/* 學生名稱和學習記錄 */}
-          <div className="min-w-0 flex-1">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-1 truncate">
-              {studentName}
-            </h1>
+          <div className="min-w-0 flex-1 relative">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-1 truncate">
+                {studentName}
+              </h1>
+              {/* 返回首頁按鈕 - 只在手機寬度下顯示 */}
+              <button 
+                onClick={() => router.push('/')}
+                className="md:hidden bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer flex items-center justify-center w-10 h-10 hover:scale-105 active:scale-95 flex-shrink-0 ml-2"
+              >
+                <span className="material-icons-outlined text-lg">home</span>
+              </button>
+            </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span className="text-primary truncate">{recordsTitle}</span>
             </div>

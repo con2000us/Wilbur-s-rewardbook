@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import Modal from '@/app/components/Modal'
 import SubjectForm from './SubjectForm'
@@ -37,6 +38,19 @@ export default function SubjectModal({
   onSuccess
 }: SubjectModalProps) {
   const t = useTranslations('subject')
+  const [widthPercent, setWidthPercent] = useState(70)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateWidth = () => {
+        const newWidthPercent = window.innerWidth < 600 ? 96 : 70
+        setWidthPercent(newWidthPercent)
+      }
+      updateWidth()
+      window.addEventListener('resize', updateWidth)
+      return () => window.removeEventListener('resize', updateWidth)
+    }
+  }, [])
 
   const handleSuccess = () => {
     if (onSuccess) {
@@ -48,13 +62,13 @@ export default function SubjectModal({
     }, 1000)
   }
 
-  return (
+    return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={subject ? `✏️ ${t('editSubject')}` : `➕ ${t('addSubject')}`}
       size="xl"
-      widthPercent={70}
+      widthPercent={widthPercent}
     >
       <SubjectForm
         studentId={studentId}

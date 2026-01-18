@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       score_type: body.score_type || 'numeric',
       grade: body.grade || null,
     }
-    
+
     // 如果使用等級制但資料庫可能沒有欄位，先檢查
     // 注意：這只是為了更好的錯誤訊息，實際檢查會在插入時進行
 
@@ -34,9 +34,11 @@ export async function POST(request: NextRequest) {
         .select('grade_mapping')
         .eq('id', body.subject_id)
         .single()
-      
-      if (subjectData?.grade_mapping) {
-        subjectGradeMapping = subjectData.grade_mapping
+
+      // Type assertion to handle Supabase type inference
+      const subjectDataTyped = subjectData as any
+      if (subjectDataTyped?.grade_mapping) {
+        subjectGradeMapping = subjectDataTyped.grade_mapping
       }
     }
 
@@ -58,15 +60,15 @@ export async function POST(request: NextRequest) {
     } else if (assessmentData.score_type === 'numeric' && body.score !== null && body.score !== undefined) {
       actualScore = body.score
       actualPercentage = (body.score / assessmentData.max_score) * 100
-      assessmentData.score = body.score
+        assessmentData.score = body.score
       assessmentData.percentage = actualPercentage
       assessmentData.grade = null
     }
 
     // 如果有分數或等級，標記為完成
     if (actualScore !== null && actualPercentage !== null) {
-      assessmentData.status = 'completed'
-      assessmentData.completed_date = new Date().toISOString()
+        assessmentData.status = 'completed'
+        assessmentData.completed_date = new Date().toISOString()
 
       // 從數據庫獲取獎金規則並計算獎金
       // 規則優先級：科目+學生 > 科目全局 > 學生全局 > 全局
@@ -145,13 +147,13 @@ export async function POST(request: NextRequest) {
           // 檢查分數是否匹配（使用實際百分比）
           let scoreMatches = false
           if (actualPercentage !== null) {
-            if (rule.condition === 'perfect_score') {
+          if (rule.condition === 'perfect_score') {
               scoreMatches = actualPercentage === 100
-            } else if (rule.condition === 'score_equals') {
+          } else if (rule.condition === 'score_equals') {
               scoreMatches = actualPercentage === rule.min_score
-            } else if (rule.condition === 'score_range') {
-              const min = rule.min_score !== null ? rule.min_score : 0
-              const max = rule.max_score !== null ? rule.max_score : 100
+          } else if (rule.condition === 'score_range') {
+            const min = rule.min_score !== null ? rule.min_score : 0
+            const max = rule.max_score !== null ? rule.max_score : 100
               scoreMatches = actualPercentage >= min && actualPercentage <= max
             }
           }

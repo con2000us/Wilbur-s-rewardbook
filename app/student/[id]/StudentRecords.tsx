@@ -487,11 +487,12 @@ export default function StudentRecords({
   }
 
   // 檢查是否可以切換
-  const canGoPrevious = !selectedMonth 
-    ? availableMonths.length > 0 
+  const canGoPrevious = !selectedMonth
+    ? availableMonths.length > 0
     : availableMonths.indexOf(selectedMonth) < availableMonths.length - 1
+  const canGoPreviousBool: boolean = Boolean(canGoPrevious)
 
-  const canGoNext = selectedMonth && availableMonths.indexOf(selectedMonth) > 0
+  const canGoNext = selectedMonth ? availableMonths.indexOf(selectedMonth) > 0 : false
 
   return (
     <>
@@ -531,7 +532,7 @@ export default function StudentRecords({
             formatMonth={formatMonth}
             goToPreviousMonth={goToPreviousMonth}
             goToNextMonth={goToNextMonth}
-            canGoPrevious={canGoPrevious}
+            canGoPrevious={canGoPreviousBool}
             canGoNext={canGoNext}
             filteredAssessments={filteredAssessments}
             onOpenAddModal={handleOpenAddModal}
@@ -567,7 +568,7 @@ export default function StudentRecords({
           formatMonth={formatMonth}
           goToPreviousMonth={goToPreviousMonth}
           goToNextMonth={goToNextMonth}
-          canGoPrevious={canGoPrevious}
+          canGoPrevious={canGoPreviousBool}
           canGoNext={canGoNext}
         />
       </main>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { defaultLocale } from './lib/i18n/config'
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // 從 cookie 獲取語言設定
   const locale = request.cookies.get('NEXT_LOCALE')?.value || defaultLocale
   
@@ -11,9 +11,9 @@ export function middleware(request: NextRequest) {
   // 定義公開路徑（不需要認證）
   const isLoginPage = request.nextUrl.pathname === '/login'
   const isAuthAPI = request.nextUrl.pathname.startsWith('/api/auth')
-  const isPublicAsset = request.nextUrl.pathname.startsWith('/_next') || 
+  const isPublicAsset = request.nextUrl.pathname.startsWith('/_next') ||
                         request.nextUrl.pathname.startsWith('/favicon.ico') ||
-                        request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js)$/)
+                        /\.(ico|png|jpg|jpeg|svg|css|js)$/.test(request.nextUrl.pathname)
   
   // 如果未認證且不是登入頁面或公開資源，重定向到登入頁
   if (!isAuthenticated && !isLoginPage && !isPublicAsset) {
@@ -47,4 +47,3 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:ico|png|jpg|jpeg|svg|css|js)$).*)',
   ]
 }
-

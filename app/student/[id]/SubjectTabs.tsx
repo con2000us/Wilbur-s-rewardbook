@@ -27,6 +27,7 @@ interface Assessment {
   assessment_type?: string
   grade?: string | null
   score_type?: string | null
+  description?: string | null
   subjects?: {
     name: string
     color: string
@@ -126,6 +127,8 @@ export default function SubjectTabs({
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState<number | null>(25)
   const subjectButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({})
+  const allButtonRef = useRef<HTMLButtonElement | null>(null)
+  const monthButtonRef = useRef<HTMLButtonElement | null>(null)
 
   // 載入分頁設定
   useEffect(() => {
@@ -146,11 +149,6 @@ export default function SubjectTabs({
       }
     }
     loadPaginationSettings()
-  }, [])
-  
-  // 科目變更時重置頁碼
-  useEffect(() => {
-    setCurrentPage(1)
   }, [selectedSubject, assessments])
 
   // 過濾評量
@@ -179,13 +177,13 @@ export default function SubjectTabs({
     <>
       {/* Header */}
       <div className="mb-6">
-        <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between gap-4 mb-4">
+        <div className="flex flex-col min-[360px]:flex-row min-[360px]:items-center justify-between gap-4 mb-4">
           <div className="flex items-start gap-3">
-            <span className="text-blue-600 dark:text-blue-400 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">assessment</span>
+            <span className="text-blue-600 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">assessment</span>
             <div className="flex flex-col gap-1">
               <h1 className="text-2xl font-black tracking-tight">{t('recordsTitle')}</h1>
               {studentName && (
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm text-slate-500">
                   {locale === 'zh-TW' 
                     ? `記錄${studentName}的評量與作業表現`
                     : `Tracking ${studentName}'s assessments and homework performance`
@@ -207,27 +205,28 @@ export default function SubjectTabs({
               </button>
             )}
             
-            {/* 返回首頁按鈕 */}
+            {/* 返回首頁按鈕 - 在手機寬度下隱藏 */}
             <button 
               onClick={() => router.push('/')}
-              className="bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer flex items-center justify-center w-10 h-10 hover:scale-105 active:scale-95"
+              className="hidden md:flex bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer items-center justify-center w-10 h-10 hover:scale-105 active:scale-95"
             >
               <span className="material-icons-outlined text-lg">home</span>
             </button>
           </div>
         </div>
         
-        {/* 科目過濾器和月份選擇器 */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          {/* 科目過濾器和月份選擇器 */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* 科目過濾器 */}
-          <div className="w-full lg:w-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 dark:border-slate-700/40 shadow-sm overflow-hidden overflow-x-auto">
+          <div className="w-full md:w-auto bg-white/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 shadow-sm overflow-hidden overflow-x-auto">
             {/* 全部 */}
             <button
+              ref={allButtonRef}
               onClick={() => setSelectedSubject('')}
               className={`px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                 !selectedSubject || selectedSubject === ''
-                  ? 'bg-white dark:bg-slate-700 shadow-sm font-bold text-slate-800 dark:text-white'
-                  : 'font-medium text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                  ? 'bg-white shadow-sm font-bold text-slate-800'
+                  : 'font-medium text-slate-500 hover:bg-white/50'
               }`}
             >
               {t('all')}
@@ -251,7 +250,7 @@ export default function SubjectTabs({
                   }}
                   className={`px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                     isSelected
-                      ? 'bg-white dark:bg-slate-700 shadow-sm font-bold text-slate-800 dark:text-white'
+                      ? 'bg-white shadow-sm font-bold text-slate-800'
                       : 'font-medium text-slate-500'
                   }`}
                   style={isSelected ? {
@@ -280,11 +279,11 @@ export default function SubjectTabs({
           </div>
 
           {/* 月份選擇器 */}
-          <div className="w-full lg:w-auto flex items-center gap-3 justify-end lg:justify-start lg:ml-auto">
+          <div className="w-full md:w-auto flex items-center gap-3 justify-end md:justify-start md:ml-auto">
             <span className="text-xs font-bold text-slate-400 whitespace-nowrap">{t('selectAssessmentMonth')}</span>
             <div className="relative min-w-[180px]">
-              <div className="flex items-center bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-1.5 rounded-full border border-white/40 dark:border-slate-700/40 shadow-sm">
-                <div className="flex items-center justify-between bg-white dark:bg-slate-700 px-4 py-1.5 rounded-full border border-slate-100 dark:border-slate-600 gap-6 w-full">
+              <div className="flex items-center bg-white/60 backdrop-blur-sm p-1.5 rounded-full border border-white/40 shadow-sm">
+                <div className="flex items-center justify-between bg-white px-4 py-1.5 rounded-full border border-slate-100 gap-6 w-full">
                   <button
                     onClick={goToPreviousMonth}
                     disabled={!canGoPrevious}
@@ -297,8 +296,9 @@ export default function SubjectTabs({
                       e.stopPropagation()
                       setIsMonthPickerOpen && setIsMonthPickerOpen(!isMonthPickerOpen)
                     }}
-                    className="font-bold text-sm min-w-[6rem] text-center cursor-pointer hover:text-primary transition-colors whitespace-nowrap"
-                  >
+                  ref={monthButtonRef}
+                className="font-bold text-sm min-w-[6rem] text-center cursor-pointer text-slate-800 hover:text-primary transition-colors whitespace-nowrap"
+                >
                     {selectedMonth ? (formatMonth ? formatMonth(selectedMonth) : selectedMonth) : (calculateFromReset ? t('recentSettlement') : t('all'))}
                   </button>
                   <button
@@ -319,15 +319,15 @@ export default function SubjectTabs({
                     onClick={() => setIsMonthPickerOpen && setIsMonthPickerOpen(false)}
                   />
                   <div
-                    className={`absolute top-full right-0 mt-2 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl p-4 min-w-[280px] transition-all duration-300 ease-in-out ${
+                    className={`absolute top-full right-0 mt-2 z-20 bg-white/95 backdrop-blur-xl rounded-xl border border-slate-200 shadow-2xl p-4 min-w-[280px] transition-all duration-300 ease-in-out ${
                       isMonthPickerOpen 
                         ? 'opacity-100 translate-y-0 pointer-events-auto' 
                         : 'opacity-0 -translate-y-2 pointer-events-none'
                     }`}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {/* 全部和最近結算選項 */}
                     <div className="grid grid-cols-2 gap-2 mb-3">
+                      {/* All button */}
                       <button
                         onClick={() => {
                           setSelectedMonth && setSelectedMonth('')
@@ -337,7 +337,7 @@ export default function SubjectTabs({
                         className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
                           selectedMonth === '' && !calculateFromReset
                             ? 'bg-blue-600 text-white'
-                            : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
+                            : 'hover:bg-gray-100 text-gray-700'
                         }`}
                       >
                         {t('all')}
@@ -351,7 +351,7 @@ export default function SubjectTabs({
                         className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
                           calculateFromReset && !selectedMonth
                             ? 'bg-blue-600 text-white'
-                            : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
+                            : 'hover:bg-gray-100 text-gray-700'
                         }`}
                       >
                         {t('recentSettlement')}
@@ -360,7 +360,7 @@ export default function SubjectTabs({
 
                     {/* 月份網格 */}
                     {availableMonths && availableMonths.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-2 border border-gray-200 dark:border-slate-700 rounded-lg p-2 max-h-[240px]">
+                      <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-2 border border-gray-200 rounded-lg p-2 max-h-[240px]">
                         {availableMonths.map(month => {
                           const [year, monthNum] = month.split('-')
                           const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -375,7 +375,7 @@ export default function SubjectTabs({
                               className={`px-3 py-2 rounded-lg font-semibold transition-all flex flex-col items-center h-[85px] cursor-pointer ${
                                 selectedMonth === month
                                   ? 'bg-blue-600 text-white'
-                                  : 'hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-300'
+                                  : 'hover:bg-blue-50 text-gray-700'
                               }`}
                             >
                               {locale === 'zh-TW' ? (
@@ -527,7 +527,7 @@ export default function SubjectTabs({
         )}
         </>
       ) : (
-        <div className="col-span-full py-20 text-center bg-white dark:bg-slate-800/40 rounded-4xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+        <div className="col-span-full py-20 text-center bg-white rounded-4xl border-2 border-dashed border-slate-200">
           <span className="material-icons-outlined text-6xl text-slate-200 mb-4">folder_off</span>
           <p className="text-slate-400 font-medium">
             {selectedSubject
