@@ -217,8 +217,8 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
             <span className={`text-5xl font-black ${gradeColor}`}>{record.grade}</span>
           ) : (
             <>
-              <span className={`text-5xl font-black ${scoreColor}`}>{record.score ?? '-'}</span>
-              <span className="text-slate-400 font-bold">{t('points')}</span>
+          <span className={`text-5xl font-black ${scoreColor}`}>{record.score ?? '-'}</span>
+          <span className="text-slate-400 font-bold">{t('points')}</span>
             </>
           )}
         </div>

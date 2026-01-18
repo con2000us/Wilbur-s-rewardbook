@@ -7,7 +7,7 @@ import './print.css'
 export default function PrintButtons() {
   const t = useTranslations('print')
   const tCommon = useTranslations('common')
-  
+
   useEffect(() => {
     // 添加打印样式
     const style = document.createElement('style')
@@ -49,6 +49,15 @@ export default function PrintButtons() {
           display: none !important;
         }
       }
+      /* 修復手機 dark mode 下列印按鈕樣式 */
+      .no-print button.bg-blue-600 {
+        background-color: rgb(37 99 235) !important; /* blue-600 */
+        border-color: transparent !important;
+      }
+      .no-print button.bg-gray-600 {
+        background-color: rgb(75 85 99) !important; /* gray-600 */
+        border-color: transparent !important;
+      }
     `
     document.head.appendChild(style)
 
@@ -58,16 +67,18 @@ export default function PrintButtons() {
   }, [])
 
   return (
-    <div className="no-print mb-4 flex justify-between items-center">
+    <div className="no-print mb-4 flex justify-between items-center gap-3">
       <button
         onClick={() => window.print()}
         className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 font-semibold cursor-pointer"
+        style={{boxShadow: '0 1px 3px 0 rgb(37 99 235)'}}
       >
         🖨️ {t('printPage')}
       </button>
       <button
         onClick={() => window.close()}
         className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 font-semibold cursor-pointer"
+        style={{boxShadow: '0 1px 3px 0 rgb(75 85 99)'}}
       >
         {tCommon('close')}
       </button>
