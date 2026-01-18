@@ -141,7 +141,7 @@ export default function SidebarContent({
           <Link
             href={`/student/${studentId}/print?${params.toString()}`}
             target="_blank"
-            className="glass-card hover:bg-slate-50 dark:hover:bg-slate-800 p-4 rounded-3xl flex flex-col items-center gap-2 border border-blue-50/50 dark:border-slate-700/50 transition-all group"
+            className="glass-card print-button-card hover:bg-slate-50 dark:hover:bg-slate-800 p-4 rounded-3xl flex flex-col items-center gap-2 border border-blue-50/50 dark:border-blue-500/40 transition-all group"
           >
             <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
               <span className="material-icons-outlined" style={{ fontSize: '2.5rem' }}>print</span>
