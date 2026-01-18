@@ -20,6 +20,30 @@ export default function PrintButtons() {
         body {
           print-color-adjust: exact;
           -webkit-print-color-adjust: exact;
+          background: white !important;
+        }
+        /* 確保列印時背景始終為白色，不受 dark mode 影響 */
+        div, body, td, th, tr {
+          background-color: white !important;
+        }
+        /* 確保所有邊框始終為灰色 */
+        * {
+          border-color: rgb(209 213 219) !important; /* gray-300 */
+        }
+        /* 確保統計卡片的背景色 */
+        div[class*="bg-gray-50"] {
+          background-color: rgb(249 250 251) !important; /* gray-50 */
+        }
+        /* 確保表頭背景 */
+        tr[class*="bg-gray-100"] {
+          background-color: rgb(243 244 246) !important; /* gray-100 */
+        }
+        /* 確保交替行背景 */
+        tr[class*="bg-white"] {
+          background-color: white !important;
+        }
+        tr[class*="bg-gray-50"] {
+          background-color: rgb(249 250 251) !important; /* gray-50 */
         }
         .no-print {
           display: none !important;
@@ -27,7 +51,7 @@ export default function PrintButtons() {
       }
     `
     document.head.appendChild(style)
-    
+
     return () => {
       document.head.removeChild(style)
     }

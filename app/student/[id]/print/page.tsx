@@ -218,7 +218,7 @@ export default async function PrintPage({
   }
 
   return (
-    <div className="max-w-[210mm] mx-auto bg-white p-8" style={{fontFamily: "'Noto Sans TC', sans-serif"}}>
+    <div className="max-w-[210mm] mx-auto bg-white p-8 border-2 border-gray-300" style={{fontFamily: "'Noto Sans TC', sans-serif", background: 'white'}}>
         {/* 打印按鈕 */}
         <PrintButtons />
         
@@ -226,7 +226,7 @@ export default async function PrintPage({
         <PrintFilters subjects={subjects || []} />
 
         {/* A4 列印內容 */}
-        <div className="border-2 border-gray-300 p-6">
+        <div className="border-2 border-gray-300 p-6 bg-white" style={{background: 'white'}}>
           {/* 標題區 */}
           <div className="text-center mb-6 pb-4 border-b-2 border-gray-300">
             <div className="flex items-center justify-center gap-3 mb-2">
@@ -279,19 +279,19 @@ export default async function PrintPage({
 
           {/* 統計卡片 */}
           <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="text-center p-3 bg-gray-50 rounded border border-gray-200">
+            <div className="text-center p-3 bg-gray-50 rounded border border-gray-200" style={{background: '#f9fafb', borderColor: '#e5e7eb'}}>
               <div className="text-2xl font-bold text-blue-600">{totalAssessments}</div>
               <div className="text-xs text-gray-600">{t('totalAssessments')}</div>
             </div>
-            <div className="text-center p-3 bg-gray-50 rounded border border-gray-200">
+            <div className="text-center p-3 bg-gray-50 rounded border border-gray-200" style={{background: '#f9fafb', borderColor: '#e5e7eb'}}>
               <div className="text-2xl font-bold text-green-600">{completedAssessments}</div>
               <div className="text-xs text-gray-600">{t('completed')}</div>
             </div>
-            <div className="text-center p-3 bg-gray-50 rounded border border-gray-200">
+            <div className="text-center p-3 bg-gray-50 rounded border border-gray-200" style={{background: '#f9fafb', borderColor: '#e5e7eb'}}>
               <div className="text-2xl font-bold text-purple-600">{avgScore.toFixed(1)}%</div>
               <div className="text-xs text-gray-600">{t('averageScore')}</div>
             </div>
-            <div className="text-center p-3 bg-gray-50 rounded border border-gray-200">
+            <div className="text-center p-3 bg-gray-50 rounded border border-gray-200" style={{background: '#f9fafb', borderColor: '#e5e7eb'}}>
               <div className="text-2xl font-bold text-orange-600">${totalReward}</div>
               <div className="text-xs text-gray-600">{t('totalReward')}</div>
             </div>

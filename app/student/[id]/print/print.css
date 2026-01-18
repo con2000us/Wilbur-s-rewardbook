@@ -3,16 +3,30 @@
     size: A4;
     margin: 15mm;
   }
-  
+
   body {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    background: white !important;
   }
-  
+
+  /* 確保列印內容的背景始終為白色，不受 dark mode 影響 */
+  div[class*="bg-white"],
+  div[class*="p-8"] {
+    background-color: white !important;
+  }
+
+  /* 確保邊框始終為灰色 */
+  div[class*="border-2"],
+  div[class*="border-gray-300"],
+  div[class*="border-"] {
+    border-color: rgb(209 213 219) !important; /* gray-300 */
+  }
+
   .no-print {
     display: none !important;
   }
-  
+
   .page-break {
     page-break-after: always;
   }
@@ -21,5 +35,6 @@
 body {
   margin: 0;
   padding: 0;
+  background: white !important;
 }
 
