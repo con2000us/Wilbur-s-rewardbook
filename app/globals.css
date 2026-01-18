@@ -118,10 +118,11 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* 修復 dark mode 下列印按鈕的邊框顏色 */
+/* 修復 dark mode 下列印按鈕的邊框顏色 - 改為白色邊框 */
 .dark .print-button-card,
 .dark a.glass-card[href*="/print"] {
-  border-color: rgba(59, 130, 246, 0.4) !important; /* blue-500/40 */
+  border-color: rgba(255, 255, 255, 0.3) !important; /* white */
+  background: rgba(255, 255, 255, 0.05) !important; /* 確保背景是白色 */
 }
 
 /* Glass button style - matching passwook.html */
