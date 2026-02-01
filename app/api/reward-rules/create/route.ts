@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
         max_score: body.max_score,
         reward_amount: body.reward_amount,
         reward_formula: body.reward_formula || null,
+        reward_config: body.reward_config || null, // 新增：支持多种奖励配置
         priority: body.priority || 0,
         is_active: true,
         assessment_type: body.assessment_type || null,

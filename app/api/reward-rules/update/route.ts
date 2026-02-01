@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     if (body.max_score !== undefined) updateData.max_score = body.max_score
     if (body.reward_amount !== undefined) updateData.reward_amount = body.reward_amount
     if (body.reward_formula !== undefined) updateData.reward_formula = body.reward_formula || null
+    if (body.reward_config !== undefined) updateData.reward_config = body.reward_config || null // 新增：支持多种奖励配置
     if (body.priority !== undefined) updateData.priority = body.priority
     if (body.is_active !== undefined) updateData.is_active = body.is_active
     if (body.assessment_type !== undefined) updateData.assessment_type = body.assessment_type

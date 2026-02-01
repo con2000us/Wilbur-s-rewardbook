@@ -39,11 +39,11 @@ export default function SubjectsHeader({ studentId, studentName, globalRules, st
       <div className="mb-6">
         <div className="flex flex-col min-[360px]:flex-row min-[360px]:items-center justify-between gap-4 mb-4">
           <div className="flex items-start gap-3">
-            <span className="text-orange-600 dark:text-orange-300 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">menu_book</span>
+            <span className="text-orange-600 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">menu_book</span>
             <div className="flex flex-col gap-1">
               <h1 className="text-2xl font-black tracking-tight">{t('manageSubjects')}</h1>
               {studentName && (
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm text-slate-500">
                   {locale === 'zh-TW'
                     ? `管理${studentName}的科目設定與獎金規則`
                     : `Managing ${studentName}'s subjects and reward rules`

@@ -94,7 +94,7 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
   const getScoreColor = (score: number | null) => {
     if (score === null) return 'text-slate-400'
     if (score === 100) return 'text-emerald-500'
-    if (score >= 90) return 'text-slate-700 dark:text-slate-700'
+    if (score >= 90) return 'text-slate-700'
     return 'text-slate-400'
   }
 

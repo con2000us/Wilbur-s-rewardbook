@@ -215,7 +215,7 @@ export default function SubjectTabs({
           </div>
         </div>
         
-          {/* 科目過濾器和月份選擇器 */}
+        {/* 科目過濾器和月份選擇器 */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* 科目過濾器 */}
           <div className="w-full md:w-auto bg-white/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 shadow-sm overflow-hidden overflow-x-auto">
@@ -298,7 +298,7 @@ export default function SubjectTabs({
                     }}
                   ref={monthButtonRef}
                 className="font-bold text-sm min-w-[6rem] text-center cursor-pointer text-slate-800 hover:text-primary transition-colors whitespace-nowrap"
-                >
+                  >
                     {selectedMonth ? (formatMonth ? formatMonth(selectedMonth) : selectedMonth) : (calculateFromReset ? t('recentSettlement') : t('all'))}
                   </button>
                   <button

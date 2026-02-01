@@ -3,6 +3,15 @@
 import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
 
+interface CustomRewardType {
+  id: string
+  type_key: string
+  display_name: string
+  icon: string
+  color: string
+  default_unit: string | null
+}
+
 // Debug logging
 const LOG_ENDPOINT = 'http://127.0.0.1:7242/ingest/4e31ed8f-606c-4d4a-840c-4dfd29aa46a1'
 
@@ -24,6 +33,14 @@ function debugLog(location: string, message: string, data: any = {}) {
   }
 }
 
+interface RewardConfigItem {
+  type_id: string
+  type_key: string
+  amount: number | null
+  formula: string | null
+  unit: string | null
+}
+
 interface RewardRule {
   id: string
   student_id: string | null
@@ -34,6 +51,7 @@ interface RewardRule {
   max_score: number | null
   reward_amount: number
   reward_formula?: string | null
+  reward_config?: RewardConfigItem[] | null
   priority: number
   is_active: boolean
   assessment_type: string | null
@@ -79,6 +97,50 @@ export default function RuleCard({
   const tAssessment = useTranslations('assessment')
   const tCommon = useTranslations('common')
   
+  // 加载奖励类型数据
+  const [rewardTypes, setRewardTypes] = useState<CustomRewardType[]>([])
+  
+  useEffect(() => {
+    const loadRewardTypes = async () => {
+      try {
+        const response = await fetch('/api/custom-reward-types/list')
+        const data = await response.json()
+        if (data.success && data.types) {
+          setRewardTypes(data.types || [])
+        }
+      } catch (err) {
+        console.error('Failed to load reward types:', err)
+      }
+    }
+    loadRewardTypes()
+  }, [])
+  
+  // 根据 type_id 或 type_key 获取奖励类型信息
+  const getRewardTypeInfo = (config: RewardConfigItem): { icon: string; name: string; unit: string } => {
+    const type = rewardTypes.find(rt => rt.id === config.type_id || rt.type_key === config.type_key)
+    if (type) {
+      return {
+        icon: type.icon,
+        name: type.display_name,
+        unit: config.unit || type.default_unit || ''
+      }
+    }
+    // 向后兼容：如果没有找到，使用默认映射
+    const defaultMap: Record<string, { icon: string; name: string }> = {
+      points: { icon: '⭐', name: '積分' },
+      money: { icon: '💰', name: '獎金' },
+      hearts: { icon: '❤️', name: '愛心' },
+      diamonds: { icon: '💎', name: '鑽石' },
+      gametime: { icon: '🎮', name: '遊戲時間' }
+    }
+    const defaultInfo = defaultMap[config.type_key] || { icon: '🎁', name: '獎勵' }
+    return {
+      icon: defaultInfo.icon,
+      name: defaultInfo.name,
+      unit: config.unit || ''
+    }
+  }
+  
   // Debug: Track window width and responsive classes
   const logRef = useRef(false)
   const rewardContainerRef = useRef<HTMLDivElement>(null)
@@ -87,8 +149,9 @@ export default function RuleCard({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const checkWidth = () => {
+        // window.innerWidth 返回的是 CSS 像素宽度（已考虑 viewport 缩放）
         const width = window.innerWidth
-        const isNarrow = width < 600
+        const isNarrow = width < 850
         setIsNarrowScreen(isNarrow)
         
         if (rewardContainerRef.current) {
@@ -107,10 +170,10 @@ export default function RuleCard({
         }
         
         if (!logRef.current) {
-          debugLog('RuleCard:effect', 'Component mounted, window width', { width, isLessThan600: isNarrow })
+          debugLog('RuleCard:effect', 'Component mounted, window width', { width, isLessThan850: isNarrow })
           logRef.current = true
         } else {
-          debugLog('RuleCard:resize', 'Window resized', { newWidth: width, isLessThan600: isNarrow })
+          debugLog('RuleCard:resize', 'Window resized', { newWidth: width, isLessThan850: isNarrow })
         }
       }
       
@@ -335,7 +398,7 @@ export default function RuleCard({
                 const width = window.innerWidth
                 debugLog('RuleCard:info-container', 'Rule info container', {
                   width,
-                  isLessThan600: width < 600,
+                  isLessThan850: width < 850,
                   className: `flex items-center justify-between gap-4 flex-wrap w-full ${isDraggable ? 'select-none' : ''}`
                 })
               }
@@ -361,12 +424,51 @@ export default function RuleCard({
                 </span>
               </div>
             </div>
-            {/* 獎金金額 - 使用 ref 動態設置樣式以確保換行 */}
+            {/* 獎勵內容 - 優先顯示 reward_config，否則顯示舊的 reward_formula/reward_amount */}
             <div 
               ref={rewardContainerRef}
               className={`text-right ${isDraggable ? 'select-none' : ''}`}
             >
-              {rule.reward_formula ? (
+              {rule.reward_config && Array.isArray(rule.reward_config) && rule.reward_config.length > 0 ? (
+                // 顯示多種獎勵配置 - 使用表格格式，窄屏時靠右顯示
+                <div className={`min-w-[200px] ${isNarrowScreen ? 'ml-auto' : ''}`}>
+                  <table className={`text-sm ${isNarrowScreen ? 'text-right ml-auto' : 'text-left'}`}>
+                    <tbody>
+                      {rule.reward_config.map((config, idx) => {
+                        const typeInfo = getRewardTypeInfo(config)
+                        const displayValue = config.formula 
+                          ? config.formula 
+                          : (config.amount !== null && config.amount !== undefined ? config.amount : 0)
+                        
+                        return (
+                          <tr key={idx} className={idx > 0 ? 'border-t border-gray-200' : ''}>
+                            <td className={`py-1 ${isNarrowScreen ? 'text-right' : 'pr-3'}`}>
+                              <div className={`flex items-center gap-1.5 ${isNarrowScreen ? 'justify-end' : ''}`}>
+                                <span className="text-base">{typeInfo.icon}</span>
+                                <span className={`font-medium text-gray-700 ${isDraggable ? 'select-none' : ''}`}>
+                                  {typeInfo.name}
+                                </span>
+                              </div>
+                            </td>
+                            <td className={`py-1 ${isNarrowScreen ? 'text-right pl-3' : ''}`}>
+                              {config.formula ? (
+                                <span className={`font-semibold text-green-600 ${isDraggable ? 'select-none' : ''}`}>
+                                  {displayValue}
+                                </span>
+                              ) : (
+                                <span className={`font-semibold text-green-600 ${isDraggable ? 'select-none' : ''}`}>
+                                  {displayValue}{typeInfo.unit && ` ${typeInfo.unit}`}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : rule.reward_formula ? (
+                // 向後兼容：顯示公式
                 <div className="flex flex-col items-end">
                   <p className={`text-xs font-semibold text-gray-500 ${isDraggable ? 'select-none' : ''}`}>
                     {t('formula') || '公式'}
@@ -376,6 +478,7 @@ export default function RuleCard({
                   </p>
                 </div>
               ) : (
+                // 向後兼容：顯示固定金額
                 <p className="text-2xl font-bold text-green-600">
                   ${rule.reward_amount ?? 0}
                 </p>

@@ -18,7 +18,7 @@ interface Props {
   recordsTitle: string
   allStudents: Student[]
   basePath?: string
-  currentPage?: 'records' | 'transactions' | 'subjects' | 'settings'
+  currentPage?: 'records' | 'transactions' | 'subjects' | 'rewards' | 'settings'
   showHeader?: boolean
 }
 
@@ -73,7 +73,7 @@ export default function StudentSidebarHeader({
 
       {/* 快速導覽/學生列表切換按鈕 */}
       <div className="relative w-full mt-3 pb-4" id="student-switch-button-container">
-        <div className="w-full bg-white/60 dark:bg-white/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 dark:border-white/40 shadow-sm overflow-hidden overflow-x-auto">
+        <div className="w-full bg-white/60 bg-white/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 border-white/40 shadow-sm overflow-hidden overflow-x-auto">
           {/* 快速導覽按鈕 */}
           <button
             onClick={(e) => {
@@ -83,8 +83,8 @@ export default function StudentSidebarHeader({
             ref={navButtonRef}
             className={`flex-1 px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
               displayMode === 'navigation'
-                ? 'bg-white dark:bg-white shadow-sm font-bold text-slate-800 dark:text-slate-800'
-                : 'font-medium text-slate-500 dark:text-slate-500 hover:bg-white/50 dark:hover:bg-white/50'
+                ? 'bg-white shadow-sm font-bold text-slate-800'
+                : 'font-medium text-slate-500 hover:bg-white/50'
             }`}
           >
             {locale === 'zh-TW' ? '快速導覽' : 'Quick Navigation'}
@@ -99,8 +99,8 @@ export default function StudentSidebarHeader({
             ref={studentButtonRef}
             className={`flex-1 px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
               displayMode === 'students'
-                ? 'bg-white dark:bg-white shadow-sm font-bold text-slate-800 dark:text-slate-800'
-                : 'font-medium text-slate-500 dark:text-slate-500 hover:bg-white/50 dark:hover:bg-white/50'
+                ? 'bg-white shadow-sm font-bold text-slate-800'
+                : 'font-medium text-slate-500 hover:bg-white/50'
             }`}
           >
             {locale === 'zh-TW' ? '學生列表' : 'Student List'}

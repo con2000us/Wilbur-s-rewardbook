@@ -19,11 +19,6 @@
   --color-accent-cyan: #06B6D4;
 }
 
-.dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -70,6 +65,14 @@ body {
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.6); }
 
+/* Drag handle styling */
+.drag-handle {
+  cursor: grab;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+
 /* Glass panel style - matching passwook.html */
 .glass-panel {
   background: rgba(255, 255, 255, 0.45);
@@ -77,12 +80,6 @@ body {
   -webkit-backdrop-filter: blur(32px);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.1);
-}
-
-.dark .glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Glass card style - matching passwook.html */
@@ -113,16 +110,27 @@ body {
   box-shadow: 0 15px 30px -5px rgba(0,0,0,0.08);
 }
 
-.dark .glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+/* Glass card without hover effect - for navigation menu */
+.glass-card-no-hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  position: relative;
+  overflow: hidden;
 }
 
-/* 修復 dark mode 下列印按鈕的邊框顏色 - 改為白色邊框和白色背景 */
-.dark .print-button-card,
-.dark a.glass-card[href*="/print"] {
-  border-color: rgba(255, 255, 255, 0.3) !important; /* white */
-  background: white !important; /* 確保背景是白色 */
+/* Sidebar item active state - matching example HTML */
+.sidebar-item-active {
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Print button styles - 確保背景是白色 */
+.print-button-card,
+a.glass-card[href*="/print"] {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  background: white !important;
 }
 
 /* Glass button style - matching passwook.html */
@@ -190,26 +198,6 @@ select option {
   color: #171717 !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  input[type="text"],
-  input[type="number"],
-  input[type="password"],
-  input[type="email"],
-  input[type="date"],
-  input[type="time"],
-  input[type="datetime-local"],
-  textarea,
-  select {
-    background-color: #ffffff !important;
-    color: #171717 !important;
-  }
-
-  /* 確保 select 的 option 在深色模式下也有良好的對比度 */
-  select option {
-    background-color: #ffffff !important;
-    color: #171717 !important;
-  }
-}
 
 /* 規則保存後的閃爍動畫 */
 @keyframes saveFlash {
@@ -355,27 +343,6 @@ select option {
   color: rgb(106 153 224 / var(--tw-text-opacity, 1)) !important;
 }
 
-/* 修復深色模式下按鈕和標籤的文字顏色問題 - 僅在 .dark 模式啟用 */
-
-/* 使用 .dark 類別作為備用方案 */
-.dark #student-switch-button-container button.bg-white.shadow-sm {
-  background-color: rgb(51 65 85) !important; /* slate-700 */
-  color: rgb(255 255 255) !important;
-}
-
-.dark button.bg-white.shadow-sm.text-slate-800 {
-  background-color: rgb(51 65 85) !important; /* slate-700 */
-  color: rgb(255 255 255) !important;
-}
-
-.dark div.bg-white.dark\:bg-slate-700 button,
-.dark div[class*="dark:bg-slate-700"] button.text-slate-800 {
-  color: rgb(255 255 255) !important;
-}
-
-.dark .glass-card span.text-5xl.text-slate-700 {
-  color: rgb(255 255 255) !important;
-}
 
 @keyframes slideDown {
   from {
@@ -432,15 +399,20 @@ select option {
   animation: fadeInUp 0.5s ease-out forwards;
 }
 
+/* 快速導覽 > 按鈕跳動：整體向下 8px，小幅度跳動 */
+@keyframes bounce-down {
+  0%, 100% { transform: translateY(8px); }
+  50% { transform: translateY(4px); }
+}
+.animate-bounce-down {
+  animation: bounce-down 0.6s ease-in-out infinite;
+}
+
 /* Sunrise theme colors - matching subject.htm */
 .sunrise-gradient {
   background: linear-gradient(-45deg, #BAE6FD, #FBCFE8, #FECACA, #DDD6FE);
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
-}
-
-.dark .sunrise-gradient {
-  background: linear-gradient(-45deg, #0f172a, #312e81, #4c1d95, #1e1b4b);
 }
 
 .sunrise-pink {

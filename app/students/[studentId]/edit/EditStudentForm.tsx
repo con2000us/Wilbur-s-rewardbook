@@ -710,7 +710,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
               {t('selectEmoji')}
             </label>
             
-            {/* 分類標籤 */}
+            {/* 獎勵類別 */}
             <div className="flex gap-2 mb-3 flex-wrap">
               {Object.keys(EMOJI_CATEGORIES).map(category => (
                 <button

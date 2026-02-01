@@ -82,16 +82,16 @@ export default function SidebarContent({
       {/* Profile Section - 已由 StudentSidebarHeader 處理，這裡只保留統計卡片 */}
       
       {/* Average Score */}
-      <div className="glass-card p-6 rounded-3xl shadow-sm border border-blue-50/50 dark:border-slate-700/50">
+      <div className="glass-card p-6 rounded-3xl shadow-sm border border-blue-50/50 border-slate-700/50">
         <div className="flex items-center gap-2 text-blue-500 mb-2">
           <span className="material-icons-outlined text-sm">leaderboard</span>
           <span className="text-xs font-bold">{t('totalAverageScore')}</span>
         </div>
         <div className="flex items-baseline gap-1 mb-4">
-          <span ref={totalAverageRef} className="text-5xl font-black text-slate-700 dark:text-slate-700">{rewardBreakdown.totalAverage?.toFixed(1) || '0.0'}</span>
-          <span className="text-slate-400 dark:text-slate-400 font-medium">{t('points')}</span>
+          <span ref={totalAverageRef} className="text-5xl font-black text-slate-700 text-slate-700">{rewardBreakdown.totalAverage?.toFixed(1) || '0.0'}</span>
+          <span className="text-slate-400 text-slate-400 font-medium">{t('points')}</span>
         </div>
-        <div className="w-full h-2 bg-slate-100 dark:bg-slate-100 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-slate-100 bg-slate-100 rounded-full overflow-hidden">
           <div 
             className="h-full bg-cyan-400 transition-all duration-1000" 
             style={{ width: `${Math.min(rewardBreakdown.totalAverage || 0, 100)}%` }}
@@ -101,16 +101,16 @@ export default function SidebarContent({
 
       {/* Mini Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="glass-card p-4 rounded-3xl text-center border border-blue-50/50 dark:border-slate-700/50">
-          <span className="block text-xs text-slate-400 dark:text-slate-400 mb-1">{t('totalSubjects')}</span>
-          <span className="text-xl font-black text-slate-700 dark:text-slate-700">{subjects.length}</span>
+        <div className="glass-card p-4 rounded-3xl text-center border border-blue-50/50 border-slate-700/50">
+          <span className="block text-xs text-slate-400 text-slate-400 mb-1">{t('totalSubjects')}</span>
+          <span className="text-xl font-black text-slate-700 text-slate-700">{subjects.length}</span>
         </div>
-        <div className="glass-card p-4 rounded-3xl text-center border border-blue-50/50 dark:border-slate-700/50">
-          <span className="block text-xs text-slate-400 dark:text-slate-400 mb-1">{t('totalAssessments')}</span>
-          <span className="text-xl font-black text-slate-700 dark:text-slate-700">{filteredAssessments.length}</span>
+        <div className="glass-card p-4 rounded-3xl text-center border border-blue-50/50 border-slate-700/50">
+          <span className="block text-xs text-slate-400 text-slate-400 mb-1">{t('totalAssessments')}</span>
+          <span className="text-xl font-black text-slate-700 text-slate-700">{filteredAssessments.length}</span>
         </div>
-        <div className="glass-card p-4 rounded-3xl text-center border border-blue-50/50 dark:border-slate-700/50">
-          <span className="block text-xs text-slate-400 dark:text-slate-400 mb-1">{t('completed')}</span>
+        <div className="glass-card p-4 rounded-3xl text-center border border-blue-50/50 border-slate-700/50">
+          <span className="block text-xs text-slate-400 text-slate-400 mb-1">{t('completed')}</span>
           <span className="text-xl font-black text-emerald-500">
             {filteredAssessments.length > 0
               ? `${Math.round((filteredAssessments.filter(a => a.status === 'completed').length / filteredAssessments.length) * 100)}%`
@@ -118,6 +118,20 @@ export default function SidebarContent({
           </span>
         </div>
       </div>
+
+      {/* Rewards Management Button */}
+      <Link
+        href={`/student/${studentId}/rewards`}
+        className="glass-card p-4 rounded-3xl flex flex-col items-center gap-2 border border-blue-50/50 transition-all group hover:bg-blue-50/50"
+      >
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-3xl">
+          🎁
+        </div>
+        <div className="text-center">
+          <div className="text-sm font-bold text-slate-700 text-slate-200">{locale === 'zh-TW' ? '獎勵管理' : 'Reward Management'}</div>
+          <div className="text-xs text-slate-500 text-slate-400">{locale === 'zh-TW' ? '管理學生的獎勵類型' : 'Manage student reward types'}</div>
+        </div>
+      </Link>
 
       {/* Print Button */}
       {(() => {
@@ -141,7 +155,7 @@ export default function SidebarContent({
           <Link
             href={`/student/${studentId}/print?${params.toString()}`}
             target="_blank"
-            className="glass-card print-button-card hover:bg-slate-50 dark:hover:bg-slate-800 p-4 rounded-3xl flex flex-col items-center gap-2 border border-blue-50/50 transition-all group"
+            className="glass-card print-button-card hover:bg-slate-50 p-4 rounded-3xl flex flex-col items-center gap-2 border border-blue-50/50 transition-all group"
             style={{ background: 'white' }}
           >
             <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">

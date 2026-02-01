@@ -275,7 +275,7 @@ export default function StudentList({ initialStudents }: Props) {
                 >
                   ⋮⋮
                 </div>
-
+                
                 <div className="relative z-10 flex flex-col items-center justify-between pt-[30px] pb-6 px-[18px] h-full">
                   {/* 個人資料區域 */}
                   <div className="flex flex-col items-center gap-3 w-full cursor-pointer flex-shrink-0">

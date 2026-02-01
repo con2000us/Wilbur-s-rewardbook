@@ -15,11 +15,11 @@ interface Props {
   onClose: () => void
   currentStudentId: string
   allStudents: Student[]
-  currentPage?: 'records' | 'transactions' | 'subjects' | 'settings'
+  currentPage?: 'records' | 'transactions' | 'subjects' | 'rewards' | 'settings'
   displayMode?: 'navigation' | 'students'
 }
 
-type HoverAction = 'records' | 'transactions' | 'subjects' | 'settings' | null
+type HoverAction = 'records' | 'transactions' | 'subjects' | 'rewards' | 'settings' | null
 
 export default function StudentSwitchModal({ 
   isOpen, 
@@ -36,10 +36,13 @@ export default function StudentSwitchModal({
   const tTransaction = useTranslations('transaction')
   const tHome = useTranslations('home')
   const tNav = useTranslations('nav')
+  const tCommon = useTranslations('common')
   const locale = useLocale()
 
   // 追蹤每個學生的 hover 狀態
   const [hoveredActions, setHoveredActions] = useState<Record<string, HoverAction>>({})
+  // 二層式：展開的學生 ID（點擊 >>> 後顯示該學生的頁面選單）
+  const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null)
 
   const getActionText = (action: HoverAction) => {
     switch (action) {
@@ -49,6 +52,8 @@ export default function StudentSwitchModal({
         return tTransaction('passbook')
       case 'subjects':
         return tHome('features.subjects.title')
+      case 'rewards':
+        return locale === 'zh-TW' ? '獎勵管理' : 'Reward Management'
       case 'settings':
         return tNav('settings')
       default:
@@ -132,9 +137,9 @@ export default function StudentSwitchModal({
     }
   }
 
-  const handleSwitchStudent = (targetStudentId: string) => {
-    router.push(`/student/${targetStudentId}`)
-    // 不關閉列表，讓用戶可以繼續操作
+  // 點擊學生名稱/頭像：跳到該學生的「目前頁面」對應頁面（與 currentPage 同類型）
+  const handleSwitchStudentToCurrentPage = (targetStudentId: string) => {
+    handleSwitchWithAction(targetStudentId, currentPage)
   }
 
   const handleSwitchWithAction = (targetStudentId: string, page: string) => {
@@ -144,6 +149,8 @@ export default function StudentSwitchModal({
       router.push(`/student/${targetStudentId}/transactions`)
     } else if (page === 'subjects') {
       router.push(`/student/${targetStudentId}/subjects`)
+    } else if (page === 'rewards') {
+      router.push(`/student/${targetStudentId}/rewards`)
     } else if (page === 'settings') {
       // 觸發自定義事件來打開設定 Modal
       window.dispatchEvent(new CustomEvent('openStudentSettings', { 
@@ -170,6 +177,8 @@ export default function StudentSwitchModal({
       router.push(`/student/${currentStudentId}/transactions`)
     } else if (page === 'subjects') {
       router.push(`/student/${currentStudentId}/subjects`)
+    } else if (page === 'rewards') {
+      router.push(`/student/${currentStudentId}/rewards`)
     } else if (page === 'settings') {
       // 觸發自定義事件來打開設定 Modal
       window.dispatchEvent(new CustomEvent('openStudentSettings', { 
@@ -186,7 +195,7 @@ export default function StudentSwitchModal({
     <div
       ref={dropdownRef}
       className="relative w-full min-w-0"
-      style={{ paddingTop: '5px' }}
+      style={{ paddingTop: '20px' }}
     >
       {/* 學生列表 - 無外層包裝，直接向下展開，有展開/收起動畫 */}
       {/* 高度設定位置：下方 max-h-[600px] 可調整下拉選單的最大高度 */}
@@ -196,7 +205,6 @@ export default function StudentSwitchModal({
           (isOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none')
         }
         style={{
-          borderBottom: '1px solid rgba(255, 255, 255, 0.5)',
           scrollbarColor: 'rgb(209 213 219) transparent',
           scrollbarWidth: 'thin',
           overflowY: isOpen ? 'auto' : 'hidden',
@@ -205,229 +213,230 @@ export default function StudentSwitchModal({
       >
         {/* 根據 displayMode 顯示不同內容 */}
         {displayMode === 'navigation' ? (
-          /* 快速導覽按鈕 - 學習記錄、獎金存摺、科目管理、設定 */
-          <div className="mb-4">
-          {/* 學習記錄 */}
-          <button
-            onClick={() => currentPage !== 'records' && handleQuickNav('records')}
-            disabled={currentPage === 'records'}
-            className={`w-full flex items-center justify-between p-2.5 transition-all duration-300 quick-nav-button border-b border-transparent ${
-              currentPage === 'records' 
-                ? 'cursor-default' 
-                : 'cursor-pointer group hover:translate-y-[-4px] hover:border-gray-300 dark:hover:border-gray-600'
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-blue-200 dark:bg-blue-700 text-blue-700 dark:text-blue-200 transition-colors">
-                <span className="material-symbols-outlined text-lg">assessment</span>
-              </div>
-              <span className="text-base font-medium transition-all quick-nav-text group-hover:text-blue-600 dark:group-hover:text-blue-400" style={{ color: '#1f2937', textShadow: 'transparent' }}>
-                <span className="group-hover:drop-shadow-[0_2px_4px_rgba(59,130,246,0.4)]">{tStudent('recordsTitle')}</span>
-              </span>
-            </div>
+          /* 快速導覽選單 */
+          <nav className="glass-card-no-hover rounded-3xl p-4 flex flex-col gap-2">
+            {/* 學習記錄 */}
             {currentPage === 'records' ? (
-              <span className="text-xl font-bold text-blue-600 dark:text-blue-400 transition-all" style={{ textShadow: '0 2px 4px rgba(59, 130, 246, 0.5)' }}>▶</span>
-            ) : (
-            <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
-            )}
-          </button>
-
-          {/* 分隔線 */}
-          <div className="h-[0.5px] mx-4" style={{ backgroundColor: '#e2e8f0' }}></div>
-
-          {/* 獎金存摺 */}
-          <button
-            onClick={() => currentPage !== 'transactions' && handleQuickNav('transactions')}
-            disabled={currentPage === 'transactions'}
-            className={`w-full flex items-center justify-between p-2.5 transition-all duration-300 quick-nav-button border-b border-transparent ${
-              currentPage === 'transactions' 
-                ? 'cursor-default' 
-                : 'cursor-pointer group hover:translate-y-[-4px] hover:border-gray-300 dark:hover:border-gray-600'
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300 transition-colors">
-                <span className="material-symbols-outlined text-lg">attach_money</span>
-              </div>
-              <span className="text-base font-medium transition-all quick-nav-text group-hover:text-green-600 dark:group-hover:text-green-400" style={{ color: '#1f2937', textShadow: 'transparent' }}>
-                <span className="group-hover:drop-shadow-[0_2px_4px_rgba(22,163,74,0.4)]">{tTransaction('passbook')}</span>
-              </span>
-            </div>
-            {currentPage === 'transactions' ? (
-              <span className="text-xl font-bold text-green-600 dark:text-green-400 transition-all" style={{ textShadow: '0 2px 4px rgba(22, 163, 74, 0.5)' }}>▶</span>
-            ) : (
-            <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
-            )}
-          </button>
-
-          {/* 分隔線 */}
-          <div className="h-[0.5px] mx-4" style={{ backgroundColor: '#e2e8f0' }}></div>
-
-          {/* 科目管理 */}
-          <button
-            onClick={() => currentPage !== 'subjects' && handleQuickNav('subjects')}
-            disabled={currentPage === 'subjects'}
-            className={`w-full flex items-center justify-between p-2.5 transition-all duration-300 quick-nav-button border-b border-transparent ${
-              currentPage === 'subjects' 
-                ? 'cursor-default' 
-                : 'cursor-pointer group hover:translate-y-[-4px] hover:border-gray-300 dark:hover:border-gray-600'
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-orange-100 dark:bg-orange-800 text-orange-600 dark:text-orange-300 transition-colors">
-                <span className="material-symbols-outlined text-lg">menu_book</span>
-              </div>
-              <span className="text-base font-medium transition-all quick-nav-text group-hover:text-orange-600 dark:group-hover:text-orange-400" style={{ color: '#1f2937', textShadow: 'transparent' }}>
-                <span className="group-hover:drop-shadow-[0_2px_4px_rgba(234,88,12,0.4)]">{tHome('features.subjects.title')}</span>
-              </span>
-            </div>
-            {currentPage === 'subjects' ? (
-              <span className="text-xl font-bold text-orange-600 dark:text-orange-400 transition-all" style={{ textShadow: '0 2px 4px rgba(234, 88, 12, 0.5)' }}>▶</span>
-            ) : (
-            <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
-            )}
-          </button>
-
-          {/* 分隔線 */}
-          <div className="h-[0.5px] mx-4" style={{ backgroundColor: '#e2e8f0' }}></div>
-
-          {/* 學生設置 */}
-          <button
-            onClick={() => currentPage !== 'settings' && handleQuickNav('settings')}
-            disabled={currentPage === 'settings'}
-            className={`w-full flex items-center justify-between p-2.5 transition-all duration-300 quick-nav-button border-b border-transparent ${
-              currentPage === 'settings' 
-                ? 'cursor-default' 
-                : 'cursor-pointer group hover:translate-y-[-4px] hover:border-gray-300 dark:hover:border-gray-600'
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-300 transition-colors">
-                <span className="material-symbols-outlined text-lg">settings</span>
-              </div>
-              <span className="text-base font-medium transition-all quick-nav-text group-hover:text-purple-600 dark:group-hover:text-purple-400" style={{ color: '#1f2937', textShadow: 'transparent' }}>
-                <span className="group-hover:drop-shadow-[0_2px_4px_rgba(147,51,234,0.4)]">{locale === 'zh-TW' ? '學生設置' : 'Student Settings'}</span>
-              </span>
-            </div>
-            {currentPage === 'settings' ? (
-              <span className="text-xl font-bold text-purple-600 dark:text-purple-400 transition-all" style={{ textShadow: '0 2px 4px rgba(147, 51, 234, 0.5)' }}>▶</span>
-            ) : (
-              <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
-            )}
-          </button>
-
-          {/* 分隔線 */}
-          <div className="h-[0.5px] mx-4" style={{ backgroundColor: '#e2e8f0' }}></div>
-
-          {/* 返回首頁 */}
-          <button
-            onClick={() => {
-              router.push('/')
-            }}
-            className="w-full flex items-center justify-between p-2.5 transition-all duration-300 cursor-pointer group hover:translate-y-[-4px] quick-nav-button border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-indigo-500 dark:bg-indigo-600 text-white transition-colors shadow-sm">
-                <span className="material-icons-outlined text-xl">home</span>
-              </div>
-              <span className="text-base font-medium transition-all quick-nav-text group-hover:text-indigo-600 dark:group-hover:text-indigo-400" style={{ color: '#1f2937', textShadow: 'transparent' }}>
-                <span className="group-hover:drop-shadow-[0_2px_4px_rgba(99,102,241,0.4)]">{locale === 'zh-TW' ? '返回首頁' : 'Back to Home'}</span>
-              </span>
-            </div>
-            <span className="material-symbols-outlined transition-all group-hover:translate-x-1" style={{ color: '#94a3b8' }}>chevron_right</span>
-          </button>
-        </div>
-        ) : (
-          /* 學生列表 */
-          <div className="space-y-3 pt-3">
-          {/* 其他學生列表 - 使用與頁面一致的玻璃態樣式 */}
-          {otherStudents.map((student) => {
-            const avatar = parseAvatar(student.avatar_url, student.name)
-            const hoveredAction = hoveredActions[student.id] || 'records'
-            return (
-              <div
-                key={student.id}
-                className="glass-card-base w-full relative overflow-hidden rounded-2xl p-0 group transition-all duration-300 hover:translate-y-[-4px] hover:bg-white/35 hover:border-white/60 hover:shadow-lg"
+              <button
+                disabled
+                className="flex items-center gap-3 p-3 rounded-2xl transition-all relative sidebar-item-active text-primary cursor-default"
               >
-                <button
-                  onClick={() => handleSwitchStudent(student.id)}
-                  className="w-full flex items-center justify-between p-4 relative z-10 transition-transform duration-300 list-item-content slide-panel-open cursor-pointer"
-                >
-                  <div className="flex items-center gap-4">
-                    <div 
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-sm transition-transform duration-300 group-hover:scale-110"
-                      style={{ background: avatar.gradientStyle }}
-                    >
-                      {avatar.emoji}
-                    </div>
-                    <div className="text-left">
-                      <h3 className="text-base font-bold other-student-name-text transition-colors" style={{ color: '#1f2937' }}>
-                        {student.name}
-                      </h3>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">
-                        {getActionText(hoveredAction)}
-                      </p>
+                <span className="material-icons-outlined text-blue-500 bg-blue-50 p-2 rounded-xl">analytics</span>
+                <span className="font-medium">{tStudent('recordsTitle')}</span>
+                <div className="absolute -right-2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[12px] border-r-primary"></div>
+              </button>
+            ) : (
+              <a
+                href={`/student/${currentStudentId}`}
+                className="flex items-center gap-3 p-3 rounded-2xl transition-all relative text-slate-600 hover:bg-white/50"
+              >
+                <span className="material-icons-outlined text-blue-500 bg-blue-50 p-2 rounded-xl">analytics</span>
+                <span className="font-medium">{tStudent('recordsTitle')}</span>
+                <span className="material-icons-outlined ml-auto text-slate-400 text-sm">chevron_right</span>
+              </a>
+            )}
+
+            {/* 獎金存摺 */}
+            {currentPage === 'transactions' ? (
+              <button
+                disabled
+                className="flex items-center gap-3 p-3 rounded-2xl transition-all relative sidebar-item-active text-primary cursor-default"
+              >
+                <span className="material-icons-outlined text-green-500 bg-green-50 p-2 rounded-xl">account_balance_wallet</span>
+                <span className="font-medium">{tTransaction('passbook')}</span>
+                <div className="absolute -right-2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[12px] border-r-primary"></div>
+              </button>
+            ) : (
+              <a
+                href={`/student/${currentStudentId}/transactions`}
+                className="flex items-center gap-3 p-3 rounded-2xl transition-all relative text-slate-600 hover:bg-white/50"
+              >
+                <span className="material-icons-outlined text-green-500 bg-green-50 p-2 rounded-xl">account_balance_wallet</span>
+                <span className="font-medium">{tTransaction('passbook')}</span>
+                <span className="material-icons-outlined ml-auto text-slate-400 text-sm">chevron_right</span>
+              </a>
+            )}
+
+            {/* 科目管理 */}
+            {currentPage === 'subjects' ? (
+              <button
+                disabled
+                className="flex items-center gap-3 p-3 rounded-2xl transition-all relative sidebar-item-active text-primary cursor-default"
+              >
+                <span className="material-icons-outlined text-orange-500 bg-orange-50 p-2 rounded-xl">auto_stories</span>
+                <span className="font-medium">{tHome('features.subjects.title')}</span>
+                <div className="absolute -right-2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[12px] border-r-primary"></div>
+              </button>
+            ) : (
+              <a
+                href={`/student/${currentStudentId}/subjects`}
+                className="flex items-center gap-3 p-3 rounded-2xl transition-all relative text-slate-600 hover:bg-white/50"
+              >
+                <span className="material-icons-outlined text-orange-500 bg-orange-50 p-2 rounded-xl">auto_stories</span>
+                <span className="font-medium">{tHome('features.subjects.title')}</span>
+                <span className="material-icons-outlined ml-auto text-slate-400 text-sm">chevron_right</span>
+              </a>
+            )}
+
+            {/* 獎勵管理 */}
+            {currentPage === 'rewards' ? (
+              <button
+                disabled
+                className="flex items-center gap-3 p-3 rounded-2xl transition-all relative sidebar-item-active text-primary cursor-default"
+              >
+                <span className="material-icons-outlined text-purple-500 bg-purple-50 p-2 rounded-xl">card_giftcard</span>
+                <span className="font-medium">{locale === 'zh-TW' ? '獎勵管理' : 'Reward Management'}</span>
+                <div className="absolute -right-2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[12px] border-r-primary"></div>
+              </button>
+            ) : (
+              <a
+                href={`/student/${currentStudentId}/rewards`}
+                className="flex items-center gap-3 p-3 rounded-2xl transition-all relative text-slate-600 hover:bg-white/50"
+              >
+                <span className="material-icons-outlined text-purple-500 bg-purple-50 p-2 rounded-xl">card_giftcard</span>
+                <span className="font-medium">{locale === 'zh-TW' ? '獎勵管理' : 'Reward Management'}</span>
+                <span className="material-icons-outlined ml-auto text-slate-400 text-sm">chevron_right</span>
+              </a>
+            )}
+
+            {/* 學生設置 */}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                window.dispatchEvent(new CustomEvent('openStudentSettings', { 
+                  detail: { studentId: currentStudentId } 
+                }))
+              }}
+              className="flex items-center gap-3 p-3 rounded-2xl text-slate-600 hover:bg-white/50 transition-all"
+            >
+              <span className="material-icons-outlined text-purple-500 bg-purple-50 p-2 rounded-xl">settings</span>
+              <span className="font-medium">{tNav('settings')}</span>
+              <span className="material-icons-outlined ml-auto text-slate-400 text-sm">chevron_right</span>
+            </a>
+
+            {/* 返回首頁 */}
+            <a
+              href="/"
+              className="flex items-center gap-3 p-3 rounded-2xl text-slate-600 hover:bg-white/50 transition-all"
+            >
+                <span className="material-icons-outlined text-blue-500 bg-blue-50 p-2 rounded-xl">home</span>
+              <span className="font-medium">{tCommon('home')}</span>
+              <span className="material-icons-outlined ml-auto text-slate-400 text-sm">chevron_right</span>
+            </a>
+          </nav>
+        ) : (
+          /* 學生列表：hover 顯示目前頁面小標題；點名稱跳到該學生對應頁；點「更多」展開下拉選單 */
+          <div className="space-y-2 pt-3 pb-[5px]">
+            {otherStudents.map((student) => {
+              const avatar = parseAvatar(student.avatar_url, student.name)
+              const isExpanded = expandedStudentId === student.id
+              return (
+                <div key={student.id} className="w-full">
+                  {/* 第一層：學生項目 - hover 時名稱下顯示目前頁面小字；點名稱區跳到該學生對應頁 */}
+                  <div
+                    className="glass-card-base w-full relative overflow-hidden rounded-2xl p-0 group transition-all duration-300 hover:translate-y-[-2px] hover:bg-white/35 hover:border-white/60 hover:shadow-lg"
+                  >
+                    <div className="w-full flex items-center justify-between p-4 relative z-10">
+                      <button
+                        onClick={() => handleSwitchStudentToCurrentPage(student.id)}
+                        className="flex items-center gap-4 flex-1 min-w-0 text-left cursor-pointer"
+                      >
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-sm transition-transform duration-300 group-hover:scale-105 flex-shrink-0"
+                          style={{ background: avatar.gradientStyle }}
+                        >
+                          {avatar.emoji}
+                        </div>
+                        <div className="flex flex-col items-start min-w-0">
+                          <h3 className="text-base font-bold truncate w-full" style={{ color: '#1f2937' }}>
+                            {student.name}
+                          </h3>
+                          {/* hover 時在名稱下顯示目前頁面的小字標題 */}
+                          <span className="text-xs text-slate-500 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {getActionText(currentPage)}
+                          </span>
+                        </div>
+                      </button>
+                      {/* 帶外框的「更多」按鈕：點擊展開該學生的頁面選單 */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setExpandedStudentId(prev => prev === student.id ? null : student.id)
+                        }}
+                        className="flex items-center justify-center px-3 py-1.5 rounded-lg border border-slate-300/80 bg-white/50 text-slate-600 text-sm font-medium hover:bg-white/80 hover:border-slate-400 transition-colors cursor-pointer shrink-0 ml-2"
+                        title={locale === 'zh-TW' ? '展開下拉選單' : 'Expand dropdown menu'}
+                      >
+                        {locale === 'zh-TW' ? '更多' : 'More'}
+                      </button>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 group-hover:text-indigo-400 dark:group-hover:text-indigo-500 group-hover:translate-x-1 transition-all">chevron_right</span>
-                </button>
 
-                {/* Hover 覆蓋動畫 - 只保留三個連結：獎金存摺、科目管理、學生設定 */}
-                <div className="absolute inset-y-0 right-0 w-36 bg-gradient-to-l from-pink-50/90 to-transparent dark:from-pink-900/30 flex items-center justify-around space-x-2 px-2 translate-x-full opacity-0 transition-all duration-300 list-item-actions group-hover:translate-x-[0px] group-hover:opacity-100 z-10">
-                  <button
-                    onMouseEnter={() => setHoveredActions(prev => ({ ...prev, [student.id]: 'transactions' }))}
-                    onMouseLeave={() => setHoveredActions(prev => ({ ...prev, [student.id]: 'records' }))}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleSwitchWithAction(student.id, 'transactions')
-                    }}
-                    className="w-10 h-10 rounded-full flex items-center justify-center border border-white/80 hover:bg-green-100 dark:hover:bg-green-800 text-green-600 dark:text-green-300 transition-colors cursor-pointer"
-                    title={tTransaction('passbook')}
+                  {/* 第二層：該學生的相關頁面選單（點擊 >>> 後向下展開） */}
+                  <div
+                    className={isExpanded ? 'max-h-[400px] opacity-100 overflow-hidden' : 'max-h-0 opacity-0 overflow-hidden'}
+                    style={{ transition: 'max-height 0.3s ease-out, opacity 0.2s ease-out' }}
                   >
-                    <span className="material-symbols-outlined text-lg">attach_money</span>
-                  </button>
-                  <button
-                    onMouseEnter={() => setHoveredActions(prev => ({ ...prev, [student.id]: 'subjects' }))}
-                    onMouseLeave={() => setHoveredActions(prev => ({ ...prev, [student.id]: 'records' }))}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleSwitchWithAction(student.id, 'subjects')
-                    }}
-                    className="w-10 h-10 rounded-full flex items-center justify-center border border-white/80 hover:bg-orange-100 dark:hover:bg-orange-800 text-orange-600 dark:text-orange-300 transition-colors cursor-pointer"
-                    title={tHome('features.subjects.title')}
-                  >
-                    <span className="material-symbols-outlined text-lg">menu_book</span>
-                  </button>
-                  <button
-                    onMouseEnter={() => setHoveredActions(prev => ({ ...prev, [student.id]: 'settings' }))}
-                    onMouseLeave={() => setHoveredActions(prev => ({ ...prev, [student.id]: 'records' }))}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleSwitchWithAction(student.id, 'settings')
-                    }}
-                    className="w-10 h-10 rounded-full flex items-center justify-center border border-white/80 hover:bg-purple-100 dark:hover:bg-purple-800 text-purple-600 dark:text-purple-300 transition-colors cursor-pointer"
-                    title={tNav('settings')}
-                  >
-                    <span className="material-symbols-outlined text-lg">settings</span>
-                  </button>
+                    <nav className="glass-card-no-hover rounded-2xl p-3 mt-1 ml-2 mr-0 flex flex-col gap-1 border border-white/40">
+                      <a
+                        href={`/student/${student.id}`}
+                        onClick={(e) => { e.preventDefault(); handleSwitchWithAction(student.id, 'records') }}
+                        className="flex items-center gap-2 py-2 px-3 rounded-xl text-slate-600 hover:bg-primary/15 hover:text-primary transition-colors text-sm cursor-pointer"
+                      >
+                        <span className="material-icons-outlined text-blue-500 text-lg">analytics</span>
+                        <span>{tStudent('recordsTitle')}</span>
+                      </a>
+                      <a
+                        href={`/student/${student.id}/transactions`}
+                        onClick={(e) => { e.preventDefault(); handleSwitchWithAction(student.id, 'transactions') }}
+                        className="flex items-center gap-2 py-2 px-3 rounded-xl text-slate-600 hover:bg-primary/15 hover:text-primary transition-colors text-sm cursor-pointer"
+                      >
+                        <span className="material-icons-outlined text-green-500 text-lg">account_balance_wallet</span>
+                        <span>{tTransaction('passbook')}</span>
+                      </a>
+                      <a
+                        href={`/student/${student.id}/subjects`}
+                        onClick={(e) => { e.preventDefault(); handleSwitchWithAction(student.id, 'subjects') }}
+                        className="flex items-center gap-2 py-2 px-3 rounded-xl text-slate-600 hover:bg-primary/15 hover:text-primary transition-colors text-sm cursor-pointer"
+                      >
+                        <span className="material-icons-outlined text-orange-500 text-lg">auto_stories</span>
+                        <span>{tHome('features.subjects.title')}</span>
+                      </a>
+                      <a
+                        href={`/student/${student.id}/rewards`}
+                        onClick={(e) => { e.preventDefault(); handleSwitchWithAction(student.id, 'rewards') }}
+                        className="flex items-center gap-2 py-2 px-3 rounded-xl text-slate-600 hover:bg-primary/15 hover:text-primary transition-colors text-sm cursor-pointer"
+                      >
+                        <span className="material-icons-outlined text-purple-500 text-lg">card_giftcard</span>
+                        <span>{locale === 'zh-TW' ? '獎勵管理' : 'Reward Management'}</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); handleOpenSettings(e, student.id) }}
+                        className="flex items-center gap-2 py-2 px-3 rounded-xl text-slate-600 hover:bg-primary/15 hover:text-primary transition-colors text-sm cursor-pointer w-full text-left"
+                      >
+                        <span className="material-icons-outlined text-slate-500 text-lg">settings</span>
+                        <span>{tNav('settings')}</span>
+                      </button>
+                    </nav>
+                  </div>
                 </div>
+              )
+            })}
+
+            {otherStudents.length === 0 && (
+              <div className="text-center py-8">
+                <span className="material-symbols-outlined text-4xl text-slate-600 mb-2">person_off</span>
+                <p className="text-sm text-slate-400">
+                  {locale === 'zh-TW' ? '沒有其他學生帳號' : 'No other student accounts'}
+                </p>
               </div>
-            )
-          })}
-
-          {/* 沒有其他學生時顯示提示 */}
-          {otherStudents.length === 0 && (
-            <div className="text-center py-8">
-              <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2">person_off</span>
-              <p className="text-sm text-slate-400 dark:text-slate-500">
-                {locale === 'zh-TW' ? '沒有其他學生帳號' : 'No other student accounts'}
-              </p>
-            </div>
-          )}
-
+            )}
           </div>
         )}
       </div>
+
       {/* 自定義樣式 */}
       <style jsx>{`
         .no-scrollbar::-webkit-scrollbar {
@@ -451,38 +460,9 @@ export default function StudentSwitchModal({
           top: 0; left: 0; right: 0; height: 1px;
           background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
         }
-        /* 只在 group hover 時才滑動內容 */
-        .group:hover .slide-panel-open .list-item-content {
-          transform: translateX(-100px);
-        }
-        .group:hover .slide-panel-open .list-item-actions {
-          opacity: 1;
-          transform: translateX(0);
-        }
         /* 隱藏橫向卷軸 */
         .glass-card-base {
           overflow-x: hidden !important;
-        }
-        /* 確保快速導覽按鈕文字顏色在所有設備上都是深色 */
-        .quick-nav-text {
-          color: #1f2937 !important;
-        }
-        .quick-nav-button:hover .quick-nav-text {
-          color: #1f2937 !important;
-        }
-        /* 確保其他學生名稱文字顏色在所有設備上都是深色 */
-        .other-student-name-text {
-          color: #1f2937 !important;
-        }
-        .other-student-name-text:hover {
-          color: #6366f1 !important;
-        }
-        /* 確保首頁連結文字顏色在所有設備上都是深色 */
-        .home-link-text {
-          color: #1f2937 !important;
-        }
-        .home-link-text:hover {
-          color: #6366f1 !important;
         }
       `}</style>
     </div>

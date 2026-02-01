@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import TransactionModal from './components/TransactionModal'
+import { useRewardType } from './TransactionsContent'
 
 interface Props {
   studentId: string
@@ -12,18 +13,23 @@ interface Props {
   studentName?: string
   onEditTransaction?: (transaction: any) => void
   onAddTransaction?: () => void
+  selectedRewardType?: string | null
+  onRewardTypeSelect?: (rewardType: string | null) => void
+  assessments?: any[]
 }
 
-export default function TransactionRecords({ studentId, transactions, studentName, onEditTransaction, onAddTransaction }: Props) {
+export default function TransactionRecords({ studentId, transactions, studentName, onEditTransaction, onAddTransaction, selectedRewardType, onRewardTypeSelect, assessments = [] }: Props) {
   const router = useRouter()
   const t = useTranslations('transaction')
   const tStudent = useTranslations('student')
   const tCommon = useTranslations('common')
   const locale = useLocale()
 
+  // 從 Context 獲取月份選擇狀態
+  const { selectedMonth, setSelectedMonth } = useRewardType()
+
   // 預設為最近結算
   const currentMonth = new Date().toISOString().slice(0, 7)
-  const [selectedMonth, setSelectedMonth] = useState<string>('')
   const [availableMonths, setAvailableMonths] = useState<string[]>([])
   const [filteredTransactions, setFilteredTransactions] = useState(transactions)
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
@@ -140,17 +146,53 @@ export default function TransactionRecords({ studentId, transactions, studentNam
       }
     }
     
-    // 根據選擇的分類過濾
+    // 根據選擇的分類過濾（依獎勵來源：學業或課外）
     if (selectedCategory) {
-      if (selectedCategory === '評量獎金') {
-        result = result.filter(t => t.category === '測驗獎金')
+      if (selectedCategory === '學業獎勵') {
+        // 有 assessment_id 表示來自評量（學業）
+        result = result.filter(t => t.assessment_id != null && t.transaction_type !== 'reset')
       } else if (selectedCategory === '課外表現') {
-        result = result.filter(t => t.category && t.category !== '測驗獎金' && t.category !== 'shopping' && t.transaction_type !== 'reset')
+        // 沒有 assessment_id 表示來自課外表現（手動新增）
+        result = result.filter(t => t.assessment_id == null && t.transaction_type !== 'reset')
+      }
+    }
+    
+    // 根據選擇的獎勵來源分類過濾
+    if (selectedRewardType) {
+      if (selectedRewardType.startsWith('subject_')) {
+        // 科目分類：subject_${subjectId}
+        const subjectId = selectedRewardType.replace('subject_', '')
+        // 建立 assessment_id → subject_id 映射
+        const assessmentToSubject = new Map<string, string>()
+        assessments.forEach((a: any) => {
+          if (a.id && a.subject_id) {
+            assessmentToSubject.set(a.id, a.subject_id)
+          }
+        })
+        // 過濾出該科目的交易
+        result = result.filter(t => {
+          if (t.assessment_id) {
+            const tSubjectId = assessmentToSubject.get(t.assessment_id)
+            return tSubjectId === subjectId
+          }
+          return false
+        })
+      } else if (selectedRewardType === 'special') {
+        // 特殊事蹟：沒有 assessment_id 的交易
+        result = result.filter(t => !t.assessment_id)
+      } else {
+        // 向後兼容：直接匹配獎勵類別名稱
+        result = result.filter(t => {
+          if (t.category === selectedRewardType) {
+            return true
+          }
+          return false
+        })
       }
     }
     
     setFilteredTransactions(result)
-  }, [selectedMonth, transactions, calculateFromReset, selectedCategory])
+  }, [selectedMonth, transactions, calculateFromReset, selectedCategory, selectedRewardType, assessments])
 
   // 找到最近的歸零記錄
   const findLastResetTransaction = (transactionList: any[]) => {
@@ -228,7 +270,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
               {studentName && (
                 <p className="text-sm text-slate-500">
                   {locale === 'zh-TW' 
-                    ? `記錄${studentName}的獎金收支明細`
+                    ? `記錄${studentName}的獎勵收支明細`
                     : `Tracking ${studentName}'s reward income and expenses`
                   }
                 </p>
@@ -274,9 +316,9 @@ export default function TransactionRecords({ studentId, transactions, studentNam
               {locale === 'zh-TW' ? '全部' : 'All'}
             </button>
 
-            {/* 評量獎金 */}
+            {/* 學業獎勵 */}
             <button
-              ref={(el) => { categoryButtonRefs.current['評量獎金'] = el }}
+              ref={(el) => { categoryButtonRefs.current['學業獎勵'] = el }}
               onClick={() => {
                 Object.values(categoryButtonRefs.current).forEach(btn => {
                   if (btn) {
@@ -284,33 +326,33 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                     btn.style.backgroundColor = ''
                   }
                 })
-                setSelectedCategory('評量獎金')
+                setSelectedCategory('學業獎勵')
               }}
               className={`px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center gap-2 cursor-pointer ${
-                selectedCategory === '評量獎金'
+                selectedCategory === '學業獎勵'
                   ? 'bg-white shadow-sm font-bold text-slate-800'
                   : 'font-medium text-slate-500'
               }`}
-              style={selectedCategory === '評量獎金' ? {
+              style={selectedCategory === '學業獎勵' ? {
                 border: '2px solid transparent'
               } : {
                 border: '1px solid transparent'
               }}
               onMouseEnter={(e) => {
-                if (selectedCategory !== '評量獎金') {
+                if (selectedCategory !== '學業獎勵') {
                   e.currentTarget.style.borderColor = '#4ade80'
                   e.currentTarget.style.backgroundColor = '#4ade8015'
                 }
               }}
               onMouseLeave={(e) => {
-                if (selectedCategory !== '評量獎金') {
+                if (selectedCategory !== '學業獎勵') {
                   e.currentTarget.style.borderColor = 'transparent'
                   e.currentTarget.style.backgroundColor = ''
                 }
               }}
             >
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#4ade80' }}></span>
-              {locale === 'zh-TW' ? '評量獎金' : 'Assessment Reward'}
+              {locale === 'zh-TW' ? '學業獎勵' : 'Academic Reward'}
             </button>
 
             {/* 課外表現 */}
@@ -510,7 +552,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
       {/* 交易記錄列表 */}
       <div className="space-y-4">
         {paginatedTransactions.map(transaction => {
-          // 分類標籤
+          // 獎勵類別
           const categoryLabel = transaction.category === '測驗獎金' 
             ? (locale === 'zh-TW' ? '評量獎金' : 'Assessment Reward')
             : (transaction.category === 'shopping' 
@@ -551,7 +593,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                   transaction.amount > 0 
                   ? 'bg-emerald-100 text-emerald-600' 
                     : 'bg-rose-100 text-rose-600'
-                  }`}>
+                }`}>
                   {transaction.category === 'shopping' ? (
                     <span className="material-icons-outlined text-2xl">shopping_bag</span>
                   ) : transaction.amount > 0 ? (

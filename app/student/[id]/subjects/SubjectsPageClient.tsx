@@ -298,76 +298,111 @@ const SubjectsPageClient = forwardRef<SubjectsPageClientRef, Props>(({ studentId
                 )}
                 
                 <div
-                  draggable={true}
-                  onDragStart={() => handleDragStart(subject.id, index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
-                  className={`glass-card p-4 rounded-2xl flex items-center gap-4 transition-all hover:bg-white/60 dark:hover:bg-white/10 hover:shadow-lg group ${
+                  draggable={isReordering}
+                  onDragStart={(e) => {
+                    if (isReordering) {
+                      handleDragStart(subject.id, index)
+                      e.dataTransfer.effectAllowed = 'move'
+                    } else {
+                      e.preventDefault()
+                    }
+                  }}
+                  onDragOver={(e) => {
+                    if (isReordering) {
+                      e.preventDefault()
+                      e.dataTransfer.dropEffect = 'move'
+                      handleDragOver(e, index)
+                    }
+                  }}
+                  onDrop={(e) => {
+                    if (isReordering) {
+                      e.preventDefault()
+                      handleDrop(e)
+                    }
+                  }}
+                  onDragEnd={(e) => {
+                    if (isReordering) {
+                      handleDragEnd()
+                    }
+                  }}
+                  className={`glass-card p-4 rounded-2xl flex flex-col md:flex-row md:items-center gap-4 transition-all hover:shadow-md group ${
                     isDragging
                       ? 'opacity-50 scale-95'
                       : ''
-                  } ${isDesktopLayout ? 'flex-row' : 'flex-col'}`}
+                  }`}
                 >
-                  {/* #region agent log */}
-                  {(() => {
-                    if (index === 0) {
-                      fetch('http://127.0.0.1:7242/ingest/4e31ed8f-606c-4d4a-840c-4dfd29aa46a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SubjectsPageClient.tsx:310',message:'Rendering subject card',data:{isDesktopLayout,windowInnerWidth:typeof window !== 'undefined' ? window.innerWidth : 'N/A',layoutClass:isDesktopLayout ? 'flex-row' : 'flex-col'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                    }
-                    return null;
-                  })()}
-                  {/* #endregion */}
-                  {/* 拖拽指示器 */}
-                  <div className={`text-gray-400 cursor-grab active:cursor-grabbing p-2 ${isDesktopLayout ? 'block' : 'hidden'}`}>
-                    <span className="material-icons-outlined text-3xl">drag_indicator</span>
+                  {/* 拖拽指示器 - 始终显示，点击或拖拽时进入排序模式 */}
+                  <div
+                    className={`text-gray-300 cursor-grab active:cursor-grabbing drag-handle ${isReordering ? '' : 'opacity-50'}`}
+                    draggable={true}
+                    onDragStart={(e) => {
+                      e.stopPropagation()
+                      if (!isReordering) {
+                        setIsReordering(true)
+                      }
+                      handleDragStart(subject.id, index)
+                      e.dataTransfer.effectAllowed = 'move'
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (!isReordering) {
+                        setIsReordering(true)
+                      }
+                    }}
+                  >
+                    <span className="material-icons-outlined" style={{ fontSize: '36px' }}>drag_indicator</span>
                   </div>
                   
-                  {/* 科目圖示 */}
-                  <div className="w-16 h-16 flex-shrink-0 bg-blue-100 rounded-xl flex items-center justify-center shadow-inner relative overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-200 to-indigo-100 opacity-50"></div>
-                    {(() => {
-                      // 判斷是否為 emoji（用於向後兼容）
-                      const isEmoji = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(subject.icon) || 
-                                     subject.icon.length <= 2 || 
-                                     !/^[a-z_]+$/i.test(subject.icon)
-                      return isEmoji ? (
-                    <span className="text-[2.59rem] relative z-10 leading-none flex items-center justify-center">{subject.icon}</span>
-                      ) : (
-                        <span className="material-icons-outlined relative z-10" style={{ fontSize: '2.59rem', color: subject.color }}>
-                          {subject.icon}
-                        </span>
-                      )
-                    })()}
-                  </div>
-                  
-                  {/* 科目資訊 */}
-                  <div className={`flex-grow ${isDesktopLayout ? 'text-left' : 'text-center'}`}>
-                    <h3 className="text-xl font-bold mb-1 subject-name-text" style={{ color: '#1f2937' }}>{subject.name}</h3>
-                    <div
-                      className="inline-flex items-center px-3 py-1 rounded-full text-white text-xs font-medium shadow-sm"
+                  {/* 科目圖示和資訊容器 */}
+                  <div className="flex items-center gap-4 flex-1">
+                    {/* 科目圖示 - 外框增大20%，图标本身也增大 */}
+                    <div className="w-[4.2rem] h-[4.2rem] md:w-[4.8rem] md:h-[4.8rem] flex-shrink-0 rounded-xl flex items-center justify-center"
                       style={{
-                        backgroundColor: subject.color || '#3B82F6',
-                        boxShadow: `0 1px 2px 0 ${subject.color || '#3B82F6'}30`
+                        backgroundColor: subject.color ? `${subject.color}20` : '#EFF6FF',
                       }}
                     >
-                      <span className="w-2 h-2 rounded-full bg-white mr-2 opacity-70"></span>
-                      {t('colorTag')}
+                      {(() => {
+                        // 判斷是否為 emoji（用於向後兼容）
+                        const isEmoji = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(subject.icon) || 
+                                       subject.icon.length <= 2 || 
+                                       !/^[a-z_]+$/i.test(subject.icon)
+                        return isEmoji ? (
+                          <span style={{ fontSize: '40px' }}>{subject.icon}</span>
+                        ) : (
+                          <span className="material-icons-outlined" style={{ fontSize: '40px', color: subject.color || '#3B82F6' }}>
+                            {subject.icon}
+                          </span>
+                        )
+                      })()}
+                    </div>
+                    
+                    {/* 科目資訊 */}
+                    <div className="flex flex-col">
+                      <h3 className="text-xl font-bold text-slate-800">{subject.name}</h3>
+                      <div className="mt-1 inline-flex items-center px-3 py-1 rounded-full text-white text-xs font-medium"
+                        style={{
+                          backgroundColor: subject.color || '#3B82F6',
+                        }}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-white mr-2"></span>
+                        {t('colorTag')}
+                      </div>
                     </div>
                   </div>
 
                   {/* 操作按鈕 */}
                   {!isReordering && (
-                    <div className={`flex gap-3 ${isDesktopLayout ? 'w-auto justify-end mt-0' : 'w-full justify-center mt-2'} opacity-90 group-hover:opacity-100 transition-opacity`}>
+                    <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           handleOpenRewardRulesModal(subject)
                         }}
                         data-subject-action="reward-rules"
-                        className="bg-accent-purple hover:bg-purple-400 text-white px-4 py-2 rounded-full shadow-md shadow-purple-500/20 flex items-center gap-2 text-sm font-medium transition-transform active:scale-95 cursor-pointer"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-[0.4375rem] rounded-full bg-[#A855F7] hover:bg-[#9333EA] text-white text-sm font-medium shadow-lg shadow-purple-200 transition-transform active:scale-95 cursor-pointer"
                       >
-                        <span className="material-icons-outlined" style={{ fontSize: '0.875rem' }}>diamond</span>
-                        {t('rewardRules')}
+                        <span className="material-icons-outlined text-sm">diamond</span>
+                        <span className="text-[1.1em]">{t('rewardRules')}</span>
                       </button>
                       <button
                         onClick={(e) => {
@@ -375,10 +410,10 @@ const SubjectsPageClient = forwardRef<SubjectsPageClientRef, Props>(({ studentId
                           handleOpenEditModal(subject)
                         }}
                         data-subject-action="edit-subject"
-                        className="bg-accent-blue hover:bg-blue-400 text-white px-4 py-2 rounded-full shadow-md shadow-blue-500/20 flex items-center gap-2 text-sm font-medium transition-transform active:scale-95 cursor-pointer"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-[0.4375rem] rounded-full bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium shadow-lg shadow-blue-200 transition-transform active:scale-95 cursor-pointer"
                       >
-                        <span className="material-icons-outlined" style={{ fontSize: '0.875rem' }}>edit</span>
-                        {tCommon('edit')}
+                        <span className="material-icons-outlined text-sm">edit</span>
+                        <span className="text-[1.1em]">{tCommon('edit')}</span>
                       </button>
                     </div>
                   )}

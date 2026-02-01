@@ -1,8 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+
+interface CustomRewardType {
+  id: string
+  type_key: string
+  display_name: string
+  display_name_zh?: string
+  display_name_en?: string
+  icon: string
+  color: string
+  default_unit: string | null
+  is_accumulable: boolean
+  has_extra_input: boolean
+  extra_input_schema: any
+  is_system?: boolean
+}
 
 interface Props {
   studentId: string
@@ -13,11 +28,60 @@ export default function EditTransactionForm({ studentId, transaction }: Props) {
   const router = useRouter()
   const t = useTranslations('transaction')
   const tCommon = useTranslations('common')
+  const locale = useLocale()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [transactionType, setTransactionType] = useState<'earn' | 'spend' | 'reset'>(
     transaction.transaction_type as 'earn' | 'spend' | 'reset'
   )
+  const [customTypes, setCustomTypes] = useState<CustomRewardType[]>([])
+  const [loadingTypes, setLoadingTypes] = useState(true)
+
+  // 載入自訂義獎勵類型
+  useEffect(() => {
+    async function loadCustomTypes() {
+      try {
+        setLoadingTypes(true)
+        const response = await fetch('/api/custom-reward-types/list', {
+          method: 'GET',
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        
+        if (data.success && data.types) {
+          setCustomTypes(data.types || [])
+        } else {
+          setCustomTypes([])
+        }
+      } catch (err) {
+        console.error('Failed to load custom types:', err)
+        setCustomTypes([])
+      } finally {
+        setLoadingTypes(false)
+      }
+    }
+    loadCustomTypes()
+  }, [])
+
+  // 取得顯示名稱（根據語言）
+  const getDisplayName = (type: CustomRewardType): string => {
+    if (locale === 'zh-TW') {
+      return type.display_name_zh || type.display_name || type.type_key
+    } else {
+      return type.display_name_en || type.display_name || type.type_key
+    }
+  }
+
+  // 判斷是否為 emoji
+  const isEmojiIcon = (icon: string): boolean => {
+    return /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(icon) || 
+           icon.length <= 2 || 
+           !/^[a-z_]+$/i.test(icon)
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -35,7 +99,7 @@ export default function EditTransactionForm({ studentId, transaction }: Props) {
     
     const transactionDate = formData.get('transaction_date') as string
     
-    // 處理事件名稱：如果沒有填寫，自動生成 [日期][分類標籤]
+    // 處理事件名稱：如果沒有填寫，自動生成 [日期][獎勵類別]
     let description = formData.get('description') as string
     if (!description || description.trim() === '') {
       const category = formData.get('category') as string
@@ -45,7 +109,7 @@ export default function EditTransactionForm({ studentId, transaction }: Props) {
       const dateObj = new Date(date)
       const dateStr = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`
       
-      // 生成名稱: [日期][分類標籤]
+      // 生成名稱: [日期][獎勵類別]
       description = `${dateStr} ${category}`
     }
     
@@ -197,17 +261,25 @@ export default function EditTransactionForm({ studentId, transaction }: Props) {
           </p>
         </div>
 
-        {/* 分類標籤 */}
+        {/* 獎勵類別（獎勵品種類） */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {t('categoryLabel')} *
+          <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <span>{t('categoryLabel')} *</span>
+            <span className="text-xs text-gray-500 font-normal">
+              {transactionType === 'reset' 
+                ? t('exampleCategoryReset')
+                : locale === 'zh-TW' 
+                  ? '選擇獎勵品種類'
+                  : 'Select reward type'
+              }
+            </span>
           </label>
           {transactionType === 'reset' ? (
             <select
               name="category"
               required
               defaultValue={transaction.category}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="">{t('selectCategory')}</option>
               <option value={t('categories.semesterUpdate')}>{t('categories.semesterUpdate')}</option>
@@ -215,37 +287,32 @@ export default function EditTransactionForm({ studentId, transaction }: Props) {
               <option value={t('categories.systemCalibration')}>{t('categories.systemCalibration')}</option>
               <option value={t('categories.amountAdjustment')}>{t('categories.amountAdjustment')}</option>
             </select>
-          ) : transactionType === 'earn' ? (
-            <select
-              name="category"
-              required
-              defaultValue={transaction.category}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">{t('selectCategory')}</option>
-              <option value={t('categories.specialReward')}>{t('categories.specialReward')}</option>
-              <option value={t('categories.contestReward')}>{t('categories.contestReward')}</option>
-              <option value={t('categories.behaviorReward')}>{t('categories.behaviorReward')}</option>
-              <option value={t('categories.improvementReward')}>{t('categories.improvementReward')}</option>
-              <option value={t('categories.attendanceReward')}>{t('categories.attendanceReward')}</option>
-              <option value={t('categories.homeworkBonus')}>{t('categories.homeworkBonus')}</option>
-              <option value={t('categories.other')}>{t('categories.other')}</option>
-            </select>
+          ) : loadingTypes ? (
+            <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-500">
+              {locale === 'zh-TW' ? '載入中...' : 'Loading...'}
+            </div>
+          ) : customTypes.length === 0 ? (
+            <div className="w-full px-4 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-yellow-700 text-sm">
+              {locale === 'zh-TW' 
+                ? '⚠️ 尚未設定獎勵品種類，請先前往「獎勵管理」頁面新增'
+                : '⚠️ No reward types configured. Please add reward types in "Reward Management" first'}
+            </div>
           ) : (
             <select
               name="category"
               required
               defaultValue={transaction.category}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="">{t('selectCategory')}</option>
-              <option value={t('categories.giftExchange')}>{t('categories.giftExchange')}</option>
-              <option value={t('categories.stationeryPurchase')}>{t('categories.stationeryPurchase')}</option>
-              <option value={t('categories.bookPurchase')}>{t('categories.bookPurchase')}</option>
-              <option value={t('categories.leisureActivity')}>{t('categories.leisureActivity')}</option>
-              <option value={t('categories.foodPurchase')}>{t('categories.foodPurchase')}</option>
-              <option value={t('categories.toyPurchase')}>{t('categories.toyPurchase')}</option>
-              <option value={t('categories.other')}>{t('categories.other')}</option>
+              {customTypes.map((type) => {
+                const displayName = getDisplayName(type)
+                return (
+                  <option key={type.id} value={displayName}>
+                    {isEmojiIcon(type.icon) ? `${type.icon} ` : ''}{displayName}
+                  </option>
+                )
+              })}
             </select>
           )}
         </div>

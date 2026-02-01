@@ -487,8 +487,8 @@ export default function StudentRecords({
   }
 
   // 檢查是否可以切換
-  const canGoPrevious = !selectedMonth
-    ? availableMonths.length > 0
+  const canGoPrevious = !selectedMonth 
+    ? availableMonths.length > 0 
     : availableMonths.indexOf(selectedMonth) < availableMonths.length - 1
   const canGoPreviousBool: boolean = Boolean(canGoPrevious)
 

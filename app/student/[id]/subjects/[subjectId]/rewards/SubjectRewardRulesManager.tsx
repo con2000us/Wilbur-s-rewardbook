@@ -4,6 +4,15 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import RuleCard from '../../components/RuleCard'
+import RewardConfigFormBasic from '@/examples/reward-config-form-basic'
+
+interface RewardConfigItem {
+  type_id: string
+  type_key: string
+  amount: number | null
+  formula: string | null
+  unit: string | null
+}
 
 interface RewardRule {
   id: string
@@ -15,6 +24,7 @@ interface RewardRule {
   max_score: number | null
   reward_amount: number
   reward_formula?: string | null
+  reward_config?: RewardConfigItem[] | null
   priority: number
   is_active: boolean
   assessment_type: string | null
@@ -71,7 +81,8 @@ export default function SubjectRewardRulesManager({
     condition: 'score_range' as 'score_equals' | 'score_range' | 'perfect_score',
     min_score: '',
     max_score: '',
-    reward_amount: '',
+    reward_amount: '', // 保留用于向后兼容
+    reward_config: [] as RewardConfigItem[], // 新增：多种奖励配置
     is_active: true,
     is_student_specific: true, // 是否為學生專屬（科目+學生）
     assessment_type: '' as '' | 'exam' | 'quiz' | 'homework' | 'project', // 評量類型
@@ -89,6 +100,7 @@ export default function SubjectRewardRulesManager({
       min_score: '',
       max_score: '',
       reward_amount: '',
+      reward_config: [],
       is_active: true,
       is_student_specific: true,
       assessment_type: '',
@@ -99,13 +111,25 @@ export default function SubjectRewardRulesManager({
 
   const handleEdit = (rule: RewardRule) => {
     setEditingRule(rule)
+    
+    // 优先使用 reward_config，如果没有则从 reward_amount/reward_formula 构建
+    let rewardConfig: RewardConfigItem[] = []
+    if (rule.reward_config && Array.isArray(rule.reward_config) && rule.reward_config.length > 0) {
+      rewardConfig = rule.reward_config
+    } else if (rule.reward_amount || rule.reward_formula) {
+      // 向后兼容：从旧的 reward_amount 构建 reward_config
+      // 注意：这里需要加载 reward types 来获取 money 类型的 ID
+      // 暂时留空，让组件自己处理
+    }
+    
     setFormData({
       rule_name: rule.rule_name || '',
       condition: rule.condition as any,
       min_score: rule.min_score?.toString() || '',
       max_score: rule.max_score?.toString() || '',
-      // 若有公式，編輯時優先顯示公式
+      // 若有公式，編輯時優先顯示公式（用于向后兼容显示）
       reward_amount: (rule.reward_formula?.toString() || rule.reward_amount?.toString() || ''),
+      reward_config: rewardConfig,
       is_active: rule.is_active ?? true,
       is_student_specific: rule.student_id !== null,
       assessment_type: (rule.assessment_type as any) || '',
@@ -162,6 +186,9 @@ export default function SubjectRewardRulesManager({
         }
       }
       
+      // 优先使用 reward_config，如果没有则使用旧的 reward_amount/reward_formula（向后兼容）
+      const hasRewardConfig = formData.reward_config && formData.reward_config.length > 0
+      
       const payload = {
         ...(editingRule ? { rule_id: editingRule.id } : {}),
         student_id: formData.is_student_specific ? studentId : null,
@@ -170,9 +197,10 @@ export default function SubjectRewardRulesManager({
         condition: formData.condition,
         min_score: formData.min_score ? parseFloat(formData.min_score) : null,
         max_score: formData.max_score ? parseFloat(formData.max_score) : null,
-        // reward_amount 欄位支援「數字或公式」，若為公式則寫入 reward_formula
-        reward_amount: isNumericReward(formData.reward_amount) ? parseFloat(formData.reward_amount) : 0,
-        reward_formula: isNumericReward(formData.reward_amount) ? null : (formData.reward_amount.trim() || null),
+        // 如果配置了 reward_config，使用它；否则使用旧的 reward_amount/reward_formula
+        reward_config: hasRewardConfig ? formData.reward_config : null,
+        reward_amount: hasRewardConfig ? 0 : (isNumericReward(formData.reward_amount) ? parseFloat(formData.reward_amount) : 0),
+        reward_formula: hasRewardConfig ? null : (isNumericReward(formData.reward_amount) ? null : (formData.reward_amount.trim() || null)),
         priority: formData.is_student_specific ? 40 : 30, // 自動設置優先級
         is_active: formData.is_active,
         assessment_type: formData.assessment_type || null,
@@ -231,10 +259,10 @@ export default function SubjectRewardRulesManager({
           router.refresh()
         }
       } else {
-        setError(result.error || '操作失敗，請稍後再試')
+        setError(result.error || t('operationFailed'))
       }
     } catch (err) {
-      setError('發生錯誤：' + (err as Error).message)
+      setError(t('errorOccurred') + (err as Error).message)
     } finally {
       setLoading(false)
     }
@@ -289,7 +317,7 @@ export default function SubjectRewardRulesManager({
         setError(result.error || t('deleteFailed'))
       }
     } catch (err) {
-      setError('發生錯誤：' + (err as Error).message)
+      setError(t('errorOccurred') + (err as Error).message)
     } finally {
       setLoading(false)
     }
@@ -342,10 +370,10 @@ export default function SubjectRewardRulesManager({
           onSuccess()
         }
       } else {
-        setError(result.error || '更新失敗，請稍後再試')
+        setError(result.error || t('updateFailed'))
       }
     } catch (err) {
-      setError('發生錯誤：' + (err as Error).message)
+      setError(t('errorOccurred') + (err as Error).message)
     } finally {
       setLoading(false)
     }
@@ -530,7 +558,7 @@ export default function SubjectRewardRulesManager({
         // 不刷新頁面，直接使用當前排序狀態
         if (onSuccess) onSuccess()
       } else {
-        setError('排序失敗，請稍後再試')
+        setError(t('reorderFailed'))
         // 恢復原順序
         if (type === 'exclusive') {
           setSortedExclusiveRules(sortRules(exclusiveRules))
@@ -541,7 +569,7 @@ export default function SubjectRewardRulesManager({
         }
       }
     } catch (err) {
-      setError('發生錯誤：' + (err as Error).message)
+      setError(t('errorOccurred') + (err as Error).message)
       // 恢復原順序
       if (type === 'exclusive') {
         setSortedExclusiveRules(sortRules(exclusiveRules))
@@ -603,7 +631,7 @@ export default function SubjectRewardRulesManager({
             {/* 編輯模式時顯示對照的規則卡片 */}
             {editingRule && (
               <div ref={referenceCardRef} className="mb-4">
-                <p className="text-sm font-semibold text-gray-600 mb-2">📋 {t('currentRule') || '當前規則（對照）'}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-2">📋 {t('currentRule')}</p>
                 <RuleCard 
                   rule={editingRule} 
                   canEdit={false}
@@ -658,7 +686,7 @@ export default function SubjectRewardRulesManager({
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                 <span>{t('ruleName')}</span>
                 <span className="text-xs text-gray-500 font-normal">
-                  ({t('optional') || '選填'})
+                  ({t('optional')})
                 </span>
               </label>
               <input
@@ -666,10 +694,10 @@ export default function SubjectRewardRulesManager({
                 value={formData.rule_name}
                 onChange={(e) => setFormData({ ...formData, rule_name: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                placeholder={t('autoGenerateRuleName') || '留空則自動生成：科目 分數 獎勵'}
+                placeholder={t('autoGenerateRuleName')}
               />
               <p className="text-xs text-gray-500 mt-1">
-                💡 {t('autoGenerateRuleNameHint') || '留空將自動產生名稱，例如：數學 90分獎勵'}
+                💡 {t('autoGenerateRuleNameHint')}
               </p>
             </div>
 
@@ -766,23 +794,32 @@ export default function SubjectRewardRulesManager({
               </div>
             )}
 
-            {/* 獎金金額 */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {t('rewardAmount')} *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.reward_amount}
-                onChange={(e) => setFormData({ ...formData, reward_amount: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                placeholder={t('rewardAmountPlaceholder')}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                💡 {t('rewardFormulaHint')}
-              </p>
-            </div>
+            {/* 奖励配置 - 使用基础版组件 */}
+            <RewardConfigFormBasic
+              rewardConfig={formData.reward_config}
+              onChange={(config) => {
+                setFormData({ ...formData, reward_config: config })
+              }}
+            />
+            
+            {/* 向后兼容：如果 reward_config 为空，显示旧的 reward_amount 输入 */}
+            {formData.reward_config.length === 0 && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('rewardAmount')} * ({t('legacyMode') || '传统模式'})
+                </label>
+                <input
+                  type="text"
+                  value={formData.reward_amount}
+                  onChange={(e) => setFormData({ ...formData, reward_amount: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder={t('rewardAmountPlaceholder')}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 {t('rewardFormulaHint')} {t('orUseRewardConfig') || '或使用上方的奖励配置'}
+                </p>
+              </div>
+            )}
 
             {/* 按鈕 */}
             <div className="flex gap-3 pt-2">
@@ -868,7 +905,7 @@ export default function SubjectRewardRulesManager({
                   className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
                 >
                   <span>✓</span>
-                  <span>{tCommon('done') || '完成排序'}</span>
+                  <span>{tCommon('done')}</span>
                 </button>
                 <button
                   onClick={() => handleCancelReorder('exclusive')}
@@ -894,7 +931,7 @@ export default function SubjectRewardRulesManager({
         <div className="mb-3">
           <h3 className="text-xl font-bold text-blue-800 flex items-center gap-2 min-w-0">
             <span className="flex-shrink-0">🔵</span>
-            <span className="truncate min-w-0">{t('subjectOnlyRulesFor', { subjectIcon, subjectName }) || `${subjectName} 的科目規則`}</span>
+            <span className="truncate min-w-0">{t('subjectOnlyRulesFor', { subjectIcon, subjectName })}</span>
             <span className="text-sm font-normal text-gray-600 whitespace-nowrap flex-shrink-0">({sortedSubjectOnlyRules.length} {t('rulesCount', { count: sortedSubjectOnlyRules.length })})</span>
           </h3>
         </div>
@@ -949,7 +986,7 @@ export default function SubjectRewardRulesManager({
                   className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center gap-2 whitespace-nowrap disabled:opacity-50 cursor-pointer"
                 >
                   <span>✓</span>
-                  <span>{tCommon('done') || '完成排序'}</span>
+                  <span>{tCommon('done')}</span>
                 </button>
                 <button
                   onClick={() => handleCancelReorder('subject')}
@@ -964,7 +1001,7 @@ export default function SubjectRewardRulesManager({
           </>
         ) : (
           <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
-            <p className="text-gray-600">{t('noSubjectOnlyRules') || '暫無科目規則'}</p>
+            <p className="text-gray-600">{t('noSubjectOnlyRules')}</p>
             <p className="text-sm text-gray-500 mt-1">{t('clickAboveToAdd')}</p>
           </div>
         )}

@@ -288,12 +288,12 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                <label className="text-sm font-semibold text-slate-600 flex items-center gap-1">
                   {t('name')} <span className="text-red-500">*</span>
                 </label>
                 <input 
                   name="name"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-800/50 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white" 
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-slate-900" 
                   placeholder={t('namePlaceholder')} 
                   type="text" 
                   value={subjectName}
@@ -329,14 +329,14 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             </div>
 
             {/* Current Icon Preview Box */}
-            <div className="bg-slate-50 dark:bg-900/40 rounded-2xl p-6 flex flex-col items-center justify-center border border-dashed border-slate-300 dark:border-slate-600 transition-all">
+            <div className="bg-white rounded-2xl p-6 flex flex-col items-center justify-center border border-dashed border-slate-300 transition-all">
               <div 
                 className="w-32 h-32 rounded-2xl flex items-center justify-center mb-4 shadow-sm"
                 style={{ backgroundColor: `${subjectColor}15`, color: subjectColor }}
               >
                 <span className="material-icons-outlined" style={{ fontSize: '4.8rem' }}>{currentIcon}</span>
               </div>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">{t('currentIcon')}</p>
+              <p className="text-xs font-medium text-slate-500 mb-4">{t('currentIcon')}</p>
               <button 
                 type="button"
                 onClick={() => setIsPickerVisible(!isPickerVisible)}
@@ -356,7 +356,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             }`}
           >
             <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-600 dark:text-slate-400">{t('icon')}</label>
+              <label className="text-sm font-semibold text-slate-600">{t('icon')}</label>
             </div>
             
             {/* Category Pills */}
@@ -369,7 +369,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                   className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                     selectedCategory === category 
                       ? 'bg-primary text-white shadow-md shadow-primary/20' 
-                      : 'bg-slate-100 dark:bg-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   {category}
@@ -378,7 +378,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             </div>
 
             {/* Icon Grid */}
-            <div className="p-4 bg-white/60 dark:bg-950/40 rounded-2xl border border-slate-200 dark:border-slate-700 max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(203 213 225) transparent' }}>
+            <div className="p-4 bg-white rounded-2xl border border-slate-200 max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(203 213 225) transparent' }}>
               <div className="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-10 gap-3">
                 {getCategoryIcons().map((icon) => (
                   <button
@@ -388,7 +388,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                     className={`aspect-square flex items-center justify-center rounded-xl transition-all cursor-pointer ${
                       selectedIcon === icon && !customIconInput.trim()
                         ? 'bg-primary/10 text-primary border-2 border-primary scale-110' 
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                        : 'hover:bg-slate-100 text-slate-600'
                     }`}
                   >
                     <span className="material-icons-outlined text-2xl">{icon}</span>
@@ -401,7 +401,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             <div className="relative group">
               <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
               <input 
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-800/50 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white text-sm" 
+                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-slate-900 text-sm" 
                 placeholder="自訂圖標名稱 (例如: auto_stories, calculate, public...)" 
                 type="text"
                 value={customIconInput}
@@ -411,13 +411,13 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
           </div>
 
           {/* 等級對應設定 */}
-          <div className="border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-6 bg-white dark:bg-800/50">
+          <div className="border-2 border-slate-200 rounded-2xl p-6 bg-white">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
                   {locale === 'zh-TW' ? '等級制成績對應' : 'Letter Grade Mapping'}
                 </label>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500">
                   {locale === 'zh-TW' 
                     ? '設定此科目的等級（A+ ~ F）對應的數字分數範圍，用於計算獎金（使用最高分數）'
                     : 'Set the numeric score range for each letter grade (A+ ~ F) for this subject, used for reward calculation (using max score)'}
@@ -435,7 +435,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                   }}
                   className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                 />
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <span className="text-sm font-semibold text-slate-700">
                   {locale === 'zh-TW' ? '使用自訂對應' : 'Use Custom Mapping'}
                 </span>
               </label>
@@ -444,13 +444,13 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             {useCustomGradeMapping && (
               <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
                 {GRADE_OPTIONS.map((grade) => (
-                  <div key={grade} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-900/40 rounded-lg">
+                  <div key={grade} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                     <div className="w-16 text-center">
-                      <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{grade}</span>
+                      <span className="text-2xl font-bold text-slate-800">{grade}</span>
                     </div>
                     <div className="flex-1 grid grid-cols-3 gap-2">
                       <div>
-                        <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
+                        <label className="block text-xs text-slate-600 mb-1">
                           {locale === 'zh-TW' ? '最低' : 'Min'}
                         </label>
                         <input
@@ -466,11 +466,11 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                               [grade]: { ...gradeMapping[grade], min: value }
                             })
                           }}
-                          className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-800 text-slate-900 dark:text-slate-100"
+                          className="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 bg-white text-slate-900"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
+                        <label className="block text-xs text-slate-600 mb-1">
                           {locale === 'zh-TW' ? '平均' : 'Average'}
                         </label>
                         <input
@@ -486,11 +486,11 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                               [grade]: { ...gradeMapping[grade], average: value }
                             })
                           }}
-                          className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 font-semibold bg-white dark:bg-800 text-slate-900 dark:text-slate-100"
+                          className="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 font-semibold bg-white text-slate-900"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
+                        <label className="block text-xs text-slate-600 mb-1">
                           {locale === 'zh-TW' ? '最高' : 'Max'}
                         </label>
                         <input
@@ -506,13 +506,13 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
                               [grade]: { ...gradeMapping[grade], max: value }
                             })
                           }}
-                          className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-800 text-slate-900 dark:text-slate-100"
+                          className="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 bg-white text-slate-900"
                         />
                       </div>
                     </div>
                   </div>
                 ))}
-                <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
+                <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700">
                   <span className="material-icons-outlined text-sm align-middle mr-1">info</span>
                   {locale === 'zh-TW' 
                     ? '提示：系統會使用「最高」值來計算獎金。如果未設定自訂對應，將使用系統預設值。'
@@ -522,7 +522,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
             )}
 
             {!useCustomGradeMapping && (
-              <div className="p-3 bg-slate-50 dark:bg-900/40 rounded text-sm text-slate-600 dark:text-slate-400">
+              <div className="p-3 bg-slate-50 rounded text-sm text-slate-600">
                 {locale === 'zh-TW' 
                   ? '目前使用系統預設等級對應。勾選「使用自訂對應」可為此科目設定專屬的等級對應。'
                   : 'Currently using system default grade mapping. Check "Use Custom Mapping" to set a subject-specific grade mapping.'}
@@ -532,12 +532,12 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
 
           {/* Warning Section (僅編輯模式) */}
           {isEditMode && (
-            <div className="bg-red-50 dark:bg-red-950/20 rounded-2xl p-5 border border-red-100 dark:border-red-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-red-50 rounded-2xl p-5 border border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
                 <span className="material-icons-outlined text-red-500 mt-0.5">warning</span>
                 <div>
-                  <h4 className="text-sm font-bold text-red-700 dark:text-red-400 uppercase tracking-tight">{t('dangerZone')}</h4>
-                  <p className="text-xs text-red-600/80 dark:text-red-400/60 leading-relaxed">{t('deleteWarningIntro')}</p>
+                  <h4 className="text-sm font-bold text-red-700 uppercase tracking-tight">{t('dangerZone')}</h4>
+                  <p className="text-xs text-red-600/80 text-red-400/60 leading-relaxed">{t('deleteWarningIntro')}</p>
                 </div>
               </div>
               <button 
@@ -588,12 +588,12 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
         `}</style>
 
         {/* Footer Actions */}
-        <div className="px-8 py-6 bg-slate-50/50 dark:bg-900/50 border-t border-slate-200/60 dark:border-slate-700/60 flex flex-col-reverse sm:flex-row gap-4 justify-end flex-shrink-0">
+        <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-200/60 flex flex-col-reverse sm:flex-row gap-4 justify-end flex-shrink-0">
           <button 
             type="button"
             onClick={() => onCancel ? onCancel() : router.back()}
             disabled={loading || deleting}
-            className="px-8 py-3 bg-white dark:bg-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+            className="px-8 py-3 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             {tCommon('cancel')}
           </button>
