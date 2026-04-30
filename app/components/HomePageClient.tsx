@@ -1,13 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import LanguageToggle from './LanguageToggle'
 import LogoutButton from './LogoutButton'
 import StudentList from './StudentList'
-import GlobalAddRewardPopup from './GlobalAddRewardPopup'
-import { isParent } from '@/lib/utils/userRole'
 
 interface Student {
   id: string
@@ -22,36 +19,24 @@ interface Props {
 
 export default function HomePageClient({ students, siteName }: Props) {
   const t = useTranslations('home')
-  const [showAddRewardPopup, setShowAddRewardPopup] = useState(false)
-  const canManage = isParent()
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 sm:p-6 md:p-8">
+      <div className="min-h-screen bg-app-shell p-4 sm:p-6 md:p-8">
         <div className="max-w-5xl mx-auto">
           {/* 語言切換與設置按鈕 - 右上角 */}
           <div className="flex justify-end items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
-            {/* 添加獎勵按鈕 - 僅家長可見，放在首頁按鈕左邊 */}
-            {canManage && (
-              <button
-                onClick={() => setShowAddRewardPopup(true)}
-                className="glass w-12 h-12 flex items-center justify-center gap-2 px-4 rounded-2xl active:scale-95 transition-all text-white/90 hover:text-white"
-                title="添加獎勵"
-              >
-                <span className="material-icons-round text-2xl sm:text-2xl">card_giftcard</span>
-              </button>
-            )}
             {/* 首頁按鈕 */}
             <Link
               href="/"
-              className="glass w-12 h-12 flex items-center justify-center gap-2 px-4 rounded-2xl active:scale-95 transition-all text-white/90 hover:text-white"
+              className="w-12 h-12 flex items-center justify-center gap-2 px-4 rounded-2xl active:scale-95 transition-all bg-white/70 backdrop-blur-md border border-white/90 shadow-sm text-slate-700 hover:bg-white/90 hover:text-slate-900"
               title="首頁"
             >
               <span className="material-icons-round text-2xl sm:text-2xl">home</span>
             </Link>
             <Link
               href="/settings"
-              className="glass w-12 h-12 flex items-center justify-center gap-2 px-4 rounded-2xl active:scale-95 transition-all text-white/90 hover:text-white"
+              className="w-12 h-12 flex items-center justify-center gap-2 px-4 rounded-2xl active:scale-95 transition-all bg-white/70 backdrop-blur-md border border-white/90 shadow-sm text-slate-700 hover:bg-white/90 hover:text-slate-900"
             >
               <span className="material-icons-round text-2xl sm:text-2xl">settings</span>
             </Link>
@@ -61,10 +46,10 @@ export default function HomePageClient({ students, siteName }: Props) {
 
           {/* 主標題區域 - 大而突出 */}
           <div className="text-center mb-6 md:mb-8">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[41.4px] font-bold text-white mb-3 md:mb-4 drop-shadow-2xl animate-fade-in">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[41.4px] font-bold text-slate-800 mb-3 md:mb-4 animate-fade-in">
               📚 {siteName}
             </h1>
-            <p className="text-base sm:text-lg text-purple-100 mb-6 md:mb-8">
+            <p className="text-base sm:text-lg text-slate-600 mb-6 md:mb-8">
               {t('subtitle')}
             </p>
           </div>
@@ -97,13 +82,6 @@ export default function HomePageClient({ students, siteName }: Props) {
           </div>
         </div>
       </div>
-
-      {/* 全局添加獎勵 Popup */}
-      <GlobalAddRewardPopup
-        isOpen={showAddRewardPopup}
-        onClose={() => setShowAddRewardPopup(false)}
-        students={students || []}
-      />
     </>
   )
 }

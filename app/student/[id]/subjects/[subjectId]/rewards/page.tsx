@@ -64,18 +64,18 @@ export default async function SubjectRewardsPage({
     .order('priority', { ascending: false })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-8">
+    <div className="min-h-screen bg-app-shell p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 flex justify-between items-center">
           <Link 
             href={`/student/${id}/subjects`}
-            className="text-white hover:text-gray-200 text-lg"
+            className="text-slate-700 hover:text-slate-900 text-lg font-medium"
           >
             ← {t('backToSubjects')}
           </Link>
           <Link 
             href={`/student/${id}`}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold"
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold"
           >
             {/* @ts-ignore - Supabase type inference issue with select queries */}
             {tStudent('returnToStudent', { name: (student as any).name })}

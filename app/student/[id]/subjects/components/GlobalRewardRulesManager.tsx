@@ -847,7 +847,7 @@ export default function GlobalRewardRulesManager({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-gray-600 text-white py-2 rounded-lg font-semibold hover:bg-gray-700 hover:-translate-y-1 hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 cursor-pointer"
+                  className="flex-1 bg-primary text-white py-2 rounded-lg font-semibold hover:opacity-90 hover:-translate-y-1 hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 cursor-pointer"
                 >
                   {loading ? t('processing') : editingRule ? `💾 ${t('saveChanges')}` : `✅ ${t('addRule')}`}
                 </button>

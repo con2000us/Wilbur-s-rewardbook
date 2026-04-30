@@ -284,14 +284,14 @@ export default function CustomRewardTypesManager() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {/* 新增表單卡片 */}
-          <div className="bg-white bg-800 rounded-xl p-6 shadow-lg border border-gray-200 border-slate-700">
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
             <h2 className="text-xl font-bold mb-4">{t('addNewType')}</h2>
 
             <form onSubmit={handleAddCustomType} className="space-y-4">
               {/* 基本資訊 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 text-slate-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t('typeKey')}
                   </label>
                   <input
@@ -304,7 +304,7 @@ export default function CustomRewardTypesManager() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 text-slate-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t('displayNameZh')}
                   </label>
                   <input
@@ -317,7 +317,7 @@ export default function CustomRewardTypesManager() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 text-slate-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t('displayNameEn')}
                   </label>
                   <input
@@ -331,7 +331,7 @@ export default function CustomRewardTypesManager() {
 
               {/* 圖標設定 */}
               <div className="space-y-4">
-                <label className="block text-sm font-semibold text-gray-700 text-slate-300 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {t('icon')}
                 </label>
                 <div className="flex gap-2">
@@ -353,7 +353,7 @@ export default function CustomRewardTypesManager() {
                   </button>
                 </div>
 
-                <label className="block text-sm font-semibold text-gray-700 text-slate-300 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {t('color')}
                 </label>
                 <input
@@ -366,7 +366,7 @@ export default function CustomRewardTypesManager() {
 
               {/* 獎勵設定 */}
               <div className="space-y-4">
-                <label className="block text-sm font-semibold text-gray-700 text-slate-300 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {t('defaultUnit')}
                 </label>
                 <input
@@ -415,7 +415,7 @@ export default function CustomRewardTypesManager() {
           </div>
 
           {/* 現有類型列表 */}
-          <div className="bg-white bg-800 rounded-xl p-6 shadow-lg border border-gray-200 border-slate-700">
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">{t('existingTypes')}</h2>
               {customTypes.length > 0 && (
@@ -675,7 +675,7 @@ function EditRewardTypePopup({
 
   const popupContent = (
     <div
-      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 modal-backdrop backdrop-blur-sm flex items-center justify-center p-4"
       style={{ zIndex: 99999 }}
       onClick={handleBackdropClick}
     >

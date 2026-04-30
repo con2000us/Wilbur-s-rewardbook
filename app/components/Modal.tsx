@@ -75,7 +75,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'lg', w
       onClick={handleBackdropClick}
     >
       {/* 模糊背景 */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-md" />
+      <div className="absolute inset-0 modal-backdrop backdrop-blur-md" />
 
       {/* Modal 內容 */}
       <div

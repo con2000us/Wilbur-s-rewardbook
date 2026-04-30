@@ -62,7 +62,7 @@ export default async function AddSubjectPage({
         <div className="mb-6 flex items-center gap-4">
           <Link 
             href={`/student/${id}/subjects`}
-            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold inline-flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold inline-flex items-center gap-2 cursor-pointer"
           >
             <span>←</span>
             <span>{t('returnToManage')}</span>

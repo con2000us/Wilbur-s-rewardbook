@@ -180,7 +180,7 @@ export default function RewardDetailModal({
 
   const popupContent = (
     <div 
-      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 modal-backdrop backdrop-blur-sm flex items-center justify-center p-4 z-50"
       onClick={handleBackdropClick}
     >
       <div

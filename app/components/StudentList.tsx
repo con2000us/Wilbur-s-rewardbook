@@ -189,7 +189,7 @@ export default function StudentList({ initialStudents }: Props) {
     <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-2xl pt-3 pl-6 pr-6 pb-6 mb-8 border-2 border-white/30 min-h-[200px]">
       {/* 標題和按鈕 */}
       <div className="flex justify-between items-center mb-6 min-h-[48px]">
-        <h2 className="text-3xl font-bold text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
+        <h2 className="text-3xl font-bold text-slate-800">
           🎓 {t('studentsList')}
         </h2>
 

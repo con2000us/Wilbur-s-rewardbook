@@ -31,7 +31,7 @@ export default function LogoutButton() {
     <button
       onClick={handleLogout}
       disabled={loading}
-      className="glass px-5 h-12 flex items-center justify-center gap-2 rounded-2xl transition-all text-white font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+      className="px-5 h-12 flex items-center justify-center gap-2 rounded-2xl transition-all bg-white/70 backdrop-blur-md border border-white/90 shadow-sm text-slate-700 hover:bg-white/90 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       title={t('logout')}
     >
       <span className="material-icons-round text-xl">logout</span>

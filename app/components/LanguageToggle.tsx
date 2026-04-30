@@ -33,7 +33,7 @@ export default function LanguageToggle() {
       {/* 語言按鈕 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="glass w-auto min-w-[80px] h-12 flex items-center justify-center gap-2 px-5 rounded-2xl active:scale-95 transition-all text-white/90 hover:text-white cursor-pointer"
+        className="w-auto min-w-[80px] h-12 flex items-center justify-center gap-2 px-5 rounded-2xl active:scale-95 transition-all bg-white/70 backdrop-blur-md border border-white/90 shadow-sm text-slate-700 hover:bg-white/90 hover:text-slate-900 cursor-pointer"
         title={locale === 'zh-TW' ? '切換語言' : 'Switch Language'}
       >
         <span className="text-sm sm:text-base font-medium tracking-wide">{currentLang.name}</span>

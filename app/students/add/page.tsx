@@ -3,12 +3,12 @@ import Link from 'next/link'
 
 export default function AddStudentPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-8">
+    <div className="min-h-screen bg-app-shell p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <Link 
             href="/"
-            className="text-white hover:text-gray-200 text-lg"
+            className="text-slate-700 hover:text-slate-900 text-lg font-medium"
           >
             ← 返回首頁
           </Link>

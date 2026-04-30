@@ -61,29 +61,14 @@ export default function PrintButtons() {
         border-color: transparent !important;
         border: none !important;
       }
-      .no-print button.bg-gray-600,
-      .no-print button[class*="bg-gray-600"],
-      button.bg-gray-600.no-print,
-      button[class*="bg-gray-600"][class*="no-print"] {
-        background-color: rgb(75 85 99) !important; /* gray-600 */
-        background: rgb(75 85 99) !important;
+      .no-print button.bg-primary,
+      .no-print button[class*="bg-primary"],
+      button.bg-primary.no-print,
+      button[class*="bg-primary"][class*="no-print"] {
+        background-color: rgb(106 153 224) !important; /* primary */
+        background: rgb(106 153 224) !important;
         border-color: transparent !important;
         border: none !important;
-      }
-      /* 確保在 dark mode 下也正確顯示 */
-      .dark .no-print button.bg-blue-600,
-      .dark .no-print button[class*="bg-blue-600"],
-      .dark button.bg-blue-600.no-print,
-      .dark button[class*="bg-blue-600"][class*="no-print"] {
-        background-color: rgb(37 99 235) !important;
-        background: rgb(37 99 235) !important;
-      }
-      .dark .no-print button.bg-gray-600,
-      .dark .no-print button[class*="bg-gray-600"],
-      .dark button.bg-gray-600.no-print,
-      .dark button[class*="bg-gray-600"][class*="no-print"] {
-        background-color: rgb(75 85 99) !important;
-        background: rgb(75 85 99) !important;
       }
     `
     document.head.appendChild(style)
@@ -169,11 +154,11 @@ export default function PrintButtons() {
       <button
         ref={closeButtonRef}
         onClick={() => window.close()}
-        className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 font-semibold cursor-pointer"
+        className="px-6 py-3 bg-primary text-white rounded-lg hover:opacity-90 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 font-semibold cursor-pointer"
         style={{
-          backgroundColor: 'rgb(75 85 99)',
-          background: 'rgb(75 85 99)',
-          boxShadow: '0 1px 3px 0 rgb(75 85 99)',
+          backgroundColor: 'rgb(106 153 224)',
+          background: 'rgb(106 153 224)',
+          boxShadow: '0 1px 3px 0 rgb(106 153 224)',
           border: 'none',
           borderColor: 'transparent'
         }}

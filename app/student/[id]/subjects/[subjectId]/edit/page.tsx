@@ -74,7 +74,7 @@ export default async function EditSubjectPage({
         <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
           <Link 
             href={`/student/${id}/subjects`}
-            className="px-3 sm:px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold inline-flex items-center justify-center gap-2 text-sm sm:text-base"
+            className="px-3 sm:px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold inline-flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             <span>←</span>
             <span>{t('returnToManage')}</span>

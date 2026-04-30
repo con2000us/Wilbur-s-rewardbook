@@ -55,7 +55,7 @@ export default async function AddTransactionPage({
         <div className="mb-6 flex items-center gap-4">
           <Link 
             href={`/student/${id}/transactions`}
-            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold inline-flex items-center gap-2"
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold inline-flex items-center gap-2"
           >
             <span>←</span>
             <span>{t('passbook')}</span>

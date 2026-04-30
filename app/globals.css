@@ -25,6 +25,16 @@ body {
   font-family: 'Noto Sans TC', 'Poppins', sans-serif;
 }
 
+/* 與學生主頁一致的亮系全畫面背景 */
+.bg-app-shell {
+  background: linear-gradient(135deg, #a7d9ef 0%, #c1d9f0 50%, #e0e7f2 100%);
+}
+
+/* 彈窗遮罩：主色半透明，避免 slate-900 偏暗 */
+.modal-backdrop {
+  background-color: rgba(106, 153, 224, 0.28);
+}
+
 /* Material Icons Outlined */
 .material-icons-outlined {
   font-family: 'Material Icons Outlined';
@@ -62,8 +72,8 @@ body {
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.6); }
+::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.18); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.28); }
 
 /* Drag handle styling */
 .drag-handle {
