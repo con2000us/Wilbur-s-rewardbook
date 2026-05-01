@@ -58,6 +58,8 @@ export async function POST(request: NextRequest) {
       .insert({
         student_id: studentId,
         assessment_id: null,
+        reward_type_id: rewardTypeId,
+        achievement_event_id: null,
         transaction_type: 'use',
         amount: -amount, // 負數表示扣除
         description: useDescription,

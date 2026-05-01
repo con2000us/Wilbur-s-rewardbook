@@ -73,6 +73,18 @@
         "title": "獎勵存摺",
         "desc": "記錄獎金收入與支出明細"
       }
+    },
+    "globalManagement": {
+      "title": "全域管理",
+      "subtitle": "影響所有學生的共用設定",
+      "rewardTypes": {
+        "title": "獎勵類型管理",
+        "desc": "管理積分、獎金、愛心、星星、鑽石等獎勵定義"
+      },
+      "achievementEvents": {
+        "title": "成就事件管理",
+        "desc": "管理優良表現事件與對應的獎勵規則"
+      }
     }
   },
   "student": {
@@ -228,6 +240,8 @@
     "categoryLabel": "獎勵類別",
     "date": "日期",
     "amount": "金額",
+    "quantity": "數量",
+    "quantityWithUnit": "數量（{unit}）",
     "startingBalance": "起始金額",
     "startingBalanceHint": "（結算後的實際獎金金額）",
     "autoDeduct": "(會自動扣除)",
@@ -912,12 +926,50 @@
     "rewardHistory": "獎勵歷史",
     "rewardDetails": "獎勵詳情",
     "manageCustomTypes": "管理自訂義類型",
-    "goToCustomTypes": "前往管理"
+    "goToCustomTypes": "前往管理",
+    "valueWithUnit": "數量（{unit}）",
+    "valueInputHintWithUnit": "輸入數量（單位：{unit}）",
+    "enterUnitValue": "輸入{unit}",
+    "validValueRequired": "請輸入有效的數值"
   },
   "sidebar": {
     "rewardsManagement": "獎勵管理",
     "manageStudentRewardTypes": "管理學生的獎勵類型",
     "rewardsManagementDesc": "管理學生的獎勵類型",
     "rewardsManagementDescEn": "Manage student reward types"
+  },
+  "achievementEvents": {
+    "title": "成就事件管理",
+    "existingEvents": "成就事件列表",
+    "addEvent": "新增事件",
+    "editEvent": "編輯事件",
+    "noEvents": "尚未建立任何成就事件",
+    "noEventsHint": "點擊「新增事件」來建立第一個成就",
+    "nameZh": "名稱（中文）",
+    "nameEn": "名稱（英文）",
+    "nameZhPlaceholder": "例如：作業準時完成",
+    "nameEnPlaceholder": "e.g. Homework On Time",
+    "descZh": "說明（中文）",
+    "descEn": "說明（英文）",
+    "isActive": "啟用中",
+    "inactive": "已停用",
+    "displayOrder": "排序",
+    "rewardRules": "獎勵規則",
+    "addRule": "新增規則",
+    "noRules": "尚未設定獎勵規則",
+    "default": "預設",
+    "nameRequired": "請輸入中文名稱",
+    "confirmDelete": "確定要刪除這個成就事件嗎？",
+    "deleteFailed": "刪除失敗",
+    "saveFailed": "儲存失敗",
+    "loadError": "載入失敗，請稍後再試",
+    "dismiss": "關閉",
+    "cancel": "取消",
+    "create": "建立",
+    "saving": "儲存中...",
+    "saveChanges": "儲存變更",
+    "edit": "編輯",
+    "delete": "刪除",
+    "loading": "載入中..."
   }
 }

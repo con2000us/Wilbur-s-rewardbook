@@ -8,6 +8,7 @@ import RewardDetailModal from './RewardDetailModal'
 import UseRewardPopup from './UseRewardPopup'
 import AddRewardPopup from './AddRewardPopup'
 import { isParent } from '@/lib/utils/userRole'
+import { formatRewardAmountWithUnit, getRewardUnit } from './rewardUnit'
 
 interface Student {
   id: string
@@ -179,6 +180,7 @@ export default function RewardsPageClient({
   const getIconByType = (typeKey: string): string => {
     const iconMap: Record<string, string> = {
       points: '⭐',
+      stars: '🌟',
       money: '💰',
       hearts: '❤️',
       diamonds: '💎',
@@ -210,6 +212,11 @@ export default function RewardsPageClient({
 
     const colorMap: Record<string, { bg: string; text: string; border: string }> = {
       points: {
+        bg: 'bg-blue-100',
+        text: 'text-blue-500',
+        border: 'border-l-blue-400'
+      },
+      stars: {
         bg: 'bg-blue-100',
         text: 'text-blue-500',
         border: 'border-l-blue-400'
@@ -487,12 +494,9 @@ export default function RewardsPageClient({
 
     const currentBalance = rewardStats[requiredType.id]?.currentBalance || 0
     if (currentBalance < rule.required_amount) {
-      const typeName = locale === 'zh-TW' 
-        ? (requiredType.display_name_zh || requiredType.display_name || requiredType.type_key)
-        : (requiredType.display_name_en || requiredType.display_name || requiredType.type_key)
       setError(locale === 'zh-TW' 
-        ? `餘額不足，需要 ${rule.required_amount} ${typeName}，目前只有 ${currentBalance}` 
-        : `Insufficient balance. Need ${rule.required_amount} ${typeName}, but only have ${currentBalance}`
+        ? `餘額不足，需要 ${formatRewardAmountWithUnit(rule.required_amount, requiredType, locale)}，目前只有 ${formatRewardAmountWithUnit(currentBalance, requiredType, locale)}` 
+        : `Insufficient balance. Need ${formatRewardAmountWithUnit(rule.required_amount, requiredType, locale)}, but only have ${formatRewardAmountWithUnit(currentBalance, requiredType, locale)}`
       )
       return
     }
@@ -501,13 +505,10 @@ export default function RewardsPageClient({
     const ruleName = locale === 'zh-TW' 
       ? (rule.name_zh || rule.name_en || '')
       : (rule.name_en || rule.name_zh || '')
-    const typeName = locale === 'zh-TW' 
-      ? (requiredType.display_name_zh || requiredType.display_name || requiredType.type_key)
-      : (requiredType.display_name_en || requiredType.display_name || requiredType.type_key)
     
     if (!confirm(locale === 'zh-TW' 
-      ? `確定要用 ${rule.required_amount} ${typeName} 兌換「${ruleName}」嗎？` 
-      : `Are you sure you want to exchange ${rule.required_amount} ${typeName} for "${ruleName}"?`
+      ? `確定要用 ${formatRewardAmountWithUnit(rule.required_amount, requiredType, locale)} 兌換「${ruleName}」嗎？` 
+      : `Are you sure you want to exchange ${formatRewardAmountWithUnit(rule.required_amount, requiredType, locale)} for "${ruleName}"?`
     )) {
       return
     }
@@ -687,6 +688,7 @@ export default function RewardsPageClient({
                 const iconName = type.icon || getIconByType(type.type_key)
                 const description = type.extra_input_schema?.description || (locale === 'zh-TW' ? '日常作業與小考獲得' : 'Earned from homework and quizzes')
                 const currentBalance = type.id ? (rewardStats[type.id]?.currentBalance || 0) : 0
+                const typeUnit = getRewardUnit(type, locale)
                 return (
                   <div
                     key={type.id}
@@ -776,6 +778,7 @@ export default function RewardsPageClient({
                           <span className="font-bold text-3xl" style={{ color: type.color }}>
                             {currentBalance.toLocaleString()}
                           </span>
+                          <p className="text-[11px] text-slate-500 mt-1">{typeUnit}</p>
                         </div>
                       </div>
                       
@@ -848,10 +851,6 @@ export default function RewardsPageClient({
                   const ruleDescription = locale === 'zh-TW'
                     ? (rule.description_zh || rule.description_en || '')
                     : (rule.description_en || rule.description_zh || '')
-                  const typeDisplayName = locale === 'zh-TW'
-                    ? (requiredType.display_name_zh || requiredType.display_name || requiredType.type_key)
-                    : (requiredType.display_name_en || requiredType.display_name || requiredType.type_key)
-
                   return (
                     <div
                       key={rule.id}
@@ -881,13 +880,14 @@ export default function RewardsPageClient({
                             {locale === 'zh-TW' ? '兌換條件' : 'Exchange Condition'}
                           </span>
                           <div className="flex items-center gap-1 justify-end font-bold text-gray-700">
-                            <span className={ruleColors.text}>{rule.required_amount}</span>
-                            <span className="text-sm">{typeDisplayName}</span>
+                            <span className={ruleColors.text}>
+                              {formatRewardAmountWithUnit(rule.required_amount, requiredType, locale)}
+                            </span>
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
                             {locale === 'zh-TW' ? '現有：' : 'Current: '}
                             <span className={canExchange ? 'text-green-600' : 'text-red-600'}>
-                              {currentBalance}
+                              {formatRewardAmountWithUnit(currentBalance, requiredType, locale)}
                             </span>
                           </div>
                         </div>

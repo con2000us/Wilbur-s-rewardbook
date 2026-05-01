@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       max_score: body.max_score || 100,
       status: body.status || 'upcoming',
       due_date: body.due_date || null,
+      notes: body.notes || null,
       // 只有在資料庫有這些欄位時才設定（向後兼容）
       // 如果 migration 尚未執行，這些欄位會導致錯誤
       // 我們先嘗試插入，如果失敗會返回錯誤訊息
@@ -236,6 +237,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: errorMessage }, { status: 500 })
     }
 
+    // 先嘗試使用表單指定的獎勵類型，未指定時才回退到 money
+    const selectedRewardTypeId = body.reward_type_id || null
+
+    let selectedRewardType: any = null
+    if (selectedRewardTypeId) {
+      const { data } = await supabase
+        .from('custom_reward_types')
+        .select('id, display_name, display_name_zh, type_key')
+        .eq('id', selectedRewardTypeId)
+        .single()
+      selectedRewardType = data
+    }
+
+    const { data: moneyRewardType } = await supabase
+      .from('custom_reward_types')
+      .select('id, display_name, display_name_zh, type_key')
+      .eq('type_key', 'money')
+      .single()
+
+    const targetRewardType = selectedRewardType || moneyRewardType
+    const rewardCategoryName = targetRewardType?.display_name || targetRewardType?.display_name_zh || '獎金'
+
     // 如果有獎金，創建交易記錄
     if (assessmentData.reward_amount > 0) {
       // @ts-ignore - Supabase type inference issue with insert operations
@@ -243,10 +266,12 @@ export async function POST(request: NextRequest) {
         student_id: body.student_id,
         // @ts-ignore - Supabase type inference issue with select queries
         assessment_id: assessment.id,
+        reward_type_id: targetRewardType?.id || null,
+        achievement_event_id: null,
         transaction_type: 'earn',
         amount: assessmentData.reward_amount,
-        description: `${body.title} - 獎金`,
-        category: '測驗獎金',
+        description: `${body.title} - ${rewardCategoryName}`,
+        category: rewardCategoryName,
         transaction_date: body.due_date || new Date().toISOString().split('T')[0]
       })
     }

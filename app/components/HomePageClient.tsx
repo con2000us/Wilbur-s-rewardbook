@@ -57,7 +57,50 @@ export default function HomePageClient({ students, siteName }: Props) {
           {/* 學生列表 */}
           <StudentList initialStudents={students || []} />
 
-          {/* 功能卡片 */}
+          {/* 全域管理區塊 */}
+          <div className="mt-8 sm:mt-10 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="material-icons-outlined text-slate-500 text-xl">tune</span>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-700">{t('globalManagement.title')}</h2>
+              <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
+                {t('globalManagement.subtitle')}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <Link
+                href="/reward-types"
+                className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-purple-100 group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-purple-50 border-2 border-purple-200 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <span className="material-icons-outlined text-purple-500 text-2xl">card_giftcard</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-0.5">{t('globalManagement.rewardTypes.title')}</h3>
+                    <p className="text-xs sm:text-sm text-slate-500">{t('globalManagement.rewardTypes.desc')}</p>
+                  </div>
+                  <span className="material-icons-outlined text-slate-400 group-hover:text-purple-500 transition-colors">chevron_right</span>
+                </div>
+              </Link>
+              <Link
+                href="/achievement-events"
+                className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-amber-100 group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <span className="material-icons-outlined text-amber-500 text-2xl">emoji_events</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-0.5">{t('globalManagement.achievementEvents.title')}</h3>
+                    <p className="text-xs sm:text-sm text-slate-500">{t('globalManagement.achievementEvents.desc')}</p>
+                  </div>
+                  <span className="material-icons-outlined text-slate-400 group-hover:text-amber-500 transition-colors">chevron_right</span>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          {/* 功能說明卡片 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 features-grid">
             <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-white/50">
               <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">📝</div>

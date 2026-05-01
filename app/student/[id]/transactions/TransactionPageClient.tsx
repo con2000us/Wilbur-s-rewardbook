@@ -12,10 +12,12 @@ interface Props {
   studentName?: string
   selectedRewardType?: string | null
   onRewardTypeSelect?: (rewardType: string | null) => void
+  subjects?: any[]
   assessments?: any[]
+  rewardTypes?: any[]
 }
 
-export default function TransactionPageClient({ studentId, transactions, studentName, selectedRewardType, onRewardTypeSelect, assessments = [] }: Props) {
+export default function TransactionPageClient({ studentId, transactions, studentName, selectedRewardType, onRewardTypeSelect, subjects = [], assessments = [], rewardTypes = [] }: Props) {
   const router = useRouter()
   const t = useTranslations('transaction')
   
@@ -54,7 +56,9 @@ export default function TransactionPageClient({ studentId, transactions, student
         onAddTransaction={handleOpenAddModal}
         selectedRewardType={selectedRewardType || undefined}
         onRewardTypeSelect={onRewardTypeSelect}
+        subjects={subjects}
         assessments={assessments}
+        rewardTypes={rewardTypes}
       />
 
       {/* 交易表單 Modal */}

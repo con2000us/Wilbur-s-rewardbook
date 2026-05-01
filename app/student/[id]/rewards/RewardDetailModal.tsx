@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocale, useTranslations } from 'next-intl'
 import { isParent } from '@/lib/utils/userRole'
+import { formatRewardAmountWithUnit, getRewardDisplayName } from './rewardUnit'
 
 interface CustomRewardType {
   id?: string
@@ -13,6 +14,7 @@ interface CustomRewardType {
   display_name_en?: string
   icon: string
   color: string
+  default_unit?: string | null
 }
 
 interface CustomRewardTypeWithId extends CustomRewardType {
@@ -168,9 +170,7 @@ export default function RewardDetailModal({
     currentBalance >= rule.required_amount
   )
 
-  const displayName = locale === 'zh-TW' 
-    ? (rewardType.display_name_zh || rewardType.display_name || rewardType.type_key)
-    : (rewardType.display_name_en || rewardType.display_name || rewardType.type_key)
+  const displayName = getRewardDisplayName(rewardType, locale)
 
   const isEmojiIcon = (icon: string) => {
     return /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(icon) || 
@@ -210,11 +210,11 @@ export default function RewardDetailModal({
               <div className="flex items-center gap-4 mt-2 text-sm">
                 <span>
                   {locale === 'zh-TW' ? '現有量：' : 'Current: '}
-                  <span className="font-bold">{currentBalance.toLocaleString()}</span>
+                  <span className="font-bold">{formatRewardAmountWithUnit(currentBalance, rewardType, locale)}</span>
                 </span>
                 <span>
                   {locale === 'zh-TW' ? '獲得總量：' : 'Total Earned: '}
-                  <span className="font-bold">{totalEarned.toLocaleString()}</span>
+                  <span className="font-bold">{formatRewardAmountWithUnit(totalEarned, rewardType, locale)}</span>
                 </span>
               </div>
             </div>
@@ -343,15 +343,16 @@ export default function RewardDetailModal({
                               ) : null}
                               <div className="flex items-center gap-2 text-sm">
                                 <span className="font-semibold text-gray-700">
-                                  {rule.required_amount} {displayName}
+                                  {formatRewardAmountWithUnit(rule.required_amount, rewardType, locale)}
                                 </span>
                                 <span className="text-gray-400">→</span>
                                 {rewardTypeToReceive ? (
                                   <span className="font-semibold" style={{ color: rewardTypeToReceive.color }}>
-                                    {rule.reward_amount} {locale === 'zh-TW' 
-                                      ? (rewardTypeToReceive.display_name_zh || rewardTypeToReceive.display_name)
-                                      : (rewardTypeToReceive.display_name_en || rewardTypeToReceive.display_name)
-                                    }
+                                    {formatRewardAmountWithUnit(
+                                      rule.reward_amount || 0,
+                                      rewardTypeToReceive,
+                                      locale
+                                    )}
                                   </span>
                                 ) : (
                                   <span className="font-semibold text-gray-700">
@@ -404,7 +405,7 @@ export default function RewardDetailModal({
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-bold text-green-600">
-                            +{Math.abs(transaction.amount).toLocaleString()}
+                            +{formatRewardAmountWithUnit(Math.abs(transaction.amount), rewardType, locale)}
                           </p>
                         </div>
                       </div>
@@ -485,7 +486,7 @@ export default function RewardDetailModal({
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-bold text-red-600">
-                            -{Math.abs(transaction.amount).toLocaleString()}
+                            -{formatRewardAmountWithUnit(Math.abs(transaction.amount), rewardType, locale)}
                           </p>
                         </div>
                       </div>

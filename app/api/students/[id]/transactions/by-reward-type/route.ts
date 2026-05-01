@@ -39,9 +39,9 @@ export async function GET(
       .select('*')
       .eq('student_id', studentId)
 
-    // 根據獎勵類型過濾（通過 category 欄位匹配）
+    // 新模型優先：以 reward_type_id 過濾，舊資料回退 category
     const displayName = rewardType.display_name || rewardType.display_name_zh || rewardType.type_key
-    query = query.eq('category', displayName)
+    query = query.or(`reward_type_id.eq.${rewardTypeId},category.eq.${displayName}`)
 
     // 如果指定了交易類型，則進一步過濾
     if (transactionType) {

@@ -13,7 +13,6 @@ export default async function TransactionsPage({
   const { id } = await params
   const supabase = createClient()
   const t = await getTranslations('transaction')
-  const tStudent = await getTranslations('student')
 
   // 獲取學生資料
   const { data: student } = await supabase
@@ -26,32 +25,26 @@ export default async function TransactionsPage({
     notFound()
   }
 
-  // 獲取獎金類型（type_key = 'money'）
-  const { data: moneyRewardType } = await supabase
-    .from('custom_reward_types')
-    .select('id, type_key, display_name, display_name_zh')
-    .eq('type_key', 'money')
-    .single()
-
-  // 獲取所有交易記錄，按 transaction_date 排序
+  // 獲取該學生所有獎勵／存摺交易（含各自訂獎勵類型、評量獎金、手動紀錄等）
   const { data: allTransactions } = await supabase
     .from('transactions')
     .select('*')
     .eq('student_id', id)
     .order('transaction_date', { ascending: false })
 
-  // 過濾只保留獎金相關的交易
-  // 判斷條件：category 為「獎金」或與 money 類型相關
-  const moneyDisplayName = moneyRewardType?.display_name || moneyRewardType?.display_name_zh || '獎金'
-  const transactions = (allTransactions || []).filter((t: any) => {
-    const category = t.category || ''
-    // 匹配獎金類型的名稱
-    return category === '獎金' || 
-           category === 'Money' || 
-           category === moneyDisplayName ||
-           category.toLowerCase().includes('money') ||
-           category.includes('獎金')
-  })
+  const transactions = allTransactions ?? []
+
+  // 獎勵類型（用於存摺顯示對應單位）
+  // 使用 select('*') 避免因為 schema 上少了某些欄位（如 display_name_zh/en）導致整個查詢失敗
+  const { data: rewardTypesRaw, error: rewardTypesError } = await supabase
+    .from('custom_reward_types')
+    .select('*')
+
+  if (rewardTypesError) {
+    console.error('Failed to load custom_reward_types:', rewardTypesError)
+  }
+
+  const rewardTypes = rewardTypesRaw || []
 
   // 獲取科目資料（用於分類）
   const { data: subjects } = await supabase
@@ -60,11 +53,14 @@ export default async function TransactionsPage({
     .eq('student_id', id)
     .order('order_index')
 
-  // 獲取評量資料（用於關聯交易與科目）
-  const { data: assessments } = await supabase
-    .from('assessments')
-    .select('id, subject_id')
-    .in('subject_id', subjects?.map((s: any) => s.id) || [])
+  // 獲取評量資料（關聯存摺評量獎金 → 顯示科目、類型、標題）
+  const subjectIds = subjects?.map((s: any) => s.id).filter(Boolean) || []
+  const { data: assessments } = subjectIds.length > 0
+    ? await supabase
+        .from('assessments')
+        .select('id, subject_id, title, assessment_type, due_date')
+        .in('subject_id', subjectIds)
+    : { data: [] as any[] }
 
   // 獲取所有學生（用於切換器）
   const { data: allStudents } = await supabase
@@ -75,7 +71,7 @@ export default async function TransactionsPage({
   // @ts-ignore - Supabase type inference issue with select queries
   const avatar = parseStudentAvatar((student as any).avatar_url, (student as any).name)
 
-  // 計算收支概況（只計算獎金）
+  // 計算收支概況（列表內所有交易；跨類型加總僅供參考）
   // @ts-ignore - Supabase type inference issue with transactions
   const totalEarned = transactions?.filter((t: any) => t.amount > 0).reduce((sum: number, t: any) => sum + t.amount, 0) || 0
   // @ts-ignore - Supabase type inference issue with transactions
@@ -109,14 +105,14 @@ export default async function TransactionsPage({
                 studentId={id}
                 studentName={(student as any).name}
                 studentAvatar={avatar}
-                recordsTitle="獎金存摺"
+                recordsTitle={t('passbook')}
                 allStudents={allStudents || []}
                 basePath="/transactions"
                 currentPage="transactions"
                 showHeader={true}
               />
               
-              {/* 獎金來源分類 */}
+              {/* 獎勵來源分類 */}
               <CategoryTagsSidebar
                 transactions={transactions || []}
                 summary={summary}
@@ -131,7 +127,9 @@ export default async function TransactionsPage({
             studentId={id}
             transactions={transactions || []}
             studentName={(student as any).name}
+            subjects={subjects || []}
             assessments={assessments || []}
+            rewardTypes={rewardTypes || []}
           />
         </TransactionsContentProvider>
       </div>

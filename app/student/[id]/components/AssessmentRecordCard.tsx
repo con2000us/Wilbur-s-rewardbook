@@ -19,6 +19,7 @@ interface AssessmentRecord {
     icon: string
   }
   description?: string
+  notes?: string | null
 }
 
 interface RecordCardProps {
@@ -196,6 +197,11 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
                 {formatDisplayDate(record.due_date) || (record.description ? `${t('unitLabel')}${record.description}` : '')}
               </span>
             </div>
+            {record.notes && (
+              <p className="mt-2 text-sm text-slate-600 line-clamp-2">
+                {locale === 'zh-TW' ? '備註：' : 'Notes: '}{record.notes}
+              </p>
+            )}
           </div>
         </div>
         

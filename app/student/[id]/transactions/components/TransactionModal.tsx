@@ -12,6 +12,8 @@ interface Transaction {
   description: string
   category: string
   transaction_date: string
+  reward_type_id?: string | null
+  achievement_event_id?: string | null
 }
 
 interface TransactionModalProps {

@@ -122,14 +122,14 @@ export default function SidebarContent({
       {/* Rewards Management Button */}
       <Link
         href={`/student/${studentId}/rewards`}
-        className="glass-card p-4 rounded-3xl flex flex-col items-center gap-2 border border-blue-50/50 transition-all group hover:bg-blue-50/50"
+        className="glass-card p-4 rounded-3xl flex flex-col items-center gap-2 border border-white/70 bg-white/75 backdrop-blur-sm transition-all duration-200 group hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5"
       >
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-3xl">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-3xl text-white shadow-md group-hover:scale-105 transition-transform">
           🎁
         </div>
         <div className="text-center">
-          <div className="text-sm font-bold text-slate-700 text-slate-200">{locale === 'zh-TW' ? '獎勵管理' : 'Reward Management'}</div>
-          <div className="text-xs text-slate-500 text-slate-400">{locale === 'zh-TW' ? '管理學生的獎勵類型' : 'Manage student reward types'}</div>
+          <div className="text-sm font-bold text-slate-800">{locale === 'zh-TW' ? '獎勵管理' : 'Reward Management'}</div>
+          <div className="text-xs text-slate-600">{locale === 'zh-TW' ? '管理學生的獎勵類型' : 'Manage student reward types'}</div>
         </div>
       </Link>
 
@@ -155,15 +155,14 @@ export default function SidebarContent({
           <Link
             href={`/student/${studentId}/print?${params.toString()}`}
             target="_blank"
-            className="glass-card print-button-card hover:bg-slate-50 p-4 rounded-3xl flex flex-col items-center gap-2 border border-blue-50/50 transition-all group"
-            style={{ background: 'white' }}
+            className="glass-card print-button-card p-4 rounded-3xl flex flex-col items-center gap-2 border border-primary/25 bg-primary/10 backdrop-blur-sm transition-all duration-200 group hover:bg-primary/15 hover:shadow-lg hover:-translate-y-0.5"
           >
-            <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
               <span className="material-icons-outlined" style={{ fontSize: '2.5rem' }}>print</span>
             </div>
             <div className="text-center">
-              <p className="font-bold text-sm">{t('printReport')}</p>
-              <p className="text-xs text-slate-400">{t('exportPDF')}</p>
+              <p className="font-bold text-sm text-slate-800">{t('printReport')}</p>
+              <p className="text-xs text-slate-600">{t('exportPDF')}</p>
             </div>
           </Link>
         )

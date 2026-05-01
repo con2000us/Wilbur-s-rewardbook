@@ -199,12 +199,7 @@ export default function StudentList({ initialStudents }: Props) {
               <button
                 onClick={handleSaveOrder}
                 disabled={isSaving}
-                className="h-10 px-4 py-2 rounded-lg transition-all duration-200 font-semibold flex items-center gap-2 shadow-lg shadow-[inset_0_0_0_2px_rgba(255,255,255,0.3)] cursor-pointer hover:-translate-y-1"
-                style={{
-                  background: isSaving
-                    ? '#d1d5db'
-                    : 'linear-gradient(to bottom right, #10b981, #059669, #047857)'
-                }}
+                className="h-10 px-4 py-2 rounded-lg transition-all duration-200 font-semibold flex items-center gap-2 cursor-pointer bg-primary text-white hover:opacity-90 hover:-translate-y-1 hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
               >
                 <span>💾</span>
                 <span>{isSaving ? tCommon('loading') : tCommon('save')}</span>
@@ -212,12 +207,7 @@ export default function StudentList({ initialStudents }: Props) {
               <button
                 onClick={handleCancelReorder}
                 disabled={isSaving}
-                className="h-10 px-4 py-2 rounded-lg transition-all duration-200 font-semibold flex items-center gap-2 shadow-lg shadow-[inset_0_0_0_2px_rgba(255,255,255,0.3)] cursor-pointer hover:-translate-y-1"
-                style={{
-                  background: isSaving
-                    ? '#d1d5db'
-                    : 'rgba(255, 255, 255, 0.25)'
-                }}
+                className="h-10 px-4 py-2 rounded-lg transition-all duration-200 font-semibold flex items-center gap-2 cursor-pointer bg-primary/15 backdrop-blur-md border border-primary/30 text-slate-700 hover:bg-primary/20 hover:text-slate-900 hover:-translate-y-1 hover:shadow-lg disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
               >
                 <span>❌</span>
                 <span>{tCommon('cancel')}</span>

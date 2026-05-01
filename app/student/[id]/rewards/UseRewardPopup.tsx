@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocale, useTranslations } from 'next-intl'
+import { formatRewardAmountWithUnit, getRewardDisplayName, getRewardUnit } from './rewardUnit'
 
 interface CustomRewardType {
   id?: string
@@ -12,6 +13,7 @@ interface CustomRewardType {
   display_name_en?: string
   icon: string
   color: string
+  default_unit?: string | null
 }
 
 interface ExchangeRule {
@@ -50,6 +52,7 @@ export default function UseRewardPopup({
 }: UseRewardPopupProps) {
   const locale = useLocale()
   const tCommon = useTranslations('common')
+  const tReward = useTranslations('studentRewardManager')
   const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -151,15 +154,15 @@ export default function UseRewardPopup({
 
       const amount = parseFloat(formData.amount)
       if (!amount || amount <= 0) {
-        setError(locale === 'zh-TW' ? '請輸入有效的使用數量' : 'Please enter a valid amount')
+        setError(tReward('validValueRequired'))
         setLoading(false)
         return
       }
 
       if (amount > currentBalance) {
         setError(locale === 'zh-TW' 
-          ? `餘額不足，目前只有 ${currentBalance.toLocaleString()}` 
-          : `Insufficient balance. Current balance: ${currentBalance.toLocaleString()}`
+          ? `餘額不足，目前只有 ${formatRewardAmountWithUnit(currentBalance, rewardType, locale)}` 
+          : `Insufficient balance. Current balance: ${formatRewardAmountWithUnit(currentBalance, rewardType, locale)}`
         )
         setLoading(false)
         return
@@ -176,9 +179,8 @@ export default function UseRewardPopup({
     }
   }
 
-  const displayName = locale === 'zh-TW' 
-    ? (rewardType.display_name_zh || rewardType.display_name || rewardType.type_key)
-    : (rewardType.display_name_en || rewardType.display_name || rewardType.type_key)
+  const displayName = getRewardDisplayName(rewardType, locale)
+  const unitLabel = getRewardUnit(rewardType, locale)
 
   const isEmojiIcon = (icon: string) => {
     return /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(icon) || 
@@ -220,7 +222,7 @@ export default function UseRewardPopup({
                 </h2>
                 <p className="text-sm opacity-90 mt-1">
                   {displayName} · {locale === 'zh-TW' ? '現有量：' : 'Current: '}
-                  <span className="font-bold">{currentBalance.toLocaleString()}</span>
+                  <span className="font-bold">{formatRewardAmountWithUnit(currentBalance, rewardType, locale)}</span>
                 </p>
               </div>
             </div>
@@ -303,10 +305,10 @@ export default function UseRewardPopup({
               {/* 使用數量 */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {locale === 'zh-TW' ? '使用數量 *' : 'Amount *'}
+                  {tReward('valueWithUnit', { unit: unitLabel })} *
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
-                  {locale === 'zh-TW' ? `輸入要使用的 ${displayName} 數量（最多 ${currentBalance.toLocaleString()}）` : `Enter the amount of ${displayName} to use (max ${currentBalance.toLocaleString()})`}
+                  {`${tReward('valueInputHintWithUnit', { unit: unitLabel })} - ${displayName} (max ${formatRewardAmountWithUnit(currentBalance, rewardType, locale)})`}
                 </p>
                 <input
                   type="number"
@@ -317,7 +319,7 @@ export default function UseRewardPopup({
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   required={actionType === 'use'}
-                  placeholder={locale === 'zh-TW' ? '輸入數量' : 'Enter amount'}
+                  placeholder={tReward('enterUnitValue', { unit: unitLabel })}
                 />
               </div>
 
@@ -348,7 +350,7 @@ export default function UseRewardPopup({
                     {(() => {
                       const amount = parseFloat(formData.amount) || 0
                       const newBalance = currentBalance - amount
-                      return newBalance >= 0 ? newBalance.toLocaleString() : '0'
+                      return formatRewardAmountWithUnit(newBalance >= 0 ? newBalance : 0, rewardType, locale)
                     })()}
                   </span>
                 </div>
@@ -409,15 +411,16 @@ export default function UseRewardPopup({
                               ) : null}
                               <div className="flex items-center gap-2 text-sm">
                                 <span className="font-semibold text-gray-700">
-                                  {rule.required_amount} {displayName}
+                                  {formatRewardAmountWithUnit(rule.required_amount, rewardType, locale)}
                                 </span>
                                 <span className="text-gray-400">→</span>
                                 {rewardTypeToReceive ? (
                                   <span className="font-semibold" style={{ color: rewardTypeToReceive.color }}>
-                                    {rule.reward_amount} {locale === 'zh-TW' 
-                                      ? (rewardTypeToReceive.display_name_zh || rewardTypeToReceive.display_name)
-                                      : (rewardTypeToReceive.display_name_en || rewardTypeToReceive.display_name)
-                                    }
+                                    {formatRewardAmountWithUnit(
+                                      rule.reward_amount || 0,
+                                      rewardTypeToReceive,
+                                      locale
+                                    )}
                                   </span>
                                 ) : (
                                   <span className="font-semibold text-gray-700">
@@ -450,17 +453,18 @@ export default function UseRewardPopup({
                         {locale === 'zh-TW' ? '兌換後餘額：' : 'Balance after exchange: '}
                       </span>
                       <span className="font-bold text-gray-900">
-                        {(currentBalance - selectedRule.required_amount).toLocaleString()}
+                        {formatRewardAmountWithUnit(currentBalance - selectedRule.required_amount, rewardType, locale)}
                       </span>
                     </div>
                     {rewardTypeToReceive && (
                       <div className="text-sm text-gray-600">
                         {locale === 'zh-TW' ? '將獲得：' : 'Will receive: '}
                         <span className="font-bold" style={{ color: rewardTypeToReceive.color }}>
-                          {selectedRule.reward_amount} {locale === 'zh-TW' 
-                            ? (rewardTypeToReceive.display_name_zh || rewardTypeToReceive.display_name)
-                            : (rewardTypeToReceive.display_name_en || rewardTypeToReceive.display_name)
-                          }
+                          {formatRewardAmountWithUnit(
+                            selectedRule.reward_amount || 0,
+                            rewardTypeToReceive,
+                            locale
+                          )}
                         </span>
                       </div>
                     )}

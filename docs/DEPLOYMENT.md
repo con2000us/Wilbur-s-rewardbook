@@ -12,8 +12,8 @@ Complete step-by-step guide for deploying Wilbur's Reward Book.
 1. **Set up Supabase first** (Required):
    - Create a new project at [supabase.com](https://supabase.com)
    - Go to **SQL Editor** in your Supabase dashboard
-   - Copy and paste the entire content of `database/setup-database.sql`
-   - Click **Run** to create all database tables, functions, and triggers
+   - In order, run the SQL files under `database/bootstrap/` (see **Step 1.2** below)
+   - Click **Run** after each paste to create tables, defaults, and optional seeds
    - ⚠️ **Important**: This step is **required** - the app won't work without it!
    - Go to **Settings** → **API** and copy:
      - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
@@ -28,7 +28,7 @@ Complete step-by-step guide for deploying Wilbur's Reward Book.
 5. Click "Deploy"
 6. Done! 🎉
 
-> 💡 **Note**: The database setup (`database/setup-database.sql`) must be run **before** or **after** deployment, but it's **required** for the app to function. Supabase doesn't automatically create tables from code - you need to run the SQL script manually.
+> 💡 **Note**: Database setup (`database/bootstrap/*.sql`) must be run **before** or **after** deployment, but it's **required** for the app to function. Supabase doesn't automatically create tables from code—you run the SQL files manually.
 
 ### Option 2: Use as Template
 
@@ -67,10 +67,18 @@ You need **3 free accounts** to deploy this project:
 
 1. In your Supabase dashboard, go to **SQL Editor** (left sidebar)
 2. Click **"New query"**
-3. Open `database/setup-database.sql` from this repository
-4. Copy the **entire content** and paste into the SQL Editor
-5. Click **"Run"** (or press `Ctrl+Enter`)
-6. You should see: `✅ Database setup completed successfully!`
+3. Use the consolidated SQL method (recommended) in this exact order (all under `database/bootstrap/`):
+   - **Schema**: Run `database/bootstrap/01_schema.sql`
+   - **Default seed**: Run `database/bootstrap/02_seed_defaults.sql`
+   - **Optional seed**: Run `database/bootstrap/03_seed_optional.sql`
+4. Click **"Run"** for each file (or press `Ctrl+Enter`)
+5. Confirm tables and seeds are created successfully
+
+> ✅ **Why this method**: It reduces scattered migration steps and gives new users a stable, release-friendly DB initialization flow.
+>
+> ℹ️ `database/bootstrap/01_schema.sql` contains the full schema dump for new projects.
+>
+> 🔁 **Legacy fallback**: `database/setup-database.sql` can still be used for older setup flow, but release documentation now standardizes on the consolidated method above.
 
 ### 1.3 Get API Credentials
 
@@ -183,10 +191,12 @@ After deployment, verify:
 
 ### Issue: "Table does not exist"
 
-**Solution**: Make sure you ran `database/setup-database.sql` completely:
+**Solution**: Make sure you ran the consolidated SQL files completely:
 1. Go to Supabase SQL Editor
 2. Check if tables exist: `SELECT * FROM students LIMIT 1;`
-3. If error, re-run `database/setup-database.sql`
+3. If error, re-run in order:
+   - `database/bootstrap/01_schema.sql`
+   - `database/bootstrap/02_seed_defaults.sql`
 
 ### Issue: "Build failed"
 

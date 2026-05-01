@@ -47,9 +47,13 @@ export async function GET(
 
     // 處理每筆交易
     transactions?.forEach(transaction => {
-      // 根據category匹配獎勵類型
-      // category可能是獎勵類型的display_name或type_key
-      const matchingType = rewardTypes?.find(type => {
+      // 新模型優先：使用 reward_type_id 直接匹配
+      const directType = transaction.reward_type_id
+        ? rewardTypes?.find(type => type.id === transaction.reward_type_id)
+        : null
+
+      // 過渡相容：若舊資料沒有 reward_type_id，退回 category 模糊匹配
+      const matchingType = directType || rewardTypes?.find(type => {
         const displayName = type.display_name || type.display_name_zh || ''
         const typeKey = type.type_key || ''
         const category = transaction.category || ''

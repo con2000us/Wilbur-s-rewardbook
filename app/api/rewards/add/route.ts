@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const supabase = createClient()
 
-    const { studentId, rewardTypeId, amount, title, notes } = body
+    const { studentId, rewardTypeId, amount, title, notes, achievementEventId } = body
 
     if (!studentId || !rewardTypeId || !amount || amount <= 0 || !title) {
       return NextResponse.json({ 
@@ -38,6 +38,8 @@ export async function POST(request: NextRequest) {
       .insert({
         student_id: studentId,
         assessment_id: null,
+        reward_type_id: rewardTypeId,
+        achievement_event_id: achievementEventId || null,
         transaction_type: 'earn',
         amount: amount, // 正數表示獲得
         description: earnDescription,

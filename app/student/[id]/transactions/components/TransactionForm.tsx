@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
+import { getRewardUnit } from '../../rewards/rewardUnit'
 
 interface Transaction {
   id: string
@@ -11,6 +12,8 @@ interface Transaction {
   description: string
   category: string
   transaction_date: string
+  reward_type_id?: string | null
+  achievement_event_id?: string | null
 }
 
 interface CustomRewardType {
@@ -26,6 +29,24 @@ interface CustomRewardType {
   has_extra_input: boolean
   extra_input_schema: any
   is_system?: boolean
+}
+
+interface AchievementEvent {
+  id: string
+  name_zh: string
+  name_en?: string
+  description_zh?: string
+  description_en?: string
+  is_active: boolean
+  display_order: number
+}
+
+interface AchievementEventRewardRule {
+  id: string
+  event_id: string
+  reward_type_id: string
+  default_amount?: number
+  is_default: boolean
 }
 
 interface Props {
@@ -53,6 +74,10 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
   const [selectedPresetIndex, setSelectedPresetIndex] = useState<number | null>(null)
   const [customTypes, setCustomTypes] = useState<CustomRewardType[]>([])
   const [loadingTypes, setLoadingTypes] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState<string>(transaction?.category || '')
+  const [events, setEvents] = useState<AchievementEvent[]>([])
+  const [eventRules, setEventRules] = useState<AchievementEventRewardRule[]>([])
+  const [selectedEventId, setSelectedEventId] = useState<string>('')
 
   // 載入自訂義獎勵類型
   useEffect(() => {
@@ -84,6 +109,44 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
     loadCustomTypes()
   }, [])
 
+  useEffect(() => {
+    async function loadAchievementEvents() {
+      try {
+        const response = await fetch('/api/achievement-events/list', {
+          method: 'GET',
+        })
+        const data = await response.json()
+        if (!response.ok) {
+          console.error('achievement-events/list failed:', data.error || response.statusText)
+          setEvents([])
+          setEventRules([])
+          return
+        }
+        if (data.success) {
+          setEvents(data.events || [])
+          setEventRules(data.rules || [])
+        } else {
+          setEvents([])
+          setEventRules([])
+        }
+      } catch (err) {
+        console.error('Failed to load achievement events:', err)
+        setEvents([])
+        setEventRules([])
+      }
+    }
+    loadAchievementEvents()
+  }, [])
+
+  // 編輯模式：還原先前儲存的成就事件選項（需與 transaction.achievement_event_id 同步）
+  useEffect(() => {
+    if (transaction?.achievement_event_id) {
+      setSelectedEventId(String(transaction.achievement_event_id))
+    } else {
+      setSelectedEventId('')
+    }
+  }, [transaction?.id, transaction?.achievement_event_id])
+
   // 取得顯示名稱（根據語言）
   const getDisplayName = (type: CustomRewardType): string => {
     if (locale === 'zh-TW') {
@@ -91,6 +154,17 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
     } else {
       return type.display_name_en || type.display_name || type.type_key
     }
+  }
+
+  const selectedType = customTypes.find((type) => getDisplayName(type) === selectedCategory)
+  const selectedUnit = selectedType ? getRewardUnit(selectedType, locale) : (locale === 'zh-TW' ? '元' : 'dollars')
+  const getEventDisplayName = (event: AchievementEvent): string => {
+    const zh = (event.name_zh || '').trim()
+    const en = (event.name_en || '').trim()
+    if (locale === 'zh-TW') {
+      return zh || en || String(event.id).slice(0, 8)
+    }
+    return en || zh || String(event.id).slice(0, 8)
   }
 
   // 判斷是否為 emoji
@@ -156,6 +230,8 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
         amount: transactionType === 'reset' ? amount : (transactionType === 'spend' ? -Math.abs(amount) : Math.abs(amount)),
         description: description,
         category: formData.get('category'),
+        reward_type_id: selectedType?.id || null,
+        achievement_event_id: selectedEventId || null,
         transaction_date: transactionDate || new Date().toISOString().split('T')[0],
       }
 
@@ -243,6 +319,37 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
       (form.elements.namedItem('category') as HTMLInputElement).value = preset.category
     }
     setSelectedPresetIndex(index)
+    setSelectedCategory(preset.category)
+  }
+
+  function handleEventChange(eventId: string) {
+    setSelectedEventId(eventId)
+    if (!eventId) return
+
+    const defaultRule =
+      eventRules.find(rule => rule.event_id === eventId && rule.is_default) ||
+      eventRules.find(rule => rule.event_id === eventId)
+
+    if (!defaultRule) return
+
+    const mappedType = customTypes.find(type => type.id === defaultRule.reward_type_id)
+    if (!mappedType) return
+
+    const displayName = getDisplayName(mappedType)
+    setSelectedCategory(displayName)
+
+    const form = document.querySelector('form') as HTMLFormElement | null
+    if (!form) return
+
+    const categoryInput = form.elements.namedItem('category') as HTMLSelectElement
+    if (categoryInput) {
+      categoryInput.value = displayName
+    }
+
+    const amountInput = form.elements.namedItem('amount') as HTMLInputElement
+    if (amountInput && defaultRule.default_amount && !amountInput.value) {
+      amountInput.value = String(defaultRule.default_amount)
+    }
   }
 
   // 格式化日期
@@ -398,6 +505,28 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
           </p>
         </div>
 
+        {/* 成就事件（可選） */}
+        {transactionType !== 'reset' && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {locale === 'zh-TW' ? '優良成就事件' : 'Achievement Event'}
+            </label>
+            <select
+              name="achievement_event"
+              value={selectedEventId}
+              onChange={(e) => handleEventChange(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              <option value="">{locale === 'zh-TW' ? '不指定（僅記錄獎勵類型）' : 'None (record reward type only)'}</option>
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {getEventDisplayName(event)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* 獎勵類別（獎勵品種類） */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -439,7 +568,10 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
               name="category"
               required
               defaultValue={transaction?.category || ''}
-              onChange={() => setSelectedPresetIndex(null)}
+              onChange={(e) => {
+                setSelectedPresetIndex(null)
+                setSelectedCategory(e.target.value)
+              }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="">{t('selectCategory')}</option>
@@ -503,7 +635,7 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
         {transactionType !== 'reset' && (
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {t('amount')} * {transactionType === 'spend' && <span className="text-red-600">{t('autoDeduct')}</span>}
+              {t('quantityWithUnit', { unit: selectedUnit })} * {transactionType === 'spend' && <span className="text-red-600">{t('autoDeduct')}</span>}
             </label>
             <div className="relative">
               <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold ${

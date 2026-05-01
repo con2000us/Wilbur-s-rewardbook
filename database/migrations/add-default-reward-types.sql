@@ -1,6 +1,6 @@
 -- ========================================
--- 添加预设奖励类型：积分、奖金、小爱心
--- 其中积分与奖金是不可删除的系统预设类型
+-- 添加预设奖励类型：积分、奖金、爱心、星星、钻石
+-- 五种皆为不可删除的系统预设类型
 -- ========================================
 -- 注意：此迁移文件假设 custom_reward_types 表已经存在
 -- 如果表不存在，请先执行 add-custom-reward-types-manager.sql
@@ -176,7 +176,7 @@ BEGIN
   END IF;
 END $$;
 
--- 小爱心（可删除的自定义类型）
+-- 爱心（系统预设，不可删除）
 DO $$
 BEGIN
   IF EXISTS (
@@ -196,14 +196,14 @@ BEGIN
     )
     VALUES (
       'hearts',
-      '小愛心',
+      '愛心',
       '❤️',
       '#ef4444',
       '顆',
       TRUE,
       FALSE,
       NULL,
-      FALSE
+      TRUE
     )
     ON CONFLICT (type_key) DO UPDATE SET
       display_name = EXCLUDED.display_name,
@@ -213,7 +213,7 @@ BEGIN
       is_accumulable = EXCLUDED.is_accumulable,
       has_extra_input = EXCLUDED.has_extra_input,
       extra_input_schema = EXCLUDED.extra_input_schema,
-      is_system = COALESCE(EXCLUDED.is_system, FALSE),
+      is_system = TRUE,
       updated_at = NOW();
   ELSE
     INSERT INTO custom_reward_types (
@@ -230,7 +230,7 @@ BEGIN
     )
     VALUES (
       'hearts',
-      '小愛心',
+      '愛心',
       'Hearts',
       '❤️',
       '#ef4444',
@@ -238,7 +238,7 @@ BEGIN
       TRUE,
       FALSE,
       NULL,
-      FALSE
+      TRUE
     )
     ON CONFLICT (type_key) DO UPDATE SET
       display_name_zh = EXCLUDED.display_name_zh,
@@ -249,7 +249,163 @@ BEGIN
       is_accumulable = EXCLUDED.is_accumulable,
       has_extra_input = EXCLUDED.has_extra_input,
       extra_input_schema = EXCLUDED.extra_input_schema,
-      is_system = COALESCE(EXCLUDED.is_system, FALSE),
+      is_system = TRUE,
+      updated_at = NOW();
+  END IF;
+END $$;
+
+-- 星星（系统预设，不可删除）
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'custom_reward_types' AND column_name = 'display_name'
+  ) THEN
+    INSERT INTO custom_reward_types (
+      type_key,
+      display_name,
+      icon,
+      color,
+      default_unit,
+      is_accumulable,
+      has_extra_input,
+      extra_input_schema,
+      is_system
+    )
+    VALUES (
+      'stars',
+      '星星',
+      '🌟',
+      '#3b82f6',
+      '顆',
+      TRUE,
+      FALSE,
+      NULL,
+      TRUE
+    )
+    ON CONFLICT (type_key) DO UPDATE SET
+      display_name = EXCLUDED.display_name,
+      icon = EXCLUDED.icon,
+      color = EXCLUDED.color,
+      default_unit = EXCLUDED.default_unit,
+      is_accumulable = EXCLUDED.is_accumulable,
+      has_extra_input = EXCLUDED.has_extra_input,
+      extra_input_schema = EXCLUDED.extra_input_schema,
+      is_system = TRUE,
+      updated_at = NOW();
+  ELSE
+    INSERT INTO custom_reward_types (
+      type_key,
+      display_name_zh,
+      display_name_en,
+      icon,
+      color,
+      default_unit,
+      is_accumulable,
+      has_extra_input,
+      extra_input_schema,
+      is_system
+    )
+    VALUES (
+      'stars',
+      '星星',
+      'Stars',
+      '🌟',
+      '#3b82f6',
+      'pcs',
+      TRUE,
+      FALSE,
+      NULL,
+      TRUE
+    )
+    ON CONFLICT (type_key) DO UPDATE SET
+      display_name_zh = EXCLUDED.display_name_zh,
+      display_name_en = EXCLUDED.display_name_en,
+      icon = EXCLUDED.icon,
+      color = EXCLUDED.color,
+      default_unit = EXCLUDED.default_unit,
+      is_accumulable = EXCLUDED.is_accumulable,
+      has_extra_input = EXCLUDED.has_extra_input,
+      extra_input_schema = EXCLUDED.extra_input_schema,
+      is_system = TRUE,
+      updated_at = NOW();
+  END IF;
+END $$;
+
+-- 钻石（系统预设，不可删除）
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'custom_reward_types' AND column_name = 'display_name'
+  ) THEN
+    INSERT INTO custom_reward_types (
+      type_key,
+      display_name,
+      icon,
+      color,
+      default_unit,
+      is_accumulable,
+      has_extra_input,
+      extra_input_schema,
+      is_system
+    )
+    VALUES (
+      'diamonds',
+      '鑽石',
+      '💎',
+      '#8b5cf6',
+      '顆',
+      TRUE,
+      FALSE,
+      NULL,
+      TRUE
+    )
+    ON CONFLICT (type_key) DO UPDATE SET
+      display_name = EXCLUDED.display_name,
+      icon = EXCLUDED.icon,
+      color = EXCLUDED.color,
+      default_unit = EXCLUDED.default_unit,
+      is_accumulable = EXCLUDED.is_accumulable,
+      has_extra_input = EXCLUDED.has_extra_input,
+      extra_input_schema = EXCLUDED.extra_input_schema,
+      is_system = TRUE,
+      updated_at = NOW();
+  ELSE
+    INSERT INTO custom_reward_types (
+      type_key,
+      display_name_zh,
+      display_name_en,
+      icon,
+      color,
+      default_unit,
+      is_accumulable,
+      has_extra_input,
+      extra_input_schema,
+      is_system
+    )
+    VALUES (
+      'diamonds',
+      '鑽石',
+      'Diamonds',
+      '💎',
+      '#8b5cf6',
+      'pcs',
+      TRUE,
+      FALSE,
+      NULL,
+      TRUE
+    )
+    ON CONFLICT (type_key) DO UPDATE SET
+      display_name_zh = EXCLUDED.display_name_zh,
+      display_name_en = EXCLUDED.display_name_en,
+      icon = EXCLUDED.icon,
+      color = EXCLUDED.color,
+      default_unit = EXCLUDED.default_unit,
+      is_accumulable = EXCLUDED.is_accumulable,
+      has_extra_input = EXCLUDED.has_extra_input,
+      extra_input_schema = EXCLUDED.extra_input_schema,
+      is_system = TRUE,
       updated_at = NOW();
   END IF;
 END $$;
@@ -288,7 +444,7 @@ BEGIN
       is_system,
       created_at
     FROM custom_reward_types
-    WHERE type_key IN ('points', 'money', 'hearts')
+    WHERE type_key IN ('points', 'money', 'hearts', 'stars', 'diamonds')
     ORDER BY is_system DESC, type_key;
   ELSE
     SELECT 
@@ -300,7 +456,7 @@ BEGIN
       is_system,
       created_at
     FROM custom_reward_types
-    WHERE type_key IN ('points', 'money', 'hearts')
+    WHERE type_key IN ('points', 'money', 'hearts', 'stars', 'diamonds')
     ORDER BY is_system DESC, type_key;
   END IF;
 END $$;

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import TransactionModal from './components/TransactionModal'
 import { useRewardType } from './TransactionsContent'
+import { findRewardTypeForTransaction, getRewardUnit } from '../rewards/rewardUnit'
 
 interface Props {
   studentId: string
@@ -15,15 +16,61 @@ interface Props {
   onAddTransaction?: () => void
   selectedRewardType?: string | null
   onRewardTypeSelect?: (rewardType: string | null) => void
+  subjects?: any[]
   assessments?: any[]
+  rewardTypes?: any[]
 }
 
-export default function TransactionRecords({ studentId, transactions, studentName, onEditTransaction, onAddTransaction, selectedRewardType, onRewardTypeSelect, assessments = [] }: Props) {
+const ASSESSMENT_TYPE_KEYS = ['exam', 'quiz', 'homework', 'project'] as const
+
+export default function TransactionRecords({ studentId, transactions, studentName, onEditTransaction, onAddTransaction, selectedRewardType, onRewardTypeSelect, subjects = [], assessments = [], rewardTypes = [] }: Props) {
   const router = useRouter()
   const t = useTranslations('transaction')
   const tStudent = useTranslations('student')
   const tCommon = useTranslations('common')
+  const tAssessment = useTranslations('assessment')
   const locale = useLocale()
+
+  const assessmentById = useMemo(() => {
+    const m = new Map<string, any>()
+    assessments.forEach((a: any) => {
+      if (a?.id != null) m.set(String(a.id), a)
+    })
+    return m
+  }, [assessments])
+
+  const subjectById = useMemo(() => {
+    const m = new Map<string, any>()
+    subjects.forEach((s: any) => {
+      if (s?.id != null) m.set(String(s.id), s)
+    })
+    return m
+  }, [subjects])
+
+  /** 由 assessment_id join 評量／科目，顯示評量來源上下文 */
+  const getAssessmentContextLine = (transaction: any): string | null => {
+    if (!transaction.assessment_id) return null
+    const a = assessmentById.get(String(transaction.assessment_id))
+    if (!a) {
+      return locale === 'zh-TW' ? '評量紀錄已無法載入（可能已刪除）' : 'Assessment unavailable (may have been deleted)'
+    }
+    const subjectId = a.subject_id != null ? String(a.subject_id) : ''
+    const subject = subjectId ? subjectById.get(subjectId) : null
+    const subjectName = (subject?.name || '').trim()
+    const typeRaw = (a.assessment_type || '').trim()
+    const typeLabel =
+      typeRaw &&
+      ASSESSMENT_TYPE_KEYS.includes(typeRaw as (typeof ASSESSMENT_TYPE_KEYS)[number])
+        ? tAssessment(`types.${typeRaw}` as 'types.exam')
+        : typeRaw
+
+    const sep = locale === 'zh-TW' ? ' · ' : ' · '
+    const parts: string[] = []
+    if (subjectName) parts.push(`${tAssessment('subject')}: ${subjectName}`)
+    if (typeLabel) parts.push(typeLabel)
+
+    return parts.length > 0 ? parts.join(sep) : null
+  }
 
   // 從 Context 獲取月份選擇狀態
   const { selectedMonth, setSelectedMonth } = useRewardType()
@@ -37,6 +84,34 @@ export default function TransactionRecords({ studentId, transactions, studentNam
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const categoryButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({})
   const monthPickerButtonRef = useRef<HTMLButtonElement>(null)
+
+  const getTransactionUnit = (transaction: any) => {
+    const rewardType = findRewardTypeForTransaction(transaction, rewardTypes)
+    if (rewardType) return getRewardUnit(rewardType, locale)
+    return ''
+  }
+  const formatTransactionAmount = (amount: number, transaction: any) => {
+    const unit = getTransactionUnit(transaction)
+    const number = Math.abs(amount).toLocaleString()
+    return unit ? `${number} ${unit}` : number
+  }
+  const getCategoryLabel = (transaction: any) => {
+    const rewardType = findRewardTypeForTransaction(transaction, rewardTypes)
+    if (rewardType) {
+      return locale === 'zh-TW'
+        ? (rewardType.display_name_zh || rewardType.display_name || rewardType.type_key)
+        : (rewardType.display_name_en || rewardType.display_name || rewardType.type_key)
+    }
+    return transaction.category || (locale === 'zh-TW' ? '其他' : 'Other')
+  }
+
+  // 判斷 icon 字串是 emoji 還是 Material Icon 名稱（與 RewardTypePopup 同邏輯）
+  const isEmojiIcon = (icon: string) => {
+    if (!icon) return false
+    if (/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(icon)) return true
+    if (icon.length <= 2) return true
+    return !/^[a-z_]+$/i.test(icon)
+  }
 
 
   // 載入分頁設定
@@ -257,6 +332,30 @@ export default function TransactionRecords({ studentId, transactions, studentNam
         currentPage * itemsPerPage
       )
   const showPagination = !isUnlimited && filteredTransactions.length > itemsPerPage
+  const statsTransactions = (selectedMonth || calculateFromReset) ? filteredTransactions : transactions
+  const statsByCategory = Object.values(
+    statsTransactions.reduce((acc: Record<string, any>, tx: any) => {
+      const key = tx.category || '__other__'
+      if (!acc[key]) {
+        acc[key] = {
+          key,
+          label: getCategoryLabel(tx),
+          unit: getTransactionUnit(tx),
+          income: 0,
+          expense: 0,
+          balance: 0
+        }
+      }
+      const amount = Number(tx.amount) || 0
+      if (amount > 0) {
+        acc[key].income += amount
+      } else if (amount < 0) {
+        acc[key].expense += Math.abs(amount)
+      }
+      acc[key].balance += amount
+      return acc
+    }, {})
+  )
 
   return (
     <>
@@ -518,83 +617,92 @@ export default function TransactionRecords({ studentId, transactions, studentNam
         </div>
       </div>
 
-      {/* 統計卡片 */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-white p-3 rounded-3xl shadow-sm border border-pink-50 text-center">
-          <p className="text-[10px] text-slate-400 font-medium mb-1">{t('totalIncome')}</p>
-          <p className="text-emerald-600 text-xl font-bold">
-            ${selectedMonth || calculateFromReset
-              ? filteredTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
-              : transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
-            }
-          </p>
-        </div>
-        <div className="bg-white p-3 rounded-3xl shadow-sm border border-pink-50 text-center">
-          <p className="text-[10px] text-slate-400 font-medium mb-1">{t('totalExpense')}</p>
-          <p className="text-rose-500 text-xl font-bold">
-            ${selectedMonth || calculateFromReset
-              ? Math.abs(filteredTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0))
-              : Math.abs(transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0))
-            }
-          </p>
-        </div>
-        <div className="bg-white p-3 rounded-3xl shadow-sm border border-pink-50 text-center">
-          <p className="text-[10px] text-slate-400 font-medium mb-1">{t('currentBalance')}</p>
-          <p className="text-blue-600 text-xl font-bold">
-            ${selectedMonth || calculateFromReset
-              ? filteredTransactions.reduce((sum, t) => sum + t.amount, 0)
-              : transactions.reduce((sum, t) => sum + t.amount, 0)
-            }
-          </p>
-        </div>
+      {/* 統計卡片（依獎勵類型分開） */}
+      <div className="space-y-3 mb-6">
+        {statsByCategory.map((stat: any) => (
+          <div key={stat.key} className="bg-white p-3 rounded-3xl shadow-sm border border-pink-50">
+            <p className="text-xs text-slate-500 font-semibold mb-2">{stat.label}</p>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <p className="text-[10px] text-slate-400 font-medium mb-1">{t('totalIncome')}</p>
+                <p className="text-emerald-600 text-lg font-bold">{stat.income.toLocaleString()} {stat.unit}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 font-medium mb-1">{t('totalExpense')}</p>
+                <p className="text-rose-500 text-lg font-bold">{stat.expense.toLocaleString()} {stat.unit}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 font-medium mb-1">{t('currentBalance')}</p>
+                <p className="text-blue-600 text-lg font-bold">{stat.balance.toLocaleString()} {stat.unit}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* 交易記錄列表 */}
       <div className="space-y-4">
         {paginatedTransactions.map(transaction => {
-          // 獎勵類別
-          const categoryLabel = transaction.category === '測驗獎金' 
-            ? (locale === 'zh-TW' ? '評量獎金' : 'Assessment Reward')
-            : (transaction.category === 'shopping' 
-              ? (locale === 'zh-TW' ? '購物' : 'Shopping')
-              : (transaction.category || (locale === 'zh-TW' ? '其他' : 'Other')))
-          
-          // 根據分類設定 tag 顏色
-          const getCategoryTagStyle = () => {
-            if (transaction.category === '測驗獎金') {
-              return {
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                color: '#10b981',
-                borderColor: 'rgba(16, 185, 129, 0.3)'
+          // 對應的獎勵類型（提供 icon／顏色／單位）
+          const rewardType = findRewardTypeForTransaction(transaction, rewardTypes)
+          const rewardColor = rewardType?.color || ''
+          const rewardIcon = rewardType?.icon || ''
+          const categoryLabel = getCategoryLabel(transaction)
+
+          // 卡片底色：以獎勵類型主題色作淡色（找不到時保留原本白底）
+          const cardStyle: React.CSSProperties | undefined = rewardColor
+            ? {
+                borderColor: `${rewardColor}66`     // ~40% alpha
               }
-            } else if (transaction.category === 'shopping') {
-              return {
+            : undefined
+
+          // 圖示框：以獎勵類型主題色作淡背景；找不到時依正負金額顯示
+          const iconWrapperStyle: React.CSSProperties | undefined = rewardColor
+            ? {
+                backgroundColor: `${rewardColor}4D`, // ~30% alpha
+                color: rewardColor
+              }
+            : undefined
+          const iconWrapperFallbackClass = transaction.amount > 0
+            ? 'bg-emerald-100 text-emerald-600'
+            : 'bg-rose-100 text-rose-600'
+
+          // 類別標籤色：跟著主題色
+          const tagStyle: React.CSSProperties = rewardColor
+            ? {
+                backgroundColor: `${rewardColor}1F`,
+                color: rewardColor,
+                borderColor: `${rewardColor}4D`
+              }
+            : {
                 backgroundColor: 'rgba(249, 115, 22, 0.1)',
                 color: '#f97316',
                 borderColor: 'rgba(249, 115, 22, 0.3)'
               }
-            } else {
-              return {
-                backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                color: '#f97316',
-                borderColor: 'rgba(249, 115, 22, 0.3)'
-              }
-            }
-          }
-          
+
+          const assessmentContext = getAssessmentContextLine(transaction)
+
           return (
             <div
               key={transaction.id}
-              className="bg-white p-4 rounded-[2rem] shadow-sm border border-pink-50 flex items-center gap-4 group transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+              className="bg-white p-4 rounded-[2rem] shadow-sm flex items-center gap-4 group transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer border border-pink-50"
+              style={cardStyle}
               onClick={() => onEditTransaction && onEditTransaction(transaction)}
             >
               <div className="flex items-center gap-4 w-full md:w-auto flex-1 min-w-0">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                  transaction.amount > 0 
-                  ? 'bg-emerald-100 text-emerald-600' 
-                    : 'bg-rose-100 text-rose-600'
-                }`}>
-                  {transaction.category === 'shopping' ? (
+                <div
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                    rewardColor ? '' : iconWrapperFallbackClass
+                  }`}
+                  style={iconWrapperStyle}
+                >
+                  {rewardIcon ? (
+                    isEmojiIcon(rewardIcon) ? (
+                      <span className="text-2xl leading-none">{rewardIcon}</span>
+                    ) : (
+                      <span className="material-icons-outlined text-2xl">{rewardIcon}</span>
+                    )
+                  ) : transaction.category === 'shopping' ? (
                     <span className="material-icons-outlined text-2xl">shopping_bag</span>
                   ) : transaction.amount > 0 ? (
                     <span className="material-icons-outlined text-2xl">attach_money</span>
@@ -616,18 +724,23 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                         }
                       })()}
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold border" style={getCategoryTagStyle()}>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold border" style={tagStyle}>
                       {categoryLabel}
                     </span>
                   </div>
                   <p className="text-sm font-medium truncate text-slate-600">
                     {transaction.description || transaction.title || ''}
                   </p>
+                  {assessmentContext && (
+                    <p className="text-xs text-slate-500 mt-0.5 truncate" title={assessmentContext}>
+                      {assessmentContext}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
                 <span className={`font-bold tabular-nums ${transaction.amount > 0 ? 'text-emerald-600' : 'text-rose-500'}`} style={{ fontSize: '1.6875rem' }}>
-                  ${Math.abs(transaction.amount)}
+                  {formatTransactionAmount(transaction.amount, transaction)}
                 </span>
               </div>
             </div>

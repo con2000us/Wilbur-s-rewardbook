@@ -9,6 +9,7 @@ interface Props {
   transactions: any[]
   studentName: string
   summary: any
+  rewardTypes?: any[]
   renderSidebar?: boolean
 }
 
@@ -60,7 +61,7 @@ export function CategoryTagsSidebar({ transactions, summary, subjects, assessmen
 }
 
 // 主內容區組件
-export function MainContent({ studentId, transactions, studentName, assessments }: { studentId: string, transactions: any[], studentName: string, assessments?: any[] }) {
+export function MainContent({ studentId, transactions, studentName, subjects = [], assessments, rewardTypes = [] }: { studentId: string, transactions: any[], studentName: string, subjects?: any[], assessments?: any[], rewardTypes?: any[] }) {
   const { selectedRewardType, setSelectedRewardType } = useRewardType()
 
   return (
@@ -71,18 +72,20 @@ export function MainContent({ studentId, transactions, studentName, assessments 
         studentName={studentName}
         selectedRewardType={selectedRewardType}
         onRewardTypeSelect={setSelectedRewardType}
+        subjects={subjects || []}
         assessments={assessments || []}
+        rewardTypes={rewardTypes}
       />
     </main>
   )
 }
 
-export default function TransactionsContent({ studentId, transactions, studentName, summary, renderSidebar = false }: Props) {
+export default function TransactionsContent({ studentId, transactions, studentName, summary, rewardTypes = [], renderSidebar = false }: Props) {
   if (renderSidebar) {
     // 只渲染獎勵類別（在左側欄內）
     return <CategoryTagsSidebar transactions={transactions} summary={summary} />
   }
 
   // 渲染右側主內容區
-  return <MainContent studentId={studentId} transactions={transactions} studentName={studentName} />
+  return <MainContent studentId={studentId} transactions={transactions} studentName={studentName} rewardTypes={rewardTypes} />
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { calculateRewardFromRule } from '@/lib/rewardFormula'
@@ -26,6 +26,7 @@ interface Assessment {
   reward_amount: number | null
   grade: string | null
   score_type: string | null
+  notes?: string | null
 }
 
 interface RewardRule {
@@ -41,6 +42,15 @@ interface RewardRule {
   priority: number
   is_active: boolean
   assessment_type: string | null
+}
+
+interface RewardType {
+  id: string
+  type_key: string
+  display_name: string
+  display_name_zh?: string
+  display_name_en?: string
+  default_unit?: string | null
 }
 
 interface Props {
@@ -92,6 +102,36 @@ export default function AssessmentForm({
   )
   const [maxScore, setMaxScore] = useState(assessment?.max_score || 100)
   const [showRules, setShowRules] = useState(false)
+  const [rewardTypes, setRewardTypes] = useState<RewardType[]>([])
+  const [selectedRewardTypeId, setSelectedRewardTypeId] = useState<string>('')
+
+  const getRewardTypeDisplayName = (type: RewardType) => {
+    if (locale === 'zh-TW') {
+      return type.display_name_zh || type.display_name || type.type_key
+    }
+    return type.display_name_en || type.display_name || type.type_key
+  }
+
+  const selectedRewardType = rewardTypes.find((type) => type.id === selectedRewardTypeId)
+  const rewardUnit = selectedRewardType?.default_unit || (locale === 'zh-TW' ? '元' : 'units')
+
+  useEffect(() => {
+    async function loadRewardTypes() {
+      try {
+        const response = await fetch('/api/custom-reward-types/list')
+        const data = await response.json()
+        if (!response.ok || !data.success) return
+        const list: RewardType[] = data.types || []
+        setRewardTypes(list)
+
+        const moneyType = list.find((type) => type.type_key === 'money')
+        setSelectedRewardTypeId(moneyType?.id || list[0]?.id || '')
+      } catch (err) {
+        console.error('Failed to load reward types:', err)
+      }
+    }
+    loadRewardTypes()
+  }, [])
 
   // 根據選中的科目和評量類型篩選適用的規則
   const getApplicableRules = () => {
@@ -234,7 +274,9 @@ export default function AssessmentForm({
         score_type: scoreType,
         max_score: parseInt(formData.get('max_score') as string),
         due_date: formData.get('due_date'),
-        manual_reward: formData.get('manual_reward') ? parseFloat(formData.get('manual_reward') as string) : null
+        notes: ((formData.get('notes') as string) || '').trim() || null,
+        manual_reward: formData.get('manual_reward') ? parseFloat(formData.get('manual_reward') as string) : null,
+        reward_type_id: formData.get('reward_type_id') || null
       }
 
       // 根據評分方式設定分數或等級
@@ -644,6 +686,44 @@ export default function AssessmentForm({
           </div>
         </div>
 
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            {locale === 'zh-TW' ? '獎勵類型' : 'Reward Type'}
+          </label>
+          <select
+            name="reward_type_id"
+            value={selectedRewardTypeId}
+            onChange={(e) => setSelectedRewardTypeId(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          >
+            {rewardTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {getRewardTypeDisplayName(type)}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+            <span className="material-icons-outlined text-sm">lightbulb</span>
+            {locale === 'zh-TW'
+              ? `此評量產生的獎勵交易會記錄為所選類型（單位：${rewardUnit}）`
+              : `Transactions from this assessment will use the selected reward type (unit: ${rewardUnit})`}
+          </p>
+        </div>
+
+        {/* 備註 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            {locale === 'zh-TW' ? '備註' : 'Notes'} ({t('optional')})
+          </label>
+          <textarea
+            name="notes"
+            rows={3}
+            defaultValue={assessment?.notes || ''}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+            placeholder={locale === 'zh-TW' ? '可填寫此次評量的補充說明' : 'Optional additional details for this assessment'}
+          />
+        </div>
+
         {/* 分數預覽與預期獎金 */}
         {((scoreType === 'numeric' && score !== null) || (scoreType === 'letter' && grade)) && displayPercentage !== null && (
           <div className={`p-3 rounded-lg border-2 ${
@@ -676,7 +756,7 @@ export default function AssessmentForm({
                     {locale === 'zh-TW' ? '預期獎金' : 'Expected Reward'}
                   </p>
                   <p className="text-2xl font-bold text-green-600">
-                    +${expectedReward}
+                    +{expectedReward} {rewardUnit}
                   </p>
                   <p className="text-xs text-gray-500">
                     {locale === 'zh-TW' ? '根據' : 'Based on'} "{matchingRule.rule_name}"
@@ -688,7 +768,7 @@ export default function AssessmentForm({
                     {locale === 'zh-TW' ? '無匹配規則' : 'No matching rule'}
                   </p>
                   <p className="text-xl font-bold text-gray-400">
-                    $0
+                    0 {rewardUnit}
                   </p>
                 </div>
               )}

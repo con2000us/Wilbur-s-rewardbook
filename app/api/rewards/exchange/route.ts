@@ -85,6 +85,8 @@ export async function POST(request: NextRequest) {
         .insert({
           student_id: studentId,
           assessment_id: null,
+          reward_type_id: rewardType.id,
+          achievement_event_id: null,
           transaction_type: 'exchange',
           amount: -exchangeRule.required_amount, // 負數表示扣除
           description: `${exchangeDescription} (扣除)`,
@@ -106,6 +108,8 @@ export async function POST(request: NextRequest) {
         .insert({
           student_id: studentId,
           assessment_id: null,
+          reward_type_id: rewardTypeToReceive.id,
+          achievement_event_id: null,
           transaction_type: 'exchange',
           amount: exchangeRule.reward_amount, // 正數表示獲得
           description: `${exchangeDescription} (獲得)`,
@@ -140,6 +144,8 @@ export async function POST(request: NextRequest) {
         .insert({
           student_id: studentId,
           assessment_id: null,
+          reward_type_id: rewardType.id,
+          achievement_event_id: null,
           transaction_type: 'exchange',
           amount: -exchangeRule.required_amount, // 負數表示扣除
           description: exchangeDescription,

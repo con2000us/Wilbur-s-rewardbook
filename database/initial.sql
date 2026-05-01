@@ -1,0 +1,1 @@
+﻿-- See database/bootstrap/README.md for initial SQL (01_schema, 02_seed_defaults, 03_seed_optional).

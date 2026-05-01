@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocale, useTranslations } from 'next-intl'
+import { getRewardDisplayName, getRewardUnit } from './rewardUnit'
 
 interface CustomRewardType {
   id?: string
@@ -12,6 +13,7 @@ interface CustomRewardType {
   display_name_en?: string
   icon: string
   color: string
+  default_unit?: string | null
 }
 
 interface AddRewardPopupProps {
@@ -31,6 +33,7 @@ export default function AddRewardPopup({
 }: AddRewardPopupProps) {
   const locale = useLocale()
   const tCommon = useTranslations('common')
+  const tReward = useTranslations('studentRewardManager')
   const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -107,7 +110,7 @@ export default function AddRewardPopup({
 
     const amount = parseFloat(formData.amount)
     if (!amount || amount <= 0) {
-      setError(locale === 'zh-TW' ? '請輸入有效的數量' : 'Please enter a valid amount')
+      setError(tReward('validValueRequired'))
       setLoading(false)
       return
     }
@@ -128,11 +131,8 @@ export default function AddRewardPopup({
            !/^[a-z_]+$/i.test(icon)
   }
 
-  const getDisplayName = (type: CustomRewardType) => {
-    return locale === 'zh-TW' 
-      ? (type.display_name_zh || type.display_name || type.type_key)
-      : (type.display_name_en || type.display_name || type.type_key)
-  }
+  const getDisplayName = (type: CustomRewardType) => getRewardDisplayName(type, locale)
+  const selectedUnit = selectedRewardType ? getRewardUnit(selectedRewardType, locale) : ''
 
   const popupContent = (
     <div 
@@ -255,12 +255,10 @@ export default function AddRewardPopup({
           {selectedRewardType && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {locale === 'zh-TW' ? '數量 *' : 'Amount *'}
+                {tReward('valueWithUnit', { unit: selectedUnit })} *
               </label>
               <p className="text-xs text-gray-500 mb-2">
-                {locale === 'zh-TW' 
-                  ? `輸入要添加的 ${getDisplayName(selectedRewardType)} 數量` 
-                  : `Enter the amount of ${getDisplayName(selectedRewardType)} to add`}
+                {`${tReward('valueInputHintWithUnit', { unit: selectedUnit })} - ${getDisplayName(selectedRewardType)}`}
               </p>
               <input
                 type="number"
@@ -270,7 +268,7 @@ export default function AddRewardPopup({
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
-                placeholder={locale === 'zh-TW' ? '輸入數量' : 'Enter amount'}
+                placeholder={tReward('enterUnitValue', { unit: selectedUnit })}
               />
             </div>
           )}
