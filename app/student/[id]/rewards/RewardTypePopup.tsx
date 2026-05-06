@@ -263,8 +263,7 @@ export default function RewardTypePopup({
                         : 'opacity-50 hover:opacity-100'
                     }`}
                     style={{
-                      backgroundColor: color.value,
-                      ringColor: `${color.value}40`
+                      backgroundColor: color.value
                     }}
                   />
                 ))}
@@ -423,12 +422,14 @@ export default function RewardTypePopup({
                   <button
                     type="button"
                     onClick={async () => {
+                      const editingTypeId = editingType?.id
+                      if (!editingTypeId) return
                       if (!confirm(locale === 'zh-TW' ? '確定要刪除這個獎勵類型嗎？' : 'Are you sure you want to delete this reward type?')) {
                         return
                       }
                       setDeleting(true)
                       try {
-                        await onDelete(editingType.id, editingType.is_system)
+                        await onDelete(editingTypeId, editingType?.is_system)
                         onClose()
                       } catch (err) {
                         setError(err instanceof Error ? err.message : (locale === 'zh-TW' ? '刪除失敗' : 'Delete failed'))

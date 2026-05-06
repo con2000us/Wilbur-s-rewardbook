@@ -18,7 +18,7 @@ interface Props {
   recordsTitle: string
   allStudents: Student[]
   basePath?: string
-  currentPage?: 'records' | 'transactions' | 'subjects' | 'settings'
+  currentPage?: 'records' | 'transactions' | 'subjects' | 'rewards' | 'settings'
   isOpen?: boolean
   setIsOpen?: (value: boolean) => void
   showHeader?: boolean

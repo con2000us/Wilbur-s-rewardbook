@@ -9,7 +9,9 @@ import StudentList from './StudentList'
 interface Student {
   id: string
   name: string
+  email: string | null
   avatar_url: string | null
+  display_order: number
 }
 
 interface Props {
@@ -66,7 +68,7 @@ export default function HomePageClient({ students, siteName }: Props) {
                 {t('globalManagement.subtitle')}
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <Link
                 href="/reward-types"
                 className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-purple-100 group"
@@ -95,6 +97,21 @@ export default function HomePageClient({ students, siteName }: Props) {
                     <p className="text-xs sm:text-sm text-slate-500">{t('globalManagement.achievementEvents.desc')}</p>
                   </div>
                   <span className="material-icons-outlined text-slate-400 group-hover:text-amber-500 transition-colors">chevron_right</span>
+                </div>
+              </Link>
+              <Link
+                href="/major-goals"
+                className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 border-2 border-sky-100 group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-50 border-2 border-sky-200 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <span className="material-icons-outlined text-sky-500 text-2xl">flag</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-0.5">{t('globalManagement.majorGoals.title')}</h3>
+                    <p className="text-xs sm:text-sm text-slate-500">{t('globalManagement.majorGoals.desc')}</p>
+                  </div>
+                  <span className="material-icons-outlined text-slate-400 group-hover:text-sky-500 transition-colors">chevron_right</span>
                 </div>
               </Link>
             </div>

@@ -26,6 +26,7 @@ interface ExchangeRule {
   required_amount: number
   reward_type_id?: string
   reward_amount?: number
+  reward_item?: string
   is_active: boolean
 }
 

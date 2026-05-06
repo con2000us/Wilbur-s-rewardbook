@@ -22,7 +22,7 @@ interface CustomRewardTypeWithId extends CustomRewardType {
 }
 
 interface ExchangeRule {
-  id?: string
+  id: string
   name_zh: string
   name_en?: string
   description_zh?: string

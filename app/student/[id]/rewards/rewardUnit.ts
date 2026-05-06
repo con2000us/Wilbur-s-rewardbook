@@ -5,6 +5,8 @@ interface RewardTypeLike {
   display_name_zh?: string
   display_name_en?: string
   default_unit?: string | null
+  color?: string
+  icon?: string
 }
 
 /** 由交易紀錄取出對應的獎勵類型：以 reward_type_id 為主；缺值才依 category 完全比對顯示名稱／type_key */

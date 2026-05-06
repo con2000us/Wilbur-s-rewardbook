@@ -13,6 +13,7 @@ export async function POST(request: Request) {
     const supabase = createClient()
 
     const { error } = await supabase
+      // @ts-ignore - Supabase type inference issue for newly added tables
       .from('achievement_events')
       .delete()
       .eq('id', id)

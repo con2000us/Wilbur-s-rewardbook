@@ -2,8 +2,11 @@
 
 import HomeButton from '@/app/components/HomeButton'
 import AchievementEventsManager from './AchievementEventsManager'
+import { useTranslations } from 'next-intl'
 
 export default function AchievementEventsPage() {
+  const t = useTranslations('achievementEvents')
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 bg-app-shell"></div>
@@ -18,8 +21,10 @@ export default function AchievementEventsPage() {
                 <span className="material-icons-outlined text-white text-2xl">emoji_events</span>
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-800">成就事件管理</h1>
-                <p className="text-slate-500 text-sm">管理優良表現事件與獎勵規則</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-800">{t('title')}</h1>
+                <p className="text-slate-500 text-sm">
+                  {t('pageSubtitle')}
+                </p>
               </div>
             </div>
             <HomeButton />
