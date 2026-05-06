@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server'
+import Link from 'next/link'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import SiteNameSettings from './SiteNameSettings'
 import PaginationSettings from './PaginationSettings'
@@ -42,6 +43,20 @@ export default async function SettingsPage() {
 
           {/* 主內容區域 */}
           <div className="bg-white rounded-2xl shadow-2xl p-8">
+            <div className="mb-8 pb-8 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+                🧭 {t('initializationManager')}
+              </h2>
+              <p className="text-gray-600 mb-4 text-sm">{t('initializationManagerDesc')}</p>
+              <Link
+                href="/settings/initialization"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-semibold hover:opacity-90 transition-opacity"
+              >
+                <span className="material-icons-outlined text-base">arrow_forward</span>
+                {t('openInitializationManager')}
+              </Link>
+            </div>
+
             {/* Site Name Settings */}
             <SiteNameSettings />
 
