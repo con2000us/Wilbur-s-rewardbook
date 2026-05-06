@@ -1,15 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { createPortal } from 'react-dom'
 
 interface RewardType {
   id: string
   type_key: string
   display_name?: string
-  display_name_zh?: string
-  display_name_en?: string
   icon: string
   color: string
   default_unit: string | null
@@ -25,6 +23,8 @@ interface RewardRule {
 
 interface AchievementEvent {
   id: string
+  name: string
+  description: string | null
   name_zh: string
   name_en: string | null
   description_zh: string | null
@@ -35,24 +35,12 @@ interface AchievementEvent {
   updated_at: string
 }
 
-function getEventName(event: AchievementEvent, locale: string) {
-  if (locale === 'en' && event.name_en) return event.name_en
-  return event.name_zh
-}
-
-function getEventDesc(event: AchievementEvent, locale: string) {
-  if (locale === 'en' && event.description_en) return event.description_en
-  return event.description_zh || ''
-}
-
-function getRewardTypeName(rt: RewardType, locale: string) {
-  if (locale === 'en' && rt.display_name_en) return rt.display_name_en
-  return rt.display_name_zh || rt.display_name || rt.type_key
+function getRewardTypeName(rt: RewardType) {
+  return rt.display_name || rt.type_key
 }
 
 export default function AchievementEventsManager() {
   const t = useTranslations('achievementEvents')
-  const locale = useLocale()
 
   const [events, setEvents] = useState<AchievementEvent[]>([])
   const [rules, setRules] = useState<RewardRule[]>([])
@@ -169,7 +157,7 @@ export default function AchievementEventsManager() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-lg font-bold text-slate-800">
-                        {getEventName(event, locale)}
+                        {event.name || event.name_zh || event.name_en || String(event.id).slice(0, 8)}
                       </h3>
                       {!event.is_active && (
                         <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-500 rounded-full">
@@ -177,8 +165,10 @@ export default function AchievementEventsManager() {
                         </span>
                       )}
                     </div>
-                    {getEventDesc(event, locale) && (
-                      <p className="text-sm text-slate-500 mb-3">{getEventDesc(event, locale)}</p>
+                    {(event.description || event.description_zh || event.description_en) && (
+                      <p className="text-sm text-slate-500 mb-3">
+                        {event.description || event.description_zh || event.description_en}
+                      </p>
                     )}
 
                     {eventRules.length > 0 && (
@@ -197,7 +187,7 @@ export default function AchievementEventsManager() {
                               }}
                             >
                               <span className="text-sm">{rt.icon}</span>
-                              {getRewardTypeName(rt, locale)}
+                              {getRewardTypeName(rt)}
                               {rule.default_amount > 0 && (
                                 <span className="opacity-70">+{rule.default_amount}{rt.default_unit || ''}</span>
                               )}
@@ -239,7 +229,6 @@ export default function AchievementEventsManager() {
           event={editingEvent}
           rewardTypes={rewardTypes}
           existingRules={editingEvent ? getRulesForEvent(editingEvent.id) : []}
-          locale={locale}
           onClose={() => { setShowForm(false); setEditingEvent(null) }}
           onSaved={() => { setShowForm(false); setEditingEvent(null); loadData() }}
         />
@@ -252,12 +241,11 @@ interface EventFormModalProps {
   event: AchievementEvent | null
   rewardTypes: RewardType[]
   existingRules: RewardRule[]
-  locale: string
   onClose: () => void
   onSaved: () => void
 }
 
-function EventFormModal({ event, rewardTypes, existingRules, locale, onClose, onSaved }: EventFormModalProps) {
+function EventFormModal({ event, rewardTypes, existingRules, onClose, onSaved }: EventFormModalProps) {
   const t = useTranslations('achievementEvents')
   const isEditing = !!event
 
@@ -358,8 +346,7 @@ function EventFormModal({ event, rewardTypes, existingRules, locale, onClose, on
   }
 
   function getRewardTypeName(rt: RewardType) {
-    if (locale === 'en' && rt.display_name_en) return rt.display_name_en
-    return rt.display_name_zh || rt.display_name || rt.type_key
+    return rt.display_name || rt.type_key
   }
 
   const usedRewardTypeIds = formRules.map(r => r.reward_type_id)

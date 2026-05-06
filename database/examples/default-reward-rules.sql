@@ -1,5 +1,6 @@
--- 預設獎金規則
+-- 預設獎金規則（zh-TW）
 -- 在 Supabase SQL Editor 中執行此腳本來快速設置獎金規則
+-- English sample version: default-reward-rules.en.sql
 
 -- 清除現有規則（可選，如果要重新設置）
 -- DELETE FROM reward_rules;

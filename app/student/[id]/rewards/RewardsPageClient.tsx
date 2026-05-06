@@ -33,6 +33,8 @@ interface CustomRewardType {
 
 interface ExchangeRule {
   id?: string
+  name?: string
+  description?: string
   name_zh: string
   name_en?: string
   description_zh?: string
@@ -502,9 +504,7 @@ export default function RewardsPageClient({
     }
 
     // 確認兌換
-    const ruleName = locale === 'zh-TW' 
-      ? (rule.name_zh || rule.name_en || '')
-      : (rule.name_en || rule.name_zh || '')
+    const ruleName = rule.name || rule.name_zh || rule.name_en || ''
     
     if (!confirm(locale === 'zh-TW' 
       ? `確定要用 ${formatRewardAmountWithUnit(rule.required_amount, requiredType, locale)} 兌換「${ruleName}」嗎？` 
@@ -845,12 +845,9 @@ export default function RewardsPageClient({
                   const canExchange = currentBalance >= rule.required_amount
 
                   // 獲取顯示名稱
-                  const ruleName = locale === 'zh-TW' 
-                    ? (rule.name_zh || rule.name_en || '')
-                    : (rule.name_en || rule.name_zh || '')
-                  const ruleDescription = locale === 'zh-TW'
-                    ? (rule.description_zh || rule.description_en || '')
-                    : (rule.description_en || rule.description_zh || '')
+                  const ruleName = rule.name || rule.name_zh || rule.name_en || ''
+                  const ruleDescription =
+                    rule.description || rule.description_zh || rule.description_en || ''
                   return (
                     <div
                       key={rule.id}
@@ -982,7 +979,7 @@ export default function RewardsPageClient({
         onSave={handleSaveExchangeRule}
         onDelete={handleDeleteExchangeRule}
         editingRule={editingExchangeRule}
-        rewardTypes={customTypes}
+        rewardTypes={customTypes.filter((type): type is CustomRewardType & { id: string } => Boolean(type.id))}
       />
       {/* 獎勵詳情彈窗 */}
       {selectedRewardType && selectedRewardType.id && (
@@ -997,7 +994,7 @@ export default function RewardsPageClient({
           currentBalance={rewardStats[selectedRewardType.id]?.currentBalance || 0}
           totalEarned={rewardStats[selectedRewardType.id]?.totalEarned || 0}
           rewardTypes={customTypes}
-          exchangeRules={exchangeRules}
+          exchangeRules={exchangeRules.filter((rule): rule is ExchangeRule & { id: string } => Boolean(rule.id))}
           onExchange={handleExchangeFromDetail}
           onUse={(amount, description) => {
             // 從詳情彈窗使用時，打開使用彈窗

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { buildDualLocalePayload, toCanonicalKey } from '@/app/api/_shared/i18n'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,6 +9,10 @@ export async function POST(request: NextRequest) {
 
     const { 
       id,
+      name,
+      description,
+      locale,
+      rule_key,
       name_zh, 
       name_en, 
       description_zh, 
@@ -25,11 +30,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 })
     }
 
+    const { locale: preferredLocale, nameZh: resolvedNameZh, nameEn: resolvedNameEn, descriptionZh, descriptionEn } =
+      buildDualLocalePayload({
+        locale,
+        name,
+        description,
+        name_zh,
+        name_en,
+        description_zh,
+        description_en,
+      })
+
     const updateData: any = {}
-    if (name_zh !== undefined) updateData.name_zh = name_zh
-    if (name_en !== undefined) updateData.name_en = name_en || null
-    if (description_zh !== undefined) updateData.description_zh = description_zh || null
-    if (description_en !== undefined) updateData.description_en = description_en || null
+    if (rule_key !== undefined && rule_key !== null && String(rule_key).trim() !== '') {
+      updateData.rule_key = toCanonicalKey(String(rule_key), 'rule')
+    }
+    if (name_zh !== undefined || (preferredLocale === 'zh-TW' && name !== undefined)) updateData.name_zh = resolvedNameZh
+    if (name_en !== undefined || (preferredLocale === 'en' && name !== undefined)) updateData.name_en = resolvedNameEn || null
+    if (description_zh !== undefined || (preferredLocale === 'zh-TW' && description !== undefined)) {
+      updateData.description_zh = descriptionZh || null
+    }
+    if (description_en !== undefined || (preferredLocale === 'en' && description !== undefined)) {
+      updateData.description_en = descriptionEn || null
+    }
     if (required_reward_type_id !== undefined) updateData.required_reward_type_id = required_reward_type_id
     if (required_amount !== undefined) updateData.required_amount = parseFloat(required_amount)
     if (reward_type_id !== undefined) updateData.reward_type_id = reward_type_id || null
@@ -39,17 +62,58 @@ export async function POST(request: NextRequest) {
     if (display_order !== undefined) updateData.display_order = display_order
     updateData.updated_at = new Date().toISOString()
 
-    const { data, error } = await supabase
-      .from('exchange_rules')
-      // @ts-ignore - Supabase type inference issue with update operations
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single()
+    const runUpdate = async (payload: any) =>
+      supabase
+        .from('exchange_rules')
+        // @ts-ignore - Supabase type inference issue with update operations
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single()
+
+    let { data, error } = await runUpdate(updateData)
+
+    if (error && String(error.message || '').includes('rule_key')) {
+      const { rule_key: _ruleKey, ...fallbackData } = updateData
+      const fallback = await runUpdate(fallbackData)
+      data = fallback.data
+      error = fallback.error
+    }
 
     if (error) {
       console.error('Error updating exchange rule:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    const translationsToUpsert: Array<{ rule_id: string; locale: string; name: string; description: string | null }> =
+      []
+
+    if (resolvedNameZh) {
+      translationsToUpsert.push({
+        rule_id: id,
+        locale: 'zh-TW',
+        name: resolvedNameZh,
+        description: descriptionZh || null,
+      })
+    }
+
+    if (resolvedNameEn) {
+      translationsToUpsert.push({
+        rule_id: id,
+        locale: 'en',
+        name: resolvedNameEn,
+        description: descriptionEn || null,
+      })
+    }
+
+    if (translationsToUpsert.length > 0) {
+      const { error: translationError } = await supabase
+        .from('exchange_rule_translations')
+        .upsert(translationsToUpsert as any, { onConflict: 'rule_id,locale' })
+
+      if (translationError) {
+        console.warn('exchange_rule_translations upsert skipped:', translationError.message)
+      }
     }
 
     return NextResponse.json({ success: true, data })

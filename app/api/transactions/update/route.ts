@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
     const { data: rewardTypes } = await supabase
       .from('custom_reward_types')
-      .select('id, type_key, display_name, display_name_zh, display_name_en')
+      .select('id, type_key, display_name')
 
     if (rewardTypes && rewardTypes.length > 0) {
       // 優先以 category 反查 reward_type_id，避免編輯類別後仍沿用舊單位
@@ -19,20 +19,16 @@ export async function POST(request: Request) {
         const categoryLc = String(category).toLowerCase()
         const mappedType = rewardTypes.find((type: any) => {
           const displayName = type.display_name || ''
-          const displayNameZh = type.display_name_zh || ''
-          const displayNameEn = type.display_name_en || ''
           const typeKey = type.type_key || ''
           return (
             category === displayName ||
-            category === displayNameZh ||
-            category === displayNameEn ||
             categoryLc === String(typeKey).toLowerCase()
           )
         })
 
         if (mappedType) {
           rewardTypeId = mappedType.id
-          category = mappedType.display_name || mappedType.display_name_zh || mappedType.type_key || category
+          category = mappedType.display_name || mappedType.type_key || category
         }
       }
 
@@ -40,7 +36,7 @@ export async function POST(request: Request) {
       if (!category && rewardTypeId) {
         const matchedById = rewardTypes.find((type: any) => type.id === rewardTypeId)
         if (matchedById) {
-          category = matchedById.display_name || matchedById.display_name_zh || matchedById.type_key || null
+          category = matchedById.display_name || matchedById.type_key || null
         }
       }
     }

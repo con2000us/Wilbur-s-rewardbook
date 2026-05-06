@@ -1,10 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { parsePreferredLocale, resolveLocalizedText } from '@/app/api/_shared/i18n'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const supabase = createClient()
+    const preferredLocale = parsePreferredLocale(request.cookies.get('NEXT_LOCALE')?.value)
 
     const { studentId, exchangeRuleId } = body
 
@@ -55,11 +57,26 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    const { data: ruleTranslations } = await supabase
+      .from('exchange_rule_translations')
+      .select('locale, name, description')
+      .eq('rule_id', exchangeRule.id)
+      .in('locale', ['zh-TW', 'en'])
+
+    const localizedRule = resolveLocalizedText({
+      locale: preferredLocale,
+      translations: ruleTranslations || [],
+      fallbackZhName: exchangeRule.name_zh,
+      fallbackEnName: exchangeRule.name_en,
+      fallbackZhDescription: exchangeRule.description_zh,
+      fallbackEnDescription: exchangeRule.description_en,
+    })
+
     // 創建交易記錄
-    const displayName = rewardType.display_name || rewardType.display_name_zh || rewardType.type_key
-    const exchangeDescription = exchangeRule.name_zh 
-      ? `兌換：${exchangeRule.name_zh}`
-      : `Exchange: ${exchangeRule.name_en || exchangeRule.name_zh}`
+    const displayName = rewardType.display_name || rewardType.type_key
+    const exchangeDescription = preferredLocale === 'zh-TW'
+      ? `兌換：${localizedRule.name}`
+      : `Exchange: ${localizedRule.name}`
     
     const transactionDate = new Date().toISOString().split('T')[0]
 
@@ -76,7 +93,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Reward type to receive not found' }, { status: 404 })
       }
 
-      const rewardTypeToReceiveName = rewardTypeToReceive.display_name || rewardTypeToReceive.display_name_zh || rewardTypeToReceive.type_key
+      const rewardTypeToReceiveName = rewardTypeToReceive.display_name || rewardTypeToReceive.type_key
 
       // 創建扣除交易（原獎勵類型）
       const { data: deductTransaction, error: deductError } = await supabase

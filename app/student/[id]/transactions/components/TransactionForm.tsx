@@ -20,8 +20,6 @@ interface CustomRewardType {
   id: string
   type_key: string
   display_name: string
-  display_name_zh?: string
-  display_name_en?: string
   icon: string
   color: string
   default_unit: string | null
@@ -33,6 +31,8 @@ interface CustomRewardType {
 
 interface AchievementEvent {
   id: string
+  name: string
+  description?: string
   name_zh: string
   name_en?: string
   description_zh?: string
@@ -149,22 +149,16 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
 
   // 取得顯示名稱（根據語言）
   const getDisplayName = (type: CustomRewardType): string => {
-    if (locale === 'zh-TW') {
-      return type.display_name_zh || type.display_name || type.type_key
-    } else {
-      return type.display_name_en || type.display_name || type.type_key
-    }
+    return type.display_name || type.type_key
   }
 
   const selectedType = customTypes.find((type) => getDisplayName(type) === selectedCategory)
   const selectedUnit = selectedType ? getRewardUnit(selectedType, locale) : (locale === 'zh-TW' ? '元' : 'dollars')
   const getEventDisplayName = (event: AchievementEvent): string => {
+    const localized = (event.name || '').trim()
     const zh = (event.name_zh || '').trim()
     const en = (event.name_en || '').trim()
-    if (locale === 'zh-TW') {
-      return zh || en || String(event.id).slice(0, 8)
-    }
-    return en || zh || String(event.id).slice(0, 8)
+    return localized || zh || en || String(event.id).slice(0, 8)
   }
 
   // 判斷是否為 emoji
@@ -505,11 +499,11 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
           </p>
         </div>
 
-        {/* 成就事件（可選） */}
+        {/* 行為事件模板（可選） */}
         {transactionType !== 'reset' && (
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {locale === 'zh-TW' ? '優良成就事件' : 'Achievement Event'}
+              {locale === 'zh-TW' ? '行為事件模板' : 'Behavior Event Template'}
             </label>
             <select
               name="achievement_event"
