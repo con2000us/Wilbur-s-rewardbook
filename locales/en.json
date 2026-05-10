@@ -648,6 +648,18 @@
     "initializationManager": "Initialization Manager",
     "initializationManagerDesc": "Check initialization status, database compatibility, and run initialization tasks.",
     "openInitializationManager": "Open Initialization Manager",
+    "resourceModeTitle": "Resource Mode",
+    "resourceModeDesc": "Configure image storage limits based on deployment resources. Free mode applies fixed caps; upgraded mode removes limits.",
+    "resourceModeFreeTitle": "Free Resource Mode",
+    "resourceModeFreeDesc": "Total image cap {total}, single file cap {single}",
+    "resourceModeUpgradedTitle": "Upgraded Resource Mode",
+    "resourceModeUpgradedDesc": "No limits on total image usage or single file size (bounded by deployment resources)",
+    "resourceUsageTitle": "Current Image Storage Usage",
+    "resourceUsageSummary": "Using {size} across {files} files",
+    "resourceUsagePercent": "{percent}% used / limit {total}",
+    "resourceUsageLoadFailed": "Failed to load storage usage",
+    "resourceUsageUnavailable": "Storage usage is currently unavailable",
+    "refreshUsage": "Refresh Usage",
     "languages": {
       "zh-TW": "繁體中文",
       "en": "English"

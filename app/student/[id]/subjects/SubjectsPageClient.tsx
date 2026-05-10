@@ -440,7 +440,7 @@ const SubjectsPageClient = forwardRef<SubjectsPageClientRef, Props>(({ studentId
             }}
             disabled={loading}
             data-reorder-action="save"
-            className="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="student-toolbar-primary px-6 py-2.5 min-h-11 rounded-full font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="material-icons-outlined text-lg">check_circle</span>
             <span>{tCommon('done') || '完成排序'}</span>
@@ -452,7 +452,7 @@ const SubjectsPageClient = forwardRef<SubjectsPageClientRef, Props>(({ studentId
             }}
             disabled={loading}
             data-reorder-action="cancel"
-            className="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="student-toolbar-primary px-6 py-2.5 min-h-11 rounded-full font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="material-icons-outlined text-lg">cancel</span>
             <span>{tCommon('cancel')}</span>

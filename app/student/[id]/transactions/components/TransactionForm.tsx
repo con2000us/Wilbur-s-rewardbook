@@ -183,6 +183,20 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
     { description: t('presets.spend.gameTime'), icon: '🎮', category: t('categories.leisureActivity') },
     { description: t('presets.spend.snacks'), icon: '🍭', category: t('categories.foodPurchase') },
   ]
+  const resetCategoryOptions = [
+    t('categories.semesterUpdate'),
+    t('categories.yearEnd'),
+    t('categories.systemCalibration'),
+    t('categories.amountAdjustment')
+  ]
+
+  useEffect(() => {
+    if (transactionType === 'reset' || customTypes.length === 0) return
+    const validDisplayNames = customTypes.map((type) => getDisplayName(type))
+    if (!selectedCategory || !validDisplayNames.includes(selectedCategory)) {
+      setSelectedCategory(validDisplayNames[0] || '')
+    }
+  }, [transactionType, customTypes, selectedCategory, locale])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -538,14 +552,14 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
             <select
               name="category"
               required
-              defaultValue={transaction?.category || ''}
+              defaultValue={transaction?.category || resetCategoryOptions[0]}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
-              <option value="">{t('selectCategory')}</option>
-              <option value={t('categories.semesterUpdate')}>{t('categories.semesterUpdate')}</option>
-              <option value={t('categories.yearEnd')}>{t('categories.yearEnd')}</option>
-              <option value={t('categories.systemCalibration')}>{t('categories.systemCalibration')}</option>
-              <option value={t('categories.amountAdjustment')}>{t('categories.amountAdjustment')}</option>
+              {resetCategoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
             </select>
           ) : loadingTypes ? (
             <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-500">
@@ -561,14 +575,13 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
             <select
               name="category"
               required
-              defaultValue={transaction?.category || ''}
+              defaultValue={transaction?.category || getDisplayName(customTypes[0])}
               onChange={(e) => {
                 setSelectedPresetIndex(null)
                 setSelectedCategory(e.target.value)
               }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
-              <option value="">{t('selectCategory')}</option>
               {customTypes.map((type) => {
                 const displayName = getDisplayName(type)
                 return (

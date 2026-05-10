@@ -543,7 +543,7 @@ export default function StudentRecords({
       </div>
 
       {/* 主內容區 */}
-      <main className="relative z-10 flex-1">
+      <main className="relative z-10 flex-1 min-w-0">
         {/* 科目標籤和評量列表 */}
         <SubjectTabs
           subjects={subjects}

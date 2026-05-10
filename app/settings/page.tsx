@@ -3,6 +3,7 @@ import Link from 'next/link'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import SiteNameSettings from './SiteNameSettings'
 import PaginationSettings from './PaginationSettings'
+import ResourceModeSettings from './ResourceModeSettings'
 import BackupSettings from './BackupSettings'
 import ClearAllStudentsSettings from './ClearAllStudentsSettings'
 import HomeButton from '@/app/components/HomeButton'
@@ -12,66 +13,50 @@ export default async function SettingsPage() {
   
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* 背景漸層 - 亮系主色調 */}
       <div className="absolute inset-0 bg-app-shell"></div>
       <div className="absolute inset-0 bg-gradient-to-tl from-white/50 via-transparent to-transparent"></div>
-      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/10 to-sky-200/40"></div>
-      
-      {/* 內容區域 */}
-      <div className="relative z-10 p-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-8">
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-sky-100/30 to-sky-200/20"></div>
+
+      <div className="relative z-10 p-4 sm:p-6 md:p-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
-              {/* 設定圖標 */}
-              <div 
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-sky-500 flex items-center justify-center text-3xl shadow-lg ring-4 ring-white/80 flex-shrink-0"
-              >
-                ⚙️
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center shadow-lg ring-4 ring-white/80 flex-shrink-0">
+                <span className="material-icons-outlined text-white text-2xl">settings</span>
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-800">
-                  {t('title')}
-                </h1>
-                <p className="text-slate-600 text-base md:text-lg font-semibold">
-                  系統設定與偏好
-                </p>
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-800">{t('title')}</h1>
+                <p className="text-slate-500 text-sm">管理與客製化您的系統環境</p>
               </div>
             </div>
             <HomeButton />
           </div>
 
-          {/* 主內容區域 */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8">
-            <div className="mb-8 pb-8 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                🧭 {t('initializationManager')}
-              </h2>
-              <p className="text-gray-600 mb-4 text-sm">{t('initializationManagerDesc')}</p>
-              <Link
-                href="/settings/initialization"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-semibold hover:opacity-90 transition-opacity"
-              >
-                <span className="material-icons-outlined text-base">arrow_forward</span>
-                {t('openInitializationManager')}
-              </Link>
-            </div>
-
-            {/* Site Name Settings */}
+          <main className="space-y-6">
             <SiteNameSettings />
-
-            {/* Pagination Settings */}
             <PaginationSettings />
-
-            {/* Backup Settings */}
+            <ResourceModeSettings />
             <BackupSettings />
 
-            {/* Clear All Students Settings */}
-            <ClearAllStudentsSettings />
+            <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl p-6 sm:p-7">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800 mb-1">{t('initializationManager')}</h2>
+                  <p className="text-sm text-slate-500">{t('initializationManagerDesc')}</p>
+                </div>
+                <Link
+                  href="/settings/initialization"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white hover:opacity-90 transition-opacity font-semibold text-sm"
+                >
+                  {t('openInitializationManager')}
+                  <span className="material-icons-outlined text-base">arrow_forward</span>
+                </Link>
+              </div>
+            </section>
 
-            {/* Language Switcher */}
+            <ClearAllStudentsSettings />
             <LanguageSwitcher />
-          </div>
+          </main>
         </div>
       </div>
     </div>

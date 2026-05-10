@@ -2,8 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useTranslations, useLocale } from 'next-intl'
-import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 interface SidebarContentProps {
   studentId: string
@@ -57,10 +56,6 @@ export default function SidebarContent({
   onOpenAddModal
 }: SidebarContentProps) {
   const t = useTranslations('student')
-  const tAssessment = useTranslations('assessment')
-  const tCommon = useTranslations('common')
-  const locale = useLocale()
-  const router = useRouter()
   const totalAverageRef = useRef<HTMLSpanElement | null>(null)
 
   useEffect(() => {
@@ -119,20 +114,6 @@ export default function SidebarContent({
         </div>
       </div>
 
-      {/* Rewards Management Button */}
-      <Link
-        href={`/student/${studentId}/rewards`}
-        className="glass-card p-4 rounded-3xl flex flex-col items-center gap-2 border border-white/70 bg-white/75 backdrop-blur-sm transition-all duration-200 group hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5"
-      >
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-3xl text-white shadow-md group-hover:scale-105 transition-transform">
-          🎁
-        </div>
-        <div className="text-center">
-          <div className="text-sm font-bold text-slate-800">{locale === 'zh-TW' ? '獎勵管理' : 'Reward Management'}</div>
-          <div className="text-xs text-slate-600">{locale === 'zh-TW' ? '管理學生的獎勵類型' : 'Manage student reward types'}</div>
-        </div>
-      </Link>
-
       {/* Print Button */}
       {(() => {
         const params = new URLSearchParams()
@@ -155,14 +136,19 @@ export default function SidebarContent({
           <Link
             href={`/student/${studentId}/print?${params.toString()}`}
             target="_blank"
-            className="glass-card print-button-card p-4 rounded-3xl flex flex-col items-center gap-2 border border-primary/25 bg-primary/10 backdrop-blur-sm transition-all duration-200 group hover:bg-primary/15 hover:shadow-lg hover:-translate-y-0.5"
+            className="glass-card p-4 rounded-3xl flex flex-col items-center gap-2 border border-white/70 bg-white/75 backdrop-blur-sm transition-all duration-200 group hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5"
           >
-            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-              <span className="material-icons-outlined" style={{ fontSize: '2.5rem' }}>print</span>
+            <div className="w-16 h-16 rounded-full bg-sky-500 flex items-center justify-center shadow-none group-hover:bg-sky-600 transition-colors">
+              <span
+                className="material-icons-outlined text-white leading-none font-normal"
+                style={{ fontSize: '3.11rem' }}
+              >
+                print
+              </span>
             </div>
             <div className="text-center">
-              <p className="font-bold text-sm text-slate-800">{t('printReport')}</p>
-              <p className="text-xs text-slate-600">{t('exportPDF')}</p>
+              <div className="text-sm font-bold text-slate-800">{t('printReport')}</div>
+              <div className="text-xs text-slate-600">{t('exportPDF')}</div>
             </div>
           </Link>
         )

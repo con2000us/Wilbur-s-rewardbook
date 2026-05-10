@@ -8,6 +8,7 @@ import RewardDetailModal from './RewardDetailModal'
 import UseRewardPopup from './UseRewardPopup'
 import AddRewardPopup from './AddRewardPopup'
 import { isParent } from '@/lib/utils/userRole'
+import StudentHomeNavButton from '@/app/components/StudentHomeNavButton'
 import { formatRewardAmountWithUnit, getRewardUnit } from './rewardUnit'
 
 interface Student {
@@ -642,12 +643,7 @@ export default function RewardsPageClient({
               </span>
             </button>
           )}
-          <button
-            onClick={() => window.location.href = '/'}
-            className="hidden md:flex bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer items-center justify-center w-10 h-10 hover:scale-105 active:scale-95"
-          >
-            <span className="material-icons-outlined text-lg">home</span>
-          </button>
+          <StudentHomeNavButton className="hidden lg:inline-flex" />
         </div>
       </div>
 

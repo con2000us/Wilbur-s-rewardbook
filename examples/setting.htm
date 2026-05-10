@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設定 - 學生獎勵系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6; /* 淺灰背景 */
+        }
+        /* 隱藏 Chrome/Safari/Edge 的數字輸入框上下箭頭 */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        /* 進度條轉場動畫 */
+        .progress-transition {
+            transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
+        }
+        /* Toast 動畫 */
+        .toast-enter { transform: translateY(100%); opacity: 0; }
+        .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s ease-out; }
+        .toast-exit { transform: translateY(0); opacity: 1; }
+        .toast-exit-active { transform: translateY(100%); opacity: 0; transition: all 0.3s ease-in; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-gray-900 leading-tight">系統設定</h1>
+                <p class="text-xs text-gray-500">管理與客製化您的系統環境</p>
+            </div>
+            <button class="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors px-3 py-2 rounded-md hover:bg-blue-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span class="hidden sm:inline">返回首頁</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- 1. 網站名稱設定 -->
+        <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="p-5 sm:p-6">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">網站名稱設定</h2>
+                    <p class="text-sm text-gray-500 mt-1">自訂學生與家長登入時看到的系統顯示名稱。</p>
+                </div>
+                
+                <div class="space-y-4 max-w-xl">
+                    <div>
+                        <label for="siteName" class="block text-sm font-medium text-gray-700 mb-1">網站名稱</label>
+                        <input type="text" id="siteName" value="中山國小 獎勵系統" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors" placeholder="請輸入網站名稱">
+                    </div>
+                    <div class="flex items-center bg-gray-50 p-3 rounded-md border border-gray-100">
+                        <span class="text-sm text-gray-500 mr-2">即時預覽：</span>
+                        <span id="siteNamePreview" class="text-sm font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded">中山國小 獎勵系統</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-5 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
+                <button id="resetSiteName" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">重置預設</button>
+                <button id="saveSiteName" disabled class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors">
+                    <span class="button-text">儲存變更</span>
+                    <svg class="loading-spinner hidden animate-spin ml-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. 分頁設定 -->
+        <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="p-5 sm:p-6">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">分頁設定</h2>
+                    <p class="text-sm text-gray-500 mt-1">設定學生列表、交易紀錄等頁面每次載入的資料筆數。</p>
+                </div>
+                
+                <div class="space-y-5 max-w-xl">
+                    <div class="flex items-center">
+                        <input id="unlimitedPagination" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                        <label for="unlimitedPagination" class="ml-2 block text-sm text-gray-900 cursor-pointer">
+                            不限筆數 <span class="text-xs text-gray-500">(將一次載入所有資料，資料量大時可能影響效能)</span>
+                        </label>
+                    </div>
+                    
+                    <div id="paginationControls" class="p-4 border border-gray-200 rounded-md bg-white space-y-4 transition-opacity">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-gray-700">每頁筆數設定</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="perPageInput" value="20" min="10" max="100" class="w-20 px-2 py-1 text-center border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+                                <span class="text-sm text-gray-500">筆</span>
+                            </div>
+                        </div>
+                        <input type="range" id="perPageSlider" min="10" max="100" step="10" value="20" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>10</span>
+                            <span>50</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    
+                    <p id="paginationPreview" class="text-sm font-medium text-blue-600">目前的設定：每頁將展示 20 筆資料</p>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-5 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
+                <button id="savePagination" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center transition-colors">
+                    <span class="button-text">儲存變更</span>
+                    <svg class="loading-spinner hidden animate-spin ml-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. 資源模式 -->
+        <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="p-5 sm:p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">資源模式</h2>
+                        <p class="text-sm text-gray-500 mt-1">管理圖片與檔案的儲存方案與限制。</p>
+                    </div>
+                    <button id="refreshStatsBtn" class="flex items-center text-sm text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        重新整理統計
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 模式選擇 -->
+                    <div class="space-y-3">
+                        <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none border-blue-500 ring-1 ring-blue-500" id="freeModeCard">
+                            <input type="radio" name="resourceMode" value="free" class="sr-only" checked>
+                            <span class="flex flex-1">
+                                <span class="flex flex-col">
+                                    <span class="block text-sm font-medium text-gray-900">Free 資源模式</span>
+                                    <span class="mt-1 flex items-center text-sm text-gray-500">總量上限 600MB / 單檔 2MB</span>
+                                </span>
+                            </span>
+                            <svg class="h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>
+                        </label>
+                        
+                        <label class="relative flex cursor-pointer rounded-lg border border-gray-300 bg-white p-4 shadow-sm focus:outline-none hover:border-gray-400" id="proModeCard">
+                            <input type="radio" name="resourceMode" value="pro" class="sr-only">
+                            <span class="flex flex-1">
+                                <span class="flex flex-col">
+                                    <span class="block text-sm font-medium text-gray-900 flex items-center gap-2">
+                                        升級資源模式 
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">PRO</span>
+                                    </span>
+                                    <span class="mt-1 flex items-center text-sm text-gray-500">無儲存限制 (依實際部署資源)</span>
+                                </span>
+                            </span>
+                            <svg class="h-5 w-5 text-blue-600 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>
+                        </label>
+                    </div>
+
+                    <!-- 統計數據 -->
+                    <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                        <h3 class="text-sm font-medium text-gray-700 mb-4">儲存空間使用狀況</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">目前用量</p>
+                                <p class="text-xl font-bold text-gray-900" id="storageUsageTxt">450 MB</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">總檔案數</p>
+                                <p class="text-xl font-bold text-gray-900" id="fileCountTxt">1,245</p>
+                            </div>
+                        </div>
+                        
+                        <div id="freeModeStats">
+                            <div class="flex justify-between items-end mb-1 text-xs">
+                                <span class="text-gray-500 font-medium">使用率 <span id="usagePercent">75</span>%</span>
+                                <span class="text-gray-400">600 MB 上限</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                <div id="usageProgressBar" class="bg-yellow-500 h-2.5 rounded-full progress-transition" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-5 py-4 border-t border-gray-200 flex justify-end">
+                <button id="saveModeBtn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center transition-colors">
+                    儲存模式設定
+                </button>
+            </div>
+        </section>
+
+        <!-- 4. 資料備份 -->
+        <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="p-5 sm:p-6 border-b border-gray-100">
+                <h2 class="text-lg font-semibold text-gray-900">資料備份</h2>
+                <p class="text-sm text-gray-500 mt-1">建立資料庫備份點，或將備份匯出為 JSON 格式妥善保存。</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+                <!-- 左卡：建立備份 -->
+                <div class="p-5 sm:p-6 bg-white">
+                    <h3 class="text-md font-medium text-gray-900 mb-4">保存新備份</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="backupName" class="block text-sm font-medium text-gray-700 mb-1">備份名稱 (選填)</label>
+                            <input type="text" id="backupName" placeholder="例如：期中考前備份" class="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label for="backupDesc" class="block text-sm font-medium text-gray-700 mb-1">備份描述 (選填)</label>
+                            <textarea id="backupDesc" rows="2" placeholder="簡短說明此次備份的內容或目的..." class="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"></textarea>
+                        </div>
+                        
+                        <div class="pt-2">
+                            <button id="createBackupBtn" class="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                存入資料庫
+                            </button>
+                        </div>
+                        
+                        <div class="relative flex items-center py-2">
+                            <div class="flex-grow border-t border-gray-200"></div>
+                            <span class="flex-shrink-0 mx-4 text-xs text-gray-400">或</span>
+                            <div class="flex-grow border-t border-gray-200"></div>
+                        </div>
+                        
+                        <button class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center justify-center transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            匯出為 JSON 檔案
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 右卡：備份列表 -->
+                <div class="p-5 sm:p-6 bg-gray-50/50">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-md font-medium text-gray-900">已保存的備份</h3>
+                        <button class="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center bg-white border border-blue-200 px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                            匯入 JSON
+                        </button>
+                    </div>
+                    
+                    <!-- 列表區 -->
+                    <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar" id="backupList">
+                        <!-- Backup Item 1 -->
+                        <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="min-w-0">
+                                <h4 class="text-sm font-medium text-gray-900 truncate">期中考前資料庫快照</h4>
+                                <p class="text-xs text-gray-500 mt-0.5 truncate">包含所有學生分數與紀錄</p>
+                                <div class="flex items-center text-[11px] text-gray-400 mt-1.5 space-x-2">
+                                    <span>2024-05-01 14:30</span>
+                                    <span>•</span>
+                                    <span>2.4 MB</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button class="px-2.5 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">還原</button>
+                                <button class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="刪除備份">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Backup Item 2 -->
+                        <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="min-w-0">
+                                <h4 class="text-sm font-medium text-gray-900 truncate">系統預設初始狀態</h4>
+                                <p class="text-xs text-gray-500 mt-0.5 truncate">-</p>
+                                <div class="flex items-center text-[11px] text-gray-400 mt-1.5 space-x-2">
+                                    <span>2024-02-15 09:00</span>
+                                    <span>•</span>
+                                    <span>0.8 MB</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button class="px-2.5 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">還原</button>
+                                <button class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="刪除備份">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 5. 初始化管理 -->
+            <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-5 sm:p-6 flex flex-col">
+                <div class="flex-grow">
+                    <div class="flex justify-between items-start mb-2">
+                        <h2 class="text-lg font-semibold text-gray-900">初始化管理</h2>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                            已初始化
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-6">查看目前系統初始化的狀態，或重新執行完整的初始化設定流程。</p>
+                </div>
+                <button class="w-full sm:w-auto self-start px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none transition-colors flex items-center justify-center">
+                    前往初始化管理頁
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
+            </section>
+
+            <!-- 7. 語系切換 -->
+            <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-5 sm:p-6 flex flex-col">
+                <div class="flex-grow">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-1">系統語系 (Language)</h2>
+                    <p class="text-sm text-gray-500 mb-4">選擇系統操作介面的顯示語言。</p>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Active Lang -->
+                        <div class="relative border-2 border-blue-500 bg-blue-50 rounded-lg p-3 cursor-default flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-blue-900">繁體中文</p>
+                                <p class="text-xs text-blue-600 mt-0.5">目前啟用</p>
+                            </div>
+                            <svg class="h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <!-- Inactive Lang -->
+                        <button onclick="simulateLangChange()" class="relative border border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 rounded-lg p-3 text-left transition-colors flex items-center justify-between group">
+                            <div>
+                                <p class="text-sm font-medium text-gray-700 group-hover:text-gray-900">English</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    切換語言後，頁面將會自動重新載入。
+                </p>
+            </section>
+        </div>
+
+        <!-- 6. 刪除所有資料 (高風險區) -->
+        <section class="bg-red-50 rounded-lg border border-red-200 shadow-sm overflow-hidden mt-8">
+            <div class="p-5 sm:p-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                    <h2 class="text-lg font-bold text-red-700">危險區域 (Danger Zone)</h2>
+                </div>
+                <p class="text-sm text-red-900/80 mb-4">此區域包含不可逆的高風險操作，請謹慎使用。</p>
+                
+                <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-md mb-5">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-amber-800">刪除所有學生資料</h3>
+                            <div class="mt-2 text-sm text-amber-700">
+                                <p>此操作將永久刪除所有 <strong>學生、科目、評量、交易與規則資料</strong>。強烈建議在執行前，先至上方「資料備份」區塊進行完整備份。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-red-100/50 px-5 py-4 border-t border-red-200 flex sm:justify-end">
+                <button id="dangerDeleteBtn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-red-50 transition-colors shadow-sm">
+                    刪除所有學生資料
+                </button>
+            </div>
+        </section>
+        
+        <!-- Bottom spacing -->
+        <div class="h-8"></div>
+    </main>
+
+    <!-- Modal: 二次確認刪除 -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm"></div>
+      
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <!-- Modal Panel -->
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border-t-4 border-red-600">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            </div>
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                <h3 class="text-lg font-semibold leading-6 text-gray-900" id="modal-title">確認刪除所有資料？</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500 mb-3">此動作無法復原。這將永久刪除資料庫中所有的學生與相關紀錄。</p>
+                                    <p class="text-sm text-gray-700 font-medium mb-2">請在下方輸入 <span class="bg-gray-100 px-1.5 py-0.5 rounded text-red-600 font-bold select-all">確認刪除</span> 以解鎖按鈕：</p>
+                                    <input type="text" id="deleteConfirmInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" placeholder="輸入 '確認刪除'">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" id="confirmDeleteBtn" disabled class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            <span class="btn-text">確認並永久刪除</span>
+                            <svg class="loading-spinner hidden animate-spin ml-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </button>
+                        <button type="button" id="cancelDeleteBtn" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                            取消返回
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Toast Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Utils & Toast Notification ---
+            const toastContainer = document.getElementById('toastContainer');
+            
+            function showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                const isSuccess = type === 'success';
+                
+                toast.className = `flex items-center w-full max-w-xs p-4 rounded-lg shadow-lg text-sm font-medium border-l-4 toast-enter bg-white ${isSuccess ? 'border-green-500 text-gray-800' : 'border-red-500 text-gray-800'}`;
+                
+                const icon = isSuccess 
+                    ? `<svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`
+                    : `<svg class="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+                
+                toast.innerHTML = `${icon} <span>${message}</span>`;
+                toastContainer.appendChild(toast);
+                
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    toast.classList.remove('toast-enter');
+                    toast.classList.add('toast-enter-active');
+                });
+
+                setTimeout(() => {
+                    toast.classList.remove('toast-enter-active');
+                    toast.classList.add('toast-exit');
+                    requestAnimationFrame(() => {
+                        toast.classList.remove('toast-exit');
+                        toast.classList.add('toast-exit-active');
+                        setTimeout(() => toast.remove(), 300);
+                    });
+                }, 3000);
+            }
+
+            function setButtonLoading(btn, isLoading) {
+                if(!btn) return;
+                const textSpan = btn.querySelector('.button-text') || btn.querySelector('.btn-text');
+                const spinner = btn.querySelector('.loading-spinner');
+                if(isLoading) {
+                    btn.disabled = true;
+                    if(textSpan) textSpan.classList.add('opacity-0');
+                    if(spinner) {
+                        spinner.classList.remove('hidden');
+                        spinner.style.position = 'absolute';
+                    }
+                } else {
+                    btn.disabled = false;
+                    if(textSpan) textSpan.classList.remove('opacity-0');
+                    if(spinner) {
+                        spinner.classList.add('hidden');
+                        spinner.style.position = '';
+                    }
+                }
+            }
+
+            // --- 1. Site Name Logic ---
+            const DEFAULT_SITE_NAME = "中山國小 獎勵系統";
+            const siteNameInput = document.getElementById('siteName');
+            const siteNamePreview = document.getElementById('siteNamePreview');
+            const saveSiteNameBtn = document.getElementById('saveSiteName');
+            const resetSiteNameBtn = document.getElementById('resetSiteName');
+
+            function checkSiteName() {
+                const val = siteNameInput.value.trim();
+                siteNamePreview.textContent = val || "(未命名)";
+                saveSiteNameBtn.disabled = val === DEFAULT_SITE_NAME || val === "";
+            }
+
+            siteNameInput.addEventListener('input', checkSiteName);
+            
+            resetSiteNameBtn.addEventListener('click', () => {
+                siteNameInput.value = DEFAULT_SITE_NAME;
+                checkSiteName();
+            });
+
+            saveSiteNameBtn.addEventListener('click', () => {
+                setButtonLoading(saveSiteNameBtn, true);
+                setTimeout(() => { // Simulate API
+                    setButtonLoading(saveSiteNameBtn, false);
+                    showToast('網站名稱已成功更新！');
+                    saveSiteNameBtn.disabled = true; // disable again until next change
+                }, 800);
+            });
+
+            // --- 2. Pagination Logic ---
+            const unlimitedCb = document.getElementById('unlimitedPagination');
+            const paginationControls = document.getElementById('paginationControls');
+            const perPageInput = document.getElementById('perPageInput');
+            const perPageSlider = document.getElementById('perPageSlider');
+            const paginationPreview = document.getElementById('paginationPreview');
+            const savePaginationBtn = document.getElementById('savePagination');
+            
+            let currentPerPage = 20;
+
+            function syncPagination(val) {
+                let num = parseInt(val);
+                if(isNaN(num)) num = 20;
+                if(num > 100) num = 100;
+                if(num < 10) num = 10;
+                
+                perPageInput.value = num;
+                perPageSlider.value = num;
+                currentPerPage = num;
+                
+                if(!unlimitedCb.checked) {
+                    paginationPreview.textContent = `目前的設定：每頁將展示 ${num} 筆資料`;
+                }
+            }
+
+            perPageInput.addEventListener('change', (e) => syncPagination(e.target.value));
+            perPageSlider.addEventListener('input', (e) => syncPagination(e.target.value));
+
+            unlimitedCb.addEventListener('change', (e) => {
+                if(e.target.checked) {
+                    paginationControls.classList.add('opacity-50', 'pointer-events-none');
+                    paginationPreview.textContent = `目前的設定：不限筆數 (全部顯示)`;
+                    paginationPreview.classList.replace('text-blue-600', 'text-amber-600');
+                } else {
+                    paginationControls.classList.remove('opacity-50', 'pointer-events-none');
+                    syncPagination(currentPerPage);
+                    paginationPreview.classList.replace('text-amber-600', 'text-blue-600');
+                }
+            });
+
+            savePaginationBtn.addEventListener('click', () => {
+                setButtonLoading(savePaginationBtn, true);
+                setTimeout(() => {
+                    setButtonLoading(savePaginationBtn, false);
+                    showToast('分頁設定已儲存');
+                }, 600);
+            });
+
+            // --- 3. Resource Mode Logic ---
+            const freeRadio = document.querySelector('input[value="free"]');
+            const proRadio = document.querySelector('input[value="pro"]');
+            const freeCard = document.getElementById('freeModeCard');
+            const proCard = document.getElementById('proModeCard');
+            const freeStats = document.getElementById('freeModeStats');
+            const refreshStatsBtn = document.getElementById('refreshStatsBtn');
+            const usageProgressBar = document.getElementById('usageProgressBar');
+            const usagePercentTxt = document.getElementById('usagePercent');
+            const storageUsageTxt = document.getElementById('storageUsageTxt');
+            const fileCountTxt = document.getElementById('fileCountTxt');
+
+            function updateModeUI() {
+                const isFree = freeRadio.checked;
+                
+                // Style cards
+                if(isFree) {
+                    freeCard.classList.add('border-blue-500', 'ring-1', 'ring-blue-500');
+                    freeCard.classList.remove('border-gray-300');
+                    freeCard.querySelector('svg').classList.remove('hidden');
+                    
+                    proCard.classList.remove('border-blue-500', 'ring-1', 'ring-blue-500');
+                    proCard.classList.add('border-gray-300');
+                    proCard.querySelector('svg').classList.add('hidden');
+                    
+                    freeStats.style.display = 'block';
+                } else {
+                    proCard.classList.add('border-blue-500', 'ring-1', 'ring-blue-500');
+                    proCard.classList.remove('border-gray-300');
+                    proCard.querySelector('svg').classList.remove('hidden');
+                    
+                    freeCard.classList.remove('border-blue-500', 'ring-1', 'ring-blue-500');
+                    freeCard.classList.add('border-gray-300');
+                    freeCard.querySelector('svg').classList.add('hidden');
+                    
+                    freeStats.style.display = 'none';
+                }
+            }
+
+            freeCard.addEventListener('click', () => { freeRadio.checked = true; updateModeUI(); });
+            proCard.addEventListener('click', () => { proRadio.checked = true; updateModeUI(); });
+            
+            // Randomize stats to simulate refresh
+            refreshStatsBtn.addEventListener('click', () => {
+                const icon = refreshStatsBtn.querySelector('svg');
+                icon.classList.add('animate-spin');
+                
+                setTimeout(() => {
+                    const fakeUsageMB = Math.floor(Math.random() * 550) + 50; // 50 to 600
+                    const fakeFiles = Math.floor(Math.random() * 2000) + 100;
+                    const percent = Math.round((fakeUsageMB / 600) * 100);
+                    
+                    storageUsageTxt.textContent = `${fakeUsageMB} MB`;
+                    fileCountTxt.textContent = fakeFiles.toLocaleString();
+                    usagePercentTxt.textContent = percent;
+                    usageProgressBar.style.width = `${percent}%`;
+                    
+                    // Color logic
+                    usageProgressBar.className = 'h-2.5 rounded-full progress-transition ';
+                    if(percent < 70) usageProgressBar.classList.add('bg-green-500');
+                    else if(percent < 90) usageProgressBar.classList.add('bg-yellow-500');
+                    else usageProgressBar.classList.add('bg-red-500');
+
+                    icon.classList.remove('animate-spin');
+                    showToast('容量統計已更新');
+                }, 800);
+            });
+
+            document.getElementById('saveModeBtn').addEventListener('click', function() {
+                const btn = this;
+                btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> 儲存中...`;
+                btn.disabled = true;
+                setTimeout(() => {
+                    btn.innerHTML = `儲存模式設定`;
+                    btn.disabled = false;
+                    showToast('資源模式已更新');
+                }, 600);
+            });
+
+            // --- 4. Backup Logic ---
+            const createBackupBtn = document.getElementById('createBackupBtn');
+            const backupList = document.getElementById('backupList');
+            const backupName = document.getElementById('backupName');
+            const backupDesc = document.getElementById('backupDesc');
+
+            createBackupBtn.addEventListener('click', () => {
+                const name = backupName.value.trim() || '手動建立備份';
+                const desc = backupDesc.value.trim() || '-';
+                const date = new Date();
+                const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+                
+                const btnOriginalContent = createBackupBtn.innerHTML;
+                createBackupBtn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> 建立中...`;
+                createBackupBtn.disabled = true;
+
+                setTimeout(() => {
+                    const newItem = document.createElement('div');
+                    newItem.className = 'bg-white p-3 rounded-lg border border-green-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-pulse';
+                    newItem.innerHTML = `
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-medium text-gray-900 truncate">${name}</h4>
+                            <p class="text-xs text-gray-500 mt-0.5 truncate">${desc}</p>
+                            <div class="flex items-center text-[11px] text-gray-400 mt-1.5 space-x-2">
+                                <span>${dateStr}</span> <span>•</span> <span>${(Math.random() * 3 + 0.5).toFixed(1)} MB</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button class="px-2.5 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">還原</button>
+                            <button class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="刪除備份" onclick="this.parentElement.parentElement.remove(); showToast('備份已刪除');">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                            </button>
+                        </div>
+                    `;
+                    
+                    backupList.prepend(newItem);
+                    setTimeout(() => newItem.classList.remove('animate-pulse', 'border-green-200', 'border-gray-200'), 1000);
+
+                    createBackupBtn.innerHTML = btnOriginalContent;
+                    createBackupBtn.disabled = false;
+                    backupName.value = '';
+                    backupDesc.value = '';
+                    showToast('備份已成功存入資料庫');
+                }, 1200);
+            });
+
+            // Bind initial delete buttons
+            document.querySelectorAll('#backupList button[title="刪除備份"]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.parentElement.parentElement.remove();
+                    showToast('備份已刪除');
+                });
+            });
+
+            // --- 6. Danger Zone Logic ---
+            const modal = document.getElementById('deleteModal');
+            const dangerBtn = document.getElementById('dangerDeleteBtn');
+            const cancelBtn = document.getElementById('cancelDeleteBtn');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            const confirmInput = document.getElementById('deleteConfirmInput');
+
+            function openModal() {
+                modal.classList.remove('hidden');
+                confirmInput.value = '';
+                confirmBtn.disabled = true;
+                setTimeout(() => confirmInput.focus(), 100);
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+            }
+
+            dangerBtn.addEventListener('click', openModal);
+            cancelBtn.addEventListener('click', closeModal);
+            
+            // Close modal when clicking backdrop
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal.firstElementChild) closeModal();
+            });
+
+            confirmInput.addEventListener('input', (e) => {
+                if (e.target.value === '確認刪除') {
+                    confirmBtn.disabled = false;
+                } else {
+                    confirmBtn.disabled = true;
+                }
+            });
+
+            confirmBtn.addEventListener('click', () => {
+                setButtonLoading(confirmBtn, true);
+                cancelBtn.disabled = true;
+                confirmInput.disabled = true;
+
+                setTimeout(() => {
+                    closeModal();
+                    setButtonLoading(confirmBtn, false);
+                    cancelBtn.disabled = false;
+                    confirmInput.disabled = false;
+                    showToast('資料已成功清除！', 'success');
+                }, 2000);
+            });
+            
+            // Expose language sim function to window
+            window.simulateLangChange = function() {
+                showToast('正在切換語系...', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            };
+
+        });
+    </script>
+</body>
+</html>

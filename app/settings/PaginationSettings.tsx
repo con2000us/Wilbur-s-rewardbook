@@ -100,121 +100,98 @@ export default function PaginationSettings() {
 
   if (isLoading) {
     return (
-      <div className="mb-8 pb-8 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          📄 {t('paginationSettings')}
-        </h2>
-        <div className="animate-pulse">
-          <div className="h-10 bg-gray-200 rounded"></div>
+      <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl overflow-hidden">
+        <div className="p-6 sm:p-7">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">{t('paginationSettings')}</h2>
+          <div className="animate-pulse">
+            <div className="h-10 bg-gray-200 rounded"></div>
+          </div>
         </div>
-      </div>
+      </section>
     )
   }
 
   return (
-    <div className="mb-8 pb-8 border-b border-gray-200">
-      <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-        📄 {t('paginationSettings')}
-      </h2>
-      
-      <p className="text-gray-600 mb-4 text-sm">
-        {t('paginationDesc')}
-      </p>
+    <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl overflow-hidden">
+      <div className="p-6 sm:p-7">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-slate-800">{t('paginationSettings')}</h2>
+          <p className="text-sm text-slate-500 mt-1">{t('paginationDesc')}</p>
+        </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t('itemsPerPageLabel')}
-          </label>
-          
-          {/* 不限選項 */}
-          <div className="mb-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={itemsPerPage === null}
-                onChange={handleUnlimitedChange}
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-              <span className="text-sm text-gray-700">{t('paginationUnlimited')}</span>
+        <div className="space-y-5 max-w-xl">
+          <div className="flex items-center">
+            <input
+              id="unlimited-pagination"
+              type="checkbox"
+              checked={itemsPerPage === null}
+              onChange={handleUnlimitedChange}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+            />
+            <label htmlFor="unlimited-pagination" className="ml-2 block text-sm text-slate-900 cursor-pointer">
+              {t('paginationUnlimited')}
             </label>
           </div>
 
-          {/* 數值設定（當不是「不限」時顯示） */}
-          {itemsPerPage !== null && (
-            <>
-              <div className="flex items-center gap-4">
-                <input
-                  type="range"
-                  min={MIN_ITEMS}
-                  max={MAX_ITEMS}
-                  step="2"
-                  value={itemsPerPage}
-                  onChange={handleInputChange}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                />
+          <div className={`p-4 border border-slate-200 rounded-xl bg-white space-y-4 transition-opacity ${itemsPerPage === null ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="flex justify-between items-center">
+              <label className="block text-sm font-semibold text-slate-700">{t('itemsPerPageLabel')}</label>
+              <div className="flex items-center gap-2">
                 <input
                   type="number"
                   min={MIN_ITEMS}
                   max={MAX_ITEMS}
-                  step="2"
-                  value={itemsPerPage}
+                  step={2}
+                  value={itemsPerPage ?? 25}
                   onChange={handleInputChange}
-                  className="w-24 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none text-gray-800 text-center font-semibold"
+                  className="w-20 px-2 py-1 text-center border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none"
                 />
+                <span className="text-sm text-slate-500">筆</span>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                {t('paginationRange', { min: MIN_ITEMS, max: MAX_ITEMS })}
-              </p>
-            </>
-          )}
-        </div>
+            </div>
+            <input
+              type="range"
+              min={MIN_ITEMS}
+              max={MAX_ITEMS}
+              step={2}
+              value={itemsPerPage ?? 25}
+              onChange={handleInputChange}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            />
+            <p className="text-xs text-slate-500">{t('paginationRange', { min: MIN_ITEMS, max: MAX_ITEMS })}</p>
+          </div>
 
-        {/* 預覽 */}
-        <div className="bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg p-4">
-          <p className="text-sm text-gray-600 mb-2">{t('preview')}:</p>
-          <p className="text-lg text-gray-800">
+          <p className="text-sm font-medium text-blue-600">
             {itemsPerPage === null 
               ? t('paginationPreviewUnlimited')
               : t('paginationPreview', { count: itemsPerPage })
             }
           </p>
-        </div>
 
-        {/* 訊息 */}
-        {message && (
-          <div className={`p-3 rounded-lg ${
-            message.type === 'success' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
-            {message.text}
-          </div>
-        )}
-
-        {/* 按鈕 */}
-        <div className="flex gap-3 flex-wrap">
-          <button
-            onClick={handleSave}
-            disabled={isSaving || !hasChanges}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-              hasChanges && !isSaving
-                ? 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg hover:-translate-y-1 cursor-pointer'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {isSaving ? tCommon('loading') : tCommon('save')}
-          </button>
-
-          <button
-            onClick={handleReset}
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer"
-          >
-            {t('resetDefault')}
-          </button>
+          {message && (
+            <div className={`p-3 rounded-md text-sm ${message.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
+              {message.text}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+
+      <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-3">
+        <button
+          onClick={handleReset}
+          className="w-full sm:w-auto px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+        >
+          {t('resetDefault')}
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={isSaving || !hasChanges}
+          className={`w-full sm:w-auto px-4 py-2.5 text-sm font-semibold text-white border border-transparent rounded-xl transition-opacity ${hasChanges && !isSaving ? 'bg-primary hover:opacity-90' : 'bg-gray-300 cursor-not-allowed'}`}
+        >
+          {isSaving ? tCommon('loading') : tCommon('save')}
+        </button>
+      </div>
+    </section>
   )
 }
 

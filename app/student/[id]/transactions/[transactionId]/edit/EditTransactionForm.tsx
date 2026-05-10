@@ -82,6 +82,12 @@ export default function EditTransactionForm({ studentId, transaction }: Props) {
            icon.length <= 2 || 
            !/^[a-z_]+$/i.test(icon)
   }
+  const resetCategoryOptions = [
+    t('categories.semesterUpdate'),
+    t('categories.yearEnd'),
+    t('categories.systemCalibration'),
+    t('categories.amountAdjustment')
+  ]
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -278,14 +284,14 @@ export default function EditTransactionForm({ studentId, transaction }: Props) {
             <select
               name="category"
               required
-              defaultValue={transaction.category}
+              defaultValue={transaction.category || resetCategoryOptions[0]}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
-              <option value="">{t('selectCategory')}</option>
-              <option value={t('categories.semesterUpdate')}>{t('categories.semesterUpdate')}</option>
-              <option value={t('categories.yearEnd')}>{t('categories.yearEnd')}</option>
-              <option value={t('categories.systemCalibration')}>{t('categories.systemCalibration')}</option>
-              <option value={t('categories.amountAdjustment')}>{t('categories.amountAdjustment')}</option>
+              {resetCategoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
             </select>
           ) : loadingTypes ? (
             <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-500">
@@ -301,10 +307,9 @@ export default function EditTransactionForm({ studentId, transaction }: Props) {
             <select
               name="category"
               required
-              defaultValue={transaction.category}
+              defaultValue={transaction.category || getDisplayName(customTypes[0])}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
-              <option value="">{t('selectCategory')}</option>
               {customTypes.map((type) => {
                 const displayName = getDisplayName(type)
                 return (

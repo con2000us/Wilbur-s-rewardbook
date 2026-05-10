@@ -77,81 +77,76 @@ export default function SiteNameSettings() {
 
   if (isLoading) {
     return (
-      <div className="mb-8 pb-8 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          🏠 {t('siteName')}
-        </h2>
+      <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl overflow-hidden">
+        <div className="p-6 sm:p-7">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">{t('siteName')}</h2>
         <div className="animate-pulse">
           <div className="h-10 bg-gray-200 rounded"></div>
         </div>
-      </div>
+        </div>
+      </section>
     )
   }
 
   return (
-    <div className="mb-8 pb-8 border-b border-gray-200">
-      <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-        🏠 {t('siteName')}
-      </h2>
-      
-      <p className="text-gray-600 mb-4 text-sm">
-        {t('siteNameDesc')}
-      </p>
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t('siteNameLabel')}
-          </label>
-          <input
-            type="text"
-            value={siteName}
-            onChange={(e) => setSiteName(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none text-gray-800 text-lg"
-            placeholder="Wilbur's RewardBook"
-          />
+    <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl overflow-hidden">
+      <div className="p-6 sm:p-7">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-slate-800">{t('siteName')}</h2>
+          <p className="text-sm text-slate-500 mt-1">{t('siteNameDesc')}</p>
         </div>
 
-        {/* 預覽 */}
-        <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-4">
-          <p className="text-sm text-gray-600 mb-2">{t('preview')}:</p>
-          <p className="text-2xl font-bold text-purple-800">📚 {siteName || "Wilbur's RewardBook"}</p>
-        </div>
-
-        {/* 訊息 */}
-        {message && (
-          <div className={`p-3 rounded-lg ${
-            message.type === 'success' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
-            {message.text}
+        <div className="space-y-4 max-w-xl">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">{t('siteNameLabel')}</label>
+            <input
+              type="text"
+              value={siteName}
+              onChange={(e) => setSiteName(e.target.value)}
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors"
+              placeholder="Wilbur's RewardBook"
+            />
           </div>
-        )}
 
-        {/* 按鈕 */}
-        <div className="flex gap-3 flex-wrap">
-          <button
-            onClick={handleSave}
-            disabled={isSaving || !hasChanges}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-              hasChanges && !isSaving
-                ? 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg hover:-translate-y-1 cursor-pointer'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {isSaving ? tCommon('loading') : tCommon('save')}
-          </button>
+          <div className="flex items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <span className="text-sm text-slate-500 mr-2">{t('preview')}：</span>
+            <span className="text-sm font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded">
+              {siteName || "Wilbur's RewardBook"}
+            </span>
+          </div>
 
-          <button
-            onClick={handleReset}
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer"
-          >
-            {t('resetDefault')}
-          </button>
+          {message && (
+            <div
+              className={`p-3 rounded-md text-sm ${
+                message.type === 'success'
+                  ? 'bg-green-100 text-green-800 border border-green-200'
+                  : 'bg-red-100 text-red-800 border border-red-200'
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+
+      <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-3">
+        <button
+          onClick={handleReset}
+          className="w-full sm:w-auto px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+        >
+          {t('resetDefault')}
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={isSaving || !hasChanges}
+          className={`w-full sm:w-auto px-4 py-2.5 text-sm font-semibold text-white border border-transparent rounded-xl flex items-center justify-center transition-opacity ${
+            hasChanges && !isSaving ? 'bg-primary hover:opacity-90' : 'bg-gray-300 cursor-not-allowed'
+          }`}
+        >
+          {isSaving ? tCommon('loading') : tCommon('save')}
+        </button>
+      </div>
+    </section>
   )
 }
 

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
+import StudentHomeNavButton from '@/app/components/StudentHomeNavButton'
 import TransactionModal from './components/TransactionModal'
 import { useRewardType } from './TransactionsContent'
 import { findRewardTypeForTransaction, getRewardUnit } from '../rewards/rewardUnit'
@@ -24,7 +24,6 @@ interface Props {
 const ASSESSMENT_TYPE_KEYS = ['exam', 'quiz', 'homework', 'project'] as const
 
 export default function TransactionRecords({ studentId, transactions, studentName, onEditTransaction, onAddTransaction, selectedRewardType, onRewardTypeSelect, subjects = [], assessments = [], rewardTypes = [] }: Props) {
-  const router = useRouter()
   const t = useTranslations('transaction')
   const tStudent = useTranslations('student')
   const tCommon = useTranslations('common')
@@ -382,20 +381,14 @@ export default function TransactionRecords({ studentId, transactions, studentNam
             {onAddTransaction && (
               <button 
                 onClick={onAddTransaction}
-                className="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                className="student-toolbar-primary px-6 py-2.5 min-h-11 rounded-full font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <span className="material-icons-outlined text-lg">add_circle</span>
                 {locale === 'zh-TW' ? '添加記錄' : 'Add Record'}
               </button>
             )}
             
-            {/* 返回首頁按鈕 - 在手機寬度下隱藏 */}
-            <button 
-              onClick={() => router.push('/')}
-              className="hidden md:flex bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer items-center justify-center w-10 h-10 hover:scale-105 active:scale-95"
-            >
-              <span className="material-icons-outlined text-lg">home</span>
-            </button>
+            <StudentHomeNavButton className="hidden lg:inline-flex" />
           </div>
         </div>
         

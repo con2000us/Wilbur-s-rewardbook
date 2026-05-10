@@ -19,24 +19,20 @@ export default function LanguageSwitcher() {
   }
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-2">
-        🌐 {t('language')}
-      </h2>
-      <p className="text-sm text-gray-600 mb-6">
-        {t('selectLanguage')}
-      </p>
-      
-      <div className="flex gap-4">
+    <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl p-6 sm:p-7">
+      <h2 className="text-lg font-bold text-slate-800 mb-1">{t('language')}</h2>
+      <p className="text-sm text-slate-500 mb-4">{t('selectLanguage')}</p>
+
+      <div className="grid grid-cols-2 gap-3">
         {locales.map((loc) => (
           <label
             key={loc}
             className={`
-              relative flex-1 cursor-pointer
-              p-6 rounded-xl border-2 transition-all duration-200
+              relative cursor-pointer
+              p-3 rounded-xl border transition-colors flex items-center justify-between
               ${locale === loc 
-                ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
-                : 'border-gray-300 bg-white hover:border-blue-300 hover:shadow-md hover:scale-102'
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
               }
             `}
           >
@@ -48,35 +44,27 @@ export default function LanguageSwitcher() {
               onChange={(e) => handleLanguageChange(e.target.value as Locale)}
               className="sr-only"
             />
-            <div className="text-center">
-              {/* 語言名稱 */}
-              <div className={`text-lg font-bold ${locale === loc ? 'text-blue-600' : 'text-gray-800'}`}>
+            <div>
+              <div className={`text-sm font-medium ${locale === loc ? 'text-blue-900' : 'text-gray-700'}`}>
                 {localeNames[loc]}
               </div>
-              {/* 選中標記 */}
               {locale === loc && (
-                <div className="mt-2 flex items-center justify-center">
-                  <div className="bg-blue-500 text-white rounded-full px-3 py-1 text-xs font-semibold">
-                    ✓ {loc === 'zh-TW' ? '目前使用' : 'Active'}
-                  </div>
+                <div className="text-xs text-blue-600 mt-0.5">
+                  {loc === 'zh-TW' ? '目前啟用' : 'Active'}
                 </div>
               )}
             </div>
+            {locale === loc && <span className="text-blue-600">✓</span>}
           </label>
         ))}
       </div>
-      
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <p className="text-sm text-blue-800 flex items-start gap-2">
-          <span className="text-lg">💡</span>
-          <span>
-            {locale === 'zh-TW' 
-              ? '點擊語言卡片即可切換，頁面會自動刷新並套用新語言' 
-              : 'Click on a language card to switch. The page will automatically refresh and apply the new language.'}
-          </span>
-        </p>
-      </div>
-    </div>
+
+      <p className="text-xs text-slate-400 mt-4">
+        {locale === 'zh-TW'
+          ? '切換語言後，頁面將自動重新載入。'
+          : 'After switching language, this page reloads automatically.'}
+      </p>
+    </section>
   )
 }
 

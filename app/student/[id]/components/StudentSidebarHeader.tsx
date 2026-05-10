@@ -81,7 +81,7 @@ export default function StudentSidebarHeader({
               setDisplayMode('navigation')
             }}
             ref={navButtonRef}
-            className={`flex-1 px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 px-4 py-1.5 rounded-full text-base transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
               displayMode === 'navigation'
                 ? 'bg-white shadow-sm font-bold text-slate-800'
                 : 'font-medium text-slate-500 hover:bg-white/50'
@@ -97,7 +97,7 @@ export default function StudentSidebarHeader({
               setDisplayMode('students')
             }}
             ref={studentButtonRef}
-            className={`flex-1 px-4 py-1.5 rounded-full text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 px-4 py-1.5 rounded-full text-base transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
               displayMode === 'students'
                 ? 'bg-white shadow-sm font-bold text-slate-800'
                 : 'font-medium text-slate-500 hover:bg-white/50'

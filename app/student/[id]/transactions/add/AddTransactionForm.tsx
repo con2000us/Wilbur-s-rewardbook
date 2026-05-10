@@ -96,6 +96,12 @@ export default function AddTransactionForm({ studentId }: Props) {
     { description: t('presets.spend.gameTime'), icon: '🎮', category: t('categories.leisureActivity') },
     { description: t('presets.spend.snacks'), icon: '🍭', category: t('categories.foodPurchase') },
   ]
+  const resetCategoryOptions = [
+    t('categories.semesterUpdate'),
+    t('categories.yearEnd'),
+    t('categories.systemCalibration'),
+    t('categories.amountAdjustment')
+  ]
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -327,13 +333,14 @@ export default function AddTransactionForm({ studentId }: Props) {
             <select
               name="category"
               required
+              defaultValue={resetCategoryOptions[0]}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
-              <option value="">{t('selectCategory')}</option>
-              <option value={t('categories.semesterUpdate')}>{t('categories.semesterUpdate')}</option>
-              <option value={t('categories.yearEnd')}>{t('categories.yearEnd')}</option>
-              <option value={t('categories.systemCalibration')}>{t('categories.systemCalibration')}</option>
-              <option value={t('categories.amountAdjustment')}>{t('categories.amountAdjustment')}</option>
+              {resetCategoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
             </select>
           ) : loadingTypes ? (
             <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-500">
@@ -349,10 +356,10 @@ export default function AddTransactionForm({ studentId }: Props) {
             <select
               name="category"
               required
+              defaultValue={customTypes[0] ? getDisplayName(customTypes[0]) : undefined}
               onChange={() => setSelectedPresetIndex(null)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
-              <option value="">{t('selectCategory')}</option>
               {customTypes.map((type) => {
                 const displayName = getDisplayName(type)
                 return (

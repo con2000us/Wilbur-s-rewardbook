@@ -25,6 +25,16 @@ body {
   font-family: 'Noto Sans TC', 'Poppins', sans-serif;
 }
 
+/* 學生內頁主區工具列：與首頁按鈕同色；略深於 primary(#6a99e0) 以維持可讀，比海軍藍淺 */
+.student-toolbar-primary {
+  background-color: #5f94e8;
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(74 114 200 / 0.22);
+}
+.student-toolbar-primary:hover {
+  background-color: #5588e0;
+}
+
 /* 與學生主頁一致的亮系全畫面背景 */
 .bg-app-shell {
   background: linear-gradient(135deg, #a7d9ef 0%, #c1d9f0 50%, #e0e7f2 100%);
@@ -134,13 +144,6 @@ body {
 .sidebar-item-active {
   background-color: rgba(255, 255, 255, 0.9);
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-}
-
-/* Print button styles - 確保背景是白色 */
-.print-button-card,
-a.glass-card[href*="/print"] {
-  border-color: rgba(255, 255, 255, 0.3) !important;
-  background: white !important;
 }
 
 /* Glass button style - matching passwook.html */

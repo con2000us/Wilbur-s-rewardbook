@@ -63,50 +63,37 @@ export default function ClearAllStudentsSettings() {
   }
 
   return (
-    <div className="mb-8 pb-8 border-b border-red-200 last:border-b-0">
-      <h2 className="text-xl font-bold text-red-600 mb-4 flex items-center gap-2">
-        ⚠️ {t('clearAllStudents.title')}
-      </h2>
-      
-      <p className="text-gray-600 mb-4 text-sm">
-        {t('clearAllStudents.description')}
-      </p>
+    <section className="bg-red-50 rounded-2xl border border-red-200 shadow-2xl overflow-hidden">
+      <div className="p-6 sm:p-7">
+        <h2 className="text-lg font-bold text-red-700 mb-3">{t('clearAllStudents.title')}</h2>
+        <p className="text-sm text-red-900/80 mb-4">{t('clearAllStudents.description')}</p>
 
-      <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-4">
-        <p className="text-sm text-yellow-800 font-semibold mb-1">
-          💾 {t('clearAllStudents.backupSuggestionTitle')}
-        </p>
-        <p className="text-xs text-yellow-700">
-          {t('clearAllStudents.backupSuggestionDesc')}
-        </p>
+        <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl mb-4">
+          <p className="text-sm text-amber-800 font-bold mb-1">{t('clearAllStudents.backupSuggestionTitle')}</p>
+          <p className="text-xs text-amber-700">{t('clearAllStudents.backupSuggestionDesc')}</p>
+        </div>
       </div>
 
-      <button
-        onClick={handleClearAll}
-        disabled={isDeleting}
-        className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-          isDeleting
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-red-600 text-white hover:bg-red-700 hover:shadow-lg hover:-translate-y-1 cursor-pointer'
-        }`}
-      >
-        {isDeleting ? t('clearAllStudents.deleting') : `🗑️ ${t('clearAllStudents.button')}`}
-      </button>
+      <div className="bg-red-100/50 px-6 py-4 border-t border-red-200 flex sm:justify-end">
+        <button
+          onClick={handleClearAll}
+          disabled={isDeleting}
+          className={`w-full sm:w-auto px-4 py-2.5 text-sm font-semibold text-white border border-transparent rounded-xl transition-colors ${
+            isDeleting ? 'bg-gray-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 shadow-sm'
+          }`}
+        >
+          {isDeleting ? t('clearAllStudents.deleting') : t('clearAllStudents.button')}
+        </button>
+      </div>
 
-      {/* 訊息 */}
       {message && (
-        <div className={`mt-4 p-4 rounded-lg ${
-          message.type === 'success' 
-            ? 'bg-green-100 text-green-800 border border-green-300' 
-            : 'bg-red-100 text-red-800 border border-red-300'
-        }`}>
-          <div className="flex items-start gap-2">
-            <span className="text-lg flex-shrink-0">{message.type === 'success' ? '✅' : '❌'}</span>
+        <div className="px-6 pb-6">
+          <div className={`mt-4 p-3 rounded-md text-sm ${message.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
             <span className="whitespace-pre-line break-words">{message.text}</span>
           </div>
         </div>
       )}
-    </div>
+    </section>
   )
 }
 

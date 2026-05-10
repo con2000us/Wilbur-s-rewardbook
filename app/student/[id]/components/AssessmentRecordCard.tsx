@@ -30,6 +30,7 @@ interface RecordCardProps {
 const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) => {
   const locale = useLocale()
   const t = useTranslations('student')
+  const tAssessment = useTranslations('assessment')
   
   // Emoji 到 Material Icons Outlined 的映射表
   const emojiToMaterialIcon: Record<string, string> = {
@@ -153,6 +154,21 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
     return typeIconMap[type || ''] || 'history_edu'  // 預設為歷史教育
   }
 
+  const getAssessmentTypeLabel = (type: string | undefined | null): string => {
+    const normalizedType = type || 'exam'
+    if (['exam', 'quiz', 'homework', 'project'].includes(normalizedType)) {
+      return tAssessment(`types.${normalizedType}`)
+    }
+    return locale === 'zh-TW' ? '評量' : 'Assessment'
+  }
+
+  const assessmentTypeLabel = getAssessmentTypeLabel(record.assessment_type)
+  const rewardTagItems = record.reward_amount > 0
+    ? [
+        { key: 'base', label: tAssessment('reward'), amount: record.reward_amount }
+      ]
+    : []
+
   return (
     <div 
       className={`group glass-card p-6 rounded-[2.5rem] shadow-sm relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer`}
@@ -170,63 +186,76 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
             style={{ backgroundColor: subjectColor }}
           ></div>
           
-          {/* 科目圖標 - 統一使用 Material Icons Outlined */}
-          <div className="w-16 h-16 rounded-3xl flex items-center justify-center relative z-0">
-            <span className="material-icons-outlined" style={{ color: subjectColor, fontSize: '3.11rem' }}>
-              {subjectIcon}
+          {/* 科目圖標與評量類型 */}
+          <div className="w-16 flex flex-col items-center gap-1.5">
+            <div className="w-16 h-16 rounded-3xl flex items-center justify-center relative z-0">
+              <span className="material-icons-outlined" style={{ color: subjectColor, fontSize: '3.11rem' }}>
+                {subjectIcon}
+              </span>
+              <div 
+                className="absolute inset-0 rounded-3xl opacity-10"
+                style={{ backgroundColor: subjectColor }}
+              ></div>
+            </div>
+            <span
+              className="px-2 py-0.5 rounded-md text-xs font-bold leading-none truncate max-w-full flex items-center gap-1"
+              style={{
+                backgroundColor: `${subjectColor}20`,
+                color: subjectColor
+              }}
+            >
+              <span className="material-icons-outlined text-[12px]">{getAssessmentTypeIcon(record.assessment_type)}</span>
+              {assessmentTypeLabel}
             </span>
-            <div 
-              className="absolute inset-0 rounded-3xl opacity-10"
-              style={{ backgroundColor: subjectColor }}
-            ></div>
           </div>
           
           <div>
-            <h3 className="text-xl font-black mb-2">{record.title || record.description || formatDisplayDate(record.due_date)}</h3>
-            <div className="flex items-center gap-2">
-              <span 
-                className="px-2 py-0.5 rounded-md text-xs font-bold flex items-center gap-1"
-                style={{ 
-                  backgroundColor: `${subjectColor}20`,
-                  color: subjectColor
-                }}
+            <div className="flex items-center gap-2 mb-2 mt-1">
+              <span
+                className="text-[21px] font-semibold leading-none"
+                style={{ color: subjectColor }}
               >
-                <span className="material-icons-outlined text-[14px]">{getAssessmentTypeIcon(record.assessment_type)}</span> {subjectName}
-              </span>
-              <span className="text-slate-400 text-sm">
-                {formatDisplayDate(record.due_date) || (record.description ? `${t('unitLabel')}${record.description}` : '')}
+                {subjectName}
               </span>
             </div>
+            <h3 className="text-xl font-black text-slate-600">{record.title || record.description || formatDisplayDate(record.due_date)}</h3>
             {record.notes && (
-              <p className="mt-2 text-sm text-slate-600 line-clamp-2">
+              <p className="mt-2 text-sm text-slate-600 line-clamp-4">
                 {locale === 'zh-TW' ? '備註：' : 'Notes: '}{record.notes}
               </p>
             )}
           </div>
         </div>
         
-        {/* 獎金標籤 */}
-        {record.reward_amount > 0 && (
-          <div className="bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
-            <span className="text-orange-600 font-bold text-sm">${record.reward_amount}</span>
+        <div className="flex flex-col items-end gap-2 ml-4 -mt-2">
+          <div className="flex items-baseline gap-1">
+            {isLetterGrade ? (
+              <span className={`text-[43px] font-black ${gradeColor}`}>{record.grade}</span>
+            ) : (
+              <>
+                <span className={`text-[43px] font-black ${scoreColor}`}>{record.score ?? '-'}</span>
+                <span className="text-slate-400 font-bold">{t('points')}</span>
+              </>
+            )}
           </div>
-        )}
+          {rewardTagItems.length > 0 && (
+            <div className="flex flex-wrap justify-end gap-1.5 max-w-[220px]">
+              {rewardTagItems.map((tag) => (
+                <div key={tag.key} className="inline-flex items-center bg-orange-50 px-2 py-1 rounded-full border border-orange-200">
+                  <span className="text-orange-600 font-bold text-xs leading-none">
+                    {tag.label} ${tag.amount}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       
-      <div className="flex items-end justify-between">
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2 text-emerald-500 font-medium text-sm">
           <span className="material-icons-outlined text-sm">calendar_today</span>
           {formatDate(record.due_date)}
-        </div>
-        <div className="flex items-baseline gap-1">
-          {isLetterGrade ? (
-            <span className={`text-5xl font-black ${gradeColor}`}>{record.grade}</span>
-          ) : (
-            <>
-          <span className={`text-5xl font-black ${scoreColor}`}>{record.score ?? '-'}</span>
-          <span className="text-slate-400 font-bold">{t('points')}</span>
-            </>
-          )}
         </div>
       </div>
     </div>

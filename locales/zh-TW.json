@@ -645,6 +645,18 @@
     "initializationManager": "初始化管理",
     "initializationManagerDesc": "查看系統初始化狀態、資料庫相容性檢查，並執行初始化流程。",
     "openInitializationManager": "開啟初始化管理頁",
+    "resourceModeTitle": "資源模式",
+    "resourceModeDesc": "依部署資源等級設定圖片儲存限制。Free 模式將套用固定上限；升級模式則不限制。",
+    "resourceModeFreeTitle": "Free 資源模式",
+    "resourceModeFreeDesc": "圖片總量上限 {total}，單檔上限 {single}",
+    "resourceModeUpgradedTitle": "升級資源模式",
+    "resourceModeUpgradedDesc": "不限制圖片總量與單檔大小（依部署環境可用資源為準）",
+    "resourceUsageTitle": "目前圖片儲存占用統計",
+    "resourceUsageSummary": "已使用 {size}，共 {files} 個檔案",
+    "resourceUsagePercent": "已用 {percent}% / 上限 {total}",
+    "resourceUsageLoadFailed": "讀取儲存統計失敗",
+    "resourceUsageUnavailable": "目前無法取得儲存統計",
+    "refreshUsage": "重新整理統計",
     "languages": {
       "zh-TW": "繁體中文",
       "en": "English"

@@ -413,35 +413,18 @@ export default function BackupSettings() {
   }
 
   return (
-    <div className="mb-8 pb-8 border-b border-gray-200 last:border-b-0">
-      <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-        💾 {t('backupSettings')}
-      </h2>
-      
-      <p className="text-gray-600 mb-6 text-sm">
-        {t('backupDesc')}
-      </p>
-
-      <div className="space-y-6">
+    <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl overflow-hidden">
+      <div className="p-6 sm:p-7 border-b border-slate-100">
+        <h2 className="text-lg font-bold text-slate-800">{t('backupSettings')}</h2>
+        <p className="text-sm text-slate-500 mt-1">{t('backupDesc')}</p>
+      </div>
+      <div className="p-6 sm:p-7">
         {/* 保存備份和備份列表 - 同一列 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-0 lg:divide-x lg:divide-gray-200">
           {/* 保存備份到資料庫 */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                💾 {t('backupSaveToDB')}
-              </h3>
-              <button
-                onClick={handleExport}
-                disabled={isExporting}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  isExporting
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:-translate-y-1 cursor-pointer'
-                }`}
-              >
-                {isExporting ? t('backupExporting') : t('exportJSON')}
-              </button>
+          <div className="bg-white lg:pr-6">
+            <div className="mb-2">
+              <h3 className="text-md font-semibold text-slate-800">{t('backupSaveToDB')}</h3>
             </div>
             <p className="text-gray-600 mb-4 text-sm">
               {t('backupSaveToDBDesc')}
@@ -457,7 +440,7 @@ export default function BackupSettings() {
                   value={backupName}
                   onChange={(e) => setBackupName(e.target.value)}
                   placeholder={t('backupNamePlaceholder')}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none text-gray-800"
+                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   disabled={isSaving}
                 />
               </div>
@@ -471,7 +454,7 @@ export default function BackupSettings() {
                   onChange={(e) => setBackupDescription(e.target.value)}
                   placeholder={t('backupDescriptionPlaceholder')}
                   rows={3}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none text-gray-800"
+                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
                   disabled={isSaving}
                 />
               </div>
@@ -479,30 +462,46 @@ export default function BackupSettings() {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className={`w-full px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                   isSaving
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-lg hover:-translate-y-1 cursor-pointer'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
               >
                 {isSaving ? t('backupSaving') : t('backupSaveToDB')}
+              </button>
+
+              <div className="relative flex items-center py-2">
+                <div className="flex-grow border-t border-gray-200"></div>
+                <span className="flex-shrink-0 mx-4 text-xs text-gray-400">或</span>
+                <div className="flex-grow border-t border-gray-200"></div>
+              </div>
+
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  isExporting
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {isExporting ? t('backupExporting') : t('exportJSON')}
               </button>
             </div>
           </div>
 
           {/* 已保存的備份列表 */}
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200 flex flex-col">
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-100 flex flex-col lg:ml-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                📋 {t('backupList')}
-              </h3>
+              <h3 className="text-md font-semibold text-slate-800">{t('backupList')}</h3>
               <button
                 onClick={triggerFileSelect}
                 disabled={isImporting}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                className={`px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
                   isImporting
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-orange-600 text-white hover:bg-orange-700 hover:shadow-lg hover:-translate-y-1 cursor-pointer'
+                    : 'bg-white border border-blue-200 text-blue-600 hover:bg-blue-50'
                 }`}
               >
                 {isImporting ? t('backupImporting') : t('importJSON')}
@@ -523,7 +522,7 @@ export default function BackupSettings() {
                   {backups.map((backup) => (
                     <div
                       key={backup.id}
-                      className="bg-white rounded-lg p-4 border border-gray-200 flex items-center justify-between"
+                      className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-gray-800 truncate">{backup.name}</div>
@@ -538,10 +537,10 @@ export default function BackupSettings() {
                         <button
                           onClick={() => handleRestoreFromDB(backup.id, backup.name)}
                           disabled={isImporting}
-                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                        className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
                             isImporting
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-purple-600 text-white hover:bg-purple-700 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer'
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed border-gray-200'
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                           }`}
                         >
                           {t('backupRestore')}
@@ -549,10 +548,10 @@ export default function BackupSettings() {
                         <button
                           onClick={() => handleDelete(backup.id, backup.name)}
                           disabled={isDeleting === backup.id}
-                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                        className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
                             isDeleting === backup.id
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-red-600 text-white hover:bg-red-700 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer'
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed border-gray-200'
+                              : 'bg-white text-red-600 border-red-200 hover:bg-red-50'
                           }`}
                         >
                           {isDeleting === backup.id ? tCommon('loading') : tCommon('delete')}
@@ -567,20 +566,12 @@ export default function BackupSettings() {
         </div>
 
 
-        {/* 訊息 */}
         {message && (
-          <div className={`p-4 rounded-lg ${
-            message.type === 'success' 
-              ? 'bg-green-100 text-green-800 border border-green-300' 
-              : 'bg-red-100 text-red-800 border border-red-300'
-          }`}>
-            <div className="flex items-start gap-2">
-              <span className="text-lg flex-shrink-0">{message.type === 'success' ? '✅' : '❌'}</span>
-              <span className="whitespace-pre-line break-words">{message.text}</span>
-            </div>
+          <div className={`mt-5 p-3 rounded-md text-sm ${message.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
+            <span className="whitespace-pre-line break-words">{message.text}</span>
           </div>
         )}
       </div>
-    </div>
+    </section>
   )
 }

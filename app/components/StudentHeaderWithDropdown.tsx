@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
+import StudentHomeNavButton from './StudentHomeNavButton'
 
 interface Student {
   id: string
@@ -42,7 +43,6 @@ export default function StudentHeaderWithDropdown({
   const setIsOpen = externalSetIsOpen || setInternalIsOpen
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
-  const t = useTranslations('common')
   const tStudent = useTranslations('student')
   const tTransaction = useTranslations('transaction')
   const tHome = useTranslations('home')
@@ -195,7 +195,7 @@ export default function StudentHeaderWithDropdown({
   // 即使只有一個學生，也顯示下拉按鈕，以便訪問各個功能頁面和返回首頁
 
   return (
-    <div className="relative w-full min-w-0" ref={containerRef} style={{ opacity: 0.8 }}>
+    <div className="relative w-full min-w-0" ref={containerRef}>
       {showHeader && (
         <div className="flex items-center gap-5 w-full min-w-0">
           {/* 學生頭像 - 採用 code.html 的設計 */}
@@ -217,13 +217,8 @@ export default function StudentHeaderWithDropdown({
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-1 truncate">
               {studentName}
             </h1>
-              {/* 返回首頁按鈕 - 只在手機寬度下顯示 */}
-              <button 
-                onClick={() => router.push('/')}
-                className="md:hidden bg-primary hover:bg-opacity-90 text-white p-2 rounded-full shadow-lg shadow-indigo-500/20 transition-all cursor-pointer flex items-center justify-center w-10 h-10 hover:scale-105 active:scale-95 flex-shrink-0 ml-2"
-              >
-                <span className="material-icons-outlined text-lg">home</span>
-              </button>
+              {/* 返回首頁按鈕 - 側邊欄於 lg 以下堆疊在上方時顯示，與學生名同行靠右 */}
+              <StudentHomeNavButton className="lg:hidden ml-2 mt-1.5 shrink-0" />
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span className="text-primary truncate">{recordsTitle}</span>
