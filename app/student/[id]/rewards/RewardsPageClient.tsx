@@ -92,6 +92,7 @@ function formatTrackingStartDate(value: string | null | undefined, locale: strin
 }
 
 type RewardDashboardTab = 'goals' | 'shop' | 'records'
+type ResetStartMode = 'today' | 'keep' | 'custom'
 
 
 function getStudentName(student: unknown) {
@@ -179,6 +180,10 @@ export default function RewardsPageClient({ studentId, student }: Props) {
   const [undoGoalId, setUndoGoalId] = useState<string | null>(null)
   const [undoGoalName, setUndoGoalName] = useState<string>('')
   const [undoing, setUndoing] = useState(false)
+  const [goalToReset, setGoalToReset] = useState<StudentGoal | null>(null)
+  const [resetStartMode, setResetStartMode] = useState<ResetStartMode>('today')
+  const [resetCustomDate, setResetCustomDate] = useState('')
+  const [resetSubmitting, setResetSubmitting] = useState(false)
   const [canManage, setCanManage] = useState(true)
 
   // 最近活動記錄
@@ -472,10 +477,10 @@ export default function RewardsPageClient({ studentId, student }: Props) {
     if (!undoGoalId) return
     setUndoing(true)
     try {
-      const response = await fetch(`/api/student-goals/${undoGoalId}/reactivate`, {
+      const response = await fetch(`/api/student-goals/${undoGoalId}/reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ tracking_started_at_mode: 'keep' }),
       })
       if (!response.ok) {
         const err = await response.json()
@@ -491,25 +496,71 @@ export default function RewardsPageClient({ studentId, student }: Props) {
     }
   }
 
-  // 重新啟用目標
+  const getTodayDateInputValue = () => toDateInputValue(new Date().toISOString())
+
+  // 重設目標：清除完成狀態，並由確認視窗決定起算日策略
   const handleReactivateGoal = async (goal: StudentGoal) => {
     if (!goal.id) return
-    if (!confirm(locale === 'zh-TW'
-      ? '確定要重新啟用這個目標嗎？將會清除完成狀態並重新計算進度。'
-      : 'Are you sure you want to reactivate this goal? This will clear the completion status and reset progress.'
-    )) return
+    setGoalToReset(goal)
+    setResetStartMode('today')
+    setResetCustomDate(getTodayDateInputValue())
+    setError('')
+  }
+
+  const handleConfirmResetGoal = async () => {
+    if (!goalToReset?.id) return
+    if (resetStartMode === 'custom' && !resetCustomDate) {
+      setError(locale === 'zh-TW' ? '請選擇重設後的起算日' : 'Choose a tracking start date')
+      return
+    }
+
+    setResetSubmitting(true)
 
     try {
-      const response = await fetch(`/api/student-goals/${goal.id}/reactivate`, {
+      const response = await fetch(`/api/student-goals/${goalToReset.id}/reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          tracking_started_at_mode: resetStartMode,
+          tracking_started_at: resetStartMode === 'custom' ? resetCustomDate : null,
+        }),
       })
       if (!response.ok) {
         const err = await response.json()
-        throw new Error(err.error || (locale === 'zh-TW' ? '重新啟用失敗' : 'Reactivate failed'))
+        throw new Error(err.error || (locale === 'zh-TW' ? '重設失敗' : 'Reset failed'))
       }
       await loadGoals()
+      setGoalToReset(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (locale === 'zh-TW' ? '發生錯誤' : 'An error occurred'))
+    } finally {
+      setResetSubmitting(false)
+    }
+  }
+
+  // 以同一模板或設定再開一輪新目標
+  const handleRestartGoal = async (goal: StudentGoal) => {
+    if (!goal.id) return
+    if (!confirm(locale === 'zh-TW'
+      ? '要為這個大型目標再開一輪嗎？舊紀錄會保留，新的目標會從今天重新計算。'
+      : 'Restart this goal as a new round? The old record will remain and a new active goal will start today.'
+    )) return
+
+    try {
+      const response = await fetch(`/api/student-goals/${goal.id}/restart`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tracking_started_at: new Date().toISOString(),
+          use_latest_template: true,
+        }),
+      })
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.error || (locale === 'zh-TW' ? '再開一輪失敗' : 'Restart failed'))
+      }
+      await loadGoals()
+      setActiveDashboardTab('goals')
     } catch (err) {
       setError(err instanceof Error ? err.message : (locale === 'zh-TW' ? '發生錯誤' : 'An error occurred'))
     }
@@ -991,7 +1042,7 @@ export default function RewardsPageClient({ studentId, student }: Props) {
             </div>
           </div>
 
-          <div className="mt-5">
+          <div className="mt-5 min-h-[400px]">
             {activeDashboardTab === 'goals' && (
               <section>
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1281,13 +1332,22 @@ export default function RewardsPageClient({ studentId, student }: Props) {
                               </div>
                             </div>
                             {canManage && (
-                              <button
-                                type="button"
-                                onClick={() => handleReactivateGoal(goal)}
-                                className="inline-flex min-h-10 items-center justify-center rounded-full bg-white/75 px-4 text-sm font-bold text-slate-600 ring-1 ring-white/80 transition hover:bg-white"
-                              >
-                                {locale === 'zh-TW' ? '重新啟用' : 'Reactivate'}
-                              </button>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleReactivateGoal(goal)}
+                                  className="inline-flex min-h-10 items-center justify-center rounded-full bg-white/75 px-4 text-sm font-bold text-slate-600 ring-1 ring-white/80 transition hover:bg-white"
+                                >
+                                  {locale === 'zh-TW' ? '重設' : 'Reset'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRestartGoal(goal)}
+                                  className="inline-flex min-h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+                                >
+                                  {locale === 'zh-TW' ? '再開一輪' : 'Restart'}
+                                </button>
+                              </div>
                             )}
                           </div>
                         )
@@ -2040,12 +2100,20 @@ export default function RewardsPageClient({ studentId, student }: Props) {
                           </p>
                         </div>
                         {canManage && (
-                          <button
-                            onClick={() => handleReactivateGoal(goal)}
-                            className="px-3 py-1.5 text-sm font-bold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                          >
-                            {locale === 'zh-TW' ? '重新啟用' : 'Reactivate'}
-                          </button>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => handleReactivateGoal(goal)}
+                              className="px-3 py-1.5 text-sm font-bold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                            >
+                              {locale === 'zh-TW' ? '重設' : 'Reset'}
+                            </button>
+                            <button
+                              onClick={() => handleRestartGoal(goal)}
+                              className="px-3 py-1.5 text-sm font-bold rounded-lg bg-blue-600 text-white hover:opacity-90 transition-opacity"
+                            >
+                              {locale === 'zh-TW' ? '再開一輪' : 'Restart'}
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -2100,6 +2168,158 @@ export default function RewardsPageClient({ studentId, student }: Props) {
             >
               <span className="material-icons-outlined text-lg">close</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {goalToReset && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !resetSubmitting) {
+              setGoalToReset(null)
+            }
+          }}
+        >
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200">
+            <div className="border-b border-slate-100 px-6 py-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">
+                    {locale === 'zh-TW' ? '重設大型目標' : 'Reset Goal'}
+                  </h3>
+                  <p className="mt-1 text-sm font-medium text-slate-500">{goalToReset.name}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setGoalToReset(null)}
+                  disabled={resetSubmitting}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <span className="material-icons-outlined text-xl">close</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-5 px-6 py-5">
+              <div className="rounded-2xl bg-blue-50 p-4 text-sm font-medium text-blue-900 ring-1 ring-blue-100">
+                <p className="font-bold">{locale === 'zh-TW' ? '重設會執行以下動作' : 'Reset will do this'}</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  <li>{locale === 'zh-TW' ? '清除完成狀態、完成說明與完成圖片。' : 'Clear completion status, notes, and completion images.'}</li>
+                  <li>{locale === 'zh-TW' ? '退回被此目標消耗的獎勵交易。' : 'Release reward transactions consumed by this goal.'}</li>
+                  <li>{locale === 'zh-TW' ? '刪除此目標完成時產生的完成獎勵、標記與退還交易。' : 'Delete completion reward, marker, and refund transactions generated by this goal.'}</li>
+                </ul>
+              </div>
+
+              <div>
+                <p className="mb-3 text-sm font-black text-slate-800">
+                  {locale === 'zh-TW' ? '重設後的進度起算日' : 'Tracking Start After Reset'}
+                </p>
+                <div className="space-y-2">
+                  <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition ${
+                    resetStartMode === 'today'
+                      ? 'border-blue-300 bg-blue-50'
+                      : 'border-slate-200 hover:border-blue-200'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="resetStartMode"
+                      checked={resetStartMode === 'today'}
+                      onChange={() => setResetStartMode('today')}
+                      className="mt-1"
+                    />
+                    <span>
+                      <span className="block text-sm font-bold text-slate-800">
+                        {locale === 'zh-TW' ? '從今天重新開始' : 'Restart From Today'}
+                      </span>
+                      <span className="mt-0.5 block text-xs font-medium text-slate-500">
+                        {locale === 'zh-TW' ? '適合真的要重新跑一輪同一個目標。' : 'Best when starting this same goal over.'}
+                      </span>
+                    </span>
+                  </label>
+
+                  <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition ${
+                    resetStartMode === 'keep'
+                      ? 'border-blue-300 bg-blue-50'
+                      : 'border-slate-200 hover:border-blue-200'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="resetStartMode"
+                      checked={resetStartMode === 'keep'}
+                      onChange={() => setResetStartMode('keep')}
+                      className="mt-1"
+                    />
+                    <span>
+                      <span className="block text-sm font-bold text-slate-800">
+                        {locale === 'zh-TW' ? '保留原起算日' : 'Keep Current Start Date'}
+                      </span>
+                      <span className="mt-0.5 block text-xs font-medium text-slate-500">
+                        {locale === 'zh-TW'
+                          ? `目前：${formatTrackingStartDate(goalToReset.tracking_started_at, locale) || '未設定'}`
+                          : `Current: ${formatTrackingStartDate(goalToReset.tracking_started_at, locale) || 'Not set'}`}
+                      </span>
+                    </span>
+                  </label>
+
+                  <label className={`block cursor-pointer rounded-2xl border p-4 transition ${
+                    resetStartMode === 'custom'
+                      ? 'border-blue-300 bg-blue-50'
+                      : 'border-slate-200 hover:border-blue-200'
+                  }`}>
+                    <span className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="resetStartMode"
+                        checked={resetStartMode === 'custom'}
+                        onChange={() => {
+                          setResetStartMode('custom')
+                          if (!resetCustomDate) setResetCustomDate(getTodayDateInputValue())
+                        }}
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="block text-sm font-bold text-slate-800">
+                          {locale === 'zh-TW' ? '指定起算日' : 'Choose Start Date'}
+                        </span>
+                        <span className="mt-0.5 block text-xs font-medium text-slate-500">
+                          {locale === 'zh-TW' ? '適合補登或需要從特定日期重新計算。' : 'Useful for backfills or a specific restart date.'}
+                        </span>
+                      </span>
+                    </span>
+                    {resetStartMode === 'custom' && (
+                      <input
+                        type="date"
+                        value={resetCustomDate}
+                        onChange={(e) => setResetCustomDate(e.target.value)}
+                        className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      />
+                    )}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setGoalToReset(null)}
+                disabled={resetSubmitting}
+                className="rounded-xl px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {locale === 'zh-TW' ? '取消' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmResetGoal}
+                disabled={resetSubmitting || (resetStartMode === 'custom' && !resetCustomDate)}
+                className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {resetSubmitting
+                  ? (locale === 'zh-TW' ? '重設中...' : 'Resetting...')
+                  : (locale === 'zh-TW' ? '確認重設' : 'Confirm Reset')}
+              </button>
+            </div>
           </div>
         </div>
       )}

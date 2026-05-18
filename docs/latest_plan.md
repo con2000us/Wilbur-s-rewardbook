@@ -89,6 +89,13 @@
 - 已用臨時測試資料驗證：起算日、獎勵類型比對、完成後消耗、重新指派後進度重算皆符合預期。
 - 舊資料處理目前不需要執行：已確認沒有學生頁殘留舊大型目標資料。
 
+**目前狀態（2026-05-18）**
+
+- 已完成 Reset / Restart / Reassign 的基本 API 與 UI：Reset 可選起算日策略，Restart 會建立新的學生目標實例，Reassign 以停止追蹤後重新指派處理。
+- 已套用 `transactions.goal_id` migration，目標完成時產生的交易可精準連回 `student_goals`，Reset 優先用此欄位清理完成獎勵、完成標記與退還交易。
+- 舊 `/api/student-goals/[id]/reactivate` 已改成委派到 Reset 的相容入口。
+- 已新增 `database/queries/goal-progress-vs-reward-stats-diff.sql`，可檢查 `reward_stats_only` / `goal_progress_only` 差異集合。
+
 ### 1. 大型目標資料模型設計失誤：模板與學生目標被拆成兩套資料
 
 **問題**

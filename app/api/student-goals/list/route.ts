@@ -31,9 +31,11 @@ export async function GET(request: NextRequest) {
       .from('custom_reward_types')
       .select('id, type_key, display_name')
 
+    const visibleGoals = (goals || []).filter((goal) => goal.is_active !== false)
+
     // 為每個目標計算即時進度，覆蓋 current_progress（因為原本的 current_progress 從未被同步更新）
-    if (goals && goals.length > 0) {
-      for (const goal of goals) {
+    if (visibleGoals.length > 0) {
+      for (const goal of visibleGoals) {
         if (goal.tracking_mode === 'cumulative_amount') {
           const targetRewardTypeId = goal.tracking_reward_type_id || goal.reward_type_id
 
@@ -87,7 +89,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, goals: goals || [] })
+    return NextResponse.json({ success: true, goals: visibleGoals })
   } catch (err) {
     return NextResponse.json({
       success: false,

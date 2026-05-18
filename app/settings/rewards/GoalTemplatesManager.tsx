@@ -1151,13 +1151,15 @@ function GoalAssignModal({
   onClose: () => void
   onAssigned: () => void
 }) {
-  const activeAssignedStudentIds = new Set(
-    (template.assigned_goals || [])
-      .filter((goal) => goal.status !== 'completed' && goal.is_active !== false)
-      .map((goal) => goal.student_id)
+  const activeAssignedGoals = (template.assigned_goals || [])
+    .filter((goal) => goal.status !== 'completed' && goal.is_active !== false)
+  const activeAssignedGoalsByStudentId = new Map(
+    activeAssignedGoals.map((goal) => [goal.student_id, goal])
   )
+  const activeAssignedStudentIds = new Set(activeAssignedGoals.map((goal) => goal.student_id))
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const [unassigningGoalId, setUnassigningGoalId] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -1213,6 +1215,35 @@ function GoalAssignModal({
     }
   }
 
+  const handleUnassign = async (goal: AssignedStudentGoal) => {
+    if (!goal.id) return
+    if (!confirm('停止追蹤後，這位學生會從此模板的進行中名單移除；舊資料會保留，也可以之後重新指派。確定停止追蹤？')) {
+      return
+    }
+
+    setUnassigningGoalId(goal.id)
+    setError('')
+
+    try {
+      const res = await fetch('/api/goal-templates/unassign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal_id: goal.id }),
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || '停止追蹤失敗')
+      }
+
+      onAssigned()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '停止追蹤失敗')
+    } finally {
+      setUnassigningGoalId(null)
+    }
+  }
+
   const modal = (
     <div
       className="fixed inset-0 modal-backdrop backdrop-blur-sm flex items-center justify-center p-4"
@@ -1252,30 +1283,48 @@ function GoalAssignModal({
           ) : (
             <div className="space-y-2">
               {students.map((student) => {
-                const isAssigned = activeAssignedStudentIds.has(student.id)
+                const assignedGoal = activeAssignedGoalsByStudentId.get(student.id)
+                const isAssigned = Boolean(assignedGoal)
                 const isSelected = selectedStudentIds.includes(student.id)
+                if (isAssigned && assignedGoal) {
+                  return (
+                    <div
+                      key={student.id}
+                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-left text-slate-500"
+                    >
+                      <span className="font-medium">{student.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold">
+                          <span className="material-icons-outlined text-sm">check_circle</span>
+                          已指派
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleUnassign(assignedGoal)}
+                          disabled={unassigningGoalId === assignedGoal.id}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {unassigningGoalId === assignedGoal.id ? '處理中...' : '停止追蹤'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                }
+
                 return (
                   <button
                     key={student.id}
                     type="button"
                     onClick={() => toggleStudent(student.id)}
-                    disabled={isAssigned}
                     className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${
-                      isAssigned
-                        ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed'
-                        : isSelected
-                          ? 'border-blue-300 bg-blue-50 text-blue-700'
-                          : 'border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50/50'
+                      isSelected
+                        ? 'border-blue-300 bg-blue-50 text-blue-700'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50/50'
                     }`}
                   >
                     <span className="font-medium">{student.name}</span>
                     <span className="inline-flex items-center gap-1 text-xs font-semibold">
-                      {isAssigned ? (
-                        <>
-                          <span className="material-icons-outlined text-sm">check_circle</span>
-                          已指派
-                        </>
-                      ) : isSelected ? (
+                      {isSelected ? (
                         <>
                           <span className="material-icons-outlined text-sm">check</span>
                           將指派

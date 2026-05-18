@@ -108,10 +108,9 @@ export async function POST(request: NextRequest) {
 
     const { data: existingGoals, error: existingError } = await supabase
       .from('student_goals')
-      .select('id, student_id')
+      .select('id, student_id, status, is_active')
       .eq('template_id', templateId)
       .in('student_id', studentIds)
-      .neq('status', 'completed')
 
     if (existingError) {
       if (isMissingTemplateIdColumn(existingError)) {
@@ -120,7 +119,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: existingError.message }, { status: 500 })
     }
 
-    const existingStudentIds = new Set((existingGoals || []).map((goal: { student_id: string }) => goal.student_id))
+    const activeExistingGoals = (existingGoals || []).filter(
+      (goal: { status?: string | null; is_active?: boolean | null }) =>
+        goal.status !== 'completed' && goal.is_active !== false
+    )
+    const existingStudentIds = new Set(activeExistingGoals.map((goal: { student_id: string }) => goal.student_id))
     const studentIdsToCreate = studentIds.filter((studentId) => !existingStudentIds.has(studentId))
 
     const rows = []

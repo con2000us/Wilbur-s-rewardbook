@@ -9,6 +9,46 @@ import {
   transactionMatchesRewardType,
 } from '@/lib/utils/rewardTransactions'
 
+type SupabaseErrorLike = {
+  code?: string
+  message?: string
+  details?: string
+  hint?: string
+}
+
+function isMissingGoalIdColumn(error: SupabaseErrorLike | null | undefined) {
+  const text = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`
+  return (
+    error?.code === '42703' ||
+    error?.code === 'PGRST204' ||
+    text.includes('transactions.goal_id') ||
+    text.includes("'goal_id' column") ||
+    text.includes('goal_id')
+  )
+}
+
+async function insertGoalTransaction(
+  supabase: ReturnType<typeof createClient>,
+  payload: Record<string, unknown>,
+  goalId: string
+) {
+  const result = await supabase
+    .from('transactions')
+    .insert({ ...payload, goal_id: goalId })
+    .select()
+    .single()
+
+  if (!result.error || !isMissingGoalIdColumn(result.error)) {
+    return result
+  }
+
+  return supabase
+    .from('transactions')
+    .insert(payload)
+    .select()
+    .single()
+}
+
 /**
  * POST /api/student-goals/[id]/complete
  * 標記目標完成。
@@ -134,17 +174,15 @@ export async function POST(
             // 拆分超額：建立一筆「剩餘退還」交易
             if (overflowTxn && overflowAmount > 0) {
               const refundDescription = `↩️ 剩餘退還：原交易「${overflowTxn.description || overflowTxn.id}」(+${overflowTxn.amount})，已用於「${goal.name}」${goal.target_amount - (sum - overflowTxn.amount)}，退還 ${overflowAmount}`
-              await supabase
-                .from('transactions')
-                .insert({
-                  student_id: goal.student_id,
-                  reward_type_id: targetRewardTypeId,
-                  transaction_type: 'bonus',
-                  amount: overflowAmount,
-                  description: refundDescription,
-                  category: 'goal_refund',
-                  transaction_date: new Date().toISOString().split('T')[0],
-                })
+              await insertGoalTransaction(supabase, {
+                student_id: goal.student_id,
+                reward_type_id: targetRewardTypeId,
+                transaction_type: 'bonus',
+                amount: overflowAmount,
+                description: refundDescription,
+                category: 'goal_refund',
+                transaction_date: new Date().toISOString().split('T')[0],
+              }, id)
             }
           }
         }
@@ -177,19 +215,15 @@ export async function POST(
 
     // 1. 發放達成獎勵（reward_on_complete）
     if (goal.reward_on_complete > 0 && goal.reward_type_id) {
-      const { data: rewardTxn, error: rewardTxnError } = await supabase
-        .from('transactions')
-        .insert({
-          student_id: goal.student_id,
-          reward_type_id: goal.reward_type_id,
-          transaction_type: 'earn',
-          amount: goal.reward_on_complete,
-          description: `🎯 ${goal.name}`,
-          category: 'goal_complete',
-          transaction_date: transactionDate,
-        })
-        .select()
-        .single()
+      const { data: rewardTxn, error: rewardTxnError } = await insertGoalTransaction(supabase, {
+        student_id: goal.student_id,
+        reward_type_id: goal.reward_type_id,
+        transaction_type: 'earn',
+        amount: goal.reward_on_complete,
+        description: `🎯 ${goal.name}`,
+        category: 'goal_complete',
+        transaction_date: transactionDate,
+      }, id)
 
       if (!rewardTxnError && rewardTxn) {
         createdTransactionIds.push(rewardTxn.id)
@@ -198,19 +232,15 @@ export async function POST(
 
     // 2. 完成標記交易（零額度，僅供存摺顯示）
     const markerDescription = isMilestone ? `🏁 ${goal.name} (里程碑)` : `🏁 ${goal.name}`
-    const { data: markerTxn, error: markerTxnError } = await supabase
-      .from('transactions')
-      .insert({
-        student_id: goal.student_id,
-        reward_type_id: goal.reward_type_id || goal.tracking_reward_type_id,
-        transaction_type: 'spend',
-        amount: 0,
-        description: markerDescription,
-        category: 'goal_complete',
-        transaction_date: transactionDate,
-      })
-      .select()
-      .single()
+    const { data: markerTxn, error: markerTxnError } = await insertGoalTransaction(supabase, {
+      student_id: goal.student_id,
+      reward_type_id: goal.reward_type_id || goal.tracking_reward_type_id,
+      transaction_type: 'spend',
+      amount: 0,
+      description: markerDescription,
+      category: 'goal_complete',
+      transaction_date: transactionDate,
+    }, id)
 
     if (!markerTxnError && markerTxn) {
       createdTransactionIds.push(markerTxn.id)
