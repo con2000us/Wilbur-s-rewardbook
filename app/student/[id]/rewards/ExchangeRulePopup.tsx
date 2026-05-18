@@ -6,14 +6,12 @@ import { useLocale, useTranslations } from 'next-intl'
 
 interface ExchangeRule {
   id?: string
-  name_zh: string
-  name_en?: string
-  description_zh?: string
-  description_en?: string
+  name?: string
+  description?: string
   required_reward_type_id: string
   required_amount: number
-  reward_type_id?: string // 兌換得到的獎勵類型
-  reward_amount?: number // 兌換得到的數量
+  reward_type_id?: string
+  reward_amount?: number
   reward_item?: string
   is_active: boolean
   display_order: number
@@ -21,10 +19,8 @@ interface ExchangeRule {
 
 interface CustomRewardType {
   id: string
-  type_key: string
+  type_key?: string
   display_name: string
-  display_name_zh?: string
-  display_name_en?: string
 }
 
 interface ExchangeRulePopupProps {
@@ -49,10 +45,8 @@ export default function ExchangeRulePopup({
   const isEditing = !!editingRule
 
   const [formData, setFormData] = useState<ExchangeRule>({
-    name_zh: '',
-    name_en: '',
-    description_zh: '',
-    description_en: '',
+    name: '',
+    description: '',
     required_reward_type_id: '',
     required_amount: 0,
     reward_type_id: '',
@@ -74,10 +68,8 @@ export default function ExchangeRulePopup({
   useEffect(() => {
     if (editingRule) {
       setFormData({
-        name_zh: editingRule.name_zh || '',
-        name_en: editingRule.name_en || '',
-        description_zh: editingRule.description_zh || '',
-        description_en: editingRule.description_en || '',
+        name: editingRule.name || '',
+        description: editingRule.description || '',
         required_reward_type_id: editingRule.required_reward_type_id || '',
         required_amount: editingRule.required_amount || 0,
         reward_type_id: editingRule.reward_type_id || '',
@@ -88,10 +80,8 @@ export default function ExchangeRulePopup({
       })
     } else {
       setFormData({
-        name_zh: '',
-        name_en: '',
-        description_zh: '',
-        description_en: '',
+        name: '',
+        description: '',
         required_reward_type_id: '',
         required_amount: 0,
         reward_type_id: '',
@@ -135,9 +125,8 @@ export default function ExchangeRulePopup({
     setLoading(true)
     setError('')
 
-    // 驗證
-    if (!formData.name_zh.trim()) {
-      setError(locale === 'zh-TW' ? '請輸入中文名稱' : 'Please enter Chinese name')
+    if (!formData.name?.trim()) {
+      setError(locale === 'zh-TW' ? '請輸入名稱' : 'Please enter a name')
       setLoading(false)
       return
     }
@@ -154,7 +143,6 @@ export default function ExchangeRulePopup({
       return
     }
 
-    // 必須設定 reward_type_id 和 reward_amount（類型對類型兌換是必需的）
     if (!formData.reward_type_id) {
       setError(locale === 'zh-TW' ? '請選擇兌換得到的獎勵類型' : 'Please select reward type to receive')
       setLoading(false)
@@ -235,69 +223,43 @@ export default function ExchangeRulePopup({
             </div>
           )}
 
-          {/* 中文名稱 */}
+          {/* Name */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {locale === 'zh-TW' ? '中文名稱 *' : 'Chinese Name *'}
+              {locale === 'zh-TW' ? '名稱 *' : 'Name *'}
             </label>
             <p className="text-xs text-gray-500 mb-2">
-              {locale === 'zh-TW' ? '此兌換規則的顯示名稱，例如：遊樂園通行證、遊戲時間等' : 'Display name for this exchange rule, e.g., Amusement Park Pass, Gaming Time, etc.'}
+              {locale === 'zh-TW' ? '此兌換規則的顯示名稱' : 'Display name for this exchange rule'}
             </p>
             <input
               type="text"
-              value={formData.name_zh}
-              onChange={(e) => setFormData({ ...formData, name_zh: e.target.value })}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               required
             />
           </div>
 
-          {/* 英文名稱 */}
+          {/* Description */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {locale === 'zh-TW' ? '英文名稱' : 'English Name'}
-            </label>
-            <input
-              type="text"
-              value={formData.name_en || ''}
-              onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* 中文描述 */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {locale === 'zh-TW' ? '中文描述' : 'Chinese Description'}
+              {locale === 'zh-TW' ? '描述' : 'Description'}
             </label>
             <textarea
-              value={formData.description_zh || ''}
-              onChange={(e) => setFormData({ ...formData, description_zh: e.target.value })}
+              value={formData.description || ''}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               rows={3}
             />
           </div>
 
-          {/* 英文描述 */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {locale === 'zh-TW' ? '英文描述' : 'English Description'}
-            </label>
-            <textarea
-              value={formData.description_en || ''}
-              onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              rows={3}
-            />
-          </div>
-
-          {/* 獎勵類型 */}
+          {/* Required Reward Type */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               {locale === 'zh-TW' ? '需要的獎勵類型 *' : 'Required Reward Type *'}
             </label>
             <p className="text-xs text-gray-500 mb-2">
-              {locale === 'zh-TW' ? '選擇學生需要用來兌換的獎勵類型（例如：積分、鑽石、愛心等）' : 'Select the reward type that students need to use for exchange (e.g., Points, Diamonds, Hearts, etc.)'}
+              {locale === 'zh-TW' ? '選擇學生需要用來兌換的獎勵類型' : 'Select the reward type that students need to use for exchange'}
             </p>
             <select
               value={formData.required_reward_type_id}
@@ -308,22 +270,19 @@ export default function ExchangeRulePopup({
               <option value="">{locale === 'zh-TW' ? '請選擇' : 'Please select'}</option>
               {rewardTypes.map((type) => (
                 <option key={type.id} value={type.id}>
-                  {locale === 'zh-TW' 
-                    ? (type.display_name_zh || type.display_name || type.type_key)
-                    : (type.display_name_en || type.display_name || type.type_key)
-                  }
+                  {type.display_name || type.type_key}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* 需要的數量 */}
+          {/* Required Amount */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               {locale === 'zh-TW' ? '需要的數量 *' : 'Required Amount *'}
             </label>
             <p className="text-xs text-gray-500 mb-2">
-              {locale === 'zh-TW' ? '輸入兌換此項目所需的獎勵數量（例如：5 個鑽石、100 積分等）' : 'Enter the amount of rewards needed to exchange for this item (e.g., 5 diamonds, 100 points, etc.)'}
+              {locale === 'zh-TW' ? '輸入兌換此項目所需的獎勵數量' : 'Enter the amount of rewards needed to exchange for this item'}
             </p>
             <input
               type="number"
@@ -342,20 +301,19 @@ export default function ExchangeRulePopup({
             />
           </div>
 
-          {/* 兌換類型選擇：類型對類型 或 文字描述 */}
+          {/* Exchange Result */}
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               {locale === 'zh-TW' ? '兌換結果' : 'Exchange Result'}
             </h3>
             
-            {/* 選項：類型對類型兌換 */}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {locale === 'zh-TW' ? '兌換得到的獎勵類型 *' : 'Reward Type to Receive *'}
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
-                  {locale === 'zh-TW' ? '選擇學生兌換時會獲得的獎勵類型（例如：5個鑽石換1個遊樂券，選擇「遊樂券」）' : 'Select the reward type students will receive when exchanging (e.g., 5 diamonds → 1 amusement pass, select "Amusement Pass")'}
+                  {locale === 'zh-TW' ? '選擇學生兌換時會獲得的獎勵類型' : 'Select the reward type students will receive when exchanging'}
                 </p>
                 <select
                   value={formData.reward_type_id || ''}
@@ -366,22 +324,19 @@ export default function ExchangeRulePopup({
                   <option value="">{locale === 'zh-TW' ? '請選擇' : 'Please select'}</option>
                   {rewardTypes.map((type) => (
                     <option key={type.id} value={type.id}>
-                      {locale === 'zh-TW' 
-                        ? (type.display_name_zh || type.display_name || type.type_key)
-                        : (type.display_name_en || type.display_name || type.type_key)
-                      }
+                      {type.display_name || type.type_key}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* 兌換得到的數量 */}
+              {/* Reward Amount */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {locale === 'zh-TW' ? '兌換得到的數量 *' : 'Reward Amount to Receive *'}
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
-                  {locale === 'zh-TW' ? '輸入兌換後會獲得的獎勵數量（例如：選擇「遊樂券」類型，輸入 1，表示會得到 1 個遊樂券）' : 'Enter the amount of rewards students will receive after exchange (e.g., if "Amusement Pass" is selected, enter 1 to receive 1 pass)'}
+                  {locale === 'zh-TW' ? '輸入兌換後會獲得的獎勵數量' : 'Enter the amount of rewards students will receive after exchange'}
                 </p>
                 <input
                   type="number"
@@ -400,11 +355,10 @@ export default function ExchangeRulePopup({
                 />
               </div>
 
-              {/* 視覺化顯示兌換比例 */}
+              {/* Visual exchange ratio preview */}
               {formData.required_reward_type_id && formData.reward_type_id && formData.required_amount > 0 && formData.reward_amount !== undefined && formData.reward_amount > 0 && (
                 <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4">
                   <div className="flex items-center justify-center gap-4">
-                    {/* 左側：需要的獎勵 */}
                     <div className="flex flex-col items-center">
                       <div className="text-2xl font-bold text-purple-600">
                         {formData.required_amount}
@@ -412,19 +366,15 @@ export default function ExchangeRulePopup({
                       <div className="text-sm text-gray-600 mt-1">
                         {(() => {
                           const type = rewardTypes.find(t => t.id === formData.required_reward_type_id)
-                          return locale === 'zh-TW' 
-                            ? (type?.display_name_zh || type?.display_name || '')
-                            : (type?.display_name_en || type?.display_name || '')
+                          return type?.display_name || ''
                         })()}
                       </div>
                     </div>
 
-                    {/* 箭頭 */}
                     <div className="flex items-center text-purple-500">
                       <span className="material-icons-outlined text-3xl">arrow_forward</span>
                     </div>
 
-                    {/* 右側：得到的獎勵 */}
                     <div className="flex flex-col items-center">
                       <div className="text-2xl font-bold text-indigo-600">
                         {formData.reward_amount}
@@ -432,9 +382,7 @@ export default function ExchangeRulePopup({
                       <div className="text-sm text-gray-600 mt-1">
                         {(() => {
                           const type = rewardTypes.find(t => t.id === formData.reward_type_id)
-                          return locale === 'zh-TW' 
-                            ? (type?.display_name_zh || type?.display_name || '')
-                            : (type?.display_name_en || type?.display_name || '')
+                          return type?.display_name || ''
                         })()}
                       </div>
                     </div>
@@ -445,7 +393,7 @@ export default function ExchangeRulePopup({
             </div>
           </div>
 
-          {/* 是否啟用 */}
+          {/* Active toggle */}
           <div className="flex items-center gap-3">
             <input
               type="checkbox"

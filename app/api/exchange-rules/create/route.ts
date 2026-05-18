@@ -1,23 +1,34 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { buildDualLocalePayload, toCanonicalKey } from '@/app/api/_shared/i18n'
+import { toCanonicalKey } from '@/app/api/_shared/i18n'
+import type { Database } from '@/lib/supabase/types'
+
+type ExchangeRuleInsert = Database['public']['Tables']['exchange_rules']['Insert']
+
+type ExchangeRuleCreatePayload = {
+  name?: string
+  description?: string
+  rule_key?: string
+  required_reward_type_id?: string
+  required_amount?: string | number
+  reward_type_id?: string | null
+  reward_amount?: string | number | null
+  reward_item?: string | null
+  is_active?: boolean
+  display_order?: number
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json() as ExchangeRuleCreatePayload
     const supabase = createClient()
 
-    const { 
+    const {
       name,
       description,
-      locale,
       rule_key,
-      name_zh, 
-      name_en, 
-      description_zh, 
-      description_en, 
-      required_reward_type_id, 
-      required_amount, 
+      required_reward_type_id,
+      required_amount,
       reward_type_id,
       reward_amount,
       reward_item,
@@ -25,20 +36,15 @@ export async function POST(request: NextRequest) {
       display_order
     } = body
 
-    const { name: resolvedName, nameZh: resolvedNameZh, nameEn: resolvedNameEn, descriptionZh, descriptionEn } =
-      buildDualLocalePayload({
-        locale,
-        name,
-        description,
-        name_zh,
-        name_en,
-        description_zh,
-        description_en,
-      })
+    if (!name || !name.trim()) {
+      return NextResponse.json({
+        error: 'name is required'
+      }, { status: 400 })
+    }
 
-    if (!resolvedName || !required_reward_type_id || !required_amount) {
-      return NextResponse.json({ 
-        error: 'name, required_reward_type_id, and required_amount are required' 
+    if (!required_reward_type_id || !required_amount) {
+      return NextResponse.json({
+        error: 'required_reward_type_id and required_amount are required'
       }, { status: 400 })
     }
 
@@ -49,21 +55,19 @@ export async function POST(request: NextRequest) {
       .order('display_order', { ascending: false })
       .limit(1)
 
-    const newDisplayOrder = display_order !== undefined 
-      ? display_order 
+    const newDisplayOrder = display_order !== undefined
+      ? display_order
       : ((existingRules?.[0]?.display_order || 0) + 1)
 
-    const resolvedRuleKey = toCanonicalKey(rule_key || resolvedNameEn || resolvedNameZh || resolvedName, 'rule')
+    const resolvedRuleKey = toCanonicalKey(rule_key || name.trim(), 'rule')
 
-    const basePayload: any = {
-      name_zh: resolvedNameZh || resolvedName,
-      name_en: resolvedNameEn || null,
-      description_zh: descriptionZh || null,
-      description_en: descriptionEn || null,
+    const basePayload: ExchangeRuleInsert = {
+      name: name.trim(),
+      description: description?.trim() || null,
       required_reward_type_id,
-      required_amount: parseFloat(required_amount),
+      required_amount: Number(required_amount),
       reward_type_id: reward_type_id || null,
-      reward_amount: reward_amount ? parseFloat(reward_amount) : null,
+      reward_amount: reward_amount ? Number(reward_amount) : null,
       reward_item: reward_item || null,
       is_active: is_active !== undefined ? is_active : true,
       display_order: newDisplayOrder,
@@ -71,11 +75,10 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('exchange_rules')
-      // @ts-ignore - Supabase type inference issue with insert operations
       .insert({
         ...basePayload,
         rule_key: resolvedRuleKey,
-      } as any)
+      })
       .select()
       .single()
 
@@ -85,7 +88,6 @@ export async function POST(request: NextRequest) {
     if (createError && String(createError.message || '').includes('rule_key')) {
       const fallbackResult = await supabase
         .from('exchange_rules')
-        // @ts-ignore
         .insert(basePayload)
         .select()
         .single()
@@ -96,37 +98,6 @@ export async function POST(request: NextRequest) {
     if (createError) {
       console.error('Error creating exchange rule:', createError)
       return NextResponse.json({ error: createError.message }, { status: 500 })
-    }
-
-    const translationsToUpsert: Array<{ rule_id: string; locale: string; name: string; description: string | null }> =
-      []
-
-    if (resolvedNameZh) {
-      translationsToUpsert.push({
-        rule_id: createdRule.id,
-        locale: 'zh-TW',
-        name: resolvedNameZh,
-        description: descriptionZh || null,
-      })
-    }
-
-    if (resolvedNameEn) {
-      translationsToUpsert.push({
-        rule_id: createdRule.id,
-        locale: 'en',
-        name: resolvedNameEn,
-        description: descriptionEn || null,
-      })
-    }
-
-    if (translationsToUpsert.length > 0) {
-      const { error: translationError } = await supabase
-        .from('exchange_rule_translations')
-        .upsert(translationsToUpsert as any, { onConflict: 'rule_id,locale' })
-
-      if (translationError) {
-        console.warn('exchange_rule_translations upsert skipped:', translationError.message)
-      }
     }
 
     return NextResponse.json({ success: true, data: createdRule })

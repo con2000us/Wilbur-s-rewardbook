@@ -41,7 +41,7 @@ interface Props {
 
 export default function RewardRulesManager({ students, subjects, initialRules }: Props) {
   const router = useRouter()
-  const [rules, setRules] = useState(initialRules)
+  const rules = initialRules
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

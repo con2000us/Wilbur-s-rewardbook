@@ -59,6 +59,7 @@ Use this if you're not familiar with coding. You'll deploy to Vercel and only ne
    - Go to **Settings** → **API** and copy:
      - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
      - **anon public** key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - *(Optional, for **large goal image upload**)* In Supabase **Storage**, create a public bucket named **`goal-images`** and add a read policy as described in **`docs/STORAGE_BUCKET_SETUP.md`**. Add **`SUPABASE_SERVICE_ROLE_KEY`** (the **service_role** secret from the same API page) to Vercel or `.env.local`—server-only, never expose to the browser.
 2. Click the **Deploy with Vercel** button above
 3. Sign in with GitHub
 4. Click **Deploy** to start the Vercel setup flow
@@ -66,6 +67,7 @@ Use this if you're not familiar with coding. You'll deploy to Vercel and only ne
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD` (set a strong password)
+   - *(Optional)* `SUPABASE_SERVICE_ROLE_KEY` — same **service_role** value as above; recommended for **large goal** image uploads
 6. Continue and finish the deployment
 7. After deployment finishes, open your site:
    - In Vercel, open your new project → **Deployments** (or **Project**)
@@ -98,6 +100,8 @@ Create a `.env.local` file and add your credentials:
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SITE_PASSWORD=your-strong-password-here
+# Optional: large goal image uploads — Settings → API → service_role (server-only)
+# SUPABASE_SERVICE_ROLE_KEY=your_service_role_secret
 ```
 
 4. Run database migrations:
@@ -146,6 +150,7 @@ wilburs-rewardbook/
    - Go to **Settings** → **API** and copy:
      - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
      - **anon public** key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - *(Optional, for **large goal image upload**)* Create public Storage bucket **`goal-images`** and policies per **`docs/STORAGE_BUCKET_SETUP.md`**.
 
 2. Click the "Deploy with Vercel" button above
 3. Sign in with GitHub
@@ -153,6 +158,7 @@ wilburs-rewardbook/
    - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
    - `SITE_PASSWORD` - **Required**: Set a strong password to protect your site
+   - *(Optional)* `SUPABASE_SERVICE_ROLE_KEY` - **service_role** from the same API page; recommended for large goal uploads (keep secret)
 5. Click "Deploy"
 6. Done! 🎉
 

@@ -1,12 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { parsePreferredLocale, resolveLocalizedText } from '@/app/api/_shared/i18n'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const supabase = createClient()
-    const preferredLocale = parsePreferredLocale(request.cookies.get('NEXT_LOCALE')?.value)
 
     const { studentId, exchangeRuleId } = body
 
@@ -57,27 +55,10 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const { data: ruleTranslations } = await supabase
-      .from('exchange_rule_translations')
-      .select('locale, name, description')
-      .eq('rule_id', exchangeRule.id)
-      .in('locale', ['zh-TW', 'en'])
-
-    const localizedRule = resolveLocalizedText({
-      locale: preferredLocale,
-      translations: ruleTranslations || [],
-      fallbackZhName: exchangeRule.name_zh,
-      fallbackEnName: exchangeRule.name_en,
-      fallbackZhDescription: exchangeRule.description_zh,
-      fallbackEnDescription: exchangeRule.description_en,
-    })
-
     // 創建交易記錄
     const displayName = rewardType.display_name || rewardType.type_key
-    const exchangeDescription = preferredLocale === 'zh-TW'
-      ? `兌換：${localizedRule.name}`
-      : `Exchange: ${localizedRule.name}`
-    
+    const exchangeDescription = `Exchange: ${exchangeRule.name}`
+
     const transactionDate = new Date().toISOString().split('T')[0]
 
     // 如果是類型對類型的兌換，創建兩筆交易記錄
@@ -98,13 +79,12 @@ export async function POST(request: NextRequest) {
       // 創建扣除交易（原獎勵類型）
       const { data: deductTransaction, error: deductError } = await supabase
         .from('transactions')
-        // @ts-ignore
         .insert({
           student_id: studentId,
           assessment_id: null,
           reward_type_id: rewardType.id,
           achievement_event_id: null,
-          transaction_type: 'exchange',
+          transaction_type: 'spend',
           amount: -exchangeRule.required_amount, // 負數表示扣除
           description: `${exchangeDescription} (扣除)`,
           category: displayName,
@@ -121,13 +101,12 @@ export async function POST(request: NextRequest) {
       // 創建獲得交易（新獎勵類型）
       const { data: receiveTransaction, error: receiveError } = await supabase
         .from('transactions')
-        // @ts-ignore
         .insert({
           student_id: studentId,
           assessment_id: null,
           reward_type_id: rewardTypeToReceive.id,
           achievement_event_id: null,
-          transaction_type: 'exchange',
+          transaction_type: 'earn',
           amount: exchangeRule.reward_amount, // 正數表示獲得
           description: `${exchangeDescription} (獲得)`,
           category: rewardTypeToReceiveName,
@@ -157,13 +136,12 @@ export async function POST(request: NextRequest) {
       // 舊的兌換方式（只扣除，不獲得新獎勵）
       const { data: transaction, error: transactionError } = await supabase
         .from('transactions')
-        // @ts-ignore
         .insert({
           student_id: studentId,
           assessment_id: null,
           reward_type_id: rewardType.id,
           achievement_event_id: null,
-          transaction_type: 'exchange',
+          transaction_type: 'spend',
           amount: -exchangeRule.required_amount, // 負數表示扣除
           description: exchangeDescription,
           category: displayName,

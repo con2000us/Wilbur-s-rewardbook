@@ -31,8 +31,7 @@ ALTER TABLE students ADD COLUMN IF NOT EXISTS reward_config JSONB DEFAULT '{}'::
 CREATE TABLE custom_reward_types (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   type_key TEXT NOT NULL UNIQUE, -- 類型唯一識別碼（如：reading_rewards, exercise_rewards）
-  display_name_zh TEXT NOT NULL, -- 中文名稱
-  display_name_en TEXT NOT NULL, -- 英文名稱
+  display_name TEXT NOT NULL, -- 顯示名稱
   icon TEXT NOT NULL DEFAULT '🎁', -- 圖標
   color TEXT DEFAULT '#4a9eff', -- 主色
   default_unit TEXT, -- 預設單位
@@ -44,17 +43,17 @@ CREATE TABLE custom_reward_types (
 );
 
 -- 插入範例自訂義獎勵類型
-INSERT INTO custom_reward_types (type_key, display_name_zh, display_name_en, icon,
+INSERT INTO custom_reward_types (type_key, display_name, icon,
   color, default_unit, is_accumulable, has_extra_input, extra_input_schema)
 VALUES
   -- 讀書獎勵
-  ('reading_rewards', '讀書獎勵', 'Reading Rewards', '📚', '#4a9eff', '代幣', TRUE, FALSE, NULL),
+  ('reading_rewards', 'Reading Rewards', '📚', '#4a9eff', '代幣', TRUE, FALSE, NULL),
   -- 運動獎勵
-  ('exercise_rewards', '運動獎勵', 'Exercise Rewards', '🏃', '#8b5cf6', '次', TRUE, FALSE, NULL),
+  ('exercise_rewards', 'Exercise Rewards', '🏃', '#8b5cf6', '次', TRUE, FALSE, NULL),
   -- 整理房間獎勵
-  ('cleaning_rewards', '整理房間獎勵', 'Cleaning Rewards', '🧹', '#a855f7', '次', FALSE, TRUE, '{"description": "難度", "daily": true, "frequency": "once"}'::jsonb),
+  ('cleaning_rewards', 'Cleaning Rewards', '🧹', '#a855f7', '次', FALSE, TRUE, '{"description": "難度", "daily": true, "frequency": "once"}'::jsonb),
   -- 積分獎勵
-  ('points_rewards', '積分獎勵', 'Points Rewards', '⭐', '#fbbf24', '分', FALSE, TRUE, '{"exchange_rate": "100:1"}'::jsonb);
+  ('points_rewards', 'Points Rewards', '⭐', '#fbbf24', '分', FALSE, TRUE, '{"exchange_rate": "100:1"}'::jsonb);
 
 -- ========================================
 -- 4. 更新視圖 - 添加獎勵類型配置

@@ -49,6 +49,7 @@
    - 前往 **Settings** → **API** 並複製：
      - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
      - **anon public** 金鑰 → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - （選用，**大型目標圖片上傳**需要）在 Supabase **Storage** 建立公開 bucket **`goal-images`**，並依 **`docs/STORAGE_BUCKET_SETUP.md`** 設定讀取政策；在 Vercel 環境變數新增 **`SUPABASE_SERVICE_ROLE_KEY`**（同頁的 **service_role** 金鑰，僅後端、勿外洩）。
 2. 點擊上方的 **Deploy with Vercel** 按鈕
 3. 使用 GitHub 帳號登入
 4. 點擊 **Deploy** 開始 Vercel 的部署流程
@@ -56,6 +57,7 @@
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD`（設定強密碼）
+   - （選用）`SUPABASE_SERVICE_ROLE_KEY`：與步驟 1 相同，來自 Supabase **service_role**；**大型目標圖片上傳**建議設定
 6. 繼續完成部署
 7. 部署完成後開啟網站：
    - 在 Vercel 打開剛建立的 Project → **Deployments**
@@ -88,6 +90,8 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SITE_PASSWORD=your-strong-password-here
+# 選用：大型目標圖片上傳（Storage）需要，值為 Supabase Settings → API 的 service_role
+# SUPABASE_SERVICE_ROLE_KEY=your_service_role_secret
 ```
 
 4. 執行資料庫遷移：
@@ -136,6 +140,7 @@ wilburs-rewardbook/
    - 前往 **Settings** → **API** 並複製：
      - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
      - **anon public** 金鑰 → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - （選用，**大型目標圖片上傳**）在 Supabase **Storage** 建立公開 bucket **`goal-images`**，並依 **`docs/STORAGE_BUCKET_SETUP.md`** 設定讀取政策。
 
 2. 點擊上方的「Deploy with Vercel」按鈕
 3. 使用 GitHub 帳號登入
@@ -143,6 +148,7 @@ wilburs-rewardbook/
    - `NEXT_PUBLIC_SUPABASE_URL` - 你的 Supabase 專案 URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - 你的 Supabase anon 金鑰
    - `SITE_PASSWORD` - **必填**：設定一個強密碼來保護你的網站
+   - （選用）`SUPABASE_SERVICE_ROLE_KEY` - 同頁 **service_role** 金鑰；有設定時較能穩定使用 **大型目標圖片上傳**（勿外洩）
 5. 點擊「Deploy」
 6. 完成！🎉
 

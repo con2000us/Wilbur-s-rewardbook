@@ -8,13 +8,11 @@ interface CustomRewardType {
   id: string
   type_key: string
   display_name: string
-  display_name_zh?: string
-  display_name_en?: string
   icon: string
   color: string
   default_unit: string | null
   is_accumulable: boolean
-  has_extra_input: boolean
+  description?: string
   extra_input_schema: any
   is_system?: boolean
 }
@@ -69,11 +67,7 @@ export default function EditTransactionForm({ studentId, transaction }: Props) {
 
   // 取得顯示名稱（根據語言）
   const getDisplayName = (type: CustomRewardType): string => {
-    if (locale === 'zh-TW') {
-      return type.display_name_zh || type.display_name || type.type_key
-    } else {
-      return type.display_name_en || type.display_name || type.type_key
-    }
+    return type.display_name || type.type_key
   }
 
   // 判斷是否為 emoji

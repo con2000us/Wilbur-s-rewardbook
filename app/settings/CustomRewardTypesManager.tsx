@@ -2,21 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import { createPortal } from 'react-dom'
 
 interface CustomRewardType {
   id: string
   type_key: string
-  display_name_zh?: string
-  display_name_en?: string
   display_name?: string
   icon: string
   color: string
   default_unit: string | null
   is_accumulable: boolean
-  has_extra_input: boolean
-  extra_input_schema: any
+  extra_input_schema: unknown
+  description?: string
   is_system?: boolean
   created_at: string
   updated_at: string
@@ -25,7 +22,6 @@ interface CustomRewardType {
 
 export default function CustomRewardTypesManager() {
   const t = useTranslations('customRewardTypes')
-  const router = useRouter()
 
   const [customTypes, setCustomTypes] = useState<CustomRewardType[]>([])
   const [sortedTypes, setSortedTypes] = useState<CustomRewardType[]>([])
@@ -71,35 +67,18 @@ export default function CustomRewardTypesManager() {
     setError('')
 
     const formData = new FormData(e.currentTarget)
-    let typeData: any = {}
-
-    if (formData.get('has_extra_input') === 'true') {
-      const extraSchema: any = {}
-
-      if (formData.get('extra_field_name')) {
-        extraSchema[formData.get('extra_field_name') as string] = {
-          type: formData.get('extra_field_type') || 'text',
-          label: formData.get('extra_field_label') || '',
-          required: formData.get('extra_field_required') === 'true'
-        }
-      }
-
-      typeData = extraSchema
-    }
 
     try {
       const response = await fetch('/api/custom-reward-types/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type_key: formData.get('type_key') as string,
-          display_name: formData.get('display_name_zh') as string || 'Unnamed Reward Type',
+          display_name: formData.get('display_name') as string || 'Unnamed Reward Type',
           icon: formData.get('icon') || '🎁',
           color: formData.get('color') || '#4a9eff',
           default_unit: formData.get('default_unit') || '',
           is_accumulable: formData.get('is_accumulable') === 'true',
-          has_extra_input: formData.get('has_extra_input') === 'true',
-          extra_input_schema: typeData
+          description: formData.get('description') || ''
         })
       })
 
@@ -129,15 +108,20 @@ export default function CustomRewardTypesManager() {
     try {
       if (type.id) {
         // 更新 - 確保使用 display_name
-        const { id, type_key, display_name_zh, display_name_en, ...restData } = type
         const updateData = {
-          ...restData,
-          display_name: type.display_name || type.display_name_zh || ''
+          display_name: type.display_name || '',
+          icon: type.icon,
+          color: type.color,
+          default_unit: type.default_unit,
+          is_accumulable: type.is_accumulable,
+          description: type.description,
+          is_system: type.is_system,
+          display_order: type.display_order,
         }
         const response = await fetch('/api/custom-reward-types/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, ...updateData })
+          body: JSON.stringify({ id: type.id, ...updateData })
         })
         if (!response.ok) {
           const data = await response.json()
@@ -147,7 +131,7 @@ export default function CustomRewardTypesManager() {
         // 新增
         const createData = {
           ...type,
-          display_name: type.display_name || type.display_name_zh || ''
+          display_name: type.display_name || ''
         }
         const response = await fetch('/api/custom-reward-types/create', {
           method: 'POST',
@@ -292,66 +276,52 @@ export default function CustomRewardTypesManager() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('typeKey')}
+                    {t('displayName')}
                   </label>
                   <input
                     type="text"
-                    name="type_key"
-                    required
-                    placeholder="例如：reading_rewards"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('displayNameZh')}
-                  </label>
-                  <input
-                    type="text"
-                    name="display_name_zh"
+                    name="display_name"
                     required
                     placeholder="例如：讀書獎勵"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('displayNameEn')}
-                  </label>
-                  <input
-                    type="text"
-                    name="display_name_en"
-                    placeholder="Reading Rewards"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               {/* 圖標設定 */}
-              <div className="space-y-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
                   {t('icon')}
                 </label>
+                {/* 常用 Emoji 快捷選擇 */}
+                <div className="flex flex-wrap gap-1.5 p-3 bg-gray-50 rounded-xl">
+                  {['⭐', '💰', '❤️', '🎁', '🏆', '🎯', '📚', '🎮', '🎨', '🎵', '🏃', '🧠', '💎', '🌟', '🔥', '✨', '🎪', '🎭', '🏅', '🎤'].map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => {
+                        const input = document.querySelector('input[name="icon"]') as HTMLInputElement
+                        if (input) input.value = emoji
+                      }}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-xl transition-all hover:scale-110 bg-white hover:bg-gray-100 border border-gray-200"
+                      title={emoji}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+                {/* 自訂圖標輸入 */}
                 <div className="flex gap-2">
                   <input
                     type="text"
                     name="icon"
                     defaultValue="🎁"
                     placeholder="🎁"
-                    className="w-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-center text-xl"
+                    maxLength={10}
                   />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      ;(document.querySelector('input[name="icon"]') as HTMLInputElement).value = ''
-                    }}
-                    className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
-                  >
-                    {t('clear')}
-                  </button>
                 </div>
+                <p className="text-xs text-gray-500">💡 點擊上方常用圖標快速選擇，或手動輸入 emoji</p>
 
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {t('color')}
@@ -377,21 +347,16 @@ export default function CustomRewardTypesManager() {
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="is_accumulable"
-                    defaultChecked={true}
-                    className="w-5 h-5"
-                  />
-                  <span className="text-sm text-gray-700">
-                    {t('isAccumulable')}
-                  </span>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('description')} <span className="text-xs font-normal text-gray-500">（{t('optionalDesc') || '選填'}）</span>
                 </label>
-                <span className="text-xs text-gray-500 ml-2">
-                  {t('isAccumulableDesc')}
-                </span>
+                <textarea
+                  name="description"
+                  placeholder="例如：用於記錄閱讀進度與獎勵"
+                  rows={2}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                />
               </div>
 
               {/* 按鈕 */}
@@ -491,7 +456,7 @@ export default function CustomRewardTypesManager() {
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="text-lg font-bold text-gray-900">
-                              {type.display_name_zh || type.display_name || ''}
+                              {type.display_name || ''}
                             </h3>
                             {type.is_system && (
                               <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-700 rounded-full">
@@ -499,9 +464,6 @@ export default function CustomRewardTypesManager() {
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600">
-                            {type.display_name_en || ''}
-                          </p>
                         </div>
                       </div>
 
@@ -527,46 +489,13 @@ export default function CustomRewardTypesManager() {
                         </div>
                       </div>
 
-                      {type.is_accumulable && (
+                      {type.description && (
                         <div className="flex flex-wrap gap-4">
                           <div className="text-xs text-gray-500">
-                            {t('isAccumulable')}：
+                            {t('description')}：
                           </div>
-                          <div className="text-sm font-semibold text-green-600">
-                            ✓ {t('yes')}
-                          </div>
-                        </div>
-                      )}
-
-                      {!type.is_accumulable && (
-                        <div className="flex flex-wrap gap-4">
-                          <div className="text-xs text-gray-500">
-                            {t('isAccumulable')}：
-                          </div>
-                          <div className="text-sm font-semibold text-red-600">
-                            ✗ {t('no')}
-                          </div>
-                        </div>
-                      )}
-
-                      {type.has_extra_input && (
-                        <div className="flex flex-wrap gap-4">
-                          <div className="text-xs text-gray-500">
-                            {t('hasExtraInput')}：
-                          </div>
-                          <div className="text-sm font-semibold text-purple-600">
-                            ✓ {t('yes')}
-                          </div>
-                        </div>
-                      )}
-
-                      {!type.has_extra_input && (
-                        <div className="flex flex-wrap gap-4">
-                          <div className="text-xs text-gray-500">
-                            {t('hasExtraInput')}：
-                          </div>
-                          <div className="text-sm font-semibold text-gray-600">
-                            ✗ {t('no')}
+                          <div className="text-sm text-gray-600 max-w-xs truncate">
+                            {type.description}
                           </div>
                         </div>
                       )}
@@ -705,26 +634,13 @@ function EditRewardTypePopup({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                {t('typeKey')}
-              </label>
-              <input
-                type="text"
-                disabled
-                value={formData.type_key}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-gray-100 text-slate-600"
-              />
-              <p className="text-xs text-slate-500 mt-1">類型識別碼無法修改</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 {t('displayName') || '顯示名稱'}
               </label>
               <input
                 type="text"
                 required
-                value={formData.display_name || formData.display_name_zh || ''}
-                onChange={(e) => setFormData({ ...formData, display_name: e.target.value, display_name_zh: e.target.value })}
+                value={formData.display_name || ''}
+                onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -733,12 +649,32 @@ function EditRewardTypePopup({
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 {t('icon')}
               </label>
+              {/* 常用 Emoji 快捷選擇 */}
+              <div className="flex flex-wrap gap-1.5 p-3 bg-slate-50 rounded-xl mb-3">
+                {['⭐', '💰', '❤️', '🎁', '🏆', '🎯', '📚', '🎮', '🎨', '🎵', '🏃', '🧠', '💎', '🌟', '🔥', '✨', '🎪', '🎭', '🏅', '🎤'].map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, icon: emoji })}
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-xl transition-all hover:scale-110 ${
+                      formData.icon === emoji
+                        ? 'bg-blue-100 ring-2 ring-blue-400'
+                        : 'bg-white hover:bg-slate-100'
+                    }`}
+                    title={emoji}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
               <input
                 type="text"
                 value={formData.icon}
                 onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 text-center text-2xl"
+                maxLength={10}
               />
+              <p className="text-xs text-slate-500 mt-1">💡 點擊上方常用圖標快速選擇，或手動輸入 emoji</p>
             </div>
 
             <div>
@@ -765,16 +701,17 @@ function EditRewardTypePopup({
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formData.is_accumulable}
-                onChange={(e) => setFormData({ ...formData, is_accumulable: e.target.checked })}
-                className="w-5 h-5"
-              />
-              <label className="text-sm font-semibold text-slate-700">
-                {t('isAccumulable')}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                {t('description')} <span className="text-xs text-slate-500 font-normal">({t('optional') || '選填'})</span>
               </label>
+              <textarea
+                value={formData.description || ''}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="例如：用於記錄閱讀進度與獎勵"
+                rows={3}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 resize-none"
+              />
             </div>
 
             <div className="pt-6 flex gap-3 justify-between border-t border-slate-100 mt-8">

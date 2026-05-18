@@ -22,6 +22,69 @@ interface Props {
 }
 
 const ASSESSMENT_TYPE_KEYS = ['exam', 'quiz', 'homework', 'project'] as const
+type TransactionLike = {
+  amount?: number | string | null
+  created_at?: string | null
+  description?: unknown
+  transaction_date?: string | null
+}
+const EXCHANGE_ACCENTS = [
+  {
+    backgroundColor: '#fff7ed',
+    borderColor: '#fb923c',
+    tagBackgroundColor: '#ffedd5',
+    tagTextColor: '#c2410c',
+  },
+  {
+    backgroundColor: '#f0fdfa',
+    borderColor: '#14b8a6',
+    tagBackgroundColor: '#ccfbf1',
+    tagTextColor: '#0f766e',
+  },
+  {
+    backgroundColor: '#eef2ff',
+    borderColor: '#818cf8',
+    tagBackgroundColor: '#e0e7ff',
+    tagTextColor: '#4338ca',
+  },
+] as const
+
+function parseExchangeDescription(description: unknown) {
+  const value = typeof description === 'string' ? description.trim() : ''
+  if (!value.startsWith('Exchange:') && !value.startsWith('兌換：')) return null
+
+  return value.replace(/\s*\((扣除|獲得|deduct|receive|received)\)\s*$/i, '').trim()
+}
+
+function hashText(value: string) {
+  return value.split('').reduce((hash, char) => {
+    return ((hash << 5) - hash + char.charCodeAt(0)) | 0
+  }, 0)
+}
+
+function getExchangeAccent(key: string) {
+  return EXCHANGE_ACCENTS[Math.abs(hashText(key)) % EXCHANGE_ACCENTS.length]
+}
+
+function getExchangeVisualInfo(transaction: TransactionLike, locale: string) {
+  const baseDescription = parseExchangeDescription(transaction.description)
+  if (!baseDescription) return null
+
+  const dateKey = transaction.transaction_date || String(transaction.created_at || '').slice(0, 10) || 'unknown'
+  const amount = Number(transaction.amount) || 0
+  const role = amount < 0
+    ? (locale === 'zh-TW' ? '扣除' : 'Deduct')
+    : amount > 0
+      ? (locale === 'zh-TW' ? '獲得' : 'Receive')
+      : ''
+
+  return {
+    key: `${dateKey}:${baseDescription}`,
+    label: role
+      ? (locale === 'zh-TW' ? `兌換-${role}` : `Exchange-${role}`)
+      : (locale === 'zh-TW' ? '兌換' : 'Exchange'),
+  }
+}
 
 export default function TransactionRecords({ studentId, transactions, studentName, onEditTransaction, onAddTransaction, selectedRewardType, onRewardTypeSelect, subjects = [], assessments = [], rewardTypes = [] }: Props) {
   const t = useTranslations('transaction')
@@ -97,9 +160,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
   const getCategoryLabel = (transaction: any) => {
     const rewardType = findRewardTypeForTransaction(transaction, rewardTypes)
     if (rewardType) {
-      return locale === 'zh-TW'
-        ? (rewardType.display_name_zh || rewardType.display_name || rewardType.type_key)
-        : (rewardType.display_name_en || rewardType.display_name || rewardType.type_key)
+      return rewardType.display_name || rewardType.type_key
     }
     return transaction.category || (locale === 'zh-TW' ? '其他' : 'Other')
   }
@@ -641,6 +702,8 @@ export default function TransactionRecords({ studentId, transactions, studentNam
           const rewardColor = rewardType?.color || ''
           const rewardIcon = rewardType?.icon || ''
           const categoryLabel = getCategoryLabel(transaction)
+          const exchangeInfo = getExchangeVisualInfo(transaction, locale)
+          const exchangeAccent = exchangeInfo ? getExchangeAccent(exchangeInfo.key) : null
 
           // 卡片底色：以獎勵類型主題色作淡色（找不到時保留原本白底）
           const cardStyle: React.CSSProperties | undefined = rewardColor
@@ -648,6 +711,13 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                 borderColor: `${rewardColor}66`     // ~40% alpha
               }
             : undefined
+          const cardVisualStyle: React.CSSProperties | undefined = exchangeAccent
+            ? {
+                backgroundColor: exchangeAccent.backgroundColor,
+                borderColor: exchangeAccent.borderColor,
+                boxShadow: `inset 4px 0 0 ${exchangeAccent.borderColor}`,
+              }
+            : cardStyle
 
           // 圖示框：以獎勵類型主題色作淡背景；找不到時依正負金額顯示
           const iconWrapperStyle: React.CSSProperties | undefined = rewardColor
@@ -679,7 +749,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
             <div
               key={transaction.id}
               className="bg-white p-4 rounded-[2rem] shadow-sm flex items-center gap-4 group transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer border border-pink-50"
-              style={cardStyle}
+              style={cardVisualStyle}
               onClick={() => onEditTransaction && onEditTransaction(transaction)}
             >
               <div className="flex items-center gap-4 w-full md:w-auto flex-1 min-w-0">
@@ -704,7 +774,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-500">
                       {(() => {
                         const date = transaction.transaction_date 
@@ -720,6 +790,18 @@ export default function TransactionRecords({ studentId, transactions, studentNam
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold border" style={tagStyle}>
                       {categoryLabel}
                     </span>
+                    {exchangeInfo && exchangeAccent && (
+                      <span
+                        className="px-2 py-0.5 rounded text-[10px] font-bold border"
+                        style={{
+                          backgroundColor: exchangeAccent.tagBackgroundColor,
+                          color: exchangeAccent.tagTextColor,
+                          borderColor: exchangeAccent.borderColor,
+                        }}
+                      >
+                        {exchangeInfo.label}
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm font-medium truncate text-slate-600">
                     {transaction.description || transaction.title || ''}

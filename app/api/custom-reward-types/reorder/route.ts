@@ -1,9 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+type RewardTypeOrder = {
+  id: string
+  display_order: number
+}
+
 export async function POST(req: Request) {
   const supabase = createClient()
-  const { rewardTypeOrders } = await req.json()
+  const { rewardTypeOrders } = await req.json() as { rewardTypeOrders?: RewardTypeOrder[] }
 
   if (!rewardTypeOrders || !Array.isArray(rewardTypeOrders)) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
@@ -14,7 +19,6 @@ export async function POST(req: Request) {
     for (const order of rewardTypeOrders) {
       const { error } = await supabase
         .from('custom_reward_types')
-        // @ts-ignore - Supabase type inference issue with update operations
         .update({ display_order: order.display_order })
         .eq('id', order.id)
 

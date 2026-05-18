@@ -1,5 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  findMatchingRewardType,
+  getEarnedRewardAmount,
+  getTransactionAmount,
+} from '@/lib/utils/rewardTransactions'
 
 export async function GET(
   request: NextRequest,
@@ -13,11 +18,12 @@ export async function GET(
       return NextResponse.json({ error: 'Student ID is required' }, { status: 400 })
     }
 
-    // 獲取所有交易記錄
+    // 獲取所有交易記錄（排除已被目標消耗的）
     const { data: transactions, error: transactionsError } = await supabase
       .from('transactions')
       .select('*')
       .eq('student_id', studentId)
+      .is('consumed_by_goal_id', null)
 
     if (transactionsError) {
       console.error('Error fetching transactions:', transactionsError)
@@ -48,30 +54,20 @@ export async function GET(
     // 處理每筆交易
     transactions?.forEach(transaction => {
       // 新模型優先：使用 reward_type_id 直接匹配
-      const directType = transaction.reward_type_id
-        ? rewardTypes?.find(type => type.id === transaction.reward_type_id)
-        : null
-
       // 過渡相容：若舊資料沒有 reward_type_id，退回 category 模糊匹配
-      const matchingType = directType || rewardTypes?.find(type => {
-        const displayName = type.display_name || type.display_name_zh || ''
-        const typeKey = type.type_key || ''
-        const category = transaction.category || ''
-        
-        return category === displayName || 
-               category === typeKey || 
-               category.toLowerCase().includes(typeKey.toLowerCase()) ||
-               displayName.toLowerCase().includes(category.toLowerCase())
-      })
+      const matchingType = findMatchingRewardType(transaction, rewardTypes || [])
 
       if (matchingType) {
         const typeId = matchingType.id
-        const amount = Number(transaction.amount) || 0
-        const absAmount = Math.abs(amount)
+        const amount = getTransactionAmount(transaction)
+        const absAmount = getEarnedRewardAmount(transaction)
 
         // 獲得總量：只計算獲得的部分（不計算懲罰或兌換所扣除的部分）
         if (transaction.transaction_type === 'earn' || transaction.transaction_type === 'bonus') {
           stats[typeId].totalEarned += absAmount
+          stats[typeId].currentBalance += absAmount
+        } else if (transaction.transaction_type === 'refund') {
+          // 退還：只計入可用餘額，不計入總獲得量（因為是退回而非新獲得）
           stats[typeId].currentBalance += absAmount
         } else if (transaction.transaction_type === 'penalty' || transaction.transaction_type === 'spend') {
           // 扣除的部分（不計入獲得總量，但會從現有量扣除）

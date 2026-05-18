@@ -41,6 +41,22 @@ export default async function SettingsPage() {
             <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl p-6 sm:p-7">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div>
+                  <h2 className="text-lg font-bold text-slate-800 mb-1">{t('rewardsCenter')}</h2>
+                  <p className="text-sm text-slate-500">{t('rewardsCenterDesc')}</p>
+                </div>
+                <Link
+                  href="/settings/rewards"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-pink-400 to-purple-500 text-white hover:opacity-90 transition-opacity font-semibold text-sm"
+                >
+                  {t('openRewardsCenter')}
+                  <span className="material-icons-outlined text-base">arrow_forward</span>
+                </Link>
+              </div>
+            </section>
+
+            <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl p-6 sm:p-7">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
                   <h2 className="text-lg font-bold text-slate-800 mb-1">{t('initializationManager')}</h2>
                   <p className="text-sm text-slate-500">{t('initializationManagerDesc')}</p>
                 </div>

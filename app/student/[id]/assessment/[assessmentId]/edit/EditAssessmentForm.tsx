@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
+import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
 
 interface Subject {
   id: string
@@ -29,6 +30,7 @@ interface Assessment {
   completed_date?: string | null
   grade?: string | null
   score_type?: string | null
+  image_urls?: UploadedImage[] | null
   subjects?: {
     id: string
     name: string
@@ -80,6 +82,9 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
     (assessment.grade as Grade) || null
   )
   const [currentMaxScore, setCurrentMaxScore] = useState(assessment.max_score)
+  const [imageUrls, setImageUrls] = useState<UploadedImage[]>(
+    Array.isArray(assessment.image_urls) ? assessment.image_urls : []
+  )
 
   const formatFormulaForDisplay = (formula?: string | null) => {
     const f = (formula ?? '').trim()
@@ -138,6 +143,7 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
           max_score: parseFloat(formData.get('max_score') as string) || 100,
           due_date: formData.get('due_date') || null,
           manual_reward: manualReward ? parseFloat(manualReward as string) : null,
+          image_urls: imageUrls,
       }
 
       // 獲取當前選中科目的等級對應
@@ -458,6 +464,22 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
           <p className="text-xs text-gray-500 mt-1">
             💡 可以手動修改獎金金額，留空則根據獎金規則重新計算
           </p>
+        </div>
+
+        {/* 評量圖片上傳 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            {locale === 'zh-TW' ? '評量圖片' : 'Assessment Images'}
+          </label>
+          <ImageUploader
+            images={imageUrls}
+            onChange={setImageUrls}
+            maxCount={10}
+            uploadEndpoint="/api/assessments/upload-image"
+            deleteEndpoint="/api/assessments/delete-image"
+            idFieldName="assessmentId"
+            entityId={assessment.id}
+          />
         </div>
 
         {/* 獎金規則預覽（可折疊） - 與新增評量一致 */}

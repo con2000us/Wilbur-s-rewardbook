@@ -37,6 +37,11 @@ The `database/setup-database.sql` file includes all necessary migrations in the 
 - **`database/examples/default-reward-rules.sql`** - Sample reward rules (optional, for testing)
 - **`database/examples/subject-specific-reward-rules.sql`** - Example subject-specific rules
 
+## Optional: Large goal images (Storage) / 選用：大型目標圖片（Storage）
+
+If you use **Rewards Center → Large goals** with **image upload**, create the **`goal-images`** public bucket and policies in the Supabase dashboard, and set **`SUPABASE_SERVICE_ROLE_KEY`** on your host. See **`docs/STORAGE_BUCKET_SETUP.md`**.  
+若使用 **獎勵中心 → 大型目標** 的**圖片上傳**，請在 Supabase **後台**建立公開 bucket **`goal-images`**、設定讀取政策，並在部署環境設定 **`SUPABASE_SERVICE_ROLE_KEY`**。詳見 **`docs/STORAGE_BUCKET_SETUP.md`**。
+
 ## Notes / 注意事項
 
 - The script uses `IF NOT EXISTS` and `IF EXISTS` checks, so it's safe to run multiple times

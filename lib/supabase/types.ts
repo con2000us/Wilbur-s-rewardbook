@@ -1,4 +1,4 @@
-﻿// Database type definitions for Supabase
+// Database type definitions for Supabase
 // This file provides TypeScript types for the database schema
 
 export type Json =
@@ -254,16 +254,13 @@ export interface Database {
           id: string
           type_key: string
           display_name: string
-          display_name_zh: string | null
-          display_name_en: string | null
           icon: string
           color: string | null
           default_unit: string | null
           is_accumulable: boolean | null
-          has_extra_input: boolean | null
-          extra_input_schema: Json | null
           display_order: number | null
           is_system: boolean | null
+          description: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -271,16 +268,13 @@ export interface Database {
           id?: string
           type_key: string
           display_name?: string
-          display_name_zh?: string | null
-          display_name_en?: string | null
           icon?: string
           color?: string | null
           default_unit?: string | null
           is_accumulable?: boolean | null
-          has_extra_input?: boolean | null
-          extra_input_schema?: Json | null
           display_order?: number | null
           is_system?: boolean | null
+          description?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -288,16 +282,13 @@ export interface Database {
           id?: string
           type_key?: string
           display_name?: string
-          display_name_zh?: string | null
-          display_name_en?: string | null
           icon?: string
           color?: string | null
           default_unit?: string | null
           is_accumulable?: boolean | null
-          has_extra_input?: boolean | null
-          extra_input_schema?: Json | null
           display_order?: number | null
           is_system?: boolean | null
+          description?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -307,10 +298,8 @@ export interface Database {
         Row: {
           id: string
           rule_key: string
-          name_zh: string
-          name_en: string | null
-          description_zh: string | null
-          description_en: string | null
+          name: string
+          description: string | null
           required_reward_type_id: string | null
           required_amount: number
           reward_item: string | null
@@ -324,10 +313,8 @@ export interface Database {
         Insert: {
           id?: string
           rule_key?: string
-          name_zh: string
-          name_en?: string | null
-          description_zh?: string | null
-          description_en?: string | null
+          name: string
+          description?: string | null
           required_reward_type_id?: string | null
           required_amount: number
           reward_item?: string | null
@@ -341,10 +328,8 @@ export interface Database {
         Update: {
           id?: string
           rule_key?: string
-          name_zh?: string
-          name_en?: string | null
-          description_zh?: string | null
-          description_en?: string | null
+          name?: string
+          description?: string | null
           required_reward_type_id?: string | null
           required_amount?: number
           reward_item?: string | null
@@ -391,10 +376,8 @@ export interface Database {
         Row: {
           id: string
           event_key: string
-          name_zh: string
-          name_en: string | null
-          description_zh: string | null
-          description_en: string | null
+          name: string
+          description: string | null
           is_active: boolean
           display_order: number
           created_at: string | null
@@ -403,10 +386,8 @@ export interface Database {
         Insert: {
           id?: string
           event_key?: string
-          name_zh: string
-          name_en?: string | null
-          description_zh?: string | null
-          description_en?: string | null
+          name: string
+          description?: string | null
           is_active?: boolean
           display_order?: number
           created_at?: string | null
@@ -415,10 +396,8 @@ export interface Database {
         Update: {
           id?: string
           event_key?: string
-          name_zh?: string
-          name_en?: string | null
-          description_zh?: string | null
-          description_en?: string | null
+          name?: string
+          description?: string | null
           is_active?: boolean
           display_order?: number
           created_at?: string | null

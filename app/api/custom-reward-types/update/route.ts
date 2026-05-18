@@ -1,9 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import type { Database } from '@/lib/supabase/types'
+
+type CustomRewardTypeUpdate = Database['public']['Tables']['custom_reward_types']['Update']
+
+type CustomRewardTypeUpdatePayload = CustomRewardTypeUpdate & {
+  id?: string
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json() as CustomRewardTypeUpdatePayload
     const supabase = createClient()
     
     const { id, ...restBody } = body
@@ -57,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 处理 extra_input_schema
-    const updateFields: any = {}
+    const updateFields: CustomRewardTypeUpdate = {}
     
     // 编辑时不应该更新 type_key，但如果确实传入了有效值且值不同，则更新
     if (type_key && typeof type_key === 'string' && type_key.trim() !== '' && type_key !== existingType.type_key) {
@@ -73,8 +80,7 @@ export async function POST(request: NextRequest) {
     if (updateData.color !== undefined) updateFields.color = updateData.color
     if (updateData.default_unit !== undefined) updateFields.default_unit = updateData.default_unit || null
     if (updateData.is_accumulable !== undefined) updateFields.is_accumulable = updateData.is_accumulable
-    if (updateData.has_extra_input !== undefined) updateFields.has_extra_input = updateData.has_extra_input
-    if (updateData.extra_input_schema !== undefined) updateFields.extra_input_schema = updateData.extra_input_schema
+    if (updateData.description !== undefined) updateFields.description = updateData.description
     if (updateData.is_system !== undefined && !existingType.is_system) updateFields.is_system = updateData.is_system
 
     updateFields.updated_at = new Date().toISOString()

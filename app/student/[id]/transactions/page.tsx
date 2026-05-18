@@ -35,7 +35,7 @@ export default async function TransactionsPage({
   const transactions = allTransactions ?? []
 
   // 獎勵類型（用於存摺顯示對應單位）
-  // 使用 select('*') 避免因為 schema 上少了某些欄位（如 display_name_zh/en）導致整個查詢失敗
+  // 使用 select('*') 取得所有欄位
   const { data: rewardTypesRaw, error: rewardTypesError } = await supabase
     .from('custom_reward_types')
     .select('*')

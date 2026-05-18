@@ -1,25 +1,32 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+type RewardRuleOrder = {
+  id: string
+  display_order: number
+}
+
+type RewardRuleReorderPayload = {
+  ruleOrders?: RewardRuleOrder[]
+}
+
 export async function POST(req: Request) {
   const supabase = createClient()
-  const { ruleOrders } = await req.json()
+  const { ruleOrders } = await req.json() as RewardRuleReorderPayload
 
   if (!ruleOrders || !Array.isArray(ruleOrders)) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
   try {
-    const updates = ruleOrders.map(order => ({
+    const updates = ruleOrders.map((order) => ({
       id: order.id,
-      display_order: order.display_order
+      display_order: order.display_order,
     }))
 
-    // 批量更新 display_order
     for (const update of updates) {
       const { error } = await supabase
         .from('reward_rules')
-        // @ts-ignore - Supabase type inference issue with update operations
         .update({ display_order: update.display_order })
         .eq('id', update.id)
 
@@ -35,4 +42,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 })
   }
 }
-

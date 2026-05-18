@@ -17,6 +17,7 @@ export default function BackupSettings() {
   const tCommon = useTranslations('common')
   
   const [isExporting, setIsExporting] = useState(false)
+  const [isFullExporting, setIsFullExporting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
@@ -105,6 +106,48 @@ export default function BackupSettings() {
       })
     } finally {
       setIsExporting(false)
+    }
+  }
+
+  // 匯出完整備份（DB + 圖片）
+  const handleFullExport = async () => {
+    setIsFullExporting(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/backup/full-export')
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to export full backup')
+      }
+
+      // 下載 ZIP 檔案
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+
+      const contentDisposition = response.headers.get('Content-Disposition')
+      const filename = contentDisposition
+        ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
+        : `backup-full-${new Date().toISOString().slice(0, 10)}.zip`
+
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+
+      setMessage({ type: 'success', text: t('backupFullExportSuccess') })
+    } catch (error) {
+      console.error('Full export error:', error)
+      setMessage({
+        type: 'error',
+        text: `${t('backupFullExportFailed')}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      })
+    } finally {
+      setIsFullExporting(false)
     }
   }
 
@@ -487,6 +530,18 @@ export default function BackupSettings() {
                 }`}
               >
                 {isExporting ? t('backupExporting') : t('exportJSON')}
+              </button>
+
+              <button
+                onClick={handleFullExport}
+                disabled={isFullExporting}
+                className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  isFullExporting
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 shadow-md'
+                }`}
+              >
+                {isFullExporting ? t('backupFullExporting') : t('backupFullExport')}
               </button>
             </div>
           </div>

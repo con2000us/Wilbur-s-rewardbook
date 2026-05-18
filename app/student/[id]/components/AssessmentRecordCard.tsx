@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import ImageViewer from '@/app/components/ImageViewer'
 
 interface AssessmentRecord {
   id: string
@@ -13,6 +14,7 @@ interface AssessmentRecord {
   assessment_type?: string
   grade?: string | null
   score_type?: string | null
+  image_urls?: Array<{ url: string }> | null
   subjects?: {
     name: string
     color: string
@@ -31,7 +33,9 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
   const locale = useLocale()
   const t = useTranslations('student')
   const tAssessment = useTranslations('assessment')
-  
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerIndex, setViewerIndex] = useState(0)
+
   // Emoji 到 Material Icons Outlined 的映射表
   const emojiToMaterialIcon: Record<string, string> = {
     '📖': 'auto_stories',      // 書本 → 故事書
@@ -78,11 +82,9 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
 
   // 將 emoji 轉換為 Material Icon
   const convertEmojiToMaterialIcon = (icon: string): string => {
-    // 如果已經是 Material Icon 名稱，直接返回
     if (/^[a-z_]+$/i.test(icon) && icon.length > 2) {
       return icon
     }
-    // 如果是 emoji，查找映射表
     return emojiToMaterialIcon[icon] || 'description'
   }
 
@@ -113,9 +115,6 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
   const scoreColor = getScoreColor(record.score)
   const gradeColor = getGradeColor(record.grade)
   
-  // 判斷是否使用等級制
-  // 優先級：score_type === 'letter' > grade 存在 > score 存在
-  // 如果 score_type 是 'letter'，無論 score 是否有值，都應該顯示 grade
   const isLetterGrade = record.score_type === 'letter' && record.grade
   
   // 格式化日期顯示
@@ -137,21 +136,17 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
     return date.toLocaleDateString(locale === 'zh-TW' ? 'zh-TW' : 'en-US')
   }
 
-  // 獲取科目對應的邊框顏色類名
-  const getBorderColor = (color: string) => {
-    // 使用內聯樣式處理自定義顏色
-    return color
-  }
+  const getBorderColor = (color: string) => color
 
   // 根據評量種類獲取對應的 Material Icon
   const getAssessmentTypeIcon = (type: string | undefined | null): string => {
     const typeIconMap: Record<string, string> = {
-      'exam': 'assignment',      // 考試 → 作業/任務
-      'quiz': 'checklist_rtl',   // 小考 → 檢查清單（右到左）
-      'homework': 'edit_note',   // 作業 → 編輯筆記
-      'project': 'palette',      // 專題 → 調色盤
+      'exam': 'assignment',
+      'quiz': 'checklist_rtl',
+      'homework': 'edit_note',
+      'project': 'palette',
     }
-    return typeIconMap[type || ''] || 'history_edu'  // 預設為歷史教育
+    return typeIconMap[type || ''] || 'history_edu'
   }
 
   const getAssessmentTypeLabel = (type: string | undefined | null): string => {
@@ -170,8 +165,8 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
     : []
 
   return (
-    <div 
-      className={`group glass-card p-6 rounded-[2.5rem] shadow-sm relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer`}
+    <div
+      className="group glass-card p-6 rounded-[2.5rem] shadow-sm relative overflow-hidden hover:shadow-xl cursor-pointer h-full flex flex-col"
       style={{ 
         borderLeft: `8px solid ${getBorderColor(subjectColor)}`,
         borderRadius: '2.5rem'
@@ -252,12 +247,62 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
         </div>
       </div>
       
-      <div className="flex items-center justify-end">
+      <div className="mt-auto flex items-end justify-between">
+        {/* 左下：圖片縮圖 */}
+        <div>
+          {record.image_urls && record.image_urls.length > 0 && (
+            <div className="flex gap-1.5 flex-wrap">
+              {record.image_urls.slice(0, 2).map((img, i) => (
+                <img
+                  key={i}
+                  src={img.url}
+                  alt={`Image ${i + 1}`}
+                  className="w-14 h-14 object-cover rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:opacity-80 transition-opacity hover:scale-105"
+                  onMouseDown={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    setViewerIndex(i)
+                    setViewerOpen(true)
+                  }}
+                />
+              ))}
+              {record.image_urls.length > 2 && (
+                <span
+                  className="w-14 h-14 rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-500 shadow-sm cursor-pointer hover:bg-slate-200 hover:text-slate-700 transition-colors"
+                  onMouseDown={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    setViewerIndex(2)
+                    setViewerOpen(true)
+                  }}
+                >
+                  +{record.image_urls.length - 2}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        {/* 右下：日期 */}
         <div className="flex items-center gap-2 text-emerald-500 font-medium text-sm">
           <span className="material-icons-outlined text-sm">calendar_today</span>
           {formatDate(record.due_date)}
         </div>
       </div>
+
+      <ImageViewer
+        images={record.image_urls || []}
+        initialIndex={viewerIndex}
+        isOpen={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+      />
     </div>
   )
 }

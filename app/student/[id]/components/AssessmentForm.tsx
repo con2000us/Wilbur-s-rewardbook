@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { calculateRewardFromRule } from '@/lib/rewardFormula'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
+import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
 
 interface Subject {
   id: string
@@ -27,6 +28,7 @@ interface Assessment {
   grade: string | null
   score_type: string | null
   notes?: string | null
+  image_urls?: UploadedImage[] | null
 }
 
 interface RewardRule {
@@ -48,8 +50,6 @@ interface RewardType {
   id: string
   type_key: string
   display_name: string
-  display_name_zh?: string
-  display_name_en?: string
   default_unit?: string | null
 }
 
@@ -102,14 +102,14 @@ export default function AssessmentForm({
   )
   const [maxScore, setMaxScore] = useState(assessment?.max_score || 100)
   const [showRules, setShowRules] = useState(false)
+  const [imageUrls, setImageUrls] = useState<UploadedImage[]>(
+    Array.isArray(assessment?.image_urls) ? assessment.image_urls : []
+  )
   const [rewardTypes, setRewardTypes] = useState<RewardType[]>([])
   const [selectedRewardTypeId, setSelectedRewardTypeId] = useState<string>('')
 
   const getRewardTypeDisplayName = (type: RewardType) => {
-    if (locale === 'zh-TW') {
-      return type.display_name_zh || type.display_name || type.type_key
-    }
-    return type.display_name_en || type.display_name || type.type_key
+    return type.display_name || type.type_key
   }
 
   const selectedRewardType = rewardTypes.find((type) => type.id === selectedRewardTypeId)
@@ -276,7 +276,8 @@ export default function AssessmentForm({
         due_date: formData.get('due_date'),
         notes: ((formData.get('notes') as string) || '').trim() || null,
         manual_reward: formData.get('manual_reward') ? parseFloat(formData.get('manual_reward') as string) : null,
-        reward_type_id: formData.get('reward_type_id') || null
+        reward_type_id: formData.get('reward_type_id') || null,
+        image_urls: imageUrls,
       }
 
       // 根據評分方式設定分數或等級
@@ -721,6 +722,22 @@ export default function AssessmentForm({
             defaultValue={assessment?.notes || ''}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
             placeholder={locale === 'zh-TW' ? '可填寫此次評量的補充說明' : 'Optional additional details for this assessment'}
+          />
+        </div>
+
+        {/* 評量圖片上傳 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            {locale === 'zh-TW' ? '評量圖片' : 'Assessment Images'}
+          </label>
+          <ImageUploader
+            images={imageUrls}
+            onChange={setImageUrls}
+            maxCount={10}
+            uploadEndpoint="/api/assessments/upload-image"
+            deleteEndpoint="/api/assessments/delete-image"
+            idFieldName="assessmentId"
+            entityId={assessment?.id}
           />
         </div>
 

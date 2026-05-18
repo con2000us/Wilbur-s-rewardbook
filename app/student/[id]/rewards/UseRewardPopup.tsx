@@ -7,10 +7,8 @@ import { formatRewardAmountWithUnit, getRewardDisplayName, getRewardUnit } from 
 
 interface CustomRewardType {
   id?: string
-  type_key: string
+  type_key?: string
   display_name: string
-  display_name_zh?: string
-  display_name_en?: string
   icon: string
   color: string
   default_unit?: string | null
@@ -18,10 +16,8 @@ interface CustomRewardType {
 
 interface ExchangeRule {
   id?: string
-  name_zh: string
-  name_en?: string
-  description_zh?: string
-  description_en?: string
+  name?: string
+  description?: string
   required_reward_type_id: string
   required_amount: number
   reward_type_id?: string
@@ -399,17 +395,14 @@ export default function UseRewardPopup({
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h4 className="font-bold text-gray-900">
-                                  {locale === 'zh-TW' ? rule.name_zh : (rule.name_en || rule.name_zh)}
+                                  {rule.name}
                                 </h4>
                               </div>
-                              {rule.description_zh || rule.description_en ? (
+                              {rule.description && (
                                 <p className="text-sm text-gray-600 mb-2">
-                                  {locale === 'zh-TW' 
-                                    ? (rule.description_zh || rule.description_en)
-                                    : (rule.description_en || rule.description_zh)
-                                  }
+                                  {rule.description}
                                 </p>
-                              ) : null}
+                              )}
                               <div className="flex items-center gap-2 text-sm">
                                 <span className="font-semibold text-gray-700">
                                   {formatRewardAmountWithUnit(rule.required_amount, rewardType, locale)}

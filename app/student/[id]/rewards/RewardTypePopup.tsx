@@ -6,13 +6,13 @@ import { useLocale, useTranslations } from 'next-intl'
 
 interface CustomRewardType {
   id?: string
-  type_key: string
+  type_key?: string
   display_name: string
   icon: string
   color: string
   default_unit: string | null
   is_accumulable: boolean
-  has_extra_input: boolean
+  description?: string
   extra_input_schema: any
   is_system?: boolean
 }
@@ -49,13 +49,12 @@ export default function RewardTypePopup({
   const isEditing = !!editingType
 
   const [formData, setFormData] = useState<CustomRewardType>({
-    type_key: '',
     display_name: '',
     icon: '🎁',
     color: '#3b82f6',
     default_unit: null,
     is_accumulable: true,
-    has_extra_input: false,
+    description: '',
     extra_input_schema: null
   })
 
@@ -73,24 +72,22 @@ export default function RewardTypePopup({
     if (editingType) {
       // 确保所有字段都有默认值，避免 undefined 导致受控组件错误
       setFormData({
-        type_key: editingType.type_key || '',
         display_name: editingType.display_name || '',
         icon: editingType.icon || '🎁',
         color: editingType.color || '#3b82f6',
         default_unit: editingType.default_unit ?? null,
         is_accumulable: editingType.is_accumulable ?? true,
-        has_extra_input: editingType.has_extra_input ?? false,
+        description: editingType.description || '',
         extra_input_schema: editingType.extra_input_schema ?? null
       })
     } else {
       setFormData({
-        type_key: '',
         display_name: '',
         icon: '🎁',
         color: '#3b82f6',
         default_unit: null,
         is_accumulable: true,
-        has_extra_input: false,
+        description: '',
         extra_input_schema: null
       })
     }
@@ -121,13 +118,12 @@ export default function RewardTypePopup({
 
   // 確保 formData 的所有字段始終有值，避免受控組件錯誤
   const safeFormData = {
-    type_key: formData.type_key || '',
     display_name: formData.display_name || '',
     icon: formData.icon || '🎁',
     color: formData.color || '#3b82f6',
     default_unit: formData.default_unit ?? null,
     is_accumulable: formData.is_accumulable ?? true,
-    has_extra_input: formData.has_extra_input ?? false,
+    description: formData.description || '',
     extra_input_schema: formData.extra_input_schema ?? null
   }
 
@@ -144,11 +140,9 @@ export default function RewardTypePopup({
     setError('')
 
     try {
-      // 如果是编辑模式，排除 type_key（编辑时不应该修改它），但保留 id
       let dataToSave: any
       if (isEditing && editingType?.id) {
-        const { type_key, ...restData } = safeFormData
-        dataToSave = { ...restData, id: editingType.id } // 添加 id 字段
+        dataToSave = { ...safeFormData, id: editingType.id }
       } else {
         dataToSave = safeFormData
       }
@@ -299,21 +293,6 @@ export default function RewardTypePopup({
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                {t('typeKey')}
-              </label>
-              <input
-                type="text"
-                required
-                disabled={isEditing}
-                value={safeFormData.type_key}
-                onChange={(e) => setFormData({ ...formData, type_key: e.target.value })}
-                placeholder={t('typeKeyPlaceholder')}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 {t('displayName')}
               </label>
               <input
@@ -399,20 +378,6 @@ export default function RewardTypePopup({
                 />
               </div>
               <div className="flex items-end mb-1">
-                <label className="flex items-center cursor-pointer group">
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      checked={safeFormData.is_accumulable}
-                      onChange={(e) => setFormData({ ...formData, is_accumulable: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </div>
-                  <span className="ml-3 text-sm font-medium text-slate-600 group-hover:text-slate-800">
-                    {t('isAccumulable')}
-                  </span>
-                </label>
               </div>
             </div>
 

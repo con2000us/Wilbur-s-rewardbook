@@ -13,7 +13,6 @@ export async function POST(request: Request) {
     const supabase = createClient()
 
     const { error } = await supabase
-      // @ts-ignore - Supabase type inference issue for newly added tables
       .from('achievement_events')
       .delete()
       .eq('id', id)
@@ -23,7 +22,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
   }
 }

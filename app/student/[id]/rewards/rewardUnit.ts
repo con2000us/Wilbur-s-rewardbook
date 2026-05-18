@@ -2,8 +2,6 @@ interface RewardTypeLike {
   id?: string
   type_key?: string
   display_name?: string
-  display_name_zh?: string
-  display_name_en?: string
   default_unit?: string | null
   color?: string
   icon?: string
@@ -26,18 +24,13 @@ export function findRewardTypeForTransaction(
   return rewardTypes.find((rt) => {
     return (
       cat === (rt.display_name || '') ||
-      cat === (rt.display_name_zh || '') ||
-      cat === (rt.display_name_en || '') ||
       catLower === (rt.type_key || '').toLowerCase()
     )
   })
 }
 
 export function getRewardDisplayName(type: RewardTypeLike, locale: string): string {
-  if (locale === 'zh-TW') {
-    return type.display_name_zh || type.display_name || type.type_key || ''
-  }
-  return type.display_name_en || type.display_name || type.type_key || ''
+  return type.display_name || type.type_key || ''
 }
 
 export function getRewardUnit(type: RewardTypeLike, locale: string): string {

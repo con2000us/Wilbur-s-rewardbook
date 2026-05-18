@@ -70,48 +70,61 @@ export default function HomePageClient({ students, siteName }: Props) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <Link
-                href="/reward-types"
-                className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 active:scale-[0.99] transition-all duration-200 border-2 border-purple-100 group"
+                href="/settings/rewards"
+                className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 active:scale-[0.99] transition-all duration-200 border-2 border-purple-100 group col-span-full"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-purple-50 border-2 border-purple-200 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <span className="material-icons-outlined text-purple-500 text-2xl">card_giftcard</span>
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-md">
+                    <span className="text-white text-2xl">🎯</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-0.5">{t('globalManagement.rewardTypes.title')}</h3>
-                    <p className="text-xs sm:text-sm text-slate-500">{t('globalManagement.rewardTypes.desc')}</p>
+                    <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-0.5">{t('globalManagement.rewardsCenter.title')}</h3>
+                    <p className="text-xs sm:text-sm text-slate-500">{t('globalManagement.rewardsCenter.desc')}</p>
                   </div>
-                  <span className="material-icons-outlined text-purple-500 transition-colors">chevron_right</span>
+                  <span className="material-icons-outlined text-purple-500 group-hover:translate-x-1 transition-transform">chevron_right</span>
+                </div>
+              </Link>
+              {/* 舊頁面快捷連結 */}
+              <Link
+                href="/reward-types"
+                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-4 sm:p-5 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 border border-slate-200 group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <span className="material-icons-outlined text-purple-500 text-xl">card_giftcard</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-slate-700 group-hover:text-purple-700 transition-colors">{t('globalManagement.rewardTypes.title')}</h3>
+                  </div>
+                  <span className="material-icons-outlined text-slate-400 text-lg group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                 </div>
               </Link>
               <Link
                 href="/achievement-events"
-                className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 active:scale-[0.99] transition-all duration-200 border-2 border-amber-100 group"
+                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-4 sm:p-5 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 border border-slate-200 group"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <span className="material-icons-outlined text-amber-500 text-2xl">emoji_events</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <span className="material-icons-outlined text-amber-500 text-xl">emoji_events</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-0.5">{t('globalManagement.achievementEvents.title')}</h3>
-                    <p className="text-xs sm:text-sm text-slate-500">{t('globalManagement.achievementEvents.desc')}</p>
+                    <h3 className="text-sm font-bold text-slate-700 group-hover:text-amber-700 transition-colors">{t('globalManagement.achievementEvents.title')}</h3>
                   </div>
-                  <span className="material-icons-outlined text-amber-500 transition-colors">chevron_right</span>
+                  <span className="material-icons-outlined text-slate-400 text-lg group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                 </div>
               </Link>
               <Link
                 href="/major-goals"
-                className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 active:scale-[0.99] transition-all duration-200 border-2 border-sky-100 group"
+                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-4 sm:p-5 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 border border-slate-200 group"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-sky-50 border-2 border-sky-200 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <span className="material-icons-outlined text-sky-500 text-2xl">flag</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <span className="material-icons-outlined text-sky-500 text-xl">flag</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-0.5">{t('globalManagement.majorGoals.title')}</h3>
-                    <p className="text-xs sm:text-sm text-slate-500">{t('globalManagement.majorGoals.desc')}</p>
+                    <h3 className="text-sm font-bold text-slate-700 group-hover:text-sky-700 transition-colors">{t('globalManagement.majorGoals.title')}</h3>
                   </div>
-                  <span className="material-icons-outlined text-sky-500 transition-colors">chevron_right</span>
+                  <span className="material-icons-outlined text-slate-400 text-lg group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                 </div>
               </Link>
             </div>

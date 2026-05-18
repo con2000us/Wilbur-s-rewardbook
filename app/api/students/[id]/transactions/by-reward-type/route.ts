@@ -40,7 +40,7 @@ export async function GET(
       .eq('student_id', studentId)
 
     // 新模型優先：以 reward_type_id 過濾，舊資料回退 category
-    const displayName = rewardType.display_name || rewardType.display_name_zh || rewardType.type_key
+    const displayName = rewardType.display_name || rewardType.type_key
     query = query.or(`reward_type_id.eq.${rewardTypeId},category.eq.${displayName}`)
 
     // 如果指定了交易類型，則進一步過濾

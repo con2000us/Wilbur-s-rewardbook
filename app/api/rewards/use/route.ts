@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
     // 檢查餘額是否足夠
     if (currentBalance < amount) {
       return NextResponse.json({ 
-        error: `Insufficient balance. Need ${amount} ${rewardType.display_name || rewardType.display_name_zh || rewardType.type_key}, but only have ${currentBalance}` 
+        error: `Insufficient balance. Need ${amount} ${rewardType.display_name || rewardType.type_key}, but only have ${currentBalance}` 
       }, { status: 400 })
     }
 
     // 創建交易記錄（使用獎勵）
-    const displayName = rewardType.display_name || rewardType.display_name_zh || rewardType.type_key
+    const displayName = rewardType.display_name || rewardType.type_key
     // 將標題和備註組合為描述
     const useDescription = notes 
       ? `${title} (${notes})`
@@ -54,13 +54,12 @@ export async function POST(request: NextRequest) {
     
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
-      // @ts-ignore - Supabase type inference issue with insert operations
       .insert({
         student_id: studentId,
         assessment_id: null,
         reward_type_id: rewardTypeId,
         achievement_event_id: null,
-        transaction_type: 'use',
+        transaction_type: 'spend',
         amount: -amount, // 負數表示扣除
         description: useDescription,
         category: displayName,

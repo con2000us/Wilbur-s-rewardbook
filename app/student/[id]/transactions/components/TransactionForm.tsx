@@ -24,7 +24,7 @@ interface CustomRewardType {
   color: string
   default_unit: string | null
   is_accumulable: boolean
-  has_extra_input: boolean
+  description?: string
   extra_input_schema: any
   is_system?: boolean
 }
@@ -33,10 +33,6 @@ interface AchievementEvent {
   id: string
   name: string
   description?: string
-  name_zh: string
-  name_en?: string
-  description_zh?: string
-  description_en?: string
   is_active: boolean
   display_order: number
 }
@@ -155,10 +151,7 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
   const selectedType = customTypes.find((type) => getDisplayName(type) === selectedCategory)
   const selectedUnit = selectedType ? getRewardUnit(selectedType, locale) : (locale === 'zh-TW' ? '元' : 'dollars')
   const getEventDisplayName = (event: AchievementEvent): string => {
-    const localized = (event.name || '').trim()
-    const zh = (event.name_zh || '').trim()
-    const en = (event.name_en || '').trim()
-    return localized || zh || en || String(event.id).slice(0, 8)
+    return (event.name || '').trim() || String(event.id).slice(0, 8)
   }
 
   // 判斷是否為 emoji

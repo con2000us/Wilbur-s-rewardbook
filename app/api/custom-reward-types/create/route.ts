@@ -1,62 +1,116 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import type { Database } from '@/lib/supabase/types'
+
+type CustomRewardTypeInsert = Database['public']['Tables']['custom_reward_types']['Insert']
+
+type CustomRewardTypeCreatePayload = {
+  type_key?: string
+  display_name?: string
+  icon?: string
+  color?: string | null
+  default_unit?: string | null
+  is_accumulable?: boolean
+  description?: string | null
+}
+
+/**
+ * 從顯示名稱自動生成 type_key
+ * 例："讀書獎勵" → "reading_rewards"（英文）/ "du_shu_jiang_li"（中文拼音備用）
+ * 若無 display_name 則使用 UUID
+ */
+function generateTypeKey(displayName: string): string {
+  if (!displayName || displayName.trim() === '') {
+    return 'custom_' + Math.random().toString(36).substring(2, 10)
+  }
+
+  // 嘗試移除 emoji 並 trim
+  const cleaned = displayName
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{2700}-\u{27BF}]/gu, '')
+    .trim()
+
+  if (cleaned.length === 0) {
+    return 'custom_' + Math.random().toString(36).substring(2, 10)
+  }
+
+  // 檢查是否為純中文
+  const hasChinese = /[\u4e00-\u9fff]/.test(cleaned)
+  
+  if (!hasChinese) {
+    // 英文/混合：轉小寫、非字母數字替換為底線
+    return cleaned
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_|_$/g, '')
+      .substring(0, 50)
+  }
+
+  // 中文：使用拼音轉換或降級為 custom_ 後綴
+  // 簡易處理：取前幾個字的 unicode code 組合成唯一 key
+  const codes = cleaned
+    .split('')
+    .slice(0, 4)
+    .map(c => c.codePointAt(0)?.toString(36) || '')
+    .join('')
+  return 'custom_' + codes
+}
+
+/**
+ * 確保 type_key 唯一：若已存在則追加遞增數字
+ */
+async function ensureUniqueTypeKey(
+  supabase: ReturnType<typeof createClient>,
+  baseKey: string
+): Promise<string> {
+  let candidate = baseKey
+  let suffix = 1
+
+  while (true) {
+    const { data: existing } = await supabase
+      .from('custom_reward_types')
+      .select('id')
+      .eq('type_key', candidate)
+      .maybeSingle()
+
+    if (!existing) return candidate
+    candidate = `${baseKey}_${suffix}`
+    suffix++
+    if (suffix > 100) {
+      // 極端情況：改用亂數
+      return baseKey + '_' + Math.random().toString(36).substring(2, 8)
+    }
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json() as CustomRewardTypeCreatePayload
     const supabase = createClient()
     
-    // 检查 type_key 是否已存在
-    if (body.type_key) {
-      const { data: existing } = await supabase
-        .from('custom_reward_types')
-        .select('id, type_key, display_name')
-        .eq('type_key', body.type_key)
-        .single()
-      
-      if (existing) {
-        return NextResponse.json({ 
-          success: false,
-          error: `奖励类型标识符 "${body.type_key}" 已存在。请使用不同的标识符。`
-        }, { status: 400 })
-      }
-    }
-    
-    const typeData: any = {}
-    
-    // 處理額外輸入欄位
-    if (body.has_extra_input === 'true') {
-      if (body.extra_field_name) {
-        typeData[body.extra_field_name] = {
-          type: body.extra_field_type,
-          label: body.extra_field_label,
-          required: body.extra_field_required === 'true'
-        }
-      }
-    }
-    
-    // 处理 extra_input_schema
-    let finalExtraInputSchema = typeData
-    if (body.extra_input_schema) {
-      finalExtraInputSchema = {
-        ...typeData,
-        ...body.extra_input_schema
-      }
+    const displayName = body.display_name || 'Unnamed Reward Type'
+
+    // 自動生成 type_key（若前端未提供）
+    let typeKey: string
+    if (body.type_key && typeof body.type_key === 'string' && body.type_key.trim() !== '') {
+      // 前端有提供 type_key（向後兼容）
+      typeKey = body.type_key.trim()
+    } else {
+      typeKey = generateTypeKey(displayName)
     }
 
-    // 构建插入数据，兼容新旧字段结构
-    const insertData: any = {
-      type_key: body.type_key,
+    // 確保唯一性
+    typeKey = await ensureUniqueTypeKey(supabase, typeKey)
+    
+    // 构建插入数据
+    const insertData: CustomRewardTypeInsert = {
+      type_key: typeKey,
       icon: body.icon || '🎁',
       color: body.color || '#3b82f6',
       default_unit: body.default_unit || null,
       is_accumulable: body.is_accumulable !== false,
-      has_extra_input: body.has_extra_input === true,
-      extra_input_schema: finalExtraInputSchema
+      display_name: displayName,
+      description: body.description || null
     }
-    
-    // 使用 display_name（单一字段，支持任何语言）
-    insertData.display_name = body.display_name || 'Unnamed Reward Type'
 
     const { data, error } = await supabase
       .from('custom_reward_types')
@@ -66,36 +120,30 @@ export async function POST(request: NextRequest) {
     
     if (error) {
       console.error('Failed to create custom reward type:', error)
-      console.error('Error details:', JSON.stringify(error, null, 2))
-      
-      // 检查是否是字段不存在的错误（Supabase 的错误代码和消息）
       const errorMessage = error.message || ''
       const errorCode = error.code || ''
       const errorDetails = error.details || ''
       
-      // 检查是否是唯一约束违反错误
       if (
         errorMessage.includes('duplicate key') ||
         errorMessage.includes('unique constraint') ||
-        errorMessage.includes('type_key') ||
         errorCode === '23505'
       ) {
         return NextResponse.json({ 
           success: false,
-          error: `奖励类型标识符 "${body.type_key}" 已存在。请使用不同的标识符。`
+          error: `無法建立獎勵類型：識別碼衝突，請稍後再試或更換名稱。`
         }, { status: 400 })
       }
       
-      // 检查是否是字段不存在的错误
       if (
         errorMessage.includes('display_name') || 
-        errorMessage.includes('column') && errorMessage.includes('does not exist') ||
+        (errorMessage.includes('column') && errorMessage.includes('does not exist')) ||
         errorCode === '42703' ||
         errorDetails?.includes('display_name')
       ) {
         return NextResponse.json({ 
           success: false,
-          error: `数据库字段缺失。请运行诊断查询：database/migrations/check-display-name-column.sql 或重新运行迁移文件：database/migrations/merge-reward-type-display-names.sql。错误详情：${errorMessage}`
+          error: `資料庫欄位缺失。請執行 migration：database/migrations/merge-reward-type-display-names.sql。錯誤：${errorMessage}`
         }, { status: 500 })
       }
       

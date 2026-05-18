@@ -24,6 +24,8 @@ interface Assessment {
   reward_amount: number | null
   grade: string | null
   score_type: string | null
+  image_urls?: Array<{ url: string; path: string; size: number; width?: number; height?: number }> | null
+  notes?: string | null
 }
 
 interface RewardRule {

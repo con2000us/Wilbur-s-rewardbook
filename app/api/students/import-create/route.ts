@@ -1,25 +1,56 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import type { Database } from '@/lib/supabase/types'
+
+type StudentRow = Database['public']['Tables']['students']['Row']
+type StudentInsert = Database['public']['Tables']['students']['Insert']
+type SubjectRow = Database['public']['Tables']['subjects']['Row']
+type SubjectInsert = Database['public']['Tables']['subjects']['Insert']
+type AssessmentRow = Database['public']['Tables']['assessments']['Row']
+type AssessmentInsert = Database['public']['Tables']['assessments']['Insert']
+type TransactionRow = Database['public']['Tables']['transactions']['Row']
+type TransactionInsert = Database['public']['Tables']['transactions']['Insert']
+type RewardRuleRow = Database['public']['Tables']['reward_rules']['Row']
+type RewardRuleInsert = Database['public']['Tables']['reward_rules']['Insert']
+
+type BackupRecord = Record<string, unknown>
+type BackupStudent = Partial<StudentRow> & BackupRecord
+type BackupSubject = Partial<SubjectRow> & BackupRecord
+type BackupAssessment = Partial<AssessmentRow> & BackupRecord
+type BackupTransaction = Partial<TransactionRow> & BackupRecord
+type BackupRewardRule = Partial<RewardRuleRow> & BackupRecord
 
 type StudentExportBackup = {
   version?: string
   type?: string
   student_id?: string
   data?: {
-    student?: Record<string, any>
-    subjects?: any[]
-    assessments?: any[]
-    transactions?: any[]
-    reward_rules?: any[]
+    student?: BackupStudent
+    subjects?: BackupSubject[]
+    assessments?: BackupAssessment[]
+    transactions?: BackupTransaction[]
+    reward_rules?: BackupRewardRule[]
   }
 }
 
-function validateBackupFormat(backup: any): { valid: boolean; error?: string; details?: string } {
+type ValidationResult = {
+  valid: boolean
+  error?: string
+  details?: string
+}
+
+type ImportedAssessmentInsert = Omit<AssessmentInsert, 'subject_id'> & {
+  subject_id: string | null
+} & BackupRecord
+
+function validateBackupFormat(backup: unknown): ValidationResult {
   if (!backup || typeof backup !== 'object') {
     return { valid: false, error: 'Invalid backup format', details: 'Backup data is not a valid object' }
   }
 
-  if (!backup.version) {
+  const candidate = backup as StudentExportBackup
+
+  if (!candidate.version) {
     return {
       valid: false,
       error: 'Invalid backup format',
@@ -27,15 +58,15 @@ function validateBackupFormat(backup: any): { valid: boolean; error?: string; de
     }
   }
 
-  if (backup.type !== 'student_export') {
+  if (candidate.type !== 'student_export') {
     return {
       valid: false,
       error: 'Invalid backup format',
-      details: `Expected backup type "student_export", but got "${backup.type}".`,
+      details: `Expected backup type "student_export", but got "${candidate.type}".`,
     }
   }
 
-  if (!backup.data || typeof backup.data !== 'object') {
+  if (!candidate.data || typeof candidate.data !== 'object') {
     return {
       valid: false,
       error: 'Invalid backup format',
@@ -44,7 +75,7 @@ function validateBackupFormat(backup: any): { valid: boolean; error?: string; de
   }
 
   const requiredFields = ['student', 'subjects', 'assessments', 'transactions', 'reward_rules'] as const
-  const missingFields = requiredFields.filter((field) => !(field in backup.data))
+  const missingFields = requiredFields.filter((field) => !(field in candidate.data!))
   if (missingFields.length > 0) {
     return {
       valid: false,
@@ -53,12 +84,12 @@ function validateBackupFormat(backup: any): { valid: boolean; error?: string; de
     }
   }
 
-  if (!backup.data.student || typeof backup.data.student !== 'object') {
+  if (!candidate.data.student || typeof candidate.data.student !== 'object') {
     return { valid: false, error: 'Invalid backup format', details: 'Student data is missing or invalid' }
   }
 
   const arrayFields = ['subjects', 'assessments', 'transactions', 'reward_rules'] as const
-  const invalidArrayFields = arrayFields.filter((field) => !Array.isArray(backup.data[field]))
+  const invalidArrayFields = arrayFields.filter((field) => !Array.isArray(candidate.data![field]))
   if (invalidArrayFields.length > 0) {
     return {
       valid: false,
@@ -70,20 +101,30 @@ function validateBackupFormat(backup: any): { valid: boolean; error?: string; de
   return { valid: true }
 }
 
-function omitKeys<T extends Record<string, any>>(obj: T, keys: string[]): Partial<T> {
-  const copy: any = { ...obj }
-  for (const k of keys) delete copy[k]
+function omitKeys<T extends BackupRecord>(obj: T, keys: string[]): Partial<T> {
+  const copy: Partial<T> = { ...obj }
+  for (const key of keys) {
+    delete copy[key]
+  }
   return copy
+}
+
+function stringOrFallback(value: unknown, fallback: string) {
+  return typeof value === 'string' && value.trim() ? value : fallback
+}
+
+function numberOrFallback(value: unknown, fallback: number) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
 }
 
 export async function POST(req: NextRequest) {
   const supabase = createClient()
 
   try {
-    const body = await req.json()
-    const backup = body?.backup as StudentExportBackup
+    const body = await req.json() as { backup?: unknown }
+    const backupCandidate = body.backup
 
-    const validation = validateBackupFormat(backup)
+    const validation = validateBackupFormat(backupCandidate)
     if (!validation.valid) {
       return NextResponse.json(
         { error: validation.error, details: validation.details },
@@ -91,10 +132,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const oldStudentId = backup.student_id || (backup.data?.student as any)?.id
-    const studentData = backup.data!.student as any
+    const backup = backupCandidate as StudentExportBackup
+    const backupData = backup.data!
+    const studentData = backupData.student!
+    const oldStudentId = backup.student_id || (typeof studentData.id === 'string' ? studentData.id : undefined)
 
-    // 建立新學生（display_order 排最後）
     const { data: maxOrderData } = await supabase
       .from('students')
       .select('display_order')
@@ -102,21 +144,22 @@ export async function POST(req: NextRequest) {
       .limit(1)
       .maybeSingle()
 
-    // @ts-ignore - Supabase type inference issue with select queries
+    const maxOrder = maxOrderData as Pick<StudentRow, 'display_order'> | null
     const nextDisplayOrder =
-      (maxOrderData as any)?.display_order !== null && (maxOrderData as any)?.display_order !== undefined
-        ? (maxOrderData as any).display_order + 1
+      maxOrder?.display_order !== null && maxOrder?.display_order !== undefined
+        ? maxOrder.display_order + 1
         : 0
+
+    const studentToInsert: StudentInsert = {
+      name: stringOrFallback(studentData.name, 'Imported student'),
+      email: typeof studentData.email === 'string' ? studentData.email : null,
+      avatar_url: typeof studentData.avatar_url === 'string' ? studentData.avatar_url : null,
+      display_order: nextDisplayOrder,
+    }
 
     const { data: newStudent, error: createStudentError } = await supabase
       .from('students')
-      // @ts-ignore - Supabase type inference issue with insert operations
-      .insert({
-        name: studentData.name,
-        email: studentData.email || null,
-        avatar_url: studentData.avatar_url || null,
-        display_order: nextDisplayOrder,
-      })
+      .insert(studentToInsert)
       .select()
       .single()
 
@@ -127,21 +170,22 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const newStudentId = (newStudent as any).id as string
+    const newStudentId = (newStudent as Pick<StudentRow, 'id'>).id
 
-    // 匯入 subjects（建立 old->new subject_id 映射）
-    const subjectsIn = (backup.data!.subjects || []) as any[]
-    const oldSubjectIds = subjectsIn.map((s) => s?.id).filter(Boolean)
-    const subjectsToInsert = subjectsIn.map((s) => ({
-      ...omitKeys(s, ['id', 'student_id', 'created_at', 'updated_at']),
+    const subjectsIn = backupData.subjects || []
+    const oldSubjectIds = subjectsIn
+      .map((subject) => subject.id)
+      .filter((id): id is string => typeof id === 'string')
+    const subjectsToInsert: Array<SubjectInsert & BackupRecord> = subjectsIn.map((subject) => ({
+      ...omitKeys(subject, ['id', 'student_id', 'created_at', 'updated_at']),
       student_id: newStudentId,
+      name: stringOrFallback(subject.name, 'Imported subject'),
     }))
 
     const { data: insertedSubjects, error: subjectsError } =
       subjectsToInsert.length > 0
         ? await supabase
             .from('subjects')
-            // @ts-ignore - Supabase type inference issue with insert operations
             .insert(subjectsToInsert)
             .select()
         : { data: [], error: null }
@@ -153,23 +197,28 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const insertedSubjectRows = insertedSubjects as Array<Pick<SubjectRow, 'id'>>
     const subjectIdMap = new Map<string, string>()
-    // 插入順序通常與輸入一致，若不一致仍以 index 對應（同一批 insert）
-    if (oldSubjectIds.length > 0 && (insertedSubjects as any[])?.length === oldSubjectIds.length) {
-      ;(insertedSubjects as any[]).forEach((row, idx) => {
+    if (oldSubjectIds.length > 0 && insertedSubjectRows.length === oldSubjectIds.length) {
+      insertedSubjectRows.forEach((row, idx) => {
         const oldId = oldSubjectIds[idx]
-        if (oldId && row?.id) subjectIdMap.set(oldId, row.id)
+        if (oldId && row.id) subjectIdMap.set(oldId, row.id)
       })
     }
 
-    // 匯入 assessments（建立 old->new assessment_id 映射，並 remap subject_id）
-    const assessmentsIn = (backup.data!.assessments || []) as any[]
-    const oldAssessmentIds = assessmentsIn.map((a) => a?.id).filter(Boolean)
-    const assessmentsToInsert = assessmentsIn.map((a) => {
-      const mappedSubjectId = a.subject_id && subjectIdMap.get(a.subject_id)
+    const assessmentsIn = backupData.assessments || []
+    const oldAssessmentIds = assessmentsIn
+      .map((assessment) => assessment.id)
+      .filter((id): id is string => typeof id === 'string')
+    const assessmentsToInsert: ImportedAssessmentInsert[] = assessmentsIn.map((assessment) => {
+      const mappedSubjectId = typeof assessment.subject_id === 'string'
+        ? subjectIdMap.get(assessment.subject_id)
+        : null
+
       return {
-        ...omitKeys(a, ['id', 'created_at', 'updated_at']),
+        ...omitKeys(assessment, ['id', 'created_at', 'updated_at']),
         subject_id: mappedSubjectId || null,
+        title: stringOrFallback(assessment.title, 'Imported assessment'),
       }
     })
 
@@ -177,7 +226,6 @@ export async function POST(req: NextRequest) {
       assessmentsToInsert.length > 0
         ? await supabase
             .from('assessments')
-            // @ts-ignore - Supabase type inference issue with insert operations
             .insert(assessmentsToInsert)
             .select()
         : { data: [], error: null }
@@ -189,22 +237,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const insertedAssessmentRows = insertedAssessments as Array<Pick<AssessmentRow, 'id'>>
     const assessmentIdMap = new Map<string, string>()
-    if (oldAssessmentIds.length > 0 && (insertedAssessments as any[])?.length === oldAssessmentIds.length) {
-      ;(insertedAssessments as any[]).forEach((row, idx) => {
+    if (oldAssessmentIds.length > 0 && insertedAssessmentRows.length === oldAssessmentIds.length) {
+      insertedAssessmentRows.forEach((row, idx) => {
         const oldId = oldAssessmentIds[idx]
-        if (oldId && row?.id) assessmentIdMap.set(oldId, row.id)
+        if (oldId && row.id) assessmentIdMap.set(oldId, row.id)
       })
     }
 
-    // 匯入 transactions（remap student_id & assessment_id）
-    const transactionsIn = (backup.data!.transactions || []) as any[]
-    const transactionsToInsert = transactionsIn.map((t) => {
-      const mappedAssessmentId = t.assessment_id ? assessmentIdMap.get(t.assessment_id) : null
+    const transactionsIn = backupData.transactions || []
+    const transactionsToInsert: Array<TransactionInsert & BackupRecord> = transactionsIn.map((transaction) => {
+      const mappedAssessmentId = typeof transaction.assessment_id === 'string'
+        ? assessmentIdMap.get(transaction.assessment_id)
+        : null
+
       return {
-        ...omitKeys(t, ['id', 'student_id', 'created_at', 'updated_at']),
+        ...omitKeys(transaction, ['id', 'student_id', 'created_at', 'updated_at']),
         student_id: newStudentId,
         assessment_id: mappedAssessmentId || null,
+        transaction_type: stringOrFallback(transaction.transaction_type, 'earn'),
+        amount: numberOrFallback(transaction.amount, 0),
       }
     })
 
@@ -212,7 +265,6 @@ export async function POST(req: NextRequest) {
       transactionsToInsert.length > 0
         ? await supabase
             .from('transactions')
-            // @ts-ignore - Supabase type inference issue with insert operations
             .insert(transactionsToInsert)
         : { error: null }
 
@@ -223,16 +275,19 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 匯入 reward_rules（只匯入學生專屬規則，並 remap student_id & subject_id）
-    const rewardRulesIn = (backup.data!.reward_rules || []) as any[]
-    const rewardRulesToInsert = rewardRulesIn
-      .filter((r) => (oldStudentId ? r.student_id === oldStudentId : r.student_id))
-      .map((r) => {
-        const mappedSubjectId = r.subject_id ? subjectIdMap.get(r.subject_id) : null
+    const rewardRulesIn = backupData.reward_rules || []
+    const rewardRulesToInsert: Array<RewardRuleInsert & BackupRecord> = rewardRulesIn
+      .filter((rule) => (oldStudentId ? rule.student_id === oldStudentId : Boolean(rule.student_id)))
+      .map((rule) => {
+        const mappedSubjectId = typeof rule.subject_id === 'string'
+          ? subjectIdMap.get(rule.subject_id)
+          : null
+
         return {
-          ...omitKeys(r, ['id', 'student_id', 'created_at', 'updated_at']),
+          ...omitKeys(rule, ['id', 'student_id', 'created_at', 'updated_at']),
           student_id: newStudentId,
           subject_id: mappedSubjectId || null,
+          rule_name: stringOrFallback(rule.rule_name, 'Imported reward rule'),
         }
       })
 
@@ -240,7 +295,6 @@ export async function POST(req: NextRequest) {
       rewardRulesToInsert.length > 0
         ? await supabase
             .from('reward_rules')
-            // @ts-ignore - Supabase type inference issue with insert operations
             .insert(rewardRulesToInsert)
         : { error: null }
 
@@ -255,8 +309,8 @@ export async function POST(req: NextRequest) {
       message: 'Student created from backup successfully',
       student_id: newStudentId,
       imported: {
-        subjects: (insertedSubjects as any[])?.length || 0,
-        assessments: (insertedAssessments as any[])?.length || 0,
+        subjects: insertedSubjectRows.length,
+        assessments: insertedAssessmentRows.length,
         transactions: transactionsToInsert.length,
         reward_rules: rewardRulesToInsert.length,
       },
@@ -269,5 +323,3 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-
-

@@ -236,10 +236,8 @@ export async function importDemoSeedData(supabase: any) {
         .upsert(
           {
             event_key: seed.key,
-            name_zh: seed.nameZh,
-            name_en: seed.nameEn,
-            description_zh: seed.descriptionZh,
-            description_en: seed.descriptionEn,
+            name: seed.nameZh,
+            description: seed.descriptionZh,
             is_active: true,
             display_order: seed.displayOrder,
           } as any,
@@ -256,7 +254,7 @@ export async function importDemoSeedData(supabase: any) {
       const { data: existingEvent } = await supabase
         .from('achievement_events')
         .select('id')
-        .eq('name_zh', seed.nameZh)
+        .eq('name', seed.nameZh)
         .maybeSingle()
 
       if (existingEvent?.id) {
@@ -265,10 +263,8 @@ export async function importDemoSeedData(supabase: any) {
         const { data: insertedEvent, error: insertEventError } = await supabase
           .from('achievement_events')
           .insert({
-            name_zh: seed.nameZh,
-            name_en: seed.nameEn,
-            description_zh: seed.descriptionZh,
-            description_en: seed.descriptionEn,
+            name: seed.nameZh,
+            description: seed.descriptionZh,
             is_active: true,
             display_order: seed.displayOrder,
           } as any)
@@ -343,10 +339,8 @@ export async function importDemoSeedData(supabase: any) {
         .upsert(
           {
             rule_key: seed.key,
-            name_zh: seed.nameZh,
-            name_en: seed.nameEn,
-            description_zh: seed.descriptionZh,
-            description_en: seed.descriptionEn,
+            name: seed.nameZh,
+            description: seed.descriptionZh,
             required_reward_type_id: requiredRewardTypeId,
             required_amount: seed.requiredAmount,
             reward_type_id: rewardTypeId,
@@ -367,7 +361,7 @@ export async function importDemoSeedData(supabase: any) {
       const { data: existingRule } = await supabase
         .from('exchange_rules')
         .select('id')
-        .eq('name_zh', seed.nameZh)
+        .eq('name', seed.nameZh)
         .maybeSingle()
 
       if (existingRule?.id) {
@@ -377,10 +371,8 @@ export async function importDemoSeedData(supabase: any) {
           .from('exchange_rules')
           .insert(
             {
-              name_zh: seed.nameZh,
-              name_en: seed.nameEn,
-              description_zh: seed.descriptionZh,
-              description_en: seed.descriptionEn,
+              name: seed.nameZh,
+              description: seed.descriptionZh,
               required_reward_type_id: requiredRewardTypeId,
               required_amount: seed.requiredAmount,
               reward_type_id: rewardTypeId,

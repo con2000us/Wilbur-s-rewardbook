@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { calculateRewardFromRule } from '@/lib/rewardFormula'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
+import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
 
 interface Subject {
   id: string
@@ -52,6 +53,7 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
   const [grade, setGrade] = useState<Grade | null>(null)
   const [maxScore, setMaxScore] = useState(100)
   const [showRules, setShowRules] = useState(false)
+  const [imageUrls, setImageUrls] = useState<UploadedImage[]>([])
 
   // 根據選中的科目和評量類型篩選適用的規則
   const getApplicableRules = () => {
@@ -194,6 +196,7 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
         max_score: parseFloat(formData.get('max_score') as string) || 100,
         due_date: formData.get('due_date') || null,
         manual_reward: manualReward ? parseFloat(manualReward as string) : null,
+        image_urls: imageUrls,
       }
 
       // 獲取當前選中科目的等級對應
@@ -608,6 +611,21 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
             type="date"
             defaultValue={new Date().toISOString().split('T')[0]}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        {/* 評量圖片上傳 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            {locale === 'zh-TW' ? '評量圖片' : 'Assessment Images'}
+          </label>
+          <ImageUploader
+            images={imageUrls}
+            onChange={setImageUrls}
+            maxCount={10}
+            uploadEndpoint="/api/assessments/upload-image"
+            deleteEndpoint="/api/assessments/delete-image"
+            idFieldName="assessmentId"
           />
         </div>
 

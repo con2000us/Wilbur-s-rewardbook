@@ -7,10 +7,8 @@ import { getRewardDisplayName, getRewardUnit } from './rewardUnit'
 
 interface CustomRewardType {
   id?: string
-  type_key: string
+  type_key?: string
   display_name: string
-  display_name_zh?: string
-  display_name_en?: string
   icon: string
   color: string
   default_unit?: string | null
@@ -21,6 +19,7 @@ interface AddRewardPopupProps {
   onClose: () => void
   studentId: string
   rewardTypes: CustomRewardType[]
+  achievementEvents?: Array<{ id: string; name: string; icon?: string }>
   onAdd: (rewardTypeId: string, title: string, amount: number, notes: string) => Promise<void>
 }
 
@@ -29,6 +28,7 @@ export default function AddRewardPopup({
   onClose,
   studentId,
   rewardTypes,
+  achievementEvents = [],
   onAdd
 }: AddRewardPopupProps) {
   const locale = useLocale()
@@ -192,6 +192,41 @@ export default function AddRewardPopup({
               required
               placeholder={locale === 'zh-TW' ? '例如：表現優異、幫助同學完成作業' : 'e.g., Excellent performance, Helped classmates with homework'}
             />
+            {/* 常用標籤 */}
+            {achievementEvents.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {achievementEvents.slice(0, 6).map((event) => (
+                  <button
+                    key={event.id}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, title: event.name })}
+                    className="px-3 py-1.5 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 text-gray-600 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-colors"
+                  >
+                    {event.icon || '🏆'} {event.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            {achievementEvents.length === 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {[
+                  { label: locale === 'zh-TW' ? '🏆 考試滿分' : '🏆 Perfect Score', name: locale === 'zh-TW' ? '考試滿分' : 'Perfect Score' },
+                  { label: locale === 'zh-TW' ? '📝 作業優良' : '📝 Great Homework', name: locale === 'zh-TW' ? '作業優良' : 'Great Homework' },
+                  { label: locale === 'zh-TW' ? '🤝 幫助同學' : '🤝 Helped Others', name: locale === 'zh-TW' ? '幫助同學' : 'Helped Others' },
+                  { label: locale === 'zh-TW' ? '📈 進步顯著' : '📈 Improvement', name: locale === 'zh-TW' ? '進步顯著' : 'Improvement' },
+                  { label: locale === 'zh-TW' ? '⭐ 準時完成' : '⭐ On Time', name: locale === 'zh-TW' ? '準時完成' : 'On Time' },
+                ].map((tag, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, title: tag.name })}
+                    className="px-3 py-1.5 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 text-gray-600 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-colors"
+                  >
+                    {tag.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 選擇獎勵類型 */}

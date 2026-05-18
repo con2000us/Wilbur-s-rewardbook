@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { createPortal } from 'react-dom'
 
@@ -25,14 +25,22 @@ interface AchievementEvent {
   id: string
   name: string
   description: string | null
-  name_zh: string
-  name_en: string | null
-  description_zh: string | null
-  description_en: string | null
   is_active: boolean
   display_order: number
   created_at: string
   updated_at: string
+}
+
+type RewardRulePayload = Pick<RewardRule, 'reward_type_id' | 'default_amount' | 'is_default'>
+type RewardRuleField = keyof RewardRulePayload
+
+type AchievementEventPayload = {
+  id?: string
+  name: string
+  description: string | null
+  is_active: boolean
+  display_order: number
+  reward_rules: RewardRulePayload[]
 }
 
 function getRewardTypeName(rt: RewardType) {
@@ -52,12 +60,7 @@ export default function AchievementEventsManager() {
   const [showForm, setShowForm] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-    loadData()
-  }, [])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       const [eventsRes, typesRes] = await Promise.all([
@@ -80,7 +83,12 @@ export default function AchievementEventsManager() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
+
+  useEffect(() => {
+    setMounted(true)
+    loadData()
+  }, [loadData])
 
   const handleDelete = async (id: string) => {
     if (!confirm(t('confirmDelete'))) return
@@ -96,7 +104,7 @@ export default function AchievementEventsManager() {
         const data = await res.json()
         setError(data.error || t('deleteFailed'))
       }
-    } catch (err) {
+    } catch {
       setError(t('deleteFailed'))
     }
   }
@@ -157,7 +165,7 @@ export default function AchievementEventsManager() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-lg font-bold text-slate-800">
-                        {event.name || event.name_zh || event.name_en || String(event.id).slice(0, 8)}
+                        {event.name || String(event.id).slice(0, 8)}
                       </h3>
                       {!event.is_active && (
                         <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-500 rounded-full">
@@ -165,9 +173,9 @@ export default function AchievementEventsManager() {
                         </span>
                       )}
                     </div>
-                    {(event.description || event.description_zh || event.description_en) && (
+                    {event.description && (
                       <p className="text-sm text-slate-500 mb-3">
-                        {event.description || event.description_zh || event.description_en}
+                        {event.description}
                       </p>
                     )}
 
@@ -249,10 +257,8 @@ function EventFormModal({ event, rewardTypes, existingRules, onClose, onSaved }:
   const t = useTranslations('achievementEvents')
   const isEditing = !!event
 
-  const [nameZh, setNameZh] = useState(event?.name_zh || '')
-  const [nameEn, setNameEn] = useState(event?.name_en || '')
-  const [descZh, setDescZh] = useState(event?.description_zh || '')
-  const [descEn, setDescEn] = useState(event?.description_en || '')
+  const [name, setName] = useState(event?.name || '')
+  const [description, setDescription] = useState(event?.description || '')
   const [isActive, setIsActive] = useState(event?.is_active ?? true)
   const [displayOrder, setDisplayOrder] = useState(event?.display_order ?? 0)
   const [formRules, setFormRules] = useState<RewardRule[]>(
@@ -290,29 +296,34 @@ function EventFormModal({ event, rewardTypes, existingRules, onClose, onSaved }:
     setFormRules(formRules.filter((_, i) => i !== index))
   }
 
-  const updateRule = (index: number, field: string, value: any) => {
-    const updated = [...formRules]
-    ;(updated[index] as any)[field] = value
-    if (field === 'is_default' && value === true) {
-      updated.forEach((r, i) => { if (i !== index) r.is_default = false })
-    }
-    setFormRules(updated)
+  const updateRule = <K extends RewardRuleField>(index: number, field: K, value: RewardRulePayload[K]) => {
+    setFormRules((currentRules) => {
+      const updated = currentRules.map((rule, i) =>
+        i === index ? { ...rule, [field]: value } : rule
+      )
+
+      if (field === 'is_default' && value === true) {
+        return updated.map((rule, i) =>
+          i === index ? rule : { ...rule, is_default: false }
+        )
+      }
+
+      return updated
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!nameZh.trim()) {
+    if (!name.trim()) {
       setError(t('nameRequired'))
       return
     }
     setSaving(true)
     setError('')
 
-    const payload: any = {
-      name_zh: nameZh.trim(),
-      name_en: nameEn.trim() || null,
-      description_zh: descZh.trim() || null,
-      description_en: descEn.trim() || null,
+    const payload: AchievementEventPayload = {
+      name: name.trim(),
+      description: description.trim() || null,
       is_active: isActive,
       display_order: displayOrder,
       reward_rules: formRules.map(r => ({
@@ -324,7 +335,7 @@ function EventFormModal({ event, rewardTypes, existingRules, onClose, onSaved }:
 
     try {
       const url = isEditing ? '/api/achievement-events/update' : '/api/achievement-events/create'
-      if (isEditing) payload.id = event!.id
+      if (isEditing && event) payload.id = event.id
 
       const res = await fetch(url, {
         method: 'POST',
@@ -338,7 +349,7 @@ function EventFormModal({ event, rewardTypes, existingRules, onClose, onSaved }:
         const data = await res.json()
         setError(data.error || t('saveFailed'))
       }
-    } catch (err) {
+    } catch {
       setError(t('saveFailed'))
     } finally {
       setSaving(false)
@@ -378,49 +389,27 @@ function EventFormModal({ event, rewardTypes, existingRules, onClose, onSaved }:
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t('nameZh')} *</label>
-                <input
-                  type="text"
-                  value={nameZh}
-                  onChange={(e) => setNameZh(e.target.value)}
-                  required
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder={t('nameZhPlaceholder')}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t('nameEn')}</label>
-                <input
-                  type="text"
-                  value={nameEn}
-                  onChange={(e) => setNameEn(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder={t('nameEnPlaceholder')}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t('name')} *</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                placeholder={t('namePlaceholder')}
+              />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t('descZh')}</label>
-                <textarea
-                  value={descZh}
-                  onChange={(e) => setDescZh(e.target.value)}
-                  rows={2}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t('descEn')}</label>
-                <textarea
-                  value={descEn}
-                  onChange={(e) => setDescEn(e.target.value)}
-                  rows={2}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t('description')}</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none"
+                placeholder={t('descriptionPlaceholder')}
+              />
             </div>
 
             <div className="flex items-center gap-6">

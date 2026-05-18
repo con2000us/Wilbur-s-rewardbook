@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 創建交易記錄（添加獎勵）
-    const displayName = rewardType.display_name || rewardType.display_name_zh || rewardType.type_key
+    const displayName = rewardType.display_name || rewardType.type_key
     // 將標題和備註組合為描述
     const earnDescription = notes 
       ? `${title} (${notes})`
@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
     
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
-      // @ts-ignore - Supabase type inference issue with insert operations
       .insert({
         student_id: studentId,
         assessment_id: null,

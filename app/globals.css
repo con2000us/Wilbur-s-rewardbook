@@ -140,6 +140,33 @@ body {
   overflow: hidden;
 }
 
+/* ===== 獎勵頁面專用樣式 ===== */
+
+/* 獎勵卡片陰影 — 輕微藍色調 */
+.reward-card-shadow {
+  box-shadow: 0 8px 20px -6px rgba(106, 153, 224, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.reward-card-shadow:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px -8px rgba(106, 153, 224, 0.15);
+}
+
+/* 獎勵商店商品卡片 */
+.store-card {
+  box-shadow: 0 8px 20px -6px rgba(106, 153, 224, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.store-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -8px rgba(106, 153, 224, 0.15);
+}
+
+/* 進度條動畫 */
+.progress-bar-fill {
+  transition: width 0.5s ease-in-out;
+}
+
 /* Sidebar item active state - matching example HTML */
 .sidebar-item-active {
   background-color: rgba(255, 255, 255, 0.9);

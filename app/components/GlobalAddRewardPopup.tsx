@@ -17,8 +17,6 @@ interface CustomRewardType {
   id?: string
   type_key: string
   display_name: string
-  display_name_zh?: string
-  display_name_en?: string
   icon: string
   color: string
 }
@@ -194,9 +192,7 @@ export default function GlobalAddRewardPopup({
   }
 
   const getDisplayName = (type: CustomRewardType) => {
-    return locale === 'zh-TW' 
-      ? (type.display_name_zh || type.display_name || type.type_key)
-      : (type.display_name_en || type.display_name || type.type_key)
+    return type.display_name || type.type_key
   }
 
   const selectedRewardType = rewardTypes.find(t => t.id === formData.rewardTypeId)

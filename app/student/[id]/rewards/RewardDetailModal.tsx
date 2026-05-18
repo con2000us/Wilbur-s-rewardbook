@@ -8,10 +8,8 @@ import { formatRewardAmountWithUnit, getRewardDisplayName } from './rewardUnit'
 
 interface CustomRewardType {
   id?: string
-  type_key: string
+  type_key?: string
   display_name: string
-  display_name_zh?: string
-  display_name_en?: string
   icon: string
   color: string
   default_unit?: string | null
@@ -23,10 +21,8 @@ interface CustomRewardTypeWithId extends CustomRewardType {
 
 interface ExchangeRule {
   id: string
-  name_zh: string
-  name_en?: string
-  description_zh?: string
-  description_en?: string
+  name?: string
+  description?: string
   required_reward_type_id: string
   required_amount: number
   reward_type_id?: string
@@ -330,17 +326,14 @@ export default function RewardDetailModal({
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <h4 className="font-bold text-gray-900">
-                                  {locale === 'zh-TW' ? rule.name_zh : (rule.name_en || rule.name_zh)}
+                                  {rule.name}
                                 </h4>
                               </div>
-                              {rule.description_zh || rule.description_en ? (
+                              {rule.description && (
                                 <p className="text-sm text-gray-600 mb-3">
-                                  {locale === 'zh-TW' 
-                                    ? (rule.description_zh || rule.description_en)
-                                    : (rule.description_en || rule.description_zh)
-                                  }
+                                  {rule.description}
                                 </p>
-                              ) : null}
+                              )}
                               <div className="flex items-center gap-2 text-sm">
                                 <span className="font-semibold text-gray-700">
                                   {formatRewardAmountWithUnit(rule.required_amount, rewardType, locale)}
@@ -439,11 +432,11 @@ export default function RewardDetailModal({
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                              transaction.transaction_type === 'use'
+                              transaction.transaction_type === 'use' || transaction.transaction_type === 'spend'
                                 ? 'bg-orange-100 text-orange-700'
                                 : 'bg-blue-100 text-blue-700'
                             }`}>
-                              {transaction.transaction_type === 'use'
+                              {transaction.transaction_type === 'use' || transaction.transaction_type === 'spend'
                                 ? (locale === 'zh-TW' ? '使用' : 'Use')
                                 : (locale === 'zh-TW' ? '兌換' : 'Exchange')
                               }
