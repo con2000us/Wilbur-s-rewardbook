@@ -3417,6 +3417,72 @@ COMMENT ON COLUMN public.exchange_rules.reward_amount IS '??敺??
 
 
 --
+-- Name: goal_templates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.goal_templates (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    name text NOT NULL,
+    description text,
+    tracking_mode text NOT NULL,
+    target_amount numeric,
+    target_count integer,
+    reward_type_id uuid,
+    reward_on_complete numeric DEFAULT 0 NOT NULL,
+    icon text DEFAULT '🎯'::text,
+    color text DEFAULT '#6a99e0'::text,
+    is_active boolean DEFAULT true,
+    display_order integer DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    tracking_reward_type_id uuid,
+    tracking_started_at timestamp with time zone,
+    image_urls jsonb DEFAULT '[]'::jsonb,
+    consume_on_complete boolean DEFAULT true,
+    CONSTRAINT goal_templates_tracking_mode_check CHECK ((tracking_mode = ANY (ARRAY['cumulative_amount'::text, 'completion_count'::text])))
+);
+
+
+--
+-- Name: COLUMN goal_templates.tracking_reward_type_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.goal_templates.tracking_reward_type_id IS 'Reward type tracked by cumulative large goals';
+
+
+--
+-- Name: COLUMN goal_templates.tracking_started_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.goal_templates.tracking_started_at IS 'Tracking start time. NULL means include all historical transactions';
+
+
+--
+-- Name: COLUMN goal_templates.reward_type_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.goal_templates.reward_type_id IS 'Optional reward type granted when the large goal is completed';
+
+
+--
+-- Name: COLUMN goal_templates.consume_on_complete; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.goal_templates.consume_on_complete IS 'When true, matching transactions are consumed on completion. When false, the goal behaves as a milestone';
+
+
+--
+-- Name: goal_template_event_links; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.goal_template_event_links (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    template_id uuid NOT NULL,
+    event_id uuid NOT NULL
+);
+
+
+--
 -- Name: reward_rules; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3537,6 +3603,63 @@ CREATE TABLE public.students (
 
 
 --
+-- Name: student_goals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.student_goals (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    student_id uuid NOT NULL,
+    template_id uuid,
+    name text NOT NULL,
+    description text,
+    tracking_mode text DEFAULT 'cumulative_amount'::text NOT NULL,
+    target_amount numeric,
+    target_count integer,
+    reward_type_id uuid,
+    reward_on_complete numeric DEFAULT 0 NOT NULL,
+    current_progress numeric DEFAULT 0,
+    icon text DEFAULT '🎯'::text,
+    color text DEFAULT '#6a99e0'::text,
+    image_urls jsonb DEFAULT '[]'::jsonb,
+    is_active boolean DEFAULT true,
+    display_order integer DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    status text DEFAULT 'active'::text,
+    completed_at timestamp with time zone,
+    completion_notes text,
+    completion_images jsonb DEFAULT '[]'::jsonb,
+    tracking_started_at timestamp with time zone DEFAULT now(),
+    linked_event_ids jsonb DEFAULT '[]'::jsonb,
+    tracking_reward_type_id uuid,
+    consume_on_complete boolean DEFAULT true,
+    CONSTRAINT student_goals_status_check CHECK ((status = ANY (ARRAY['active'::text, 'completed'::text]))),
+    CONSTRAINT student_goals_tracking_mode_check CHECK ((tracking_mode = ANY (ARRAY['cumulative_amount'::text, 'completion_count'::text])))
+);
+
+
+--
+-- Name: COLUMN student_goals.template_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.student_goals.template_id IS 'Source large-goal template. NULL means legacy data or a student-specific goal';
+
+
+--
+-- Name: COLUMN student_goals.reward_type_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.student_goals.reward_type_id IS 'Optional reward type granted when the large goal is completed';
+
+
+--
+-- Name: COLUMN student_goals.consume_on_complete; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.student_goals.consume_on_complete IS 'When true, matching transactions are consumed on completion. When false, the goal behaves as a milestone';
+
+
+--
 -- Name: subjects; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3571,8 +3694,17 @@ CREATE TABLE public.transactions (
     category_old text,
     reward_type_id uuid,
     achievement_event_id uuid,
+    consumed_by_goal_id uuid,
+    goal_id uuid,
     CONSTRAINT transactions_transaction_type_check CHECK ((transaction_type = ANY (ARRAY['earn'::text, 'spend'::text, 'bonus'::text, 'penalty'::text, 'reset'::text])))
 );
+
+
+--
+-- Name: COLUMN transactions.goal_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.transactions.goal_id IS 'Student goal that generated this transaction, used for precise reset/undo cleanup';
 
 
 --
@@ -4194,6 +4326,30 @@ ALTER TABLE ONLY public.exchange_rules
 
 
 --
+-- Name: goal_template_event_links goal_template_event_links_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.goal_template_event_links
+    ADD CONSTRAINT goal_template_event_links_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: goal_template_event_links goal_template_event_links_template_id_event_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.goal_template_event_links
+    ADD CONSTRAINT goal_template_event_links_template_id_event_id_key UNIQUE (template_id, event_id);
+
+
+--
+-- Name: goal_templates goal_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.goal_templates
+    ADD CONSTRAINT goal_templates_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: reward_rules reward_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4231,6 +4387,14 @@ ALTER TABLE ONLY public.students
 
 ALTER TABLE ONLY public.students
     ADD CONSTRAINT students_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: student_goals student_goals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.student_goals
+    ADD CONSTRAINT student_goals_pkey PRIMARY KEY (id);
 
 
 --
@@ -4843,6 +5007,41 @@ CREATE INDEX idx_exchange_rules_reward_type_id ON public.exchange_rules USING bt
 
 
 --
+-- Name: idx_goal_template_event_links_event; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_goal_template_event_links_event ON public.goal_template_event_links USING btree (event_id);
+
+
+--
+-- Name: idx_goal_template_event_links_template; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_goal_template_event_links_template ON public.goal_template_event_links USING btree (template_id);
+
+
+--
+-- Name: idx_goal_templates_display_order; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_goal_templates_display_order ON public.goal_templates USING btree (display_order);
+
+
+--
+-- Name: idx_goal_templates_is_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_goal_templates_is_active ON public.goal_templates USING btree (is_active);
+
+
+--
+-- Name: idx_goal_templates_tracking_reward_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_goal_templates_tracking_reward_type_id ON public.goal_templates USING btree (tracking_reward_type_id);
+
+
+--
 -- Name: idx_reward_rules_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4878,6 +5077,55 @@ CREATE INDEX idx_students_display_order ON public.students USING btree (display_
 
 
 --
+-- Name: idx_student_goals_display_order; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_goals_display_order ON public.student_goals USING btree (display_order);
+
+
+--
+-- Name: idx_student_goals_is_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_goals_is_active ON public.student_goals USING btree (is_active);
+
+
+--
+-- Name: idx_student_goals_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_goals_status ON public.student_goals USING btree (status);
+
+
+--
+-- Name: idx_student_goals_student_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_goals_student_id ON public.student_goals USING btree (student_id);
+
+
+--
+-- Name: idx_student_goals_template_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_goals_template_id ON public.student_goals USING btree (template_id);
+
+
+--
+-- Name: idx_student_goals_tracking_reward_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_goals_tracking_reward_type_id ON public.student_goals USING btree (tracking_reward_type_id);
+
+
+--
+-- Name: idx_student_goals_tracking_started_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_goals_tracking_started_at ON public.student_goals USING btree (tracking_started_at);
+
+
+--
 -- Name: idx_subjects_student_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4903,6 +5151,20 @@ CREATE INDEX idx_transactions_assessment_id ON public.transactions USING btree (
 --
 
 CREATE INDEX idx_transactions_created_at ON public.transactions USING btree (created_at DESC);
+
+
+--
+-- Name: idx_transactions_consumed_by_goal_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_transactions_consumed_by_goal_id ON public.transactions USING btree (consumed_by_goal_id);
+
+
+--
+-- Name: idx_transactions_goal_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_transactions_goal_id ON public.transactions USING btree (goal_id);
 
 
 --
@@ -5251,6 +5513,38 @@ ALTER TABLE ONLY public.exchange_rules
 
 
 --
+-- Name: goal_template_event_links goal_template_event_links_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.goal_template_event_links
+    ADD CONSTRAINT goal_template_event_links_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.achievement_events(id) ON DELETE CASCADE;
+
+
+--
+-- Name: goal_template_event_links goal_template_event_links_template_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.goal_template_event_links
+    ADD CONSTRAINT goal_template_event_links_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.goal_templates(id) ON DELETE CASCADE;
+
+
+--
+-- Name: goal_templates goal_templates_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.goal_templates
+    ADD CONSTRAINT goal_templates_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+
+
+--
+-- Name: goal_templates goal_templates_tracking_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.goal_templates
+    ADD CONSTRAINT goal_templates_tracking_reward_type_id_fkey FOREIGN KEY (tracking_reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE SET NULL;
+
+
+--
 -- Name: reward_rules reward_rules_student_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5264,6 +5558,38 @@ ALTER TABLE ONLY public.reward_rules
 
 ALTER TABLE ONLY public.reward_rules
     ADD CONSTRAINT reward_rules_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id) ON DELETE CASCADE;
+
+
+--
+-- Name: student_goals student_goals_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.student_goals
+    ADD CONSTRAINT student_goals_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+
+
+--
+-- Name: student_goals student_goals_student_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.student_goals
+    ADD CONSTRAINT student_goals_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+
+
+--
+-- Name: student_goals student_goals_template_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.student_goals
+    ADD CONSTRAINT student_goals_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.goal_templates(id) ON DELETE SET NULL;
+
+
+--
+-- Name: student_goals student_goals_tracking_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.student_goals
+    ADD CONSTRAINT student_goals_tracking_reward_type_id_fkey FOREIGN KEY (tracking_reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE SET NULL;
 
 
 --
@@ -5288,6 +5614,22 @@ ALTER TABLE ONLY public.transactions
 
 ALTER TABLE ONLY public.transactions
     ADD CONSTRAINT transactions_assessment_id_fkey FOREIGN KEY (assessment_id) REFERENCES public.assessments(id) ON DELETE SET NULL;
+
+
+--
+-- Name: transactions transactions_consumed_by_goal_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.transactions
+    ADD CONSTRAINT transactions_consumed_by_goal_id_fkey FOREIGN KEY (consumed_by_goal_id) REFERENCES public.student_goals(id) ON DELETE SET NULL;
+
+
+--
+-- Name: transactions transactions_goal_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.transactions
+    ADD CONSTRAINT transactions_goal_id_fkey FOREIGN KEY (goal_id) REFERENCES public.student_goals(id) ON DELETE SET NULL;
 
 
 --
@@ -5696,6 +6038,69 @@ CREATE POLICY "Allow update exchange rules" ON public.exchange_rules FOR UPDATE 
 
 
 --
+-- Name: student_goals Allow anon and authenticated full access; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow anon and authenticated full access" ON public.student_goals TO anon, authenticated USING (true) WITH CHECK (true);
+
+
+--
+-- Name: goal_templates Allow delete goal templates; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow delete goal templates" ON public.goal_templates FOR DELETE TO anon, authenticated USING (true);
+
+
+--
+-- Name: goal_template_event_links Allow delete goal template event links; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow delete goal template event links" ON public.goal_template_event_links FOR DELETE TO anon, authenticated USING (true);
+
+
+--
+-- Name: goal_templates Allow insert goal templates; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow insert goal templates" ON public.goal_templates FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+
+--
+-- Name: goal_template_event_links Allow insert goal template event links; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow insert goal template event links" ON public.goal_template_event_links FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+
+--
+-- Name: goal_templates Allow read goal templates; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow read goal templates" ON public.goal_templates FOR SELECT TO anon, authenticated USING (true);
+
+
+--
+-- Name: goal_template_event_links Allow read goal template event links; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow read goal template event links" ON public.goal_template_event_links FOR SELECT TO anon, authenticated USING (true);
+
+
+--
+-- Name: goal_templates Allow update goal templates; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow update goal templates" ON public.goal_templates FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+
+
+--
+-- Name: goal_template_event_links Allow update goal template event links; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow update goal template event links" ON public.goal_template_event_links FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+
+
+--
 -- Name: achievement_event_reward_rules; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -5732,6 +6137,18 @@ ALTER TABLE public.custom_reward_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.exchange_rules ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: goal_template_event_links; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.goal_template_event_links ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: goal_templates; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.goal_templates ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: reward_rules; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -5748,6 +6165,12 @@ ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: student_goals; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.student_goals ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: subjects; Type: ROW SECURITY; Schema: public; Owner: -
@@ -5879,4 +6302,3 @@ CREATE EVENT TRIGGER pgrst_drop_watch ON sql_drop
 --
 
 \unrestrict J3whbaN4bNdxsrM8pFgVLt6fJ6ow0sDNE8PwrEikrLZaxRLBaGphErXnh2GKZ8I
-
