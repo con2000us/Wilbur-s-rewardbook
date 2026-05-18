@@ -937,31 +937,24 @@ export default function RewardsPageClient({ studentId, student }: Props) {
                     type="button"
                     onClick={() => type.id && handleOpenRewardDetail(type)}
                     disabled={!type.id}
-                    className="reward-card-shadow min-h-36 rounded-2xl bg-white/68 p-4 text-left ring-1 ring-white/70 transition disabled:cursor-default disabled:opacity-70"
+                    className="reward-card-shadow min-h-36 rounded-2xl bg-white/68 p-4 ring-1 ring-white/70 transition-all flex flex-col items-center text-center disabled:cursor-default disabled:opacity-70 hover:scale-[1.02] duration-200"
                   >
-                    <div className="flex h-full flex-col justify-between gap-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 text-sm font-semibold text-slate-500">
-                          <span className="mb-1 block text-lg" style={{ color: typeColor }}>
-                            {type.icon || '⭐'}
-                          </span>
-                          <span className="block truncate">{type.display_name || type.type_key}</span>
-                        </div>
-                        <div
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-lg"
-                          style={{ backgroundColor: `${typeColor}18`, color: typeColor }}
-                        >
-                          {type.icon || '⭐'}
-                        </div>
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center mb-3 text-lg"
+                      style={{ backgroundColor: `${typeColor}18`, color: typeColor }}
+                    >
+                      {type.icon || '⭐'}
+                    </div>
+                    <span className="block truncate text-sm font-semibold text-slate-500 max-w-full mb-3">
+                      {type.display_name || type.type_key}
+                    </span>
+                    <div>
+                      <div className="text-2xl font-black leading-tight text-slate-900">
+                        {stats.currentBalance.toLocaleString()}
                       </div>
-                      <div>
-                        <div className="text-2xl font-black leading-tight text-slate-900">
-                          {stats.currentBalance.toLocaleString()}
-                        </div>
-                        <p className="mt-1 text-xs font-medium text-slate-400">
-                          {type.default_unit || (locale === 'zh-TW' ? '可用餘額' : 'Balance')}
-                        </p>
-                      </div>
+                      <p className="mt-1 text-xs font-medium text-slate-400">
+                        {type.default_unit || (locale === 'zh-TW' ? '可用餘額' : 'Balance')}
+                      </p>
                     </div>
                   </button>
                 )
@@ -1002,19 +995,9 @@ export default function RewardsPageClient({ studentId, student }: Props) {
             {activeDashboardTab === 'goals' && (
               <section>
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
-                    <span className="material-icons-outlined text-primary">flag</span>
-                    {locale === 'zh-TW' ? '大型目標' : 'Major Goals'}
-                  </h2>
-                  {canManage && (
-                    <a
-                      href="/settings/rewards?tab=goalTemplates"
-                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-white/70 px-4 text-sm font-semibold text-primary shadow-sm ring-1 ring-white/80 transition hover:bg-white"
-                    >
-                      <span className="material-icons-outlined text-lg">person_add</span>
-                      {locale === 'zh-TW' ? '指派目標' : 'Assign Goal'}
-                    </a>
-                  )}
+                  <p className="text-sm font-medium text-slate-500">
+                    {locale === 'zh-TW' ? '管理與追蹤學生的長期目標進度' : 'Track progress on major goals'}
+                  </p>
                 </div>
 
                 {loading ? (
@@ -1318,10 +1301,9 @@ export default function RewardsPageClient({ studentId, student }: Props) {
             {activeDashboardTab === 'shop' && (
               <section>
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
-                    <span className="material-icons-outlined text-primary">storefront</span>
-                    {locale === 'zh-TW' ? '兌換商店' : 'Exchange Store'}
-                  </h2>
+                  <p className="text-sm font-medium text-slate-500">
+                    {locale === 'zh-TW' ? '使用獎勵餘額兌換獎品' : 'Exchange rewards with your balance'}
+                  </p>
                   {canManage && (
                     <button
                       type="button"
@@ -1441,10 +1423,9 @@ export default function RewardsPageClient({ studentId, student }: Props) {
             {activeDashboardTab === 'records' && (
               <section>
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
-                    <span className="material-icons-outlined text-primary">history</span>
-                    {locale === 'zh-TW' ? '最近獎勵紀錄' : 'Recent Records'}
-                  </h2>
+                  <p className="text-sm font-medium text-slate-500">
+                    {locale === 'zh-TW' ? '查看最近的獎勵活動紀錄' : 'View recent reward activity'}
+                  </p>
                   <a
                     href={`/student/${studentId}/transactions`}
                     className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-white/70 px-4 text-sm font-semibold text-primary shadow-sm ring-1 ring-white/80 transition hover:bg-white"
@@ -2238,6 +2219,9 @@ export default function RewardsPageClient({ studentId, student }: Props) {
           <span className="material-icons-outlined text-[32px]">add</span>
         </button>
       </div>
+
+      {/* 底部導覽列的佔位空間，避免內容被遮蓋 */}
+      <div className="md:hidden h-[90px]" />
 
       {/* 行動端底部導覽列 */}
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 bg-white/90 backdrop-blur-md md:hidden rounded-t-xl shadow-lg border-t border-white/50">
