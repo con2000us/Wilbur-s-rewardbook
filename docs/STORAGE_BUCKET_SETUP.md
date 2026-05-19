@@ -14,7 +14,7 @@
 5. 開啟 **「Public bucket」**（公開 bucket，前端才能用公開 URL 顯示縮圖）。
 6. 點 **「Create」** / **「Create bucket」** 完成建立。
 
-> 僅建立 bucket **不會**自動處理資料表欄位；`goal_templates.image_urls` 等請執行 `database/migrations/add-goal-template-images.sql`（或依 `database/bootstrap/README.md` 流程）。
+> 僅建立 bucket **不會**自動處理資料表欄位；全新專案請依 `database/bootstrap/README.md` 執行 `01_schema.sql`。既有舊資料庫若缺 `goal_templates.image_urls`，才需補跑對應 migration。
 
 ---
 

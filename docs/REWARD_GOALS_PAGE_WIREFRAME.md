@@ -6,6 +6,27 @@
 
 ---
 
+## 目前狀態（2026-05-19）
+
+此文件是 Stitch 重新規劃時產出的 wireframe。規劃方向已採納，並已落地到 `app/student/[id]/rewards/`。
+
+目前實作版與早期 wireframe 有兩個重要差異：
+
+- 資訊架構改為「獎勵餘額總覽 + 分頁：大型目標 / 兌換商店 / 最近紀錄」，不是三個區塊全部直向攤開。
+- 資料模型使用目前線上 schema：`goal_templates`、`goal_template_event_links`、`student_goals`、`transactions.goal_id`、`transactions.consumed_by_goal_id`，不再新增早期草案中的 `reward_goals` / `reward_goal_progress`。
+
+人工驗收清單：
+
+- `/settings/rewards` 指派大型目標給學生後，學生頁可看到目標。
+- 進度可依 reward type / 起算日正確累積。
+- 完成目標會產生完成紀錄與必要交易。
+- Reset 可釋放消耗交易並依選擇重設起算日。
+- Restart 會建立新一輪 `student_goals`，舊紀錄保留。
+- 兌換商店可依餘額兌換，並可連到完整存摺查看交易。
+- 手機版能正常查看餘額、目標、兌換與最近紀錄。
+
+---
+
 ## 一、頁面定位
 
 | 項目 | 說明 |
@@ -454,44 +475,58 @@
 
 ---
 
-## 九、資料模型需求（新增/修改）
+## 九、資料模型需求（已落地）
 
-### 新表：`reward_goals`
+早期草案曾規劃新增 `reward_goals` / `reward_goal_progress`。目前實作已改用既有大型目標資料模型，避免再增加一套平行概念。
 
-| 欄位 | 型別 | 說明 |
-|------|------|------|
-| `id` | UUID | 主鍵 |
-| `student_id` | UUID → students.id | 關聯學生 |
-| `template_id` | UUID? → goal_templates.id | 關聯目標模板（可為空 = 自訂目標） |
-| `name_zh` | TEXT | 目標中文名稱 |
-| `name_en` | TEXT? | 目標英文名稱 |
-| `description_zh` | TEXT? | 中文描述 |
-| `description_en` | TEXT? | 英文描述 |
-| `tracking_mode` | ENUM('cumulative_amount','completion_count') | 追蹤模式 |
-| `target_amount` | NUMERIC? | 目標金額（cumulative_amount 模式） |
-| `target_count` | INTEGER? | 目標次數（completion_count 模式） |
-| `reward_type_id` | UUID → custom_reward_types.id | 使用的獎勵類型 |
-| `reward_on_complete` | NUMERIC | 達成後額外獎勵金額 |
-| `icon` | TEXT | 圖標 (emoji 或 material icon) |
-| `color` | TEXT | 主題色 |
-| `deadline` | DATE? | 期限（空 = 無限期） |
-| `status` | ENUM('active','completed','archived') | 狀態 |
-| `completed_at` | TIMESTAMPTZ? | 完成時間 |
-| `display_order` | INTEGER | 排序 |
-| `created_at` | TIMESTAMPTZ | 建立時間 |
-| `updated_at` | TIMESTAMPTZ | 更新時間 |
+### `goal_templates`
 
-### 新表：`reward_goal_progress`
+設定頁的大型目標模板。由 `/settings/rewards` 建立與維護，可保留為模板，也可指派給學生。
 
-| 欄位 | 型別 | 說明 |
-|------|------|------|
-| `id` | UUID | 主鍵 |
-| `goal_id` | UUID → reward_goals.id | 關聯目標 |
-| `transaction_id` | UUID → transactions.id | 關聯交易記錄 |
-| `progress_amount` | NUMERIC? | 本次進度金額 |
-| `progress_count` | INTEGER? | 本次進度次數 |
-| `notes` | TEXT? | 備註 |
-| `created_at` | TIMESTAMPTZ | 建立時間 |
+重要欄位：
+
+| 欄位 | 說明 |
+|------|------|
+| `id` | 模板主鍵 |
+| `name` / `description` | 模板名稱與描述 |
+| `tracking_mode` | `cumulative_amount` 或 `completion_count` |
+| `tracking_reward_type_id` | 累積金額型要追蹤的獎勵類型 |
+| `tracking_started_at` | 起算日，空值代表納入所有歷史 |
+| `reward_type_id` / `reward_on_complete` | 完成後額外發放的獎勵，可選 |
+| `consume_on_complete` | 完成時是否消耗符合條件的交易 |
+| `image_urls` | 大型目標圖片 |
+
+### `student_goals`
+
+學生實際追蹤中的大型目標 instance。從模板指派時會複製模板內容，後續進度、完成狀態、圖片與交易消耗紀錄都獨立保存。
+
+重要欄位：
+
+| 欄位 | 說明 |
+|------|------|
+| `id` | 學生目標主鍵 |
+| `student_id` | 目標所屬學生 |
+| `template_id` | 來源模板，可為空 |
+| `tracking_mode` | `cumulative_amount` 或 `completion_count` |
+| `target_amount` / `target_count` | 目標值 |
+| `tracking_reward_type_id` | 進度追蹤用獎勵類型 |
+| `reward_type_id` / `reward_on_complete` | 完成後額外發放的獎勵，可選 |
+| `status` / `completed_at` | 完成狀態與完成時間 |
+| `tracking_started_at` | 此學生目標自己的起算日 |
+| `linked_event_ids` | 完成次數型目標要追蹤的成就事件 |
+| `consume_on_complete` | 完成時是否消耗交易 |
+| `image_urls` / `completion_images` | 目標圖片與完成圖片 |
+
+### `transactions`
+
+目標進度與完成後的交易紀錄仍走交易表。
+
+| 欄位 | 說明 |
+|------|------|
+| `reward_type_id` | 交易所屬獎勵類型 |
+| `achievement_event_id` | 完成次數型目標可用的事件來源 |
+| `consumed_by_goal_id` | 此交易已被哪個大型目標消耗 |
+| `goal_id` | 此交易由哪個大型目標完成/退還流程產生 |
 
 ---
 
@@ -499,13 +534,14 @@
 
 | 方法 | 路徑 | 說明 |
 |------|------|------|
-| `GET` | `/api/students/[id]/reward-goals` | 取得學生所有目標（含進度摘要） |
-| `POST` | `/api/reward-goals/create` | 建立新目標 |
-| `POST` | `/api/reward-goals/update` | 更新目標 |
-| `POST` | `/api/reward-goals/delete` | 刪除目標 |
-| `POST` | `/api/reward-goals/record-progress` | 記錄目標進度 |
-| `POST` | `/api/reward-goals/complete` | 標記目標完成 |
-| `POST` | `/api/reward-goals/reorder` | 排序目標 |
+| `GET` | `/api/student-goals/list` | 取得學生所有目標（含進度摘要） |
+| `POST` | `/api/student-goals/create` | 建立學生目標（相容舊自訂目標） |
+| `POST` | `/api/student-goals/update` | 更新學生目標 |
+| `POST` | `/api/student-goals/delete` | 刪除學生目標 |
+| `POST` | `/api/student-goals/[id]/complete` | 標記目標完成 |
+| `POST` | `/api/student-goals/[id]/reset` | 重設/取消完成，清理完成交易與消耗標記 |
+| `POST` | `/api/student-goals/[id]/restart` | 再開一輪，建立新的學生目標 instance |
+| `POST` | `/api/student-goals/reorder` | 排序目標 |
 | `GET` | `/api/students/[id]/reward-stats` | （現有）獎勵統計 |
 | `GET` | `/api/exchange-rules/list` | （現有）兌換規則列表 |
 | `POST` | `/api/rewards/exchange` | （現有）執行兌換 |
@@ -517,7 +553,7 @@
 
 | 整合項目 | 方式 |
 |---------|------|
-| **Goal Templates** | 作為目標模板來源，`template_id` 關聯 `goal_templates`（模板可選綁成就事件） |
+| **Goal Templates** | 作為目標模板來源，`student_goals.template_id` 關聯 `goal_templates`（模板可選綁成就事件） |
 | **Reward Types** | 目標指定追蹤的獎勵類型，餘額卡片使用 |
 | **Transactions** | 每次進度記錄/目標完成/兌換都產生交易記錄 |
 | **Exchange Rules** | 從 rewards 頁面讀取兌換規則，移至目標頁面下方 |
@@ -578,4 +614,4 @@
 
 ---
 
-> ⚠️ 此文件為規劃稿，實作前請先確認技術可行性與資料庫設計。
+> 此文件已從規劃稿轉為落地對照文件；目前仍可作為 UI/驗收參考，但資料模型與 API 以現行 `student_goals` 流程為準。

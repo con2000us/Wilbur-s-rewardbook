@@ -4,33 +4,31 @@ This guide will help you set up the database for Wilbur's Reward Book.
 
 ## Quick Setup / 快速設置
 
-**Just run one file!** Execute `database/setup-database.sql` in your Supabase SQL Editor.
+Run the consolidated bootstrap files in this order from `database/bootstrap/`:
 
-**只需執行一個文件！** 在 Supabase SQL Editor 中執行 `database/setup-database.sql`。
+請在 Supabase SQL Editor 依序執行 `database/bootstrap/` 內的整合初始化檔：
 
-```sql
--- Copy and paste the entire content of database/setup-database.sql
--- 複製並貼上 database/setup-database.sql 的完整內容
-```
+1. `database/bootstrap/01_schema.sql` — full schema
+2. `database/bootstrap/02_seed_defaults.sql` — required default reward types
+3. `database/bootstrap/03_seed_optional.sql` — optional sample reward rules
+4. Optional demo data: run either `database/bootstrap/04_seed_demo_zh-TW.sql` or `database/bootstrap/04_seed_demo_en.sql`
 
-That's it! The script will set up everything automatically.
+`01_schema.sql` now includes the large-goal tables and links used by the current app: `goal_templates`, `goal_template_event_links`, `student_goals`, `transactions.goal_id`, and `transactions.consumed_by_goal_id`.
 
-就這麼簡單！腳本會自動設置所有內容。
+`01_schema.sql` 已包含目前大型目標流程需要的資料表與欄位：`goal_templates`、`goal_template_event_links`、`student_goals`、`transactions.goal_id`、`transactions.consumed_by_goal_id`。
 
-## What the script does / 腳本會做什麼
+## What the bootstrap files do / Bootstrap 檔案會做什麼
 
-The `database/setup-database.sql` file includes all necessary migrations in the correct order:
+The `database/bootstrap/` flow initializes a fresh project with the current schema and required seed data:
 
-`database/setup-database.sql` 文件按正確順序包含所有必要的遷移：
+`database/bootstrap/` 流程會用目前最新 schema 與必要種子資料初始化新專案：
 
-1. ✅ Creates `update_updated_at_column()` function
-2. ✅ Creates `site_settings` table with default site name
-3. ✅ Adds `display_order` to `students` table
-4. ✅ Adds `subject_id` to `reward_rules` table
-5. ✅ Adds `display_order` to `reward_rules` table
-6. ✅ Adds `reset` transaction type support
-7. ✅ Adds pagination settings
-8. ✅ Creates `backups` table
+1. ✅ Creates core tables: students, subjects, assessments, transactions, reward rules, reward types, backups, settings
+2. ✅ Creates achievement events, exchange rules, and reward type links
+3. ✅ Creates large-goal tables: `goal_templates`, `goal_template_event_links`, `student_goals`
+4. ✅ Adds large-goal reset/restart tracking fields: `transactions.goal_id`, `consumed_by_goal_id`
+5. ✅ Enables indexes, foreign keys, and RLS policies needed by the app
+6. ✅ Seeds default reward types and optional demo data
 
 ## Optional Files / 可選文件
 
@@ -44,27 +42,19 @@ If you use **Rewards Center → Large goals** with **image upload**, create the 
 
 ## Notes / 注意事項
 
-- The script uses `IF NOT EXISTS` and `IF EXISTS` checks, so it's safe to run multiple times
-- 腳本使用 `IF NOT EXISTS` 和 `IF EXISTS` 檢查，因此可以安全地多次執行
-- All migrations are idempotent (can be run multiple times without issues)
-- 所有遷移都是冪等的（可以多次執行而不會出現問題）
-- After running the script, you can start using the application
-- 執行腳本後，即可開始使用應用程式
+- `database/bootstrap/01_schema.sql` is intended for fresh projects. Run it before entering production data.
+- `database/bootstrap/01_schema.sql` 適用於全新專案；請在輸入正式資料前執行。
+- `database/migrations/` contains historical incremental scripts. Fresh installs do not need to run every migration one by one.
+- `database/migrations/` 是歷史增量腳本；全新安裝不需要逐檔執行。
+- `database/setup-database.sql` is a legacy fallback kept for older setup notes. New deployment docs use `database/bootstrap/`.
+- `database/setup-database.sql` 是舊版備援流程；新的部署文件以 `database/bootstrap/` 為準。
 
 ## Individual Migration Files / 單獨的遷移文件
 
-If you prefer to run migrations individually, you can use the SQL files under `database/migrations/`:
+If you are upgrading an existing database, run only the missing migration files under `database/migrations/` that match your current schema gap.
 
-如果你更喜歡單獨執行遷移，可以使用 `database/migrations/` 目錄下的 SQL 文件：
+如果你是在升級既有資料庫，只需針對目前缺少的 schema gap 執行 `database/migrations/` 內對應檔案。
 
-1. `database/migrations/add-site-settings.sql`
-2. `database/migrations/add-student-display-order.sql`
-3. `database/migrations/add-subject-to-reward-rules.sql`
-4. `database/migrations/add-reward-rules-display-order.sql`
-5. `database/migrations/add-reset-transaction-type.sql`
-6. `database/migrations/add-pagination-settings.sql`
-7. `database/migrations/add-backups-table.sql`
+For current P0 large-goal support, fresh installs are already covered by `database/bootstrap/01_schema.sql`.
 
-However, **we recommend using `database/setup-database.sql`** for simplicity.
-
-但是，**我們建議使用 `database/setup-database.sql`** 以簡化流程。
+目前 P0 大型目標支援已包含於 `database/bootstrap/01_schema.sql`，全新安裝不需另外補跑大型目標 migration。

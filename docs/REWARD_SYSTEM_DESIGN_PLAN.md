@@ -2,10 +2,12 @@
 
 > 版本：v1.3
 > 日期：2026-05-11
-> 狀態：規劃稿（待審查）
+> 狀態：歷史規劃稿（已由 `docs/latest_plan.md` 與 `docs/REWARD_GOALS_PAGE_WIREFRAME.md` 收斂）
 > 變更：v1.3 — 獎勵規則（評量分數→獎勵）由科目層級管理，不納入全域獎勵中心。全域獎勵中心聚焦於非評量的行為獎勵管理。Tab 縮減為 4 個：①類型→②事件→③大型目標→④小型兌換
 > v1.2 — 修正核心概念：大型目標是「獎勵」（🏖️海邊玩、🚲腳踏車），不是「行為」（考試滿分）。成就事件是行為標籤，大型目標是終極大獎。Layer 順序調整為 ①類型→②事件→③大型目標→④規則→⑤交易→⑥兌換
 > 前身文件：`docs/latest_plan.md`、`docs/REWARD_GOALS_PAGE_WIREFRAME.md`
+
+> 2026-05-19 更新：本文件保留早期產品脈絡。現行大型目標實作使用 `goal_templates`、`goal_template_event_links`、`student_goals`、`transactions.goal_id`、`transactions.consumed_by_goal_id`；文中 `reward_goals` / `reward_goal_progress` SQL 草案不可作為部署依據。新環境請依 `database/bootstrap/README.md` 執行 bootstrap SQL。
 
 ---
 
@@ -110,7 +112,7 @@
 | **與成就事件的關係** | 無直接關聯。學生透過各種行為（成就事件 + 考試分數）累積點數，存夠了就能達成大型目標 |
 | **如何使用** | 家長在學生獎勵頁面從模板庫選取，指派給學生。學生看到進度條追蹤「還差多少」 |
 | **誰管理** | 家長在獎勵中心建立模板；在學生獎勵頁面指派 |
-| **資料表** | `goal_templates`（新增，全域模板）+ `reward_goals`（新增，學生層級） |
+| **資料表** | `goal_templates`（全域模板）+ `student_goals`（學生層級 instance） |
 | **管理位置** | `/settings/rewards` Tab ③（模板管理）；`/student/[id]/rewards`（指派+追蹤） |
 
 ### Layer 4：獎勵規則（Reward Rules）—「自動計算引擎」
@@ -248,6 +250,8 @@
 ---
 
 ## 六、資料模型設計
+
+> 注意：本節 SQL 是 2026-05-11 的歷史草案。現行 schema 已改由 `database/bootstrap/01_schema.sql` 維護，學生大型目標使用 `student_goals`，不使用 `reward_goals` / `reward_goal_progress`。
 
 ### 現有資料表（不變）
 
@@ -485,11 +489,11 @@ transactions
 | 建立目標模板 CRUD API | list / create / update / delete / reorder | P0 |
 | 實作 Tab ③ 大型目標 UI | 模板列表 + 新增/編輯彈窗 + 事件關聯設定 | P0 |
 
-### Phase 3：學生目標系統（核心新功能）
+### Phase 3：學生目標系統（核心新功能，已改採 `student_goals`）
 
 | 任務 | 說明 | 優先級 |
 |------|------|--------|
-| 建立 `reward_goals` + `reward_goal_progress` 資料表 | 執行 SQL migration | P0 |
+| 建立 `student_goals` 與交易關聯欄位 | 已納入 `database/bootstrap/01_schema.sql` | P0 |
 | 建立學生目標 CRUD API | create（含從模板指派）/ update / delete / list / reorder | P0 |
 | 建立目標進度 API | record-progress / complete | P0 |
 | 實作目標卡片 UI | 三種追蹤模式的進度條 + 操作按鈕 | P0 |

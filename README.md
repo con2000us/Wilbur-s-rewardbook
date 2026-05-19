@@ -41,7 +41,7 @@ A comprehensive student reward management system built with Next.js, TypeScript,
 
 ### Recommended for non-technical users (One-Click Deploy)
 
-Use this if you're not familiar with coding. You'll deploy to Vercel and only need to copy/paste one SQL file into Supabase.
+Use this if you're not familiar with coding. You'll deploy to Vercel and copy/paste the bootstrap SQL files into Supabase.
 
 **Prerequisites:**
 - Supabase account (free) - [Sign up](https://supabase.com)
@@ -54,8 +54,11 @@ Use this if you're not familiar with coding. You'll deploy to Vercel and only ne
 1. **Set up Supabase first** (Required):
    - Create a new project at [supabase.com](https://supabase.com)
    - Go to **SQL Editor**
-   - Copy and paste the entire content of `database/setup-database.sql`
-   - Click **Run**
+   - Run the SQL files under `database/bootstrap/` in order:
+     - `database/bootstrap/01_schema.sql`
+     - `database/bootstrap/02_seed_defaults.sql`
+     - Optional: `database/bootstrap/03_seed_optional.sql`
+   - Click **Run** after each file
    - Go to **Settings** → **API** and copy:
      - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
      - **anon public** key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -105,7 +108,7 @@ SITE_PASSWORD=your-strong-password-here
 ```
 
 4. Run database migrations:
-Execute `database/setup-database.sql` in the Supabase SQL Editor (recommended), or run the individual migration files under `database/migrations/`.
+For a fresh project, run `database/bootstrap/01_schema.sql` and then `database/bootstrap/02_seed_defaults.sql` in the Supabase SQL Editor. Optional demo/sample data lives in `database/bootstrap/03_seed_optional.sql` and `04_seed_demo_*.sql`.
 
 5. Start the development server:
 ```bash
@@ -144,8 +147,11 @@ wilburs-rewardbook/
 1. **Set up Supabase first** (Required):
    - Create a new project at [supabase.com](https://supabase.com)
    - Go to **SQL Editor** in your Supabase dashboard
-   - Copy and paste the entire content of `database/setup-database.sql`
-   - Click **Run** to create all database tables, functions, and triggers
+   - Run the SQL files under `database/bootstrap/` in order:
+     - `database/bootstrap/01_schema.sql`
+     - `database/bootstrap/02_seed_defaults.sql`
+     - Optional: `database/bootstrap/03_seed_optional.sql`
+   - Click **Run** after each file to create tables, defaults, and optional sample data
    - ⚠️ **Important**: This step is **required** - the app won't work without it!
    - Go to **Settings** → **API** and copy:
      - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
@@ -162,7 +168,7 @@ wilburs-rewardbook/
 5. Click "Deploy"
 6. Done! 🎉
 
-> 💡 **Note**: The database setup (`database/setup-database.sql`) must be run **before** or **after** deployment, but it's **required** for the app to function. Supabase doesn't automatically create tables from code - you need to run the SQL script manually.
+> 💡 **Note**: The database setup (`database/bootstrap/*.sql`) must be run **before** or **after** deployment, but it's **required** for the app to function. Supabase doesn't automatically create tables from code - you need to run the SQL manually.
 
 ### Deploy to Railway
 
@@ -191,8 +197,11 @@ Before deploying, you need:
 1. Go to [supabase.com](https://supabase.com) and create a new project
 2. Wait for the project to be ready
 3. Go to **SQL Editor** in your Supabase dashboard
-4. Copy and paste the entire content of `database/setup-database.sql`
-5. Click **Run** to execute the SQL
+4. Run the SQL files under `database/bootstrap/` in order:
+   - `database/bootstrap/01_schema.sql`
+   - `database/bootstrap/02_seed_defaults.sql`
+   - Optional: `database/bootstrap/03_seed_optional.sql`
+5. Click **Run** after each file
 6. Go to **Settings** → **API** and copy:
    - **Project URL** → This is your `NEXT_PUBLIC_SUPABASE_URL`
    - **anon public** key → This is your `NEXT_PUBLIC_SUPABASE_ANON_KEY`

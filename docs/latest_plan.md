@@ -23,10 +23,12 @@
 
 ## 目前確認的開發方向（待辦）
 
-### P0：學生獎勵頁面重新規劃
-- **學生的獎勵頁面**（`app/student/[id]/rewards/` 一帶）需整體**重新規劃**：資訊架構、版面層級、與獎勵規則／交易存摺／成就等功能的對齊方式皆待釐清。
-- 規劃產物應包含：使用者目標情境、核心欄位與唯讀/可編修邊界、與側欄／他頁導覽的一致性，再行拆為實作任務。
-- 本項目與 P1／P2 可並行討論，但**不宜在未定稿前就大量堆疊 UI 細節**，以免與新版流程衝突。
+### P0：學生獎勵頁面重新規劃（已完成，待最終人工驗收）
+- Stitch 重新規劃已採納，規劃稿保留於 `docs/REWARD_GOALS_PAGE_WIREFRAME.md`。
+- 實作已落地於 `app/student/[id]/rewards/`：獎勵餘額總覽、大型目標、兌換商店、最近紀錄、已完成目標、Reset / Restart / Complete 等流程已整合。
+- 最終資訊架構採「餘額總覽 + 分頁：大型目標 / 兌換商店 / 最近紀錄」，不同於早期 wireframe 的三段直列，但已符合目前產品方向。
+- 學生頁不再作為大型目標主要新增入口；大型目標由 `/settings/rewards` 建立模板並指派學生，學生頁負責檢視進度與操作已指派目標。
+- 剩餘工作只保留正式人工驗收：指派目標 → 進度累積 → 完成 → Reset → Restart → 兌換 → 手機版查看。
 
 ### P1：資源模式設定（Resource Profile）
 - 新增資源模式：
@@ -48,11 +50,9 @@
 - 匯入新站後提供基本健康檢查與資料一致性檢查。
 
 ## 下一步建議執行順序
-1. 先完成 `free` 模式下的大型目標圖片 MVP（上傳、壓縮、顯示、刪除）。
-2. 再加上資源模式開關，控制高成本圖片功能。
-3. 最後補齊「DB + Storage」完整備份/還原流程。
-
-（並行：**獎勵頁重新規劃**定稿後，再安排實作排程與上述步驟穿插。）
+1. 執行學生獎勵頁最終人工驗收，確認 Stitch 規劃落地版可接受。
+2. 補上 `free` 模式下的大型目標圖片資源限制與 Resource Profile。
+3. 補齊「DB + Storage」完整備份/還原流程。
 
 ## 安全性與權限檢查（先記錄，後續穩定期處理）
 
@@ -95,6 +95,14 @@
 - 已套用 `transactions.goal_id` migration，目標完成時產生的交易可精準連回 `student_goals`，Reset 優先用此欄位清理完成獎勵、完成標記與退還交易。
 - 舊 `/api/student-goals/[id]/reactivate` 已改成委派到 Reset 的相容入口。
 - 已新增 `database/queries/goal-progress-vs-reward-stats-diff.sql`，可檢查 `reward_stats_only` / `goal_progress_only` 差異集合。
+
+**目前狀態（2026-05-19）**
+
+- 學生獎勵頁重新規劃已由 Stitch wireframe 收斂為實作版：餘額總覽、分頁式大型目標/兌換商店/最近紀錄、已完成目標與管理操作已落地。
+- `database/bootstrap/01_schema.sql` 已同步大型目標相關 schema，包含 `goal_templates`、`goal_template_event_links`、`student_goals`、`transactions.goal_id`、`consumed_by_goal_id`、相關 index/FK/RLS。
+- active Supabase 已確認不需補跑 P0 SQL；新環境以 `database/bootstrap/` 初始化流程為準。
+- 部署/安裝文件已收斂到 `database/bootstrap/01_schema.sql` → `02_seed_defaults.sql` → 選用 seed，不再引導新使用者跑舊版 `setup-database.sql`。
+- P0 目前只剩人工驗收，不再視為待規劃或待實作項。
 
 ### 1. 大型目標資料模型設計失誤：模板與學生目標被拆成兩套資料
 
@@ -197,4 +205,4 @@
 **目前狀態**
 
 - 僅記錄為後續設計想法，尚未定案。
-- 需要先處理 P0：`goal_templates` 與 `student_goals` 的基本關聯，以及大型目標進度計算口徑一致化。
+- 基礎 P0 已完成；共同目標屬於後續產品設計，不阻擋目前部署與單一學生大型目標流程。

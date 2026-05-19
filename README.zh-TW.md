@@ -31,7 +31,7 @@
 
 ### 推薦給科技小白：一鍵部署（最簡單）
 
-如果你不熟悉寫程式，建議使用這個方式。你只需要把一個 SQL 檔案貼到 Supabase，然後點一下 Vercel 部署按鈕即可。
+如果你不熟悉寫程式，建議使用這個方式。你只需要把 bootstrap SQL 檔依序貼到 Supabase，然後點一下 Vercel 部署按鈕即可。
 
 **先決條件：**
 - Supabase 帳號（免費）- [註冊](https://supabase.com)
@@ -44,8 +44,11 @@
 1. **先設置 Supabase**（必填）：
    - 在 [supabase.com](https://supabase.com) 創建新專案
    - 進入 **SQL Editor**
-   - 複製並貼上 `database/setup-database.sql` 的完整內容
-   - 點擊 **Run**
+   - 依序執行 `database/bootstrap/` 內的 SQL：
+     - `database/bootstrap/01_schema.sql`
+     - `database/bootstrap/02_seed_defaults.sql`
+     - 選用：`database/bootstrap/03_seed_optional.sql`
+   - 每個檔案貼上後點擊 **Run**
    - 前往 **Settings** → **API** 並複製：
      - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
      - **anon public** 金鑰 → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -95,7 +98,7 @@ SITE_PASSWORD=your-strong-password-here
 ```
 
 4. 執行資料庫遷移：
-在 Supabase SQL Editor 中執行 `database/setup-database.sql`（推薦），或執行 `database/migrations/` 目錄下的單獨遷移檔案。
+全新專案請在 Supabase SQL Editor 依序執行 `database/bootstrap/01_schema.sql` 與 `database/bootstrap/02_seed_defaults.sql`。選用範例資料在 `database/bootstrap/03_seed_optional.sql` 與 `04_seed_demo_*.sql`。
 
 5. 啟動開發伺服器：
 ```bash
@@ -134,8 +137,11 @@ wilburs-rewardbook/
 1. **先設置 Supabase**（必填）：
    - 在 [supabase.com](https://supabase.com) 創建新專案
    - 在 Supabase 儀表板中進入 **SQL Editor**
-   - 複製並貼上 `database/setup-database.sql` 的完整內容
-   - 點擊 **Run** 來創建所有資料庫表格、函數和觸發器
+   - 依序執行 `database/bootstrap/` 內的 SQL：
+     - `database/bootstrap/01_schema.sql`
+     - `database/bootstrap/02_seed_defaults.sql`
+     - 選用：`database/bootstrap/03_seed_optional.sql`
+   - 每個檔案貼上後點擊 **Run**，建立資料表、預設資料與選用範例資料
    - ⚠️ **重要**：此步驟是**必填**的 - 沒有它應用程式無法運作！
    - 前往 **Settings** → **API** 並複製：
      - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
@@ -152,7 +158,7 @@ wilburs-rewardbook/
 5. 點擊「Deploy」
 6. 完成！🎉
 
-> 💡 **注意**：資料庫設置（`database/setup-database.sql`）必須在部署前或部署後執行，但這是應用程式運作的**必填**步驟。Supabase 不會自動從程式碼創建表格 - 你需要手動執行 SQL 腳本。
+> 💡 **注意**：資料庫設置（`database/bootstrap/*.sql`）必須在部署前或部署後執行，但這是應用程式運作的**必填**步驟。Supabase 不會自動從程式碼創建表格 - 你需要手動執行 SQL。
 
 ### 部署到 Railway
 
@@ -181,8 +187,11 @@ wilburs-rewardbook/
 1. 前往 [supabase.com](https://supabase.com) 創建新專案
 2. 等待專案準備完成
 3. 在 Supabase 儀表板中進入 **SQL Editor**
-4. 複製並貼上 `database/setup-database.sql` 的完整內容
-5. 點擊 **Run** 執行 SQL
+4. 依序執行 `database/bootstrap/` 內的 SQL：
+   - `database/bootstrap/01_schema.sql`
+   - `database/bootstrap/02_seed_defaults.sql`
+   - 選用：`database/bootstrap/03_seed_optional.sql`
+5. 每個檔案貼上後點擊 **Run**
 6. 前往 **Settings** → **API** 並複製：
    - **Project URL** → 這是你的 `NEXT_PUBLIC_SUPABASE_URL`
    - **anon public** 金鑰 → 這是你的 `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -249,4 +258,3 @@ MIT License
 - ✅ 使用內建的備份功能
 - ✅ 下載並在本地保存備份檔案
 - ✅ 定期測試備份還原
-

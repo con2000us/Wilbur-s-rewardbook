@@ -78,7 +78,7 @@ You need **3 free accounts** to deploy this project:
 >
 > ℹ️ `database/bootstrap/01_schema.sql` contains the full schema dump for new projects.
 >
-> 🔁 **Legacy fallback**: `database/setup-database.sql` can still be used for older setup flow, but release documentation now standardizes on the consolidated method above.
+> ✅ Current release note: `database/bootstrap/01_schema.sql` includes the large-goal P0 schema (`goal_templates`, `student_goals`, `transactions.goal_id`, and related links). Use this bootstrap flow for new projects.
 
 ### 1.3 Get API Credentials
 

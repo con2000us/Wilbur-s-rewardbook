@@ -54,8 +54,11 @@ To deploy this project, you need **3 free accounts** (all take less than 2 minut
 
 1. In Supabase, create a new project
 2. Go to SQL Editor
-3. Copy and paste `database/setup-database.sql`
-4. Click Run
+3. Run the bootstrap SQL files in order:
+   - `database/bootstrap/01_schema.sql`
+   - `database/bootstrap/02_seed_defaults.sql`
+   - Optional: `database/bootstrap/03_seed_optional.sql`
+4. Click Run after each file
 5. Go to Settings → API
 6. Copy your **Project URL** and **anon public key**
 

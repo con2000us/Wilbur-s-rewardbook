@@ -1,6 +1,8 @@
 # P0 TODO - 最需優先處理
 
-更新日期：2026-05-18
+更新日期：2026-05-19
+
+> 狀態：大型目標 P0 與學生獎勵頁重新規劃已完成主要實作。此文件保留 P0 決策脈絡；後續只剩人工驗收。
 
 ## 0. 大型目標設定與指派方式（P0 產品決策）
 
@@ -46,6 +48,14 @@
 - 舊 `/api/student-goals/[id]/reactivate` 已改為相容入口，實際委派給新的 Reset 流程，避免舊邏輯誤刪或漏清理。
 - Reset UI 已改為正式確認視窗，會說明效果並提供「從今天重新開始 / 保留原起算日 / 指定起算日」三種選項。
 - 已新增 `database/queries/goal-progress-vs-reward-stats-diff.sql`，可檢查 `reward_stats_only` / `goal_progress_only` 差異集合。
+
+### 目前狀態（2026-05-19）
+
+- Stitch 版學生獎勵頁 wireframe 已採納，實作版落地於 `app/student/[id]/rewards/`。
+- 目前學生獎勵頁已包含獎勵餘額總覽、大型目標、兌換商店、最近紀錄、已完成目標、Reset / Restart / Complete 操作。
+- 最終資訊架構採「餘額總覽 + 大型目標 / 兌換商店 / 最近紀錄分頁」，而非早期 wireframe 的三段直列。
+- `database/bootstrap/01_schema.sql` 已同步大型目標 schema，新環境不需再逐檔補跑大型目標 migrations。
+- P0 已不再是待規劃項；保留人工驗收：指派目標 → 進度累積 → 完成 → Reset → Restart → 兌換 → 手機版查看。
 
 ## 1. 大型目標資料模型設計失誤：模板與學生目標被拆成兩套資料
 

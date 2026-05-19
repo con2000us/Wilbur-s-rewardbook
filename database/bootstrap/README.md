@@ -10,8 +10,7 @@
 4. **擇一執行（選用）語系範例資料（成就事件 + 兌換規則）**
    - **`04_seed_demo_zh-TW.sql`**
    - **`04_seed_demo_en.sql`**
-5. **`05_goal_templates_rls.sql`**（選用／建議）— `goal_templates` 與 `goal_template_event_links` 的 RLS，與 `database/migrations/add-goal-templates-rls.sql` 相同。  
-   **前置**：兩張表須已存在。若目前匯出的 **`01_schema.sql` 裡還沒有這兩張表**，請先在 SQL Editor 執行 **`database/migrations/add-goal-templates.sql`**（以及 **`add-goal-template-images.sql`** 等與大型目標相關的遷移），再執行本步驟。
+5. **`05_goal_templates_rls.sql`**（舊版備援）— 目前 `01_schema.sql` 已包含 `goal_templates` 與 `goal_template_event_links` 的 RLS；只有在你使用舊版 schema dump、且缺少大型目標 RLS 時才需要補跑。
 
 ## Storage（大型目標圖片）
 
@@ -21,7 +20,7 @@
 ## 注意
 
 - 若你仍看到舊路徑 `database/initial.sql`：該檔僅保留轉向說明；實際 schema 內容在 **`01_schema.sql`**。
-- `database/migrations/` 內為歷史／增量遷移，**不必**在全新專案時逐檔跑一遍；新環境以本資料夾流程為準即可。  
-  **例外**：若 **`01_schema.sql` 尚未含大型目標相關資料表**，請依上列第 5 點之前置說明，補跑對應之 `migrations` 建表／欄位腳本後再執行 **`05_goal_templates_rls.sql`**。
+- `database/migrations/` 內為歷史／增量遷移，**不必**在全新專案時逐檔跑一遍；新環境以本資料夾流程為準即可。
+- 目前 `01_schema.sql` 已包含大型目標 P0 所需 schema：`goal_templates`、`goal_template_event_links`、`student_goals`、`transactions.goal_id`、`transactions.consumed_by_goal_id`、相關 index/FK/RLS。
 - 語系範例資料改為分檔；請依「首次語系選擇」決定執行 `04_seed_demo_zh-TW.sql` 或 `04_seed_demo_en.sql`。
 - `04_seed_demo_*` 皆採 canonical key + translation table（`event_key/rule_key` + translation tables）流程，可重複執行且不重複插入。
