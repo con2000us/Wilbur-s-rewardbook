@@ -312,6 +312,11 @@ export async function POST(
       imageArchiveError = error instanceof Error ? error.message : 'Failed to archive source image'
     }
 
+    // Fire-and-forget: clean up expired source images from previous imports
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/assessment-imports/cleanup`, {
+      method: 'POST',
+    }).catch(() => {})
+
     const { data: finalMistakeDrafts } = await supabase
       .from('assessment_import_mistake_drafts')
       .select('*')

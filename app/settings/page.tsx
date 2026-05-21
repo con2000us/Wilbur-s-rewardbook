@@ -1,4 +1,6 @@
-import { getTranslations } from 'next-intl/server'
+'use client'
+
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import SiteNameSettings from './SiteNameSettings'
@@ -8,10 +10,11 @@ import AiAssessmentSettings from './AiAssessmentSettings'
 import BackupSettings from './BackupSettings'
 import ClearAllStudentsSettings from './ClearAllStudentsSettings'
 import HomeButton from '@/app/components/HomeButton'
+import CollapsibleSection from '@/app/components/CollapsibleSection'
 
-export default async function SettingsPage() {
-  const t = await getTranslations('settings')
-  
+export default function SettingsPage() {
+  const t = useTranslations('settings')
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 bg-app-shell"></div>
@@ -22,7 +25,7 @@ export default async function SettingsPage() {
         <div className="max-w-5xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center shadow-lg ring-4 ring-white/80 flex-shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center shadow-lg ring-4 ring-white/80 flex-shrink-0">
                 <span className="material-icons-outlined text-white text-2xl">settings</span>
               </div>
               <div>
@@ -34,17 +37,46 @@ export default async function SettingsPage() {
           </div>
 
           <main className="space-y-6">
-            <SiteNameSettings />
-            <PaginationSettings />
-            <ResourceModeSettings />
-            <AiAssessmentSettings />
-            <BackupSettings />
+            {/* ── 一般設定 ── */}
+            <CollapsibleSection
+              icon="tune"
+              title={t('generalSettings') || '一般設定'}
+              description={t('generalSettingsDesc') || '網站名稱、分頁與語言偏好'}
+              badge="3"
+              defaultOpen={true}
+            >
+              <SiteNameSettings />
+              <PaginationSettings />
+              <LanguageSwitcher />
+            </CollapsibleSection>
 
-            <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl p-6 sm:p-7">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            {/* ── 資源與儲存 ── */}
+            <CollapsibleSection
+              icon="cloud"
+              title={t('storageAndResources') || '資源與儲存'}
+              description={t('storageAndResourcesDesc') || '儲存空間模式與資料備份'}
+              badge="2"
+            >
+              <ResourceModeSettings />
+              <BackupSettings />
+            </CollapsibleSection>
+
+            {/* ── AI 評量匯入 ── */}
+            <CollapsibleSection
+              icon="smart_toy"
+              title={t('aiAssessmentImport') || 'AI 評量匯入'}
+              description={t('aiAssessmentImportDesc') || '設定 LLM 模型、API Key、辨識模式與用量限制'}
+              badge="1"
+            >
+              <AiAssessmentSettings />
+            </CollapsibleSection>
+
+            {/* ── 獎勵中心 ── */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl p-6 sm:p-7">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800 mb-1">{t('rewardsCenter')}</h2>
-                  <p className="text-sm text-slate-500">{t('rewardsCenterDesc')}</p>
+                  <h2 className="text-base font-bold text-slate-800 mb-0.5">{t('rewardsCenter')}</h2>
+                  <p className="text-xs text-slate-500">{t('rewardsCenterDesc')}</p>
                 </div>
                 <Link
                   href="/settings/rewards"
@@ -54,13 +86,14 @@ export default async function SettingsPage() {
                   <span className="material-icons-outlined text-base">arrow_forward</span>
                 </Link>
               </div>
-            </section>
+            </div>
 
-            <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl p-6 sm:p-7">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            {/* ── 初始化管理器 ── */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl p-6 sm:p-7">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800 mb-1">{t('initializationManager')}</h2>
-                  <p className="text-sm text-slate-500">{t('initializationManagerDesc')}</p>
+                  <h2 className="text-base font-bold text-slate-800 mb-0.5">{t('initializationManager')}</h2>
+                  <p className="text-xs text-slate-500">{t('initializationManagerDesc')}</p>
                 </div>
                 <Link
                   href="/settings/initialization"
@@ -70,10 +103,17 @@ export default async function SettingsPage() {
                   <span className="material-icons-outlined text-base">arrow_forward</span>
                 </Link>
               </div>
-            </section>
+            </div>
 
-            <ClearAllStudentsSettings />
-            <LanguageSwitcher />
+            {/* ── 危險區域 ── */}
+            <CollapsibleSection
+              icon="warning"
+              title={t('dangerZone') || '危險區域'}
+              description={t('dangerZoneDesc') || '清空所有學生資料（不可復原）'}
+              badge="⚠️"
+            >
+              <ClearAllStudentsSettings />
+            </CollapsibleSection>
           </main>
         </div>
       </div>

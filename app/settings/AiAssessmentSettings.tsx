@@ -515,6 +515,13 @@ export default function AiAssessmentSettings() {
                 : 'Configure AI assessment import. You need two API keys (text LLM and vision LLM), each with its own provider and endpoint.'}
             </p>
           </div>
+          <a
+            href="/settings/ai-logs"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-purple-50 border border-purple-200 text-sm font-semibold text-purple-700 hover:bg-purple-100 transition"
+          >
+            <span className="material-icons-outlined text-base">history</span>
+            {isZh ? 'AI Log' : 'AI Log'}
+          </a>
         </div>
 
         {/* Encryption Secret Status */}

@@ -305,6 +305,19 @@ CREATE TYPE storage.buckettype AS ENUM (
 
 
 --
+-- Name: assessment_import_job_status; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.assessment_import_job_status AS ENUM (
+    'pending',
+    'processing',
+    'completed',
+    'failed',
+    'cancelled'
+);
+
+
+--
 -- Name: email(); Type: FUNCTION; Schema: auth; Owner: -
 --
 
@@ -3308,7 +3321,8 @@ CREATE TABLE public.ai_provider_configs (
     endpoint_url text,
     is_active boolean DEFAULT false NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT ai_provider_configs_purpose_check CHECK ((purpose = ANY (ARRAY['vision'::text, 'text'::text, 'both'::text])))
 );
 
 
@@ -3351,6 +3365,7 @@ CREATE TABLE public.assessment_import_jobs (
     source_file_size integer,
     status text DEFAULT 'pending'::text NOT NULL,
     raw_ocr_text text,
+    ai_raw_response text,
     ai_json jsonb,
     validated_json jsonb,
     provider text,
@@ -3362,6 +3377,27 @@ CREATE TABLE public.assessment_import_jobs (
     updated_at timestamp with time zone DEFAULT now(),
     completed_at timestamp with time zone,
     CONSTRAINT assessment_import_jobs_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'processing'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])))
+);
+
+
+--
+-- Name: ai_assessment_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ai_assessment_logs (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    job_id uuid,
+    purpose text NOT NULL,
+    provider text,
+    model text,
+    system_prompt text,
+    user_prompt text,
+    raw_response text,
+    success boolean DEFAULT false NOT NULL,
+    error_message text,
+    duration_ms integer,
+    created_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT ai_assessment_logs_purpose_check CHECK ((purpose = ANY (ARRAY['vision'::text, 'text'::text, 'multimodal'::text])))
 );
 
 
@@ -4402,6 +4438,54 @@ ALTER TABLE ONLY public.assessments
 
 
 --
+-- Name: ai_assessment_logs ai_assessment_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_assessment_logs
+    ADD CONSTRAINT ai_assessment_logs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ai_provider_configs ai_provider_configs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_provider_configs
+    ADD CONSTRAINT ai_provider_configs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: assessment_import_drafts assessment_import_drafts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assessment_import_drafts
+    ADD CONSTRAINT assessment_import_drafts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: assessment_import_jobs assessment_import_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assessment_import_jobs
+    ADD CONSTRAINT assessment_import_jobs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: assessment_import_mistake_drafts assessment_import_mistake_drafts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assessment_import_mistake_drafts
+    ADD CONSTRAINT assessment_import_mistake_drafts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: assessment_mistakes assessment_mistakes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assessment_mistakes
+    ADD CONSTRAINT assessment_mistakes_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: backups backups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5381,6 +5465,27 @@ CREATE TRIGGER update_assessments_updated_at BEFORE UPDATE ON public.assessments
 
 
 --
+-- Name: ai_provider_configs update_ai_provider_configs_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_ai_provider_configs_updated_at BEFORE UPDATE ON public.ai_provider_configs FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: assessment_import_drafts update_assessment_import_drafts_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_assessment_import_drafts_updated_at BEFORE UPDATE ON public.assessment_import_drafts FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: assessment_import_jobs update_assessment_import_jobs_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_assessment_import_jobs_updated_at BEFORE UPDATE ON public.assessment_import_jobs FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
 -- Name: backups update_backups_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5602,6 +5707,38 @@ ALTER TABLE ONLY public.achievement_event_reward_rules
 
 ALTER TABLE ONLY public.assessments
     ADD CONSTRAINT assessments_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id) ON DELETE CASCADE;
+
+
+--
+-- Name: ai_assessment_logs ai_assessment_logs_job_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_assessment_logs
+    ADD CONSTRAINT ai_assessment_logs_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.assessment_import_jobs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: assessment_import_drafts assessment_import_drafts_job_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assessment_import_drafts
+    ADD CONSTRAINT assessment_import_drafts_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.assessment_import_jobs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: assessment_import_mistake_drafts assessment_import_mistake_drafts_draft_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assessment_import_mistake_drafts
+    ADD CONSTRAINT assessment_import_mistake_drafts_draft_id_fkey FOREIGN KEY (draft_id) REFERENCES public.assessment_import_drafts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: assessment_mistakes assessment_mistakes_assessment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assessment_mistakes
+    ADD CONSTRAINT assessment_mistakes_assessment_id_fkey FOREIGN KEY (assessment_id) REFERENCES public.assessments(id) ON DELETE CASCADE;
 
 
 --
@@ -5899,6 +6036,152 @@ ALTER TABLE auth.sso_providers ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ai_assessment_logs Allow public delete on ai_assessment_logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public delete on ai_assessment_logs" ON public.ai_assessment_logs FOR DELETE USING (true);
+
+
+--
+-- Name: ai_assessment_logs Allow public insert on ai_assessment_logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public insert on ai_assessment_logs" ON public.ai_assessment_logs FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: ai_assessment_logs Allow public select on ai_assessment_logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public select on ai_assessment_logs" ON public.ai_assessment_logs FOR SELECT USING (true);
+
+
+--
+-- Name: ai_provider_configs Allow delete on ai_provider_configs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow delete on ai_provider_configs" ON public.ai_provider_configs FOR DELETE USING (true);
+
+
+--
+-- Name: ai_provider_configs Allow insert on ai_provider_configs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow insert on ai_provider_configs" ON public.ai_provider_configs FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: ai_provider_configs Allow public read on ai_provider_configs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public read on ai_provider_configs" ON public.ai_provider_configs FOR SELECT USING (true);
+
+
+--
+-- Name: ai_provider_configs Allow update on ai_provider_configs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow update on ai_provider_configs" ON public.ai_provider_configs FOR UPDATE USING (true);
+
+
+--
+-- Name: assessment_import_drafts Allow public insert on assessment_import_drafts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public insert on assessment_import_drafts" ON public.assessment_import_drafts FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: assessment_import_drafts Allow public select on assessment_import_drafts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public select on assessment_import_drafts" ON public.assessment_import_drafts FOR SELECT USING (true);
+
+
+--
+-- Name: assessment_import_drafts Allow public update on assessment_import_drafts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public update on assessment_import_drafts" ON public.assessment_import_drafts FOR UPDATE USING (true);
+
+
+--
+-- Name: assessment_import_jobs Allow public insert on assessment_import_jobs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public insert on assessment_import_jobs" ON public.assessment_import_jobs FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: assessment_import_jobs Allow public select on assessment_import_jobs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public select on assessment_import_jobs" ON public.assessment_import_jobs FOR SELECT USING (true);
+
+
+--
+-- Name: assessment_import_jobs Allow public update on assessment_import_jobs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public update on assessment_import_jobs" ON public.assessment_import_jobs FOR UPDATE USING (true);
+
+
+--
+-- Name: assessment_import_mistake_drafts Allow public delete on assessment_import_mistake_drafts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public delete on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts FOR DELETE USING (true);
+
+
+--
+-- Name: assessment_import_mistake_drafts Allow public insert on assessment_import_mistake_drafts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public insert on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: assessment_import_mistake_drafts Allow public select on assessment_import_mistake_drafts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public select on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts FOR SELECT USING (true);
+
+
+--
+-- Name: assessment_import_mistake_drafts Allow public update on assessment_import_mistake_drafts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public update on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts FOR UPDATE USING (true);
+
+
+--
+-- Name: assessment_mistakes Allow public delete on assessment_mistakes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public delete on assessment_mistakes" ON public.assessment_mistakes FOR DELETE USING (true);
+
+
+--
+-- Name: assessment_mistakes Allow public insert on assessment_mistakes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public insert on assessment_mistakes" ON public.assessment_mistakes FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: assessment_mistakes Allow public select on assessment_mistakes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public select on assessment_mistakes" ON public.assessment_mistakes FOR SELECT USING (true);
+
+
+--
+-- Name: assessment_mistakes Allow public update on assessment_mistakes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Allow public update on assessment_mistakes" ON public.assessment_mistakes FOR UPDATE USING (true);
 
 --
 -- Name: assessments Allow delete; Type: POLICY; Schema: public; Owner: -
@@ -6225,6 +6508,12 @@ ALTER TABLE public.achievement_events ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.assessments ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ai_assessment_logs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ai_assessment_logs ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: ai_provider_configs; Type: ROW SECURITY; Schema: public; Owner: -

@@ -13,7 +13,15 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/server-admin'
 import { loadAiServiceConfig, getAiFeatureStatus } from '@/lib/ai/config'
 import { OpenRouterProvider } from '@/lib/ai/providers/openrouter'
+import {
+  buildMultimodalAssessmentSystemPrompt,
+  buildMultimodalAssessmentUserPrompt,
+  buildTextAnalysisSystemPrompt,
+  buildTextAnalysisUserPrompt,
+  buildVisionSystemPrompt,
+} from '@/lib/ai/providers/openrouter'
 import { buildStudentContext } from '@/lib/ai/context-builder'
+import { insertAiLog, buildLoggableUserPrompt } from '@/lib/ai/logger'
 import type { AssessmentImageInput, AssessmentJsonOutput, ExtractResult, VisionResult } from '@/lib/ai/types'
 
 type CandidateSubject = {
@@ -351,7 +359,8 @@ export async function POST(
       ? processOptions.mode
       : null
     const processingMode = requestedMode || config.processingMode
-    const detectMistakes = typeof processOptions?.detectMistakes === 'boolean'
+    // 建立錯題草稿的開關（使用者可控），但 LLM 一律要求回傳錯題以利 log 紀錄
+    const createMistakeDrafts = typeof processOptions?.detectMistakes === 'boolean'
       ? processOptions.detectMistakes
       : config.detectMistakes
 
@@ -410,24 +419,61 @@ export async function POST(
     let responseModels: Record<string, string | undefined>
 
     if (processingMode === 'multimodal') {
+      const multimodalSystemPrompt = buildMultimodalAssessmentSystemPrompt(context, locale, true)
+      const multimodalUserPrompt = buildMultimodalAssessmentUserPrompt(images.length)
+      const multimodalStart = Date.now()
+
       extractResult = await provider.extractAssessmentFromImages!({
         images,
         context,
         locale,
-        detectMistakes,
+        detectMistakes: true,
       })
+
+      const multimodalDuration = Date.now() - multimodalStart
+      insertAiLog({
+        jobId,
+        purpose: 'multimodal',
+        provider: visionConfig.provider,
+        model: extractResult.model || visionConfig.model,
+        systemPrompt: multimodalSystemPrompt,
+        userPrompt: buildLoggableUserPrompt('multimodal', {
+          imageCount: images.length,
+          textPrompt: multimodalUserPrompt,
+        }),
+        rawResponse: extractResult.rawText || '',
+        success: extractResult.success,
+        errorMessage: extractResult.error,
+        durationMs: multimodalDuration,
+      }).catch(() => {})
+
       rawOcrText = buildMultimodalDebugText(images, extractResult)
       responseModels = { multimodal: extractResult.model }
     } else {
+      const visionSystemPrompt = buildVisionSystemPrompt()
       const ocrPageResults: OcrPageResult[] = await Promise.all(
-        images.map(async (image) => ({
-          image,
-          result: await provider.analyzeImage({
+        images.map(async (image) => {
+          const visionStart = Date.now()
+          const result = await provider.analyzeImage({
             imageBase64: image.imageBase64,
             mimeType: image.mimeType,
             label: image.label,
-          }),
-        }))
+          })
+          const visionDuration = Date.now() - visionStart
+          insertAiLog({
+            jobId,
+            purpose: 'vision',
+            provider: visionConfig.provider,
+            model: result.model || visionConfig.model,
+            systemPrompt: visionSystemPrompt,
+            userPrompt: buildLoggableUserPrompt('vision', { imageCount: 1 }),
+            rawResponse: result.ocrText || '',
+            success: result.success,
+            errorMessage: result.error,
+            durationMs: visionDuration,
+          }).catch(() => {})
+          return { image, result }
+        })
       )
       rawOcrText = buildOcrPipelineDebugText(ocrPageResults)
 
@@ -464,12 +510,31 @@ export async function POST(
         })
       }
 
+      const ocrTextForAnalysis = buildOcrPipelineText(ocrPageResults)
+      const textSystemPrompt = buildTextAnalysisSystemPrompt(context, locale, true)
+      const textUserPrompt = buildTextAnalysisUserPrompt(ocrTextForAnalysis)
+      const textStart = Date.now()
+
       extractResult = await provider.extractAssessment({
-        ocrText: buildOcrPipelineText(ocrPageResults),
+        ocrText: ocrTextForAnalysis,
         context,
         locale,
-        detectMistakes,
+        detectMistakes: true,
       })
+
+      const textDuration = Date.now() - textStart
+      insertAiLog({
+        jobId,
+        purpose: 'text',
+        provider: config.text?.provider || visionConfig.provider,
+        model: extractResult.model || config.text?.model || visionConfig.model,
+        systemPrompt: textSystemPrompt,
+        userPrompt: buildLoggableUserPrompt('text', { ocrText: ocrTextForAnalysis }),
+        rawResponse: extractResult.rawText || '',
+        success: extractResult.success,
+        errorMessage: extractResult.error,
+        durationMs: textDuration,
+      }).catch(() => {})
       responseModels = {
         vision: Array.from(new Set(ocrPageResults.map((page) => page.result.model || visionConfig.model))).join(', '),
         text: extractResult.model,
@@ -499,7 +564,7 @@ export async function POST(
       })
     }
 
-    const { draftId } = await createDraftFromJson(supabase, importJob, extractResult.json, detectMistakes)
+    const { draftId } = await createDraftFromJson(supabase, importJob, extractResult.json, createMistakeDrafts)
 
     await supabase
       .from('assessment_import_jobs')
