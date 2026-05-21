@@ -15,6 +15,15 @@ interface AssessmentRecord {
   grade?: string | null
   score_type?: string | null
   image_urls?: Array<{ url: string }> | null
+  mistakes?: Array<{
+    id?: string
+    question_number: string | null
+    mistake_type: string | null
+    knowledge_point: string | null
+    student_answer?: string | null
+    correct_answer?: string | null
+    ai_reason?: string | null
+  }> | null
   subjects?: {
     name: string
     color: string
@@ -158,6 +167,7 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
   }
 
   const assessmentTypeLabel = getAssessmentTypeLabel(record.assessment_type)
+  const mistakeCount = record.mistakes?.length || 0
   const rewardTagItems = record.reward_amount > 0
     ? [
         { key: 'base', label: tAssessment('reward'), amount: record.reward_amount }
@@ -173,7 +183,7 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
       }}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex items-start justify-between mb-5">
         <div className="flex gap-4">
           {/* 背景裝飾圓形 */}
           <div 
@@ -221,7 +231,6 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
             )}
           </div>
         </div>
-        
         <div className="flex flex-col items-end gap-2 ml-4 -mt-2">
           <div className="flex items-baseline gap-1">
             {isLetterGrade ? (
@@ -246,6 +255,41 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
           )}
         </div>
       </div>
+
+      {mistakeCount > 0 && (
+        <div className="mb-5 rounded-2xl border border-rose-100 bg-rose-50/70 px-3 py-2.5">
+          <div className="mb-2 flex items-center gap-1.5 text-sm font-bold text-rose-600">
+            <span className="material-icons-outlined text-base">error_outline</span>
+            {locale === 'zh-TW' ? `錯題 ${mistakeCount} 題` : `${mistakeCount} mistakes`}
+          </div>
+          <div className="space-y-1.5">
+            {record.mistakes?.slice(0, 2).map((mistake, index) => {
+              const summary = mistake.knowledge_point || mistake.mistake_type || mistake.ai_reason || (locale === 'zh-TW' ? '待補充錯題說明' : 'Mistake details pending')
+              const answerLine = [
+                mistake.student_answer ? `${locale === 'zh-TW' ? '答' : 'Ans'}: ${mistake.student_answer}` : '',
+                mistake.correct_answer ? `${locale === 'zh-TW' ? '正' : 'Correct'}: ${mistake.correct_answer}` : '',
+              ].filter(Boolean).join(' / ')
+
+              return (
+                <div key={mistake.id || index} className="rounded-xl bg-white/80 px-2.5 py-2 text-xs text-slate-600">
+                  <p className="line-clamp-1 font-semibold text-slate-700">
+                    {mistake.question_number ? `#${mistake.question_number} ` : ''}
+                    {summary}
+                  </p>
+                  {answerLine && (
+                    <p className="mt-0.5 line-clamp-1 text-slate-500">{answerLine}</p>
+                  )}
+                </div>
+              )
+            })}
+            {mistakeCount > 2 && (
+              <p className="text-xs font-semibold text-rose-500">
+                {locale === 'zh-TW' ? `另有 ${mistakeCount - 2} 題` : `+${mistakeCount - 2} more`}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
       
       <div className="mt-auto flex items-end justify-between">
         {/* 左下：圖片縮圖 */}

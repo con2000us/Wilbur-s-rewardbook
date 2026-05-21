@@ -33,6 +33,15 @@ interface Assessment {
   score_type?: string | null
   description?: string | null
   image_urls?: Array<{ url: string; path: string; size: number; width?: number; height?: number }> | null
+  mistakes?: Array<{
+    id?: string
+    question_number: string | null
+    mistake_type: string | null
+    knowledge_point: string | null
+    student_answer?: string | null
+    correct_answer?: string | null
+    ai_reason?: string | null
+  }> | null
   notes?: string | null
   subjects?: {
     name: string
@@ -601,6 +610,7 @@ export default function SubjectTabs({
                   grade: assessment.grade,
                   score_type: assessment.score_type,
                   image_urls: assessment.image_urls,
+                  mistakes: assessment.mistakes,
                   notes: assessment.notes,
                   subjects: assessment.subjects,
                   description: assessment.description || assessment.title
@@ -718,4 +728,3 @@ export default function SubjectTabs({
     </>
   )
 }
-

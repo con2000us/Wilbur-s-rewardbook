@@ -60,6 +60,22 @@ export default async function StudentPage({
   if (assessmentError) {
     console.error('Error fetching assessments:', assessmentError)
   }
+
+  const assessmentIds = (assessments || []).map((assessment: any) => assessment.id)
+  const { data: mistakeRows } = assessmentIds.length > 0
+    ? await supabase
+        .from('assessment_mistakes')
+        .select('*')
+        .in('assessment_id', assessmentIds)
+        .order('created_at', { ascending: true })
+    : { data: [] }
+
+  const mistakesByAssessment = new Map<string, any[]>()
+  ;(mistakeRows || []).forEach((mistake: any) => {
+    const current = mistakesByAssessment.get(mistake.assessment_id) || []
+    current.push(mistake)
+    mistakesByAssessment.set(mistake.assessment_id, current)
+  })
   
   // 如果有評量資料，為每個評量添加對應科目的 grade_mapping
   if (assessments && subjects) {
@@ -73,6 +89,7 @@ export default async function StudentPage({
           assessment.subjects.grade_mapping = subject.grade_mapping
         }
       }
+      assessment.mistakes = mistakesByAssessment.get(assessment.id) || []
     })
   }
 

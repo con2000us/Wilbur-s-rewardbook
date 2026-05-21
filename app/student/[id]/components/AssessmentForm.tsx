@@ -6,13 +6,15 @@ import { useTranslations, useLocale } from 'next-intl'
 import { calculateRewardFromRule } from '@/lib/rewardFormula'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
 import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
+import AiAssessmentImport from './AiAssessmentImport'
+import type { Json } from '@/lib/supabase/types'
 
 interface Subject {
   id: string
   name: string
   color: string
   icon: string
-  grade_mapping?: any
+  grade_mapping?: Json | null
 }
 
 interface Assessment {
@@ -42,6 +44,7 @@ interface RewardRule {
   reward_amount: number
   reward_formula?: string | null
   priority: number
+  display_order?: number | null
   is_active: boolean
   assessment_type: string | null
 }
@@ -107,6 +110,8 @@ export default function AssessmentForm({
   )
   const [rewardTypes, setRewardTypes] = useState<RewardType[]>([])
   const [selectedRewardTypeId, setSelectedRewardTypeId] = useState<string>('')
+  const [activeMode, setActiveMode] = useState<'manual' | 'ai'>('manual')
+  const [aiAvailable, setAiAvailable] = useState(false)
 
   const getRewardTypeDisplayName = (type: RewardType) => {
     return type.display_name || type.type_key
@@ -132,6 +137,22 @@ export default function AssessmentForm({
     }
     loadRewardTypes()
   }, [])
+
+  useEffect(() => {
+    if (isEditMode) return
+
+    async function loadAiStatus() {
+      try {
+        const response = await fetch('/api/ai-assessment/status')
+        const data = await response.json()
+        setAiAvailable(Boolean(data.enabled && data.visionConfigured && data.textConfigured))
+      } catch {
+        setAiAvailable(false)
+      }
+    }
+
+    loadAiStatus()
+  }, [isEditMode])
 
   // 根據選中的科目和評量類型篩選適用的規則
   const getApplicableRules = () => {
@@ -163,8 +184,8 @@ export default function AssessmentForm({
     // 排序函數：按 display_order（如果存在），否則按 priority（升序，因為 display_order 越小越優先）
     const sortRules = (rules: typeof filteredRules) => {
       return [...rules].sort((a, b) => {
-        const orderA = (a as any).display_order ?? a.priority ?? 0
-        const orderB = (b as any).display_order ?? b.priority ?? 0
+        const orderA = a.display_order ?? a.priority ?? 0
+        const orderB = b.display_order ?? b.priority ?? 0
         return orderA - orderB
       })
     }
@@ -266,7 +287,7 @@ export default function AssessmentForm({
         title = `${dateStr} ${typeText}`
       }
       
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         student_id: studentId,
         subject_id: formData.get('subject_id'),
         title: title,
@@ -398,6 +419,54 @@ export default function AssessmentForm({
 
   return (
     <>
+      {!isEditMode && aiAvailable && (
+        <div className="mb-6 inline-flex rounded-full border border-slate-200 bg-slate-100 p-1">
+          <button
+            type="button"
+            onClick={() => setActiveMode('manual')}
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+              activeMode === 'manual'
+                ? 'bg-white text-slate-800 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            {locale === 'zh-TW' ? '手動新增' : 'Manual'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMode('ai')}
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+              activeMode === 'ai'
+                ? 'bg-white text-green-700 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            {locale === 'zh-TW' ? 'AI 匯入' : 'AI Import'}
+          </button>
+        </div>
+      )}
+
+      {!isEditMode && activeMode === 'ai' ? (
+        <AiAssessmentImport
+          studentId={studentId}
+          subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
+          assessmentTypes={[
+            { value: 'exam', label: t('types.exam') },
+            { value: 'quiz', label: t('types.quiz') },
+            { value: 'homework', label: t('types.homework') },
+            { value: 'project', label: t('types.project') },
+          ]}
+          onConfirmed={() => {
+            if (onSuccess) {
+              onSuccess()
+            } else {
+              router.push(`/student/${studentId}`)
+              router.refresh()
+            }
+          }}
+        />
+      ) : (
+        <>
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-700 flex items-center gap-2">
@@ -776,7 +845,7 @@ export default function AssessmentForm({
                     +{expectedReward} {rewardUnit}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {locale === 'zh-TW' ? '根據' : 'Based on'} "{matchingRule.rule_name}"
+                    {locale === 'zh-TW' ? '根據' : 'Based on'} &quot;{matchingRule.rule_name}&quot;
                   </p>
                 </div>
               ) : (
@@ -985,7 +1054,8 @@ export default function AssessmentForm({
           </div>
         )}
       </form>
+        </>
+      )}
     </>
   )
 }
-

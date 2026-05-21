@@ -380,9 +380,13 @@ function TemplateCard({
                     已指派 {activeAssignedGoals.length} 位
                   </span>
                   {activeAssignedGoals.slice(0, 3).map((goal) => (
-                    <span key={goal.id} className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">
+                    <a
+                      key={goal.id}
+                      href={`/student/${goal.student_id}/rewards`}
+                      className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                    >
                       {goal.student_name || goal.student_id.slice(0, 8)}
-                    </span>
+                    </a>
                   ))}
                   {activeAssignedGoals.length > 3 && (
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-500">

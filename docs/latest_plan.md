@@ -6,6 +6,8 @@
 - 先以 Supabase 免費方案為基礎，優先實作「大型目標圖片」功能。
 - 以有限資源策略設計圖片功能，避免過早開啟高成本的考試照片儲存。
 - 後續提供可升級路徑：付費 Supabase 或自架 Docker Supabase。
+- 新增「AI 評量匯入」產品決策：家長可用手機拍照上傳考卷，系統以 OCR / vision model 擷取文字與版面，再由 LLM 依學生上下文整理成結構化 JSON，先生成待確認草稿，家長可編輯後才正式歸檔。
+- AI 評量匯入必須是可關閉的選用功能；沒有 API key、家長不願上傳資料、或資源模式不允許時，既有手動新增評量流程不受影響。
 
 ## 檢查結果：Supabase 是否可只靠 `.env` 切換
 
@@ -30,6 +32,20 @@
 - 學生頁不再作為大型目標主要新增入口；大型目標由 `/settings/rewards` 建立模板並指派學生，學生頁負責檢視進度與操作已指派目標。
 - 剩餘工作只保留正式人工驗收：指派目標 → 進度累積 → 完成 → Reset → Restart → 兌換 → 手機版查看。
 
+### P0.5：AI 評量匯入（選用，可關閉，待實作）
+- 目標：讓家長用手機拍照或上傳 PDF/圖片，系統自動辨識科目、成績、滿分、日期、考試名稱與錯題資訊，整理成可編輯的待確認草稿。
+- 產品原則：AI 只產生草稿，不直接寫入正式評量紀錄；正式歸檔前必須經過 schema 驗證與家長確認。
+- 開關原則：功能預設關閉；需同時具備站台設定開啟、server env 加密主密鑰、可用 provider API key，前端才顯示 AI 匯入入口。
+- 金鑰原則：`AI_PROVIDER_KEY_ENCRYPTION_SECRET` 只存在 server env / Vercel Environment Variables；API key 加密後存 DB，解密只在 server 端發生。
+- **重要：支援兩組獨立 API key + 端點設定（開放式架構）：**
+  - **識圖 LLM（Vision）**：圖片 → OCR 文字，獨立一組 provider / key / endpoint / model
+  - **文本 LLM（Text）**：OCR 文字 → 結構化 JSON，獨立一組 provider / key / endpoint / model
+  - 兩者可共用同一組 key（`purpose='both'`），也可各自使用不同 provider（例如 Vision 用 Claude、Text 用 GPT-4o）
+  - 設定方式：在「設定 → AI 評量匯入設定」頁面分別輸入
+- 隱私原則：傳給模型的學生上下文採最小揭露，優先使用年級、候選科目、近期課程進度，不主動送出學生姓名；原始考卷圖片可依設定在確認後保留或刪除。
+- 技術方向：先以 OpenRouter adapter 實作，但 provider / model 需可切換，保留後續改用 OpenAI、Gemini、Claude、Supabase Edge Function 或其他 OCR provider 的空間。
+- 詳細 TODO 與驗收標準見 `docs/AI_ASSESSMENT_IMPORT_TODO.md`。
+
 ### P1：資源模式設定（Resource Profile）
 - 新增資源模式：
   - `free`
@@ -40,6 +56,7 @@
   - 單檔上限
   - 每學生/每月上傳上限
   - 預設壓縮與尺寸策略
+  - 是否允許 AI 評量匯入、每日處理上限、原始檔保留策略
 
 ### P2：網站移轉與備份功能補強
 - 維持「改 `.env` 切換 Supabase」為主要切換方式（不做 UI 一鍵切換）。
@@ -51,8 +68,18 @@
 
 ## 下一步建議執行順序
 1. 執行學生獎勵頁最終人工驗收，確認 Stitch 規劃落地版可接受。
-2. 補上 `free` 模式下的大型目標圖片資源限制與 Resource Profile。
-3. 補齊「DB + Storage」完整備份/還原流程。
+2. 補上 AI 評量匯入的資料表、feature flag、金鑰加密與 provider adapter 基礎骨架。
+3. 完成手機上傳 → OCR/LLM → JSON schema 驗證 → 待確認草稿 → 家長確認歸檔的 MVP 流程。
+4. 補上 `free` 模式下的大型目標圖片與 AI 匯入資源限制，收斂 Resource Profile。
+5. 補齊「DB + Storage」完整備份/還原流程。
+
+## 交接給實作模型時的注意事項
+- 目前要照表執行的主文件是 `docs/AI_ASSESSMENT_IMPORT_TODO.md`；`latest_plan.md` 只保留產品優先順序與歷史背景。
+- 下方 2026-05-17 起的大型目標 P0 段落屬於歷史紀錄與決策背景；大型目標基礎 P0 已完成，只剩人工驗收，不應重新實作一輪。
+- AI 評量匯入必須先做成可關閉功能，且不得影響現有 `/student/[id]/add-assessment` 手動新增評量流程。
+- 實作時要同步更新 `database/bootstrap/01_schema.sql`、必要 migration、部署文件與環境變數說明。
+- 若新增 Storage bucket，優先新增 private `assessment-imports` bucket，不要把考卷原圖混進目前公開讀取用途的 `goal-images` bucket。
+- 模型輸出只能進草稿表；家長確認前不得建立正式 `assessments`、錯題正式資料或交易紀錄。
 
 ## 安全性與權限檢查（先記錄，後續穩定期處理）
 
@@ -206,3 +233,12 @@
 
 - 僅記錄為後續設計想法，尚未定案。
 - 基礎 P0 已完成；共同目標屬於後續產品設計，不阻擋目前部署與單一學生大型目標流程。
+## 2026-05-20 更新：AI 評量匯入核心缺失已補
+
+- 新增評量頁已接上「手動新增 / AI 匯入」入口；AI 關閉、key 未就緒或編輯模式不顯示入口。
+- AI 草稿確認會使用家長畫面上的最新編輯值，並支援錯題草稿新增、刪除、編輯後歸檔。
+- 手動新增與 AI confirm 已共用 `createAssessmentWithReward`，避免獎勵規則與交易邏輯分叉。
+- 上傳後前端立即輪詢 job 狀態，`/process` 以背景觸發降低前端等待風險。
+- 已補每日/月額度、每學生每日額度、可設定檔案大小限制，以及 reject 同步取消 job。
+- Bootstrap defaults 已補 AI 設定鍵與 private `assessment-imports` bucket；既有環境若缺 bucket，執行 `database/migrations/add-ai-assessment-storage-bucket.sql`。
+- `npm run build` 已通過。下一步是用真考卷照片做人工驗收，確認 OCR/LLM 模型輸出品質與 UX 細節。

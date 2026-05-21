@@ -4,6 +4,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import SiteNameSettings from './SiteNameSettings'
 import PaginationSettings from './PaginationSettings'
 import ResourceModeSettings from './ResourceModeSettings'
+import AiAssessmentSettings from './AiAssessmentSettings'
 import BackupSettings from './BackupSettings'
 import ClearAllStudentsSettings from './ClearAllStudentsSettings'
 import HomeButton from '@/app/components/HomeButton'
@@ -36,6 +37,7 @@ export default async function SettingsPage() {
             <SiteNameSettings />
             <PaginationSettings />
             <ResourceModeSettings />
+            <AiAssessmentSettings />
             <BackupSettings />
 
             <section className="bg-white rounded-2xl border border-slate-100 shadow-2xl p-6 sm:p-7">

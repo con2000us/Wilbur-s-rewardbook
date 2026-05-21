@@ -12,6 +12,45 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      ai_provider_configs: {
+        Row: {
+          id: string
+          provider: string
+          label: string | null
+          encrypted_api_key: string
+          key_version: string
+          purpose: string
+          endpoint_url: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          provider?: string
+          label?: string | null
+          encrypted_api_key: string
+          key_version?: string
+          purpose?: string
+          endpoint_url?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          provider?: string
+          label?: string | null
+          encrypted_api_key?: string
+          key_version?: string
+          purpose?: string
+          endpoint_url?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           id: string
@@ -138,6 +177,207 @@ export interface Database {
           score_type?: string | null
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      assessment_import_drafts: {
+        Row: {
+          id: string
+          job_id: string
+          student_id: string
+          subject_id: string | null
+          detected_subject_name: string | null
+          subject_candidates: Json | null
+          title: string | null
+          assessment_type: string | null
+          score: number | null
+          max_score: number
+          percentage: number | null
+          assessment_date: string | null
+          notes: string | null
+          confidence: number | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          job_id: string
+          student_id: string
+          subject_id?: string | null
+          detected_subject_name?: string | null
+          subject_candidates?: Json | null
+          title?: string | null
+          assessment_type?: string | null
+          score?: number | null
+          max_score?: number
+          percentage?: number | null
+          assessment_date?: string | null
+          notes?: string | null
+          confidence?: number | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          job_id?: string
+          student_id?: string
+          subject_id?: string | null
+          detected_subject_name?: string | null
+          subject_candidates?: Json | null
+          title?: string | null
+          assessment_type?: string | null
+          score?: number | null
+          max_score?: number
+          percentage?: number | null
+          assessment_date?: string | null
+          notes?: string | null
+          confidence?: number | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      assessment_import_jobs: {
+        Row: {
+          id: string
+          student_id: string
+          source_file_path: string | null
+          source_file_mime: string | null
+          source_file_size: number | null
+          status: string
+          raw_ocr_text: string | null
+          ai_json: Json | null
+          validated_json: Json | null
+          provider: string | null
+          model: string | null
+          error_code: string | null
+          error_message: string | null
+          retry_count: number
+          created_at: string
+          updated_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          student_id: string
+          source_file_path?: string | null
+          source_file_mime?: string | null
+          source_file_size?: number | null
+          status?: string
+          raw_ocr_text?: string | null
+          ai_json?: Json | null
+          validated_json?: Json | null
+          provider?: string | null
+          model?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          retry_count?: number
+          created_at?: string
+          updated_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          student_id?: string
+          source_file_path?: string | null
+          source_file_mime?: string | null
+          source_file_size?: number | null
+          status?: string
+          raw_ocr_text?: string | null
+          ai_json?: Json | null
+          validated_json?: Json | null
+          provider?: string | null
+          model?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          retry_count?: number
+          created_at?: string
+          updated_at?: string
+          completed_at?: string | null
+        }
+        Relationships: []
+      }
+      assessment_import_mistake_drafts: {
+        Row: {
+          id: string
+          draft_id: string
+          question_number: string | null
+          student_answer: string | null
+          correct_answer: string | null
+          mistake_type: string | null
+          knowledge_point: string | null
+          ai_reason: string | null
+          confidence: number | null
+          raw_text: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          draft_id: string
+          question_number?: string | null
+          student_answer?: string | null
+          correct_answer?: string | null
+          mistake_type?: string | null
+          knowledge_point?: string | null
+          ai_reason?: string | null
+          confidence?: number | null
+          raw_text?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          draft_id?: string
+          question_number?: string | null
+          student_answer?: string | null
+          correct_answer?: string | null
+          mistake_type?: string | null
+          knowledge_point?: string | null
+          ai_reason?: string | null
+          confidence?: number | null
+          raw_text?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      assessment_mistakes: {
+        Row: {
+          id: string
+          assessment_id: string
+          question_number: string | null
+          student_answer: string | null
+          correct_answer: string | null
+          mistake_type: string | null
+          knowledge_point: string | null
+          ai_reason: string | null
+          confidence: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          assessment_id: string
+          question_number?: string | null
+          student_answer?: string | null
+          correct_answer?: string | null
+          mistake_type?: string | null
+          knowledge_point?: string | null
+          ai_reason?: string | null
+          confidence?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          assessment_id?: string
+          question_number?: string | null
+          student_answer?: string | null
+          correct_answer?: string | null
+          mistake_type?: string | null
+          knowledge_point?: string | null
+          ai_reason?: string | null
+          confidence?: number | null
+          created_at?: string
         }
         Relationships: []
       }

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { calculateRewardFromRule } from '@/lib/rewardFormula'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
 import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
+import AiAssessmentImport from '../components/AiAssessmentImport'
 
 interface Subject {
   id: string
@@ -54,6 +55,20 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
   const [maxScore, setMaxScore] = useState(100)
   const [showRules, setShowRules] = useState(false)
   const [imageUrls, setImageUrls] = useState<UploadedImage[]>([])
+  const [activeMode, setActiveMode] = useState<'manual' | 'ai'>('manual')
+  const [aiAvailable, setAiAvailable] = useState(false)
+
+  // Check if AI assessment import is available
+  useEffect(() => {
+    fetch('/api/ai-assessment/status')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.enabled && data.visionConfigured && data.textConfigured) {
+          setAiAvailable(true)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // 根據選中的科目和評量類型篩選適用的規則
   const getApplicableRules = () => {
@@ -244,7 +259,52 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
 
   return (
     <>
-      {error && (
+      {/* Segmented Control: Manual / AI Import */}
+      {aiAvailable && (
+        <div className="mb-6 inline-flex rounded-full border border-slate-200 bg-slate-100 p-1">
+          <button
+            type="button"
+            onClick={() => setActiveMode('manual')}
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+              activeMode === 'manual'
+                ? 'bg-white text-slate-800 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            {locale === 'zh-TW' ? '手動新增' : 'Manual'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMode('ai')}
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+              activeMode === 'ai'
+                ? 'bg-white text-green-700 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            {locale === 'zh-TW' ? 'AI 匯入' : 'AI Import'}
+          </button>
+        </div>
+      )}
+
+      {activeMode === 'ai' ? (
+        <AiAssessmentImport
+          studentId={studentId}
+          subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
+          assessmentTypes={[
+            { value: 'exam', label: locale === 'zh-TW' ? '考試' : 'Exam' },
+            { value: 'quiz', label: locale === 'zh-TW' ? '小考' : 'Quiz' },
+            { value: 'homework', label: locale === 'zh-TW' ? '作業' : 'Homework' },
+            { value: 'project', label: locale === 'zh-TW' ? '專案' : 'Project' },
+          ]}
+          onConfirmed={() => {
+            router.push(`/student/${studentId}`)
+            router.refresh()
+          }}
+        />
+      ) : (
+        <>
+          {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-700 flex items-center gap-2">
             <span className="material-icons-outlined">error</span>
@@ -819,7 +879,8 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
           </button>
         </div>
       </form>
+        </>
+      )}
     </>
   )
 }
-

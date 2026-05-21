@@ -3295,6 +3295,114 @@ CREATE TABLE public.assessments_backup (
 
 
 --
+-- Name: ai_provider_configs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ai_provider_configs (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    provider text DEFAULT 'openrouter'::text NOT NULL,
+    label text,
+    encrypted_api_key text NOT NULL,
+    key_version text DEFAULT '1'::text NOT NULL,
+    purpose text DEFAULT 'both'::text NOT NULL,
+    endpoint_url text,
+    is_active boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: assessment_import_drafts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.assessment_import_drafts (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    job_id uuid NOT NULL,
+    student_id uuid NOT NULL,
+    subject_id uuid,
+    detected_subject_name text,
+    subject_candidates jsonb,
+    title text,
+    assessment_type text,
+    score numeric(5,2),
+    max_score numeric(5,2) DEFAULT 100,
+    percentage numeric(5,2),
+    assessment_date date,
+    notes text,
+    confidence numeric(3,2),
+    status text DEFAULT 'draft'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT assessment_import_drafts_assessment_type_check CHECK ((assessment_type = ANY (ARRAY['exam'::text, 'homework'::text, 'quiz'::text, 'project'::text]))),
+    CONSTRAINT assessment_import_drafts_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'confirmed'::text, 'rejected'::text])))
+);
+
+
+--
+-- Name: assessment_import_jobs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.assessment_import_jobs (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    student_id uuid NOT NULL,
+    source_file_path text,
+    source_file_mime text,
+    source_file_size integer,
+    status text DEFAULT 'pending'::text NOT NULL,
+    raw_ocr_text text,
+    ai_json jsonb,
+    validated_json jsonb,
+    provider text,
+    model text,
+    error_code text,
+    error_message text,
+    retry_count integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    completed_at timestamp with time zone,
+    CONSTRAINT assessment_import_jobs_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'processing'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])))
+);
+
+
+--
+-- Name: assessment_import_mistake_drafts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.assessment_import_mistake_drafts (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    draft_id uuid NOT NULL,
+    question_number text,
+    student_answer text,
+    correct_answer text,
+    mistake_type text,
+    knowledge_point text,
+    ai_reason text,
+    confidence numeric(3,2),
+    raw_text text,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: assessment_mistakes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.assessment_mistakes (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    assessment_id uuid NOT NULL,
+    question_number text,
+    student_answer text,
+    correct_answer text,
+    mistake_type text,
+    knowledge_point text,
+    ai_reason text,
+    confidence numeric(3,2),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: backups; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -6117,6 +6225,36 @@ ALTER TABLE public.achievement_events ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.assessments ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ai_provider_configs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ai_provider_configs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: assessment_import_drafts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.assessment_import_drafts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: assessment_import_jobs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.assessment_import_jobs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: assessment_import_mistake_drafts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.assessment_import_mistake_drafts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: assessment_mistakes; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.assessment_mistakes ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: backups; Type: ROW SECURITY; Schema: public; Owner: -
