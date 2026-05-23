@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import GoalPopup from './GoalPopup'
 import CompleteGoalPopup from './CompleteGoalPopup'
 import ExchangeRulePopup from './ExchangeRulePopup'
@@ -9,7 +9,6 @@ import RewardDetailModal from './RewardDetailModal'
 import UseRewardPopup from './UseRewardPopup'
 import AddRewardPopup from './AddRewardPopup'
 import { isParent } from '@/lib/utils/userRole'
-import StudentHomeNavButton from '@/app/components/StudentHomeNavButton'
 import { formatRewardAmountWithUnit } from './rewardUnit'
 import type { GoalTemplateImage } from '@/app/components/ImageUploader'
 import { toDateInputValue } from '@/lib/utils/goalTracking'
@@ -31,6 +30,41 @@ interface CustomRewardType {
   description?: string
   extra_input_schema: unknown
   is_system?: boolean
+}
+
+const REWARD_TAG_BACKGROUNDS = [
+  '#ebc154',
+  '#f8e4c7',
+  '#fbd0d9',
+  '#fff4cc',
+  '#d1e9ff',
+] as const
+
+function buildPaginationPages(totalPages: number, currentPage: number) {
+  const pages: Array<number | string> = []
+
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i)
+    return pages
+  }
+
+  pages.push(1)
+
+  if (currentPage <= 4) {
+    for (let i = 2; i <= 5; i++) pages.push(i)
+    pages.push('...')
+    pages.push(totalPages)
+  } else if (currentPage >= totalPages - 3) {
+    pages.push('...')
+    for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i)
+  } else {
+    pages.push('...')
+    for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i)
+    pages.push('...')
+    pages.push(totalPages)
+  }
+
+  return pages
 }
 
 interface ExchangeRule {
@@ -153,6 +187,8 @@ function getProgressPercent(current: number, target: number) {
 
 export default function RewardsPageClient({ studentId, student }: Props) {
   const locale = useLocale()
+  const tCommon = useTranslations('common')
+  const tStudent = useTranslations('student')
 
   const [customTypes, setCustomTypes] = useState<CustomRewardType[]>([])
   const [goals, setGoals] = useState<StudentGoal[]>([])
@@ -897,21 +933,10 @@ export default function RewardsPageClient({ studentId, student }: Props) {
     }
   }
 
-  const previousGoal = () => {
-    if (activeGoals.length <= 1) return
-    setActiveGoalIndex((currentIndex) =>
-      currentIndex === 0 ? activeGoals.length - 1 : currentIndex - 1
-    )
-  }
-
-  const nextGoal = () => {
-    if (activeGoals.length <= 1) return
-    setActiveGoalIndex((currentIndex) =>
-      currentIndex === activeGoals.length - 1 ? 0 : currentIndex + 1
-    )
-  }
-
   const activeGoal = activeGoals[activeGoalIndex] || null
+  const goalTotalPages = activeGoals.length
+  const goalCurrentPage = activeGoalIndex + 1
+  const showGoalPagination = goalTotalPages > 1
   const activeGoalSummary = activeGoal ? getGoalSummary(activeGoal) : null
   const renderLegacyRewardsLayout = false
   const dashboardTabs: Array<{ id: RewardDashboardTab; label: string; icon: string; count: number }> = [
@@ -925,12 +950,15 @@ export default function RewardsPageClient({ studentId, student }: Props) {
       <div className="space-y-5">
         <section>
           <div className="flex flex-col gap-4 min-[360px]:flex-row min-[360px]:items-center min-[360px]:justify-between">
-            <div className="flex items-start gap-3">
-              <span className="material-icons-outlined flex-shrink-0 text-3xl text-blue-600 drop-shadow-sm">
+            <div className="flex items-center gap-3 min-w-0">
+              <span
+                className="material-icons-outlined rounded-2xl bg-gradient-to-br from-sky-100 to-indigo-100 p-2 text-2xl text-blue-600 shadow-sm flex-shrink-0"
+                aria-hidden="true"
+              >
                 stars
               </span>
               <div className="flex min-w-0 flex-col gap-1">
-                <h1 className="truncate text-2xl font-black tracking-tight text-slate-900">
+                <h1 className="truncate text-2xl font-black tracking-tight text-slate-800">
                   {locale === 'zh-TW' ? '獎勵管理' : 'Reward Management'}
                 </h1>
                 <p className="text-sm text-slate-500">
@@ -948,39 +976,31 @@ export default function RewardsPageClient({ studentId, student }: Props) {
                 <button
                   type="button"
                   onClick={handleOpenAddReward}
-                  className="student-toolbar-primary inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 py-2.5 text-base font-bold transition-all hover:scale-105 active:scale-95"
+                  className="inline-flex min-h-9 items-center gap-1 rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-3.5 text-sm font-bold text-white shadow-md transition-all hover:opacity-95 hover:shadow-lg active:scale-95 cursor-pointer"
                 >
-                  <span className="material-icons-outlined text-lg">add_circle</span>
-                  {locale === 'zh-TW' ? '添加獎勵' : 'Add Reward'}
+                  <span className="material-icons-outlined text-base">add_circle</span>
+                  {locale === 'zh-TW' ? '新增' : 'Add'}
                 </button>
               )}
-              <a
-                href={`/student/${studentId}/transactions`}
-                className="student-toolbar-primary inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 py-2.5 text-base font-bold transition-all hover:scale-105 active:scale-95"
-              >
-                <span className="material-icons-outlined text-lg">receipt_long</span>
-                {locale === 'zh-TW' ? '完整存摺' : 'Passbook'}
-              </a>
-              <StudentHomeNavButton className="hidden lg:inline-flex" />
             </div>
           </div>
         </section>
 
         <section>
           {loading ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+            <div className="grid grid-cols-3 gap-3">
               {Array.from({ length: 6 }).map((_, index) => (
                 <div
                   key={index}
-                  className="min-h-36 animate-pulse rounded-2xl bg-white/45 ring-1 ring-white/60"
+                  className="min-h-14 animate-pulse rounded-2xl bg-white/45 shadow-[0_4px_20px_rgba(0,0,0,0.05)]"
                 />
               ))}
             </div>
           ) : customTypes.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-              {customTypes.map((type) => {
+            <div className="grid grid-cols-3 gap-3">
+              {customTypes.map((type, index) => {
                 const stats = rewardStats[type.id || ''] || { totalEarned: 0, currentBalance: 0 }
-                const typeColor = type.color || '#5f94e8'
+                const tagBackground = REWARD_TAG_BACKGROUNDS[index % REWARD_TAG_BACKGROUNDS.length]
 
                 return (
                   <button
@@ -988,24 +1008,24 @@ export default function RewardsPageClient({ studentId, student }: Props) {
                     type="button"
                     onClick={() => type.id && handleOpenRewardDetail(type)}
                     disabled={!type.id}
-                    className="reward-card-shadow min-h-36 rounded-2xl bg-white/68 p-4 ring-1 ring-white/70 transition-all flex flex-col items-center text-center disabled:cursor-default disabled:opacity-70 hover:scale-[1.02] duration-200"
+                    className="min-h-14 rounded-2xl px-2.5 py-2 text-left text-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all duration-200 flex items-center gap-2.5 disabled:cursor-default disabled:opacity-70 hover:scale-[1.015] hover:shadow-[0_8px_24px_rgba(0,0,0,0.07)]"
+                    style={{ backgroundColor: tagBackground }}
                   >
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center mb-3 text-lg"
-                      style={{ backgroundColor: `${typeColor}18`, color: typeColor }}
-                    >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/30 text-lg shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
                       {type.icon || '⭐'}
                     </div>
-                    <span className="block truncate text-sm font-semibold text-slate-500 max-w-full mb-3">
-                      {type.display_name || type.type_key}
-                    </span>
-                    <div>
-                      <div className="text-2xl font-black leading-tight text-slate-900">
-                        {stats.currentBalance.toLocaleString()}
+                    <div className="min-w-0 flex-1 pl-[2px] text-left sm:pl-[10px]">
+                      <span className="block truncate text-xs font-bold leading-tight text-slate-600">
+                        {type.display_name || type.type_key}
+                      </span>
+                      <div className="mt-1 flex items-baseline justify-end gap-1">
+                        <span className="text-xl font-bold leading-none text-slate-800">
+                          {stats.currentBalance.toLocaleString()}
+                        </span>
+                        <span className="text-[10px] font-semibold leading-none text-slate-600/80">
+                          {type.default_unit || (locale === 'zh-TW' ? '餘額' : 'Balance')}
+                        </span>
                       </div>
-                      <p className="mt-1 text-xs font-medium text-slate-400">
-                        {type.default_unit || (locale === 'zh-TW' ? '可用餘額' : 'Balance')}
-                      </p>
                     </div>
                   </button>
                 )
@@ -1019,7 +1039,7 @@ export default function RewardsPageClient({ studentId, student }: Props) {
         </section>
 
         <section>
-          <div className="overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="overflow-x-auto pb-0 pr-4 [scrollbar-width:thin] [scrollbar-color:rgba(26,90,189,0.15)_transparent] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[rgba(26,90,189,0.15)]">
             <div className="inline-flex min-w-max flex-nowrap items-center gap-1 rounded-full border border-white/40 bg-white/60 p-1.5 shadow-sm backdrop-blur-sm">
               {dashboardTabs.map((tab) => (
                 <button
@@ -1034,7 +1054,7 @@ export default function RewardsPageClient({ studentId, student }: Props) {
                 >
                   <span className="material-icons-outlined text-lg">{tab.icon}</span>
                   <span className="whitespace-nowrap">{tab.label}</span>
-                  <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                  <span className="hidden rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 sm:inline-flex sm:items-center sm:justify-center">
                     {tab.count}
                   </span>
                 </button>
@@ -1046,7 +1066,7 @@ export default function RewardsPageClient({ studentId, student }: Props) {
             {activeDashboardTab === 'goals' && (
               <section>
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm font-medium text-slate-500">
+                  <p className="mb-[5px] ml-[10px] text-sm font-medium text-slate-500">
                     {locale === 'zh-TW' ? '管理與追蹤學生的長期目標進度' : 'Track progress on major goals'}
                   </p>
                 </div>
@@ -1221,65 +1241,65 @@ export default function RewardsPageClient({ studentId, student }: Props) {
                       )
                     })()}
 
-                    <div className="mt-4 flex items-center gap-2">
-                      {(() => {
-                        const paginationColor = activeGoal.color || '#5f94e8'
-                        return (
-                      <>
-                      <button
-                        type="button"
-                        onClick={previousGoal}
-                        className="hidden shrink-0 md:flex"
-                        style={{ color: paginationColor }}
-                        aria-label={locale === 'zh-TW' ? '上一個大型目標' : 'Previous goal'}
-                      >
-                        <span className="material-icons-outlined text-xl">chevron_left</span>
-                      </button>
-                      <div className="flex min-w-0 flex-1 gap-3 overflow-x-auto p-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {activeGoals.map((goal, index) => {
-                          const summary = getGoalSummary(goal)
+                    {showGoalPagination && (
+                      <div className="mt-4 flex justify-center items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveGoalIndex((index) => Math.max(0, index - 1))}
+                          disabled={activeGoalIndex === 0}
+                          className={`glass-btn px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${
+                            activeGoalIndex === 0
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 cursor-pointer'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-base">chevron_left</span>
+                          {tCommon('prevPage')}
+                        </button>
 
+                        {buildPaginationPages(goalTotalPages, goalCurrentPage).map((page, index) => {
+                          if (page === '...') {
+                            return (
+                              <span key={`goal-ellipsis-${index}`} className="px-2 text-gray-600">
+                                ...
+                              </span>
+                            )
+                          }
+
+                          const pageNum = page as number
                           return (
                             <button
-                              key={goal.id || goal.name}
+                              key={pageNum}
                               type="button"
-                              onClick={() => setActiveGoalIndex(index)}
-                              className={`flex min-h-16 min-w-[190px] items-center gap-3 rounded-2xl px-4 text-left transition sm:min-w-[220px] ${
-                                activeGoalIndex === index
-                                  ? 'text-white shadow-sm ring-2 ring-white'
-                                  : 'bg-white/55 text-slate-600 ring-1 ring-white/70 hover:bg-white/75'
+                              onClick={() => setActiveGoalIndex(pageNum - 1)}
+                              className={`glass-btn px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+                                goalCurrentPage === pageNum
+                                  ? 'bg-white/60 text-gray-900 shadow-lg ring-1 ring-white/70'
+                                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                               }`}
-                              style={activeGoalIndex === index ? { backgroundColor: goal.color || '#5f94e8' } : undefined}
                             >
-                              <span
-                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg"
-                                style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}
-                              >
-                                {goal.icon || '🎯'}
-                              </span>
-                              <span className="min-w-0">
-                                <span className="block truncate text-sm font-black">{goal.name}</span>
-                                <span className="mt-0.5 block text-xs font-semibold opacity-70">
-                                  {summary.percent}% {locale === 'zh-TW' ? '達成' : 'done'}
-                                </span>
-                              </span>
+                              {pageNum}
                             </button>
                           )
                         })}
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActiveGoalIndex((index) => Math.min(goalTotalPages - 1, index + 1))
+                          }
+                          disabled={activeGoalIndex >= goalTotalPages - 1}
+                          className={`glass-btn px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${
+                            activeGoalIndex >= goalTotalPages - 1
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 cursor-pointer'
+                          }`}
+                        >
+                          {tCommon('nextPage')}
+                          <span className="material-symbols-outlined text-base">chevron_right</span>
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={nextGoal}
-                        className="hidden shrink-0 md:flex"
-                        style={{ color: paginationColor }}
-                        aria-label={locale === 'zh-TW' ? '下一個大型目標' : 'Next goal'}
-                      >
-                        <span className="material-icons-outlined text-xl">chevron_right</span>
-                      </button>
-                      </>
-                      )
-                      })()}
-                    </div>
+                    )}
                   </>
                 ) : (
                   <div className="rounded-3xl bg-white/55 px-5 py-12 text-center ring-1 ring-white/65">
@@ -1562,7 +1582,6 @@ export default function RewardsPageClient({ studentId, student }: Props) {
             }
           </p>
         </div>
-        <StudentHomeNavButton className="hidden lg:inline-flex" />
       </div>
 
       {/* 統計摘要列 */}
@@ -2444,27 +2463,65 @@ export default function RewardsPageClient({ studentId, student }: Props) {
       <div className="md:hidden h-[90px]" />
 
       {/* 行動端底部導覽列 */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 bg-white/90 backdrop-blur-md md:hidden rounded-t-xl shadow-lg border-t border-white/50">
-        <a href={`/student/${studentId}`} className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:bg-surface-container-high rounded-full transition-all">
-          <span className="material-icons-outlined">home</span>
-          <span className="text-label-md">{locale === 'zh-TW' ? '首頁' : 'Home'}</span>
+      <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center gap-0.5 bg-white/90 px-1 py-3 backdrop-blur-md md:hidden rounded-t-xl shadow-lg border-t border-white/50">
+        <a
+          href="/"
+          className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-2 text-on-surface-variant transition-all hover:bg-surface-container-high"
+        >
+          <span className="material-icons-outlined text-[22px]">home</span>
+          <span className="w-full text-center text-[11px] font-medium leading-tight">
+            {tStudent('mobileBottomNav.home')}
+          </span>
         </a>
-        <a href={`/student/${studentId}/transactions`} className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:bg-surface-container-high rounded-full transition-all">
-          <span className="material-icons-outlined">account_balance_wallet</span>
-          <span className="text-label-md">{locale === 'zh-TW' ? '存摺' : 'Wallet'}</span>
+        <a
+          href={`/student/${studentId}`}
+          className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-2 text-on-surface-variant transition-all hover:bg-surface-container-high"
+        >
+          <span className="material-icons-outlined text-[22px]">assignment</span>
+          <span className="w-full text-center text-[11px] font-medium leading-tight">
+            {tStudent('mobileBottomNav.records')}
+          </span>
         </a>
-        <div className="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-2 scale-105">
-          <span className="material-icons-outlined fill">emoji_events</span>
-          <span className="text-label-md font-bold">{locale === 'zh-TW' ? '獎勵' : 'Rewards'}</span>
+        <a
+          href={`/student/${studentId}/transactions`}
+          className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-2 text-on-surface-variant transition-all hover:bg-surface-container-high"
+        >
+          <span className="material-icons-outlined text-[22px]">account_balance_wallet</span>
+          <span className="w-full text-center text-[11px] font-medium leading-tight">
+            {tStudent('mobileBottomNav.passbook')}
+          </span>
+        </a>
+        <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full bg-primary-container px-1.5 py-2 text-on-primary-container scale-105">
+          <span className="material-icons-outlined text-[22px]">stars</span>
+          <span className="w-full text-center text-[11px] font-bold leading-tight">
+            {tStudent('mobileBottomNav.rewards')}
+          </span>
         </div>
-        <a href={`/student/${studentId}/subjects`} className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:bg-surface-container-high rounded-full transition-all">
-          <span className="material-icons-outlined">storefront</span>
-          <span className="text-label-md">{locale === 'zh-TW' ? '商店' : 'Store'}</span>
+        <a
+          href={`/student/${studentId}/subjects`}
+          className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-2 text-on-surface-variant transition-all hover:bg-surface-container-high"
+        >
+          <span className="material-icons-outlined text-[22px]">menu_book</span>
+          <span className="w-full text-center text-[11px] font-medium leading-tight">
+            {tStudent('mobileBottomNav.subjects')}
+          </span>
         </a>
-        <a href={`/student/${studentId}/settings`} className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:bg-surface-container-high rounded-full transition-all">
-          <span className="material-icons-outlined">settings</span>
-          <span className="text-label-md">{locale === 'zh-TW' ? '設定' : 'Settings'}</span>
-        </a>
+        <button
+          type="button"
+          onClick={() =>
+            window.dispatchEvent(
+              new CustomEvent('openStudentSettings', {
+                detail: { studentId },
+              })
+            )
+          }
+          className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-2 text-on-surface-variant transition-all hover:bg-surface-container-high"
+        >
+          <span className="material-icons-outlined text-[22px]">settings</span>
+          <span className="w-full text-center text-[11px] font-medium leading-tight">
+            {tStudent('mobileBottomNav.settings')}
+          </span>
+        </button>
       </nav>
     </>
   )

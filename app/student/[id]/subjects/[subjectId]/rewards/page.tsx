@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import SubjectRewardRulesManager from './SubjectRewardRulesManager'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
+import { parseStudentAvatar } from '@/lib/utils/studentTheme'
+import StudentFloatingQuickNav from '../../../components/StudentFloatingQuickNav'
 
 export default async function SubjectRewardsPage({ 
   params 
@@ -63,10 +65,25 @@ export default async function SubjectRewardsPage({
     .order('display_order', { ascending: true, nullsFirst: false })
     .order('priority', { ascending: false })
 
+  const { data: allStudents } = await supabase
+    .from('students')
+    .select('id, name, avatar_url')
+    .order('display_order', { ascending: true })
+
+  const avatar = parseStudentAvatar((student as any).avatar_url, (student as any).name)
+
   return (
-    <div className="min-h-screen bg-app-shell p-8">
+    <div className="min-h-screen bg-app-shell py-4 px-[5px] md:p-6 lg:p-8">
+      <StudentFloatingQuickNav
+        studentId={id}
+        studentName={(student as any).name}
+        studentAvatar={avatar}
+        allStudents={allStudents || []}
+        currentPage="subjects"
+        reserveSpace
+      />
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6 flex justify-between items-center">
+        <div className="mb-6 hidden lg:flex justify-between items-center">
           <Link 
             href={`/student/${id}/subjects`}
             className="text-slate-700 hover:text-slate-900 text-lg font-medium"
@@ -82,7 +99,7 @@ export default async function SubjectRewardsPage({
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 lg:p-8">
           <div className="mb-6">
             <h1 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-3">
               {/* @ts-ignore - Supabase type inference issue with select queries */}
@@ -124,4 +141,3 @@ export default async function SubjectRewardsPage({
     </div>
   )
 }
-

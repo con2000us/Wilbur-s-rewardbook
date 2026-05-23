@@ -122,10 +122,10 @@ export default async function StudentPage({
     <div className="min-h-screen p-4 md:p-10 flex justify-center items-start text-gray-800" style={{
       background: 'linear-gradient(135deg, #a7d9ef 0%, #c1d9f0 50%, #e0e7f2 100%)'
     }}>
-      <div className="w-full max-w-7xl glass-panel rounded-3xl p-6 md:p-10 min-h-[90vh] relative overflow-hidden flex flex-col lg:flex-row">
+      <div className="w-full max-w-7xl py-4 px-[5px] md:p-5 lg:p-10 min-h-[90vh] relative overflow-hidden flex flex-col lg:w-full lg:flex-row lg:glass-panel lg:rounded-3xl">
         {/* 裝飾性背景圓圈 */}
-        <div className="absolute top-0 left-0 w-96 h-96 bg-f7b2c9/30 rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-a7d9ef/20 rounded-full blur-[90px] translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+        <div className="absolute top-0 left-0 hidden h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-f7b2c9/30 blur-[80px] pointer-events-none lg:block"></div>
+        <div className="absolute bottom-0 right-0 hidden h-[500px] w-[500px] translate-x-1/3 -translate-y-1/3 rounded-full bg-a7d9ef/20 blur-[90px] pointer-events-none lg:block"></div>
 
         {/* StudentRecords 組件會渲染完整的布局（側邊欄 + 主內容區） */}
         <StudentRecords

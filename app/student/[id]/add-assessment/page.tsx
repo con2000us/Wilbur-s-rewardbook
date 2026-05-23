@@ -5,6 +5,7 @@ import AssessmentForm from '../components/AssessmentForm'
 import { getTranslations } from 'next-intl/server'
 import { parseStudentAvatar, getStudentBackgroundGradient } from '@/lib/utils/studentTheme'
 import StudentHeaderWithDropdown from '@/app/components/StudentHeaderWithDropdown'
+import StudentFloatingQuickNav from '../components/StudentFloatingQuickNav'
 import HomeButton from '@/app/components/HomeButton'
 
 export default async function AddAssessmentPage({ 
@@ -81,11 +82,19 @@ export default async function AddAssessmentPage({
       <div className={`absolute inset-0 bg-gradient-to-br ${backgroundGradient}`}></div>
       <div className="absolute inset-0 bg-gradient-to-tl from-white/20 via-transparent to-transparent"></div>
       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-purple-200/30"></div>
+      <StudentFloatingQuickNav
+        studentId={id}
+        studentName={(student as any).name}
+        studentAvatar={avatar}
+        allStudents={allStudents || []}
+        currentPage="records"
+        reserveSpace
+      />
       
       {/* 內容區域 */}
-      <div className="relative z-10 p-8">
+      <div className="relative z-10 py-4 px-[5px] md:p-6 lg:p-8">
         <div className="max-w-2xl mx-auto">
-        <div className="mb-6 flex justify-between items-start gap-4">
+        <div className="mb-6 hidden lg:flex justify-between items-start gap-4">
           <StudentHeaderWithDropdown
             studentId={id}
             // @ts-ignore - Supabase type inference issue with select queries
@@ -99,8 +108,8 @@ export default async function AddAssessmentPage({
           <HomeButton />
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 lg:p-8">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">
             ➕ {t('addAssessment')}
           </h1>
           <p className="text-gray-600 mb-6">

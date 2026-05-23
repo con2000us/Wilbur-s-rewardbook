@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { parseStudentAvatar, getStudentBackgroundGradient } from '@/lib/utils/studentTheme'
 import StudentSwitcher from '@/app/components/StudentSwitcher'
+import StudentFloatingQuickNav from '../../components/StudentFloatingQuickNav'
 
 export default async function AddSubjectPage({ 
   params 
@@ -55,11 +56,19 @@ export default async function AddSubjectPage({
       <div className={`absolute inset-0 bg-gradient-to-br ${backgroundGradient}`}></div>
       <div className="absolute inset-0 bg-gradient-to-tl from-white/20 via-transparent to-transparent"></div>
       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-purple-200/30"></div>
+      <StudentFloatingQuickNav
+        studentId={id}
+        studentName={(student as any).name}
+        studentAvatar={avatarData}
+        allStudents={allStudents || []}
+        currentPage="subjects"
+        reserveSpace
+      />
       
       {/* 內容區域 */}
-      <div className="relative z-10 p-8">
+      <div className="relative z-10 py-4 px-[5px] md:p-6 lg:p-8">
         <div className="max-w-2xl mx-auto">
-        <div className="mb-6 flex items-center gap-4">
+        <div className="mb-6 hidden lg:flex items-center gap-4">
           <Link 
             href={`/student/${id}/subjects`}
             className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 font-semibold inline-flex items-center gap-2 cursor-pointer"
@@ -77,8 +86,8 @@ export default async function AddSubjectPage({
           />
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h1 className="text-xl font-bold text-gray-800 mb-2">
+        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 lg:p-8">
+          <h1 className="text-xl font-bold text-slate-800 mb-2">
             ➕ {t('addSubject')}
           </h1>
           <p className="text-gray-600 mb-6">
@@ -96,4 +105,3 @@ export default async function AddSubjectPage({
     </div>
   )
 }
-

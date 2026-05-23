@@ -1,6 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server-admin'
+import { purgeAssessmentImages } from '@/lib/utils/goalImageStorage'
 import { revalidatePath } from 'next/cache'
 import { calculateReward, calculatePercentage } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
@@ -138,7 +140,32 @@ export async function updateAssessment(
 // 刪除評量
 export async function deleteAssessment(id: string, studentId: string) {
   const supabase = createClient()
-  
+
+  const { data: assessment } = await supabase
+    .from('assessments')
+    .select(`
+      id,
+      image_urls,
+      subjects ( student_id )
+    `)
+    .eq('id', id)
+    .single()
+
+  if (!assessment) {
+    return { success: false, error: 'Assessment not found' }
+  }
+
+  // @ts-ignore - Supabase type inference issue with join queries
+  if (assessment.subjects?.student_id !== studentId) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  const adminClient = createAdminClient()
+  // @ts-ignore - Supabase type inference issue
+  await purgeAssessmentImages(adminClient, id, assessment.image_urls)
+
+  await supabase.from('transactions').delete().eq('assessment_id', id)
+
   const { error } = await supabase
     .from('assessments')
     .delete()

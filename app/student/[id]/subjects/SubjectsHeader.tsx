@@ -1,7 +1,6 @@
 'use client'
 
 import { useTranslations, useLocale } from 'next-intl'
-import StudentHomeNavButton from '@/app/components/StudentHomeNavButton'
 import GlobalRewardRulesModal from './components/GlobalRewardRulesModal'
 import { useState } from 'react'
 
@@ -37,10 +36,15 @@ export default function SubjectsHeader({ studentId, studentName, globalRules, st
     <>
       <div className="mb-6">
         <div className="flex flex-col min-[360px]:flex-row min-[360px]:items-center justify-between gap-4 mb-4">
-          <div className="flex items-start gap-3">
-            <span className="text-orange-600 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">menu_book</span>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-2xl font-black tracking-tight">{t('manageSubjects')}</h1>
+          <div className="flex items-center gap-3 min-w-0">
+            <span
+              className="material-icons-outlined rounded-2xl bg-gradient-to-br from-sky-100 to-indigo-100 p-2 text-2xl text-blue-600 shadow-sm flex-shrink-0"
+              aria-hidden="true"
+            >
+              menu_book
+            </span>
+            <div className="flex min-w-0 flex-col gap-1">
+              <h1 className="text-2xl font-black tracking-tight text-slate-800 truncate">{t('manageSubjects')}</h1>
               {studentName && (
                 <p className="text-sm text-slate-500">
                   {locale === 'zh-TW'
@@ -69,14 +73,13 @@ export default function SubjectsHeader({ studentId, studentName, globalRules, st
             {onOpenAddModal && (
               <button 
                 onClick={onOpenAddModal}
-                className="student-toolbar-primary px-6 py-2.5 min-h-11 rounded-full font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                className="inline-flex min-h-9 items-center gap-1 rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-3.5 text-sm font-bold text-white shadow-md transition-all hover:opacity-95 hover:shadow-lg active:scale-95 cursor-pointer"
               >
-                <span className="material-icons-outlined text-lg">add_circle</span>
-                {t('addSubject')}
+                <span className="material-icons-outlined text-base">add_circle</span>
+                {locale === 'zh-TW' ? '新增' : 'Add'}
               </button>
             )}
             
-            <StudentHomeNavButton className="hidden lg:inline-flex" />
           </div>
         </div>
       </div>

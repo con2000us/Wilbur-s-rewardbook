@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
 import SubjectTabs from './SubjectTabs'
 import AssessmentModal from './components/AssessmentModal'
 import SidebarContent from './SidebarContent'
-import StudentHeaderWithDropdown from '@/app/components/StudentHeaderWithDropdown'
 import StudentSidebarHeader from './components/StudentSidebarHeader'
+import StudentFloatingQuickNav from './components/StudentFloatingQuickNav'
 import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 
@@ -494,10 +493,31 @@ export default function StudentRecords({
 
   const canGoNext = selectedMonth ? availableMonths.indexOf(selectedMonth) > 0 : false
 
+  const [floatingNavHeight, setFloatingNavHeight] = useState(88)
+  const [isLgLayout, setIsLgLayout] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const update = () => setIsLgLayout(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  const mainPaddingTop = Math.max(0, floatingNavHeight - 10)
+
   return (
     <>
+      <StudentFloatingQuickNav
+        studentId={studentId}
+        studentName={studentName}
+        studentAvatar={studentAvatar}
+        allStudents={allStudents}
+        currentPage="records"
+        onHeightChange={setFloatingNavHeight}
+      />
       {/* 側邊欄 */}
-      <div className="relative z-20 lg:w-80 lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
+      <div className="relative z-20 hidden lg:block lg:w-80 lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
         <header className="flex flex-col lg:items-start lg:sticky lg:top-0 w-full lg:min-w-0">
           {/* Student Sidebar Header - 包含學生頭像和快速導覽 */}
           <StudentSidebarHeader
@@ -543,7 +563,17 @@ export default function StudentRecords({
       </div>
 
       {/* 主內容區 */}
-      <main className="relative z-10 flex-1 min-w-0">
+      <main
+        className="relative z-10 flex-1 min-w-0 lg:pt-0"
+        style={
+          !isLgLayout
+            ? {
+                paddingTop: mainPaddingTop,
+                transition: 'padding-top 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+              }
+            : undefined
+        }
+      >
         {/* 科目標籤和評量列表 */}
         <SubjectTabs
           subjects={subjects}

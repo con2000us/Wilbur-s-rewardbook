@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server-admin'
+import { purgeManyAssessmentImages } from '@/lib/utils/goalImageStorage'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
@@ -48,7 +50,7 @@ export async function POST(
         // 構建評量查詢
         let assessmentQuery = supabase
           .from('assessments')
-          .select('id, due_date, completed_date')
+          .select('id, due_date, completed_date, image_urls')
           .in('subject_id', subjectIds)
 
         // 如果有日期範圍，需要先獲取所有評量，然後在應用層過濾
@@ -73,6 +75,9 @@ export async function POST(
 
         if (assessmentsToDelete.length > 0) {
           const assessmentIds = assessmentsToDelete.map((a: any) => a.id)
+
+          const adminClient = createAdminClient()
+          await purgeManyAssessmentImages(adminClient, assessmentsToDelete as Array<{ id: string; image_urls?: unknown }>)
           
           // 刪除相關的交易記錄（評量相關的）
           await supabase
@@ -153,12 +158,18 @@ export async function POST(
         // 先獲取所有評量 ID
         const { data: assessments } = await supabase
           .from('assessments')
-          .select('id')
+          .select('id, image_urls')
           .in('subject_id', subjectIds)
 
         if (assessments && assessments.length > 0) {
           // @ts-ignore - Supabase type inference issue
           const assessmentIds = (assessments as any[]).map(a => a.id)
+
+          const adminClient = createAdminClient()
+          await purgeManyAssessmentImages(
+            adminClient,
+            assessments as Array<{ id: string; image_urls?: unknown }>
+          )
           
           // 刪除相關的交易記錄（評量相關的）
           await supabase
@@ -217,7 +228,7 @@ export async function POST(
           // 3. 獲取該日期範圍內的評量
           const { data: allAssessments } = await supabase
             .from('assessments')
-            .select('id, due_date, completed_date')
+            .select('id, due_date, completed_date, image_urls')
             .in('subject_id', subjectIds)
 
           if (allAssessments) {
@@ -230,6 +241,12 @@ export async function POST(
 
             if (assessmentsToDelete.length > 0) {
               const assessmentIds = assessmentsToDelete.map((a: any) => a.id)
+
+              const adminClient = createAdminClient()
+              await purgeManyAssessmentImages(
+                adminClient,
+                assessmentsToDelete as Array<{ id: string; image_urls?: unknown }>
+              )
               
               // 刪除相關的交易記錄
               await supabase
@@ -267,6 +284,19 @@ export async function POST(
         if (subjects && subjects.length > 0) {
           // @ts-ignore - Supabase type inference issue
           const subjectIds = (subjects as any[]).map(s => s.id)
+
+          const { data: allAssessments } = await supabase
+            .from('assessments')
+            .select('id, image_urls')
+            .in('subject_id', subjectIds)
+
+          if (allAssessments && allAssessments.length > 0) {
+            const adminClient = createAdminClient()
+            await purgeManyAssessmentImages(
+              adminClient,
+              allAssessments as Array<{ id: string; image_urls?: unknown }>
+            )
+          }
 
           // 3. 刪除所有評量
           await supabase

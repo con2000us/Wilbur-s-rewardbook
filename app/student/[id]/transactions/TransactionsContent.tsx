@@ -65,7 +65,7 @@ export function MainContent({ studentId, transactions, studentName, subjects = [
   const { selectedRewardType, setSelectedRewardType } = useRewardType()
 
   return (
-    <main className="relative z-10 flex-1">
+    <main className="relative z-10 flex-1 min-w-0">
       <TransactionPageClient 
         studentId={studentId} 
         transactions={transactions || []}

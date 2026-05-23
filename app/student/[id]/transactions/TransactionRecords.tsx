@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
-import StudentHomeNavButton from '@/app/components/StudentHomeNavButton'
 import TransactionModal from './components/TransactionModal'
 import { useRewardType } from './TransactionsContent'
 import { findRewardTypeForTransaction, getRewardUnit } from '../rewards/rewardUnit'
@@ -422,10 +421,15 @@ export default function TransactionRecords({ studentId, transactions, studentNam
       {/* Header */}
       <div className="mb-6">
         <div className="flex flex-col min-[360px]:flex-row min-[360px]:items-center justify-between gap-4 mb-4">
-          <div className="flex items-start gap-3">
-            <span className="text-green-600 material-icons-outlined text-3xl drop-shadow-sm flex-shrink-0">attach_money</span>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-2xl font-black tracking-tight">{t('passbook')}</h1>
+          <div className="flex items-center gap-3 min-w-0">
+            <span
+              className="material-icons-outlined rounded-2xl bg-gradient-to-br from-sky-100 to-indigo-100 p-2 text-2xl text-blue-600 shadow-sm flex-shrink-0"
+              aria-hidden="true"
+            >
+              attach_money
+            </span>
+            <div className="flex min-w-0 flex-col gap-1">
+              <h1 className="text-2xl font-black tracking-tight text-slate-800 truncate">{t('passbook')}</h1>
               {studentName && (
                 <p className="text-sm text-slate-500">
                   {locale === 'zh-TW' 
@@ -442,21 +446,20 @@ export default function TransactionRecords({ studentId, transactions, studentNam
             {onAddTransaction && (
               <button 
                 onClick={onAddTransaction}
-                className="student-toolbar-primary px-6 py-2.5 min-h-11 rounded-full font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                className="inline-flex min-h-9 items-center gap-1 rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-3.5 text-sm font-bold text-white shadow-md transition-all hover:opacity-95 hover:shadow-lg active:scale-95 cursor-pointer"
               >
-                <span className="material-icons-outlined text-lg">add_circle</span>
-                {locale === 'zh-TW' ? '添加記錄' : 'Add Record'}
+                <span className="material-icons-outlined text-base">add_circle</span>
+                {locale === 'zh-TW' ? '新增' : 'Add'}
               </button>
             )}
             
-            <StudentHomeNavButton className="hidden lg:inline-flex" />
           </div>
         </div>
         
         {/* 分類過濾器和月份選擇器 */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* 分類過濾器 */}
-          <div className="w-full md:w-auto bg-white/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 shadow-sm overflow-hidden overflow-x-auto">
+          <div className="w-full md:w-auto bg-white/60 backdrop-blur-sm p-1.5 rounded-full flex flex-nowrap items-center gap-1 border border-white/40 shadow-sm overflow-x-auto pb-2 pr-3 [scrollbar-width:thin] [scrollbar-color:rgba(26,90,189,0.15)_transparent] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[rgba(26,90,189,0.15)]">
             {/* 全部 */}
             <button
               onClick={() => setSelectedCategory('')}

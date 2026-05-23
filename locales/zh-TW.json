@@ -108,6 +108,14 @@
     "loadStudentFailed": "載入學生資料失敗",
     "learningRecord": "{name} 的學習記錄",
     "recordsTitle": "學習記錄",
+    "mobileBottomNav": {
+      "home": "首頁",
+      "records": "記錄",
+      "passbook": "存摺",
+      "rewards": "獎勵",
+      "subjects": "科目",
+      "settings": "設置"
+    },
     "returnToHome": "返回首頁",
     "manageSubjects": "管理科目",
     "passbook": "獎勵存摺",

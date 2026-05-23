@@ -105,6 +105,7 @@ export default function AssessmentForm({
   )
   const [maxScore, setMaxScore] = useState(assessment?.max_score || 100)
   const [showRules, setShowRules] = useState(false)
+  const [showDangerZone, setShowDangerZone] = useState(false)
   const [imageUrls, setImageUrls] = useState<UploadedImage[]>(
     Array.isArray(assessment?.image_urls) ? assessment.image_urls : []
   )
@@ -1031,26 +1032,56 @@ export default function AssessmentForm({
           </button>
         </div>
 
-        {/* 危險區域：刪除（僅編輯模式） */}
+        {/* 危險區域：刪除（僅編輯模式，預設收折） */}
         {isEditMode && (
           <div className="border-t-2 border-red-200 pt-6 mt-6">
-            <h3 className="text-lg font-bold text-red-600 mb-2">⚠️ {tMessages('dangerZone')}</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              {tMessages('deleteWarning')}
-            </p>
-            <ul className="text-sm text-gray-600 mb-4 list-disc list-inside space-y-1">
-              <li>{tMessages('deleteItem1')}</li>
-              <li>{tMessages('deleteItem2')}</li>
-              <li className="text-red-600 font-bold">{tMessages('cannotUndo')}</li>
-            </ul>
             <button
               type="button"
-              onClick={handleDelete}
-              disabled={loading || deleting || success}
-              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:-translate-y-1 hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 font-semibold cursor-pointer"
+              onClick={() => setShowDangerZone(!showDangerZone)}
+              className="w-full flex items-center justify-between gap-2 rounded-lg bg-red-50 px-3 py-2.5 text-left hover:bg-red-100 transition-colors duration-200 cursor-pointer"
             >
-              {deleting ? tMessages('deleting') : '🗑️ ' + tMessages('deleteThis')}
+              <div className="flex items-center gap-2 min-w-0">
+                <span
+                  className={`text-lg text-red-600 transition-transform duration-300 shrink-0 ${
+                    showDangerZone ? 'rotate-90' : 'rotate-0'
+                  }`}
+                >
+                  ▶
+                </span>
+                <h3 className="text-lg font-bold text-red-600 truncate">
+                  ⚠️ {tMessages('dangerZone')}
+                </h3>
+              </div>
+              <span className="text-xs font-semibold text-red-600 shrink-0">
+                {showDangerZone
+                  ? (locale === 'zh-TW' ? '點擊收起' : 'Click to collapse')
+                  : (locale === 'zh-TW' ? '點擊展開' : 'Click to expand')}
+              </span>
             </button>
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                showDangerZone ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+              }`}
+            >
+              <div className="pt-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  {tMessages('deleteWarning')}
+                </p>
+                <ul className="text-sm text-gray-600 mb-4 list-disc list-inside space-y-1">
+                  <li>{tMessages('deleteItem1')}</li>
+                  <li>{tMessages('deleteItem2')}</li>
+                  <li className="text-red-600 font-bold">{tMessages('cannotUndo')}</li>
+                </ul>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={loading || deleting || success}
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:-translate-y-1 hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 font-semibold cursor-pointer"
+                >
+                  {deleting ? tMessages('deleting') : '🗑️ ' + tMessages('deleteThis')}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </form>

@@ -108,6 +108,14 @@
     "loadStudentFailed": "Failed to load student data",
     "learningRecord": "{name}'s Learning Record",
     "recordsTitle": "Learning Records",
+    "mobileBottomNav": {
+      "home": "Home",
+      "records": "Logs",
+      "passbook": "Book",
+      "rewards": "Prize",
+      "subjects": "Class",
+      "settings": "Setup"
+    },
     "returnToHome": "Back to Home",
     "manageSubjects": "Manage Subjects",
     "passbook": "Reward Passbook",

@@ -225,9 +225,7 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
             </div>
             <h3 className="text-xl font-black text-slate-600">{record.title || record.description || formatDisplayDate(record.due_date)}</h3>
             {record.notes && (
-              <p className="mt-2 text-sm text-slate-600 line-clamp-4">
-                {locale === 'zh-TW' ? '備註：' : 'Notes: '}{record.notes}
-              </p>
+              <p className="mt-2 text-sm text-slate-600 line-clamp-4">{record.notes}</p>
             )}
           </div>
         </div>

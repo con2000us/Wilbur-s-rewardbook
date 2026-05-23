@@ -4,6 +4,7 @@ import RewardsPageClient from './RewardsPageClient'
 import { getTranslations } from 'next-intl/server'
 import { parseStudentAvatar } from '@/lib/utils/studentTheme'
 import StudentSidebarHeader from '../components/StudentSidebarHeader'
+import StudentFloatingQuickNav from '../components/StudentFloatingQuickNav'
 
 export default async function RewardsPage({ 
   params 
@@ -38,13 +39,22 @@ export default async function RewardsPage({
     <div className="min-h-screen p-4 md:p-10 flex justify-center items-start text-gray-800" style={{
       background: 'linear-gradient(135deg, #a7d9ef 0%, #f7b2c9 50%, #fcd6b6 100%)'
     }}>
-      <div className="w-full max-w-7xl glass-panel rounded-3xl p-6 md:p-10 min-h-[90vh] relative overflow-hidden flex flex-col lg:flex-row">
+      <div className="w-full max-w-7xl py-4 px-[5px] md:p-5 lg:p-10 min-h-[90vh] relative overflow-hidden flex flex-col lg:w-full lg:flex-row lg:glass-panel lg:rounded-3xl">
         {/* 裝飾性背景圓圈 */}
-        <div className="absolute top-0 left-0 w-96 h-96 bg-f7b2c9/40 rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-a7d9ef/30 rounded-full blur-[90px] translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+        <div className="absolute top-0 left-0 hidden w-96 h-96 bg-f7b2c9/40 rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2 pointer-events-none lg:block"></div>
+        <div className="absolute bottom-0 right-0 hidden w-[500px] h-[500px] bg-a7d9ef/30 rounded-full blur-[90px] translate-x-1/3 translate-y-1/3 pointer-events-none lg:block"></div>
+
+        <StudentFloatingQuickNav
+          studentId={id}
+          studentName={(student as any).name}
+          studentAvatar={avatar}
+          allStudents={allStudents || []}
+          currentPage="rewards"
+          reserveSpace
+        />
 
         {/* 左側欄 - 學生資訊和快速導覽 */}
-        <div className="relative z-20 lg:w-80 lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
+        <div className="relative z-20 hidden lg:block lg:w-80 lg:flex-shrink-0 mb-6 lg:mb-0 lg:mr-8 p-4 lg:p-0 rounded-2xl lg:rounded-none lg:min-w-0">
           <header className="flex flex-col lg:items-start lg:sticky lg:top-0 w-full lg:min-w-0">
             <StudentSidebarHeader
               studentId={id}
@@ -60,7 +70,7 @@ export default async function RewardsPage({
         </div>
 
         {/* 右側主內容區 - 獎勵類型與兌換管理 */}
-        <main className="relative z-10 flex-1">
+        <main className="relative z-10 flex-1 min-w-0">
           <RewardsPageClient 
             studentId={id}
             student={student as any}

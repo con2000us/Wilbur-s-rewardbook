@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server-admin'
+import { purgeAssessmentImages } from '@/lib/utils/goalImageStorage'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -27,6 +29,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '無權刪除此評量' }, { status: 403 })
     }
 
+    // 刪除 Storage 附圖（先於 DB 刪除，以便仍可使用 image_urls）
+    const adminClient = createAdminClient()
+    // @ts-ignore - Supabase type inference issue
+    await purgeAssessmentImages(adminClient, body.assessment_id, assessment.image_urls)
+
     // 刪除相關交易記錄
     await supabase
       .from('transactions')
@@ -48,9 +55,8 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('Unexpected error:', err)
     return NextResponse.json(
-      { error: '發生錯誤：' + (err as Error).message }, 
+      { error: '發生錯誤：' + (err as Error).message },
       { status: 500 }
     )
   }
 }
-

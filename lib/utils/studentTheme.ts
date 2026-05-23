@@ -83,6 +83,28 @@ export function parseStudentAvatar(avatarUrl: string | null, studentName: string
 }
 
 /**
+ * 依學生主題色產生 box-shadow（用於卡片、導覽列等）
+ */
+export function getStudentThemeShadow(
+  hex: string,
+  intensity: 'sm' | 'md' | 'lg' | 'hover' = 'md'
+): string {
+  const normalized = hex.startsWith('#') ? hex : `#${hex}`
+  const r = parseInt(normalized.slice(1, 3), 16)
+  const g = parseInt(normalized.slice(3, 5), 16)
+  const b = parseInt(normalized.slice(5, 7), 16)
+
+  const presets = {
+    sm: { y: 2, blur: 8, spread: -2, alpha: 0.14 },
+    md: { y: 4, blur: 14, spread: -2, alpha: 0.2 },
+    lg: { y: 8, blur: 24, spread: -4, alpha: 0.26 },
+    hover: { y: 6, blur: 20, spread: -2, alpha: 0.32 },
+  }
+  const p = presets[intensity]
+  return `0 ${p.y}px ${p.blur}px ${p.spread}px rgba(${r}, ${g}, ${b}, ${p.alpha})`
+}
+
+/**
  * 獲取學生背景漸變色（向後兼容，返回 Tailwind 類名）
  * @deprecated 請使用 parseStudentAvatar 並使用內聯樣式
  */
