@@ -48,7 +48,7 @@ Use this if you're not familiar with coding. You'll deploy to Vercel and copy/pa
 - Vercel account (free) - [Sign up](https://vercel.com/signup)
 - GitHub account (free) - [Sign up](https://github.com/signup)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD,AI_PROVIDER_KEY_ENCRYPTION_SECRET,AI_PROVIDER_KEY_ACTIVE_VERSION)
 
 **Steps:**
 1. **Set up Supabase first** (Required):
@@ -70,6 +70,8 @@ Use this if you're not familiar with coding. You'll deploy to Vercel and copy/pa
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD` (set a strong password)
+   - `AI_PROVIDER_KEY_ENCRYPTION_SECRET` (server-only secret for encrypted AI provider keys)
+   - `AI_PROVIDER_KEY_ACTIVE_VERSION` (use `1` unless rotating the encryption secret)
    - *(Optional)* `SUPABASE_SERVICE_ROLE_KEY` — same **service_role** value as above; recommended for **large goal** image uploads
 6. Continue and finish the deployment
 7. After deployment finishes, open your site:
@@ -103,6 +105,8 @@ Create a `.env.local` file and add your credentials:
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SITE_PASSWORD=your-strong-password-here
+AI_PROVIDER_KEY_ENCRYPTION_SECRET=your-random-encryption-secret
+AI_PROVIDER_KEY_ACTIVE_VERSION=1
 # Optional: large goal image uploads — Settings → API → service_role (server-only)
 # SUPABASE_SERVICE_ROLE_KEY=your_service_role_secret
 ```
@@ -141,7 +145,7 @@ wilburs-rewardbook/
 
 ### One-Click Deploy to Vercel (Recommended)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD,AI_PROVIDER_KEY_ENCRYPTION_SECRET,AI_PROVIDER_KEY_ACTIVE_VERSION)
 
 **Steps:**
 1. **Set up Supabase first** (Required):
@@ -164,6 +168,8 @@ wilburs-rewardbook/
    - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
    - `SITE_PASSWORD` - **Required**: Set a strong password to protect your site
+   - `AI_PROVIDER_KEY_ENCRYPTION_SECRET` - **Required for AI assessment settings**: server-only secret used to encrypt saved AI provider API keys
+   - `AI_PROVIDER_KEY_ACTIVE_VERSION` - Recommended: set to `1`; increment only when rotating the encryption secret
    - *(Optional)* `SUPABASE_SERVICE_ROLE_KEY` - **service_role** from the same API page; recommended for large goal uploads (keep secret)
 5. Click "Deploy"
 6. Done! 🎉
@@ -216,6 +222,8 @@ Before deploying, you need:
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
    SITE_PASSWORD=your-strong-password-here
+   AI_PROVIDER_KEY_ENCRYPTION_SECRET=your-random-encryption-secret
+   AI_PROVIDER_KEY_ACTIVE_VERSION=1
    ```
    
    > 💡 **Password Protection**: The app includes password protection. Set `SITE_PASSWORD` to protect your site. See [PASSWORD_PROTECTION_SETUP.md](./docs/PASSWORD_PROTECTION_SETUP.md) for details.

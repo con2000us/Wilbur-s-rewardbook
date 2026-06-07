@@ -6,7 +6,7 @@ Complete step-by-step guide for deploying Wilbur's Reward Book.
 
 ### Option 1: One-Click Deploy (Easiest)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD,AI_PROVIDER_KEY_ENCRYPTION_SECRET,AI_PROVIDER_KEY_ACTIVE_VERSION)
 
 **Steps:**
 1. **Set up Supabase first** (Required):
@@ -25,6 +25,8 @@ Complete step-by-step guide for deploying Wilbur's Reward Book.
    - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
    - `SITE_PASSWORD` - **Required**: Set a strong password to protect your site
+   - `AI_PROVIDER_KEY_ENCRYPTION_SECRET` - **Required for AI assessment settings**: server-only secret used to encrypt saved AI provider API keys
+   - `AI_PROVIDER_KEY_ACTIVE_VERSION` - Recommended: set to `1`; increment only when rotating the encryption secret
 5. Click "Deploy"
 6. Done! 🎉
 
@@ -97,7 +99,7 @@ You'll need these in the next step!
 2. Sign in with your GitHub account
 3. Click **"New Project"**
 4. Select your repository (or fork this one first)
-5. Click **"Deploy"**
+5. Continue to the environment variables section
 
 ### 2.2 Add Environment Variables
 
@@ -117,7 +119,15 @@ You'll need these in the next step!
    - **Value**: Set a strong password to protect your site
    - ⚠️ **Important**: This is required for password protection
    - Click **"Add"**
-5. Click **"Deploy"**
+5. Add the fourth variable:
+   - **Name**: `AI_PROVIDER_KEY_ENCRYPTION_SECRET`
+   - **Value**: Set a long random server-only secret. You can generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+   - Click **"Add"**
+6. Add the fifth variable:
+   - **Name**: `AI_PROVIDER_KEY_ACTIVE_VERSION`
+   - **Value**: `1`
+   - Click **"Add"**
+7. Click **"Deploy"**
 
 ### 2.3 Wait for Deployment
 
@@ -141,6 +151,8 @@ Click the deployment URL and you should see your app! 🎉
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD`
+   - `AI_PROVIDER_KEY_ENCRYPTION_SECRET`
+   - `AI_PROVIDER_KEY_ACTIVE_VERSION`
 4. Deploy!
 
 ### Deploy to Render
@@ -153,6 +165,8 @@ Click the deployment URL and you should see your app! 🎉
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD`
+   - `AI_PROVIDER_KEY_ENCRYPTION_SECRET`
+   - `AI_PROVIDER_KEY_ACTIVE_VERSION`
 4. Deploy!
 
 ### Deploy to Netlify
@@ -167,6 +181,8 @@ Click the deployment URL and you should see your app! 🎉
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD`
+   - `AI_PROVIDER_KEY_ENCRYPTION_SECRET`
+   - `AI_PROVIDER_KEY_ACTIVE_VERSION`
 6. Deploy!
 
 ## ✅ Verification Checklist

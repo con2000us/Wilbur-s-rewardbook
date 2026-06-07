@@ -38,7 +38,7 @@
 - Vercel 帳號（免費）- [註冊](https://vercel.com/signup)
 - GitHub 帳號（免費）- [註冊](https://github.com/signup)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD,AI_PROVIDER_KEY_ENCRYPTION_SECRET,AI_PROVIDER_KEY_ACTIVE_VERSION)
 
 **步驟：**
 1. **先設置 Supabase**（必填）：
@@ -93,6 +93,8 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SITE_PASSWORD=your-strong-password-here
+AI_PROVIDER_KEY_ENCRYPTION_SECRET=your-random-encryption-secret
+AI_PROVIDER_KEY_ACTIVE_VERSION=1
 # 選用：大型目標圖片上傳（Storage）需要，值為 Supabase Settings → API 的 service_role
 # SUPABASE_SERVICE_ROLE_KEY=your_service_role_secret
 ```
@@ -131,7 +133,7 @@ wilburs-rewardbook/
 
 ### 一鍵部署到 Vercel（推薦）
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD,AI_PROVIDER_KEY_ENCRYPTION_SECRET,AI_PROVIDER_KEY_ACTIVE_VERSION)
 
 **步驟：**
 1. **先設置 Supabase**（必填）：
@@ -206,6 +208,8 @@ wilburs-rewardbook/
    NEXT_PUBLIC_SUPABASE_URL=你的_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=你的_supabase_anon_key
    SITE_PASSWORD=你的強密碼
+   AI_PROVIDER_KEY_ENCRYPTION_SECRET=你的隨機加密密鑰
+   AI_PROVIDER_KEY_ACTIVE_VERSION=1
    ```
    
    > 💡 **密碼保護**：應用程式包含密碼保護功能。設置 `SITE_PASSWORD` 來保護你的網站。詳見 [PASSWORD_PROTECTION_SETUP.md](./docs/PASSWORD_PROTECTION_SETUP.md)。
