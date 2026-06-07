@@ -99,6 +99,10 @@ AI_PROVIDER_KEY_ACTIVE_VERSION=1
 # SUPABASE_SERVICE_ROLE_KEY=your_service_role_secret
 ```
 
+AI provider 環境變數用途：
+- `AI_PROVIDER_KEY_ENCRYPTION_SECRET`：伺服器端專用的加密密鑰，用來加密與解密在「設定 → AI 評量」中儲存的 AI provider API key。部署後請保持不變；如果之後更換，原本已儲存的 AI provider key 會無法解密，需重新輸入或執行密鑰輪替。
+- `AI_PROVIDER_KEY_ACTIVE_VERSION`：新加密 AI provider key 時記錄的版本標籤。一般部署請設為 `1`；只有在刻意輪替 `AI_PROVIDER_KEY_ENCRYPTION_SECRET` 並重新儲存 provider key 時才遞增。
+
 4. 執行資料庫遷移：
 全新專案請在 Supabase SQL Editor 依序執行 `database/bootstrap/01_schema.sql` 與 `database/bootstrap/02_seed_defaults.sql`。選用範例資料在 `database/bootstrap/03_seed_optional.sql` 與 `04_seed_demo_*.sql`。
 

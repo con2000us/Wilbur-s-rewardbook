@@ -70,8 +70,8 @@ Use this if you're not familiar with coding. You'll deploy to Vercel and copy/pa
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SITE_PASSWORD` (set a strong password)
-   - `AI_PROVIDER_KEY_ENCRYPTION_SECRET` (server-only secret for encrypted AI provider keys)
-   - `AI_PROVIDER_KEY_ACTIVE_VERSION` (use `1` unless rotating the encryption secret)
+   - `AI_PROVIDER_KEY_ENCRYPTION_SECRET` (server-only secret used to encrypt and decrypt saved AI provider API keys)
+   - `AI_PROVIDER_KEY_ACTIVE_VERSION` (version label for newly encrypted AI provider keys; use `1` unless rotating the encryption secret)
    - *(Optional)* `SUPABASE_SERVICE_ROLE_KEY` — same **service_role** value as above; recommended for **large goal** image uploads
 6. Continue and finish the deployment
 7. After deployment finishes, open your site:
@@ -110,6 +110,10 @@ AI_PROVIDER_KEY_ACTIVE_VERSION=1
 # Optional: large goal image uploads — Settings → API → service_role (server-only)
 # SUPABASE_SERVICE_ROLE_KEY=your_service_role_secret
 ```
+
+AI provider environment variables:
+- `AI_PROVIDER_KEY_ENCRYPTION_SECRET` is a server-only passphrase used to encrypt and decrypt AI provider API keys saved from **Settings → AI Assessment**. Keep this value stable. If you change it later, previously saved AI provider keys cannot be decrypted unless you re-enter or rotate them.
+- `AI_PROVIDER_KEY_ACTIVE_VERSION` is the version label stored with newly encrypted AI provider keys. Use `1` for normal installs; increment it only when intentionally rotating the encryption secret and re-saving provider keys.
 
 4. Run database migrations:
 For a fresh project, run `database/bootstrap/01_schema.sql` and then `database/bootstrap/02_seed_defaults.sql` in the Supabase SQL Editor. Optional demo/sample data lives in `database/bootstrap/03_seed_optional.sql` and `04_seed_demo_*.sql`.
@@ -168,8 +172,8 @@ wilburs-rewardbook/
    - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
    - `SITE_PASSWORD` - **Required**: Set a strong password to protect your site
-   - `AI_PROVIDER_KEY_ENCRYPTION_SECRET` - **Required for AI assessment settings**: server-only secret used to encrypt saved AI provider API keys
-   - `AI_PROVIDER_KEY_ACTIVE_VERSION` - Recommended: set to `1`; increment only when rotating the encryption secret
+   - `AI_PROVIDER_KEY_ENCRYPTION_SECRET` - **Required for AI assessment settings**: server-only secret used to encrypt and decrypt saved AI provider API keys
+   - `AI_PROVIDER_KEY_ACTIVE_VERSION` - Recommended: set to `1`; version label for newly encrypted keys, increment only when rotating the encryption secret
    - *(Optional)* `SUPABASE_SERVICE_ROLE_KEY` - **service_role** from the same API page; recommended for large goal uploads (keep secret)
 5. Click "Deploy"
 6. Done! 🎉
