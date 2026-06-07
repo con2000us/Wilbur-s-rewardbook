@@ -1,5 +1,5 @@
 -- goal_templates / goal_template_event_links RLS
--- 新環境 bootstrap 同步副本：database/bootstrap/05_goal_templates_rls.sql（修改時請兩處一併更新）
+-- 歷史 migration：供舊專案升級用。全新專案請跑 database/bootstrap/01_schema.sql（已含本檔 RLS），不必再執行本檔。
 -- 專案 API（lib/supabase/server.ts）使用 anon key、未帶使用者 JWT，
 -- 寫入時資料庫角色為 anon；政策必須包含 anon，否則 INSERT 會報 RLS 錯誤。
 -- 在 Supabase：SQL Editor 執行本檔，或在 Dashboard 建立政策時 Target roles 請同時包含 anon + authenticated。
