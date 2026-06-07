@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { AUTH_COOKIE_NAME } from '@/lib/auth/session'
 
 export async function POST() {
   try {
     const cookieStore = await cookies()
-    cookieStore.delete('site-auth')
-    
+    cookieStore.delete(AUTH_COOKIE_NAME)
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Logout error:', error)
     return NextResponse.json(
-      { error: '發生錯誤' },
-      { status: 500 }
+      { error: 'Logout failed.' },
+      { status: 500 },
     )
   }
 }
-

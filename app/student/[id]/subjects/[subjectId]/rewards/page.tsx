@@ -73,7 +73,7 @@ export default async function SubjectRewardsPage({
   const avatar = parseStudentAvatar((student as any).avatar_url, (student as any).name)
 
   return (
-    <div className="min-h-screen bg-app-shell py-4 px-[5px] md:p-6 lg:p-8">
+    <div className="app-shell-student app-shell-student-inline min-h-screen bg-app-shell py-4 px-[5px] md:p-6 lg:p-8">
       <StudentFloatingQuickNav
         studentId={id}
         studentName={(student as any).name}

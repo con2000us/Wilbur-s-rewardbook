@@ -910,7 +910,7 @@ export default function AssessmentForm({
               }`}
             >
               <div className="p-3 bg-white">
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
               {applicableRules.map((rule) => {
                 // 判斷規則類型
                 let ruleTypeLabel = ''

@@ -56,7 +56,7 @@ export default async function EditTransactionPage({
   const backgroundGradient = getStudentBackgroundGradient((student as any).avatar_url, (student as any).name)
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="app-shell-student app-shell-student-form min-h-screen relative overflow-hidden">
       {/* 背景漸層 - 多層效果 */}
       <div className={`absolute inset-0 bg-gradient-to-br ${backgroundGradient}`}></div>
       <div className="absolute inset-0 bg-gradient-to-tl from-white/20 via-transparent to-transparent"></div>

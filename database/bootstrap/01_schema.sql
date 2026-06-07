@@ -6612,6 +6612,37 @@ ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: public_data_api_grants; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.achievement_event_reward_rules TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.achievement_events TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.ai_assessment_logs TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.ai_provider_configs TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessment_import_drafts TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessment_import_jobs TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessment_import_mistake_drafts TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessment_mistakes TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessments TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.backups TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.custom_reward_types TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.exchange_rules TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.goal_template_event_links TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.goal_templates TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.reward_rules TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.site_settings TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.student_goals TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.students TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.subjects TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.transactions TO anon, authenticated;
+
+GRANT SELECT ON TABLE public.student_summary TO anon, authenticated;
+
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+
+--
 -- Name: messages; Type: ROW SECURITY; Schema: realtime; Owner: -
 --
 

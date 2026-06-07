@@ -1,51 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { AUTH_COOKIE_NAME, createAuthToken, getSitePassword } from '@/lib/auth/session'
 
 export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json()
-    
-    // 從環境變量獲取正確的密碼
-    const correctPassword = process.env.SITE_PASSWORD
-    
-    // 如果沒有設置密碼，使用預設密碼（僅用於開發）
+    const correctPassword = getSitePassword()
+
     if (!correctPassword) {
-      console.warn('⚠️ SITE_PASSWORD 環境變量未設置，使用預設密碼 "password"')
-      const defaultPassword = 'password'
-      
-      if (password !== defaultPassword) {
-        return NextResponse.json(
-          { errorCode: 'INVALID_PASSWORD', error: '密碼錯誤' },
-          { status: 401 }
-        )
-      }
-    } else {
-      // 驗證密碼
-      if (password !== correctPassword) {
-        return NextResponse.json(
-          { errorCode: 'INVALID_PASSWORD', error: '密碼錯誤' },
-          { status: 401 }
-        )
-      }
+      console.error('SITE_PASSWORD is required in production.')
+      return NextResponse.json(
+        {
+          errorCode: 'SITE_PASSWORD_NOT_CONFIGURED',
+          error: 'Site password is not configured.',
+        },
+        { status: 500 },
+      )
     }
-    
-    // 設置認證 cookie（30 天有效）
+
+    if (typeof password !== 'string' || password !== correctPassword) {
+      return NextResponse.json(
+        { errorCode: 'INVALID_PASSWORD', error: 'Incorrect password.' },
+        { status: 401 },
+      )
+    }
+
     const cookieStore = await cookies()
-    cookieStore.set('site-auth', 'authenticated', {
+    cookieStore.set(AUTH_COOKIE_NAME, await createAuthToken(correctPassword), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 天
+      maxAge: 60 * 60 * 24 * 30,
       path: '/',
     })
-    
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(
-      { errorCode: 'UNKNOWN_ERROR', error: '發生錯誤' },
-      { status: 500 }
+      { errorCode: 'UNKNOWN_ERROR', error: 'Login failed.' },
+      { status: 500 },
     )
   }
 }
-

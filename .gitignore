@@ -55,6 +55,9 @@ Thumbs.db
 logs/
 *.log
 
+# Local design/demo drafts that should not be deployed
+_not_for_upload/
+
 # Git history rewrite / commit message fix temp files
 commit_msg_fixed.txt
 COMMIT_EDITMSG

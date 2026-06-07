@@ -17,6 +17,20 @@ Run the consolidated bootstrap files in this order from `database/bootstrap/`:
 
 `01_schema.sql` 已包含目前大型目標流程需要的資料表與欄位：`goal_templates`、`goal_template_event_links`、`student_goals`、`transactions.goal_id`、`transactions.consumed_by_goal_id`。
 
+`01_schema.sql` also includes explicit Supabase Data API grants for the current app-facing tables and `student_summary` view.
+
+`01_schema.sql` 也已包含目前 app 會透過 Supabase Data API 存取的資料表與 `student_summary` view 的明確 grants。
+
+## Important: Supabase Data API Grants / 重要：Supabase Data API 授權
+
+Supabase is changing `public` schema Data API exposure in 2026. New `public` tables will require explicit PostgreSQL `GRANT` statements before PostgREST, GraphQL, or `supabase-js` can access them.
+
+Supabase 於 2026 年調整 `public` schema 的 Data API 暴露規則。未來新建的 `public` 資料表需要明確 PostgreSQL `GRANT`，PostgREST、GraphQL 或 `supabase-js` 才能存取。
+
+When adding new app-facing tables, views, or RPC functions, add explicit grants in the same migration as RLS policies. Existing Supabase databases should run `database/migrations/add-explicit-data-api-grants-2026.sql` once. See [SUPABASE_DATA_API_GRANTS_2026.md](./SUPABASE_DATA_API_GRANTS_2026.md).
+
+新增會被 app 存取的 table、view 或 RPC function 時，請在同一份 migration 中加入明確 grants，並與 RLS policies 一起維護。既有 Supabase 資料庫請執行一次 `database/migrations/add-explicit-data-api-grants-2026.sql`。詳見 [SUPABASE_DATA_API_GRANTS_2026.md](./SUPABASE_DATA_API_GRANTS_2026.md)。
+
 ## What the bootstrap files do / Bootstrap 檔案會做什麼
 
 The `database/bootstrap/` flow initializes a fresh project with the current schema and required seed data:
@@ -28,7 +42,8 @@ The `database/bootstrap/` flow initializes a fresh project with the current sche
 3. ✅ Creates large-goal tables: `goal_templates`, `goal_template_event_links`, `student_goals`
 4. ✅ Adds large-goal reset/restart tracking fields: `transactions.goal_id`, `consumed_by_goal_id`
 5. ✅ Enables indexes, foreign keys, and RLS policies needed by the app
-6. ✅ Seeds default reward types and optional demo data
+6. ✅ Adds explicit Supabase Data API grants for app-facing public objects
+7. ✅ Seeds default reward types and optional demo data
 
 ## Optional Files / 可選文件
 

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { getStudentThemeShadow, parseStudentAvatar } from '@/lib/utils/studentTheme'
+import AppActionCluster, { LanguageMenuButton } from '@/app/components/AppActionCluster'
 
 type Student = {
   id: string
@@ -19,8 +20,8 @@ type StudentAvatar = {
 }
 
 type StudentPageKey = 'records' | 'transactions' | 'subjects' | 'rewards' | 'settings'
-type MobileBottomNavLabelKey = 'home' | 'records' | 'passbook' | 'rewards' | 'subjects' | 'settings'
-type NavItemKey = 'home' | StudentPageKey
+type MobileBottomNavLabelKey = 'records' | 'passbook' | 'rewards' | 'subjects' | 'settings'
+type NavItemKey = StudentPageKey
 
 type Props = {
   studentId: string
@@ -41,15 +42,16 @@ const pageSuffixByKey: Record<StudentPageKey, string> = {
 }
 
 const EXPAND_TRANSITION_MS = 300
-const QUICK_NAV_SWITCHER_HEIGHT_COOKIE = 'student_quick_nav_switcher_height'
+const QUICK_NAV_TRAY_HEIGHT_COOKIE = 'student_quick_nav_tray_height'
 const QUICK_NAV_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
 const HEIGHT_EPSILON = 2
 const HEADER_BORDER_HEIGHT = 1
-const NAV_VERTICAL_CHROME_HEIGHT = 25
-const SWITCHER_GAP_HEIGHT = 8
+const NAV_VERTICAL_CHROME_HEIGHT = 28
+
+const studentHeaderActionButtonClass =
+  'flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-primary/45 bg-white text-primary ring-2 ring-white/90 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95'
 
 const navConfig: Array<{ key: NavItemKey; icon: string; labelKey: MobileBottomNavLabelKey }> = [
-  { key: 'home', icon: 'home', labelKey: 'home' },
   { key: 'records', icon: 'assignment', labelKey: 'records' },
   { key: 'transactions', icon: 'account_balance_wallet', labelKey: 'passbook' },
   { key: 'rewards', icon: 'stars', labelKey: 'rewards' },
@@ -67,8 +69,43 @@ function getViewportBucket() {
   return 'tablet'
 }
 
-function getSwitcherHeightCookieKey(studentCount: number) {
-  return `${QUICK_NAV_SWITCHER_HEIGHT_COOKIE}_${getViewportBucket()}_${studentCount}`
+function getTrayHeightCookieKey(studentCount: number) {
+  return `${QUICK_NAV_TRAY_HEIGHT_COOKIE}_${getViewportBucket()}_${studentCount}`
+}
+
+function hexToRgba(hex: string, alpha: number) {
+  const normalized = hex.startsWith('#') ? hex : `#${hex}`
+  const r = parseInt(normalized.slice(1, 3), 16)
+  const g = parseInt(normalized.slice(3, 5), 16)
+  const b = parseInt(normalized.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+/** 高亮度主題色混 slate，確保淺底上文字可讀 */
+function getReadableThemeRgb(hex: string) {
+  const normalized = hex.startsWith('#') ? hex : `#${hex}`
+  const r = parseInt(normalized.slice(1, 3), 16)
+  const g = parseInt(normalized.slice(3, 5), 16)
+  const b = parseInt(normalized.slice(5, 7), 16)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+  const slateR = 51
+  const slateG = 65
+  const slateB = 85
+
+  let mixRatio = 0
+  if (luminance > 0.78) mixRatio = 0.62
+  else if (luminance > 0.58) mixRatio = 0.4
+  else if (luminance > 0.45) mixRatio = 0.2
+
+  const mix = (channel: number, slate: number) =>
+    Math.round(channel * (1 - mixRatio) + slate * mixRatio)
+
+  return {
+    r: mix(r, slateR),
+    g: mix(g, slateG),
+    b: mix(b, slateB),
+  }
 }
 
 function readCookieNumber(key: string) {
@@ -124,17 +161,14 @@ export default function StudentFloatingQuickNav({
   const isZh = locale === 'zh-TW'
   const tStudent = useTranslations('student')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isStudentSwitcherOpen, setIsStudentSwitcherOpen] = useState(false)
   const themeHex = studentAvatar.hex ?? '#3b82f6'
   const headerShellRef = useRef<HTMLDivElement>(null)
   const topBarRef = useRef<HTMLDivElement>(null)
   const spacerRef = useRef<HTMLDivElement>(null)
-  const studentSwitcherRef = useRef<HTMLDivElement>(null)
-  const navLinksRef = useRef<HTMLDivElement>(null)
+  const quickNavMenuRef = useRef<HTMLElement>(null)
   const [topBarHeight, setTopBarHeight] = useState(96)
-  const [navLinksHeight, setNavLinksHeight] = useState(0)
-  const [switcherPanelMaxHeight, setSwitcherPanelMaxHeight] = useState(0)
-  const [switcherHeightCookieKey, setSwitcherHeightCookieKey] = useState('')
+  const [trayPanelHeight, setTrayPanelHeight] = useState(0)
+  const [trayHeightCookieKey, setTrayHeightCookieKey] = useState('')
   const [selectedSwitcherStudentId, setSelectedSwitcherStudentId] = useState(studentId)
 
   const selectedSwitcherStudent = useMemo(
@@ -146,18 +180,23 @@ export default function StudentFloatingQuickNav({
     ? parseStudentAvatar(selectedSwitcherStudent.avatar_url, selectedSwitcherStudent.name).hex ?? themeHex
     : themeHex
 
-  const getMobileNavActiveStyle = () => undefined
+  const headerShellStyle = {
+    boxShadow: getStudentThemeShadow(themeHex, 'md'),
+    background: `linear-gradient(180deg, ${hexToRgba(themeHex, 0.14)} 0%, rgba(255, 255, 255, 0.96) 38%, #ffffff 100%)`,
+    backdropFilter: 'blur(8px)',
+  }
+
+  const quickNavMenuStyle = {
+    background: `linear-gradient(180deg, ${hexToRgba(activeNavThemeHex, 0.1)} 0%, rgba(255, 255, 255, 0.4) 100%)`,
+  }
 
   const navItems = useMemo(
     () =>
       navConfig.map((item) => ({
         ...item,
         label: tStudent(`mobileBottomNav.${item.labelKey}`),
-        href:
-          item.key === 'home'
-            ? '/'
-            : getStudentPageHref(selectedSwitcherStudentId, item.key),
-        active: item.key !== 'home' && currentPage === item.key,
+        href: getStudentPageHref(selectedSwitcherStudentId, item.key),
+        active: currentPage === item.key,
       })),
     [currentPage, selectedSwitcherStudentId, tStudent]
   )
@@ -166,13 +205,20 @@ export default function StudentFloatingQuickNav({
     navItems.find((item) => item.active)?.label ||
     (isZh ? '學生頁面' : 'Student page')
 
-  const mobileNavItemInactiveClass =
-    'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-slate-500 transition-all hover:text-slate-800'
-  const mobileNavItemActiveClass =
-    'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-slate-800 font-semibold after:absolute after:bottom-0 after:left-1/4 after:h-[2px] after:w-1/2 after:rounded-full after:bg-slate-400'
+  const mobileNavItemBaseClass =
+    'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 transition-all duration-200 hover:-translate-y-1.5'
+  const mobileNavItemInactiveClass = mobileNavItemBaseClass
+  const mobileNavItemActiveClass = `${mobileNavItemBaseClass} relative font-semibold after:absolute after:bottom-0 after:left-1/4 after:h-[2px] after:w-1/2 after:rounded-full after:bg-[var(--nav-accent)]`
 
-  const toggleStudentSwitcher = () => {
-    setIsStudentSwitcherOpen((value) => !value)
+  const getMobileNavItemStyle = (active: boolean): React.CSSProperties => {
+    const { r, g, b } = getReadableThemeRgb(activeNavThemeHex)
+    const strokeAlpha = active ? 0.65 : 0.5
+    return {
+      color: `rgb(${r}, ${g}, ${b})`,
+      WebkitTextStroke: `0.4px ${hexToRgba(activeNavThemeHex, strokeAlpha)}`,
+      paintOrder: 'stroke fill',
+      ...(active ? { ['--nav-accent' as string]: `rgb(${r}, ${g}, ${b})` } : {}),
+    }
   }
 
   const handleStudentCardClick = (targetStudentId: string) => {
@@ -208,25 +254,13 @@ export default function StudentFloatingQuickNav({
   }, [studentName, currentPageLabel])
 
   useEffect(() => {
-    const navLinks = navLinksRef.current
-    if (!navLinks) return
-
-    const measure = () => setNavLinksHeight(Math.ceil(navLinks.scrollHeight))
-
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(navLinks)
-    return () => observer.disconnect()
-  }, [navItems.length, currentPageLabel])
-
-  useEffect(() => {
     const syncCachedHeight = () => {
-      const nextKey = getSwitcherHeightCookieKey(allStudents.length)
-      setSwitcherHeightCookieKey(nextKey)
+      const nextKey = getTrayHeightCookieKey(allStudents.length)
+      setTrayHeightCookieKey(nextKey)
 
       const cachedHeight = readCookieNumber(nextKey)
       if (cachedHeight) {
-        setSwitcherPanelMaxHeight((currentHeight) =>
+        setTrayPanelHeight((currentHeight) =>
           Math.abs(currentHeight - cachedHeight) > HEIGHT_EPSILON ? cachedHeight : currentHeight
         )
       }
@@ -238,18 +272,18 @@ export default function StudentFloatingQuickNav({
   }, [allStudents.length])
 
   useEffect(() => {
-    const panel = studentSwitcherRef.current
-    if (!panel) return
+    const tray = quickNavMenuRef.current
+    if (!tray) return
 
     const measure = () => {
-      const measuredHeight = Math.ceil(panel.scrollHeight)
+      const measuredHeight = Math.ceil(tray.scrollHeight)
       if (measuredHeight <= 0) return
 
-      setSwitcherPanelMaxHeight((currentHeight) =>
+      setTrayPanelHeight((currentHeight) =>
         Math.abs(currentHeight - measuredHeight) > HEIGHT_EPSILON ? measuredHeight : currentHeight
       )
 
-      const cookieKey = switcherHeightCookieKey || getSwitcherHeightCookieKey(allStudents.length)
+      const cookieKey = trayHeightCookieKey || getTrayHeightCookieKey(allStudents.length)
       const cachedHeight = readCookieNumber(cookieKey)
       if (!cachedHeight || Math.abs(cachedHeight - measuredHeight) > HEIGHT_EPSILON) {
         writeCookieNumber(cookieKey, measuredHeight)
@@ -258,18 +292,15 @@ export default function StudentFloatingQuickNav({
 
     measure()
     const observer = new ResizeObserver(measure)
-    observer.observe(panel)
+    observer.observe(tray)
     return () => observer.disconnect()
-  }, [allStudents.length, switcherHeightCookieKey])
+  }, [allStudents.length, navItems.length, trayHeightCookieKey])
 
   useEffect(() => {
     setSelectedSwitcherStudentId(studentId)
   }, [studentId])
 
-  const switcherTargetHeight = isMenuOpen && isStudentSwitcherOpen ? switcherPanelMaxHeight : 0
-  const expandTargetMaxHeight = isMenuOpen
-    ? NAV_VERTICAL_CHROME_HEIGHT + navLinksHeight + SWITCHER_GAP_HEIGHT + switcherTargetHeight
-    : 0
+  const expandTargetMaxHeight = isMenuOpen ? NAV_VERTICAL_CHROME_HEIGHT + trayPanelHeight : 0
   const headerTargetHeight = topBarHeight + expandTargetMaxHeight + HEADER_BORDER_HEIGHT
   const spacerTargetHeight = Math.max(0, headerTargetHeight - 2)
 
@@ -282,11 +313,15 @@ export default function StudentFloatingQuickNav({
 
   return (
     <>
+      <AppActionCluster
+        className="app-action-cluster-fixed app-action-cluster-align-student hidden lg:inline-flex"
+        ariaLabel={isZh ? '全站操作' : 'Global actions'}
+      />
       <header className="fixed inset-x-0 top-0 z-50 w-full px-0 lg:hidden">
         <div
           ref={headerShellRef}
-          className="overflow-hidden rounded-none border-b border-white/70 bg-white/90 backdrop-blur-md"
-          style={{ boxShadow: getStudentThemeShadow(themeHex, 'md') }}
+          className="rounded-none border-b border-white/70 backdrop-blur-md"
+          style={headerShellStyle}
         >
           <div ref={topBarRef} className="flex items-center justify-between gap-4 px-5 py-4">
             <div className="flex min-w-0 items-center gap-3 text-left">
@@ -304,28 +339,43 @@ export default function StudentFloatingQuickNav({
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 bg-white ring-2 ring-white/90 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95 ${
-                  isStudentSwitcherOpen
-                    ? 'border-solid border-primary/45 text-primary opacity-100'
-                    : 'border-dashed border-slate-500/70 text-slate-500 opacity-85'
-                }`}
+              <Link
+                href="/settings"
+                className={studentHeaderActionButtonClass}
                 style={{
                   boxShadow: `${getStudentThemeShadow(themeHex, 'md')}, 0 8px 18px -8px rgba(15, 23, 42, 0.32)`,
                 }}
-                aria-expanded={isMenuOpen && isStudentSwitcherOpen}
-                aria-controls="student-switcher-panel"
-                aria-pressed={isStudentSwitcherOpen}
-                aria-label={isZh ? '切換顯示學生選項' : 'Toggle student list in menu'}
-                onClick={toggleStudentSwitcher}
+                aria-label={isZh ? '系統設定' : 'Settings'}
+                title={isZh ? '系統設定' : 'Settings'}
               >
-                <span className="material-icons-outlined text-2xl">person</span>
-              </button>
+                <span className="material-icons-outlined text-2xl">settings</span>
+              </Link>
+
+              <LanguageMenuButton
+                variant="studentHeader"
+                title={isZh ? '語言' : 'Language'}
+                className={studentHeaderActionButtonClass}
+                iconClassName="text-2xl"
+                buttonStyle={{
+                  boxShadow: `${getStudentThemeShadow(themeHex, 'md')}, 0 8px 18px -8px rgba(15, 23, 42, 0.32)`,
+                }}
+              />
+
+              <Link
+                href="/"
+                className={studentHeaderActionButtonClass}
+                style={{
+                  boxShadow: `${getStudentThemeShadow(themeHex, 'md')}, 0 8px 18px -8px rgba(15, 23, 42, 0.32)`,
+                }}
+                aria-label={isZh ? '返回首頁' : 'Back to home'}
+                title={isZh ? '首頁' : 'Home'}
+              >
+                <span className="material-icons-outlined text-2xl">home</span>
+              </Link>
 
               <button
                 type="button"
-                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-primary/45 bg-white text-primary ring-2 ring-white/90 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95"
+                className={studentHeaderActionButtonClass}
                 style={{
                   boxShadow: `${getStudentThemeShadow(themeHex, 'md')}, 0 8px 18px -8px rgba(15, 23, 42, 0.32)`,
                 }}
@@ -353,33 +403,26 @@ export default function StudentFloatingQuickNav({
           </div>
 
           <div
-            className="overflow-hidden transition-[max-height] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+            className={`transition-[max-height] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+              isMenuOpen ? 'overflow-visible' : 'overflow-hidden'
+            }`}
             style={{ maxHeight: expandTargetMaxHeight }}
           >
             <div className={isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}>
               <nav
-                className={`border-t border-white/55 px-4 pb-3 pt-0 transition-opacity duration-300 ${
+                ref={quickNavMenuRef}
+                className={`border-t border-white/55 px-4 pb-3 pt-3 transition-opacity duration-300 ${
                   isMenuOpen ? 'opacity-100' : 'opacity-0'
                 }`}
+                style={quickNavMenuStyle}
                 aria-label={isZh ? '學生快速導覽' : 'Student quick navigation'}
               >
-                <div className="flex flex-col gap-2 px-px">
                 <div
-                  className={`overflow-hidden transition-[max-height] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                    isStudentSwitcherOpen && isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'
-                  }`}
-                  style={{
-                    maxHeight: isStudentSwitcherOpen && isMenuOpen ? switcherPanelMaxHeight : 0,
-                  }}
-                  aria-hidden={!isStudentSwitcherOpen || !isMenuOpen}
+                  id="student-switcher-panel"
+                  className="pb-2 pt-1 [scrollbar-color:rgba(106,153,224,0.18)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-[4px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-primary/25 [&::-webkit-scrollbar-track]:bg-transparent"
                 >
-                  <div
-                    id="student-switcher-panel"
-                    ref={studentSwitcherRef}
-                    className="border-t border-white/55 pb-2 pt-3 [scrollbar-color:rgba(106,153,224,0.18)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-[4px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-primary/25 [&::-webkit-scrollbar-track]:bg-transparent"
-                  >
-                    <div className="flex gap-3 overflow-x-auto pb-2">
-                    {allStudents.map((student) => {
+                  <div className="flex gap-3 overflow-x-auto overflow-y-visible px-px pt-1 pb-1">
+                  {allStudents.map((student) => {
                       const parsedAvatar = parseStudentAvatar(student.avatar_url, student.name)
                       const active = student.id === selectedSwitcherStudentId
                       const studentHex = parsedAvatar.hex ?? '#3b82f6'
@@ -389,19 +432,20 @@ export default function StudentFloatingQuickNav({
                           key={student.id}
                           type="button"
                           onClick={() => handleStudentCardClick(student.id)}
-                          className={`relative flex h-44 w-32 shrink-0 flex-col items-center justify-center rounded-2xl p-3 text-center transition-all duration-200 ${
+                          className={`relative flex h-44 w-32 shrink-0 flex-col items-center justify-center rounded-2xl p-3 text-center transition-all duration-200 hover:-translate-y-1.5 ${
                             active
-                              ? 'border-2 text-slate-800'
-                              : 'border border-slate-200 bg-white text-slate-700 hover:-translate-y-0.5'
+                              ? 'border-[3px] text-slate-800'
+                              : 'border border-slate-200 text-slate-700'
                           }`}
                           style={
                             active
                               ? {
-                                  borderColor: studentHex,
-                                  background: `linear-gradient(135deg, ${studentHex}2a 0%, ${studentHex}14 45%, #ffffff 100%)`,
+                                  borderColor: `${studentHex}80`,
+                                  background: `linear-gradient(to bottom, ${studentHex}2a 0%, ${studentHex}14 45%, #ffffff 100%)`,
                                   boxShadow: getStudentThemeShadow(studentHex, 'lg'),
                                 }
                               : {
+                                  background: `linear-gradient(to bottom, ${studentHex}2a 0%, ${studentHex}14 45%, #ffffff 100%)`,
                                   boxShadow: getStudentThemeShadow(studentHex, 'sm'),
                                 }
                           }
@@ -424,20 +468,18 @@ export default function StudentFloatingQuickNav({
                           <span className="block w-full truncate text-[17px] font-black leading-tight">{student.name}</span>
                         </button>
                       )
-                    })}
-                    </div>
+                  })}
                   </div>
                 </div>
 
-                <div
-                  ref={navLinksRef}
-                  className="flex w-full items-center px-1 py-2 pt-0"
-                >
-                  {navItems.map((item, index) => {
+                <div className="h-px bg-slate-200/70" aria-hidden="true" />
+
+                <div className="flex w-full items-center py-1">
+                {navItems.map((item, index) => {
                     const itemClassName = item.active
                       ? mobileNavItemActiveClass
                       : mobileNavItemInactiveClass
-                    const itemStyle = item.active ? getMobileNavActiveStyle() : undefined
+                    const itemStyle = getMobileNavItemStyle(item.active)
                     const itemContent = (
                       <>
                         <span className="material-icons-outlined text-[26px]">{item.icon}</span>
@@ -473,8 +515,7 @@ export default function StudentFloatingQuickNav({
                         {separator}
                       </React.Fragment>
                     )
-                  })}
-                </div>
+                })}
                 </div>
               </nav>
             </div>
