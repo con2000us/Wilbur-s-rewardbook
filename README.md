@@ -48,7 +48,7 @@ Use this if you're not familiar with coding. You'll deploy to Vercel and copy/pa
 - Vercel account (free) - [Sign up](https://vercel.com/signup)
 - GitHub account (free) - [Sign up](https://github.com/signup)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD,AI_PROVIDER_KEY_ENCRYPTION_SECRET,AI_PROVIDER_KEY_ACTIVE_VERSION)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD,SUPABASE_SERVICE_ROLE_KEY,AI_PROVIDER_KEY_ENCRYPTION_SECRET,AI_PROVIDER_KEY_ACTIVE_VERSION)
 
 **Steps:**
 1. **Set up Supabase first** (Required):
@@ -149,7 +149,7 @@ wilburs-rewardbook/
 
 ### One-Click Deploy to Vercel (Recommended)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD,AI_PROVIDER_KEY_ENCRYPTION_SECRET,AI_PROVIDER_KEY_ACTIVE_VERSION)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/con2000us/Wilbur-s-rewardbook&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SITE_PASSWORD,SUPABASE_SERVICE_ROLE_KEY,AI_PROVIDER_KEY_ENCRYPTION_SECRET,AI_PROVIDER_KEY_ACTIVE_VERSION)
 
 **Steps:**
 1. **Set up Supabase first** (Required):
@@ -226,6 +226,7 @@ Before deploying, you need:
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
    SITE_PASSWORD=your-strong-password-here
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_secret
    AI_PROVIDER_KEY_ENCRYPTION_SECRET=your-random-encryption-secret
    AI_PROVIDER_KEY_ACTIVE_VERSION=1
    ```
