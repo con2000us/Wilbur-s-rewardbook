@@ -1,15 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { calculateRewardFromRule } from '@/lib/rewardFormula'
+import { calculateRewardOutputsFromRule, type CalculatedRewardItem } from '@/lib/rewardFormula'
+import { insertAssessmentRewardTransactions } from '@/lib/assessments/rewardTransactions'
 import { gradeToScore, gradeToPercentage } from '@/lib/gradeConverter'
 import type { Database, Json } from '@/lib/supabase/types'
 
 type AssessmentUpdate = Database['public']['Tables']['assessments']['Update']
 type RewardRuleRow = Database['public']['Tables']['reward_rules']['Row']
-type TransactionInsert = Database['public']['Tables']['transactions']['Insert']
 type SubjectGradeRow = Pick<Database['public']['Tables']['subjects']['Row'], 'grade_mapping'>
 type StudentIdRow = Pick<Database['public']['Tables']['students']['Row'], 'id'>
-type RewardTypeLookup = Pick<Database['public']['Tables']['custom_reward_types']['Row'], 'id' | 'display_name' | 'type_key'>
 
 type AssessmentWriteData = AssessmentUpdate & {
   image_urls?: string[]
@@ -133,6 +132,7 @@ export async function POST(request: NextRequest) {
 
     let actualScore: number | null = null
     let actualPercentage: number | null = null
+    let rewardItemsForTransactions: CalculatedRewardItem[] = []
     const maxScore = Number(updateData.max_score ?? 100)
 
     if (updateData.score_type === 'letter') {
@@ -220,13 +220,16 @@ export async function POST(request: NextRequest) {
       if (body.manual_reward !== null && body.manual_reward !== undefined) {
         updateData.reward_amount = Math.max(0, Math.round(Number(body.manual_reward)))
       } else if (matchedRule) {
-        updateData.reward_amount = calculateRewardFromRule({
+        const rewardOutput = calculateRewardOutputsFromRule({
           ruleRewardAmount: matchedRule.reward_amount,
           ruleRewardFormula: matchedRule.reward_formula,
+          ruleRewardConfig: matchedRule.reward_config,
           score: actualScore,
           percentage: actualPercentage,
           maxScore,
         })
+        updateData.reward_amount = rewardOutput.rewardAmount
+        rewardItemsForTransactions = rewardOutput.usesRewardConfig ? rewardOutput.rewards : []
       } else {
         updateData.reward_amount = fallbackRewardAmount(actualPercentage, rules.length > 0)
       }
@@ -275,28 +278,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update assessment' }, { status: 500 })
     }
 
-    const selectedRewardTypeId = body.reward_type_id || null
-
-    let selectedRewardType: RewardTypeLookup | null = null
-    if (selectedRewardTypeId) {
-      const { data } = await supabase
-        .from('custom_reward_types')
-        .select('id, display_name, type_key')
-        .eq('id', selectedRewardTypeId)
-        .single()
-      selectedRewardType = data as RewardTypeLookup | null
-    }
-
-    const { data: moneyRewardTypeData } = await supabase
-      .from('custom_reward_types')
-      .select('id, display_name, type_key')
-      .eq('type_key', 'money')
-      .single()
-
-    const moneyRewardType = moneyRewardTypeData as RewardTypeLookup | null
-    const targetRewardType = selectedRewardType || moneyRewardType
-    const rewardCategoryName = targetRewardType?.display_name || 'Reward'
-
     await supabase
       .from('transactions')
       .delete()
@@ -305,21 +286,15 @@ export async function POST(request: NextRequest) {
     const rewardAmount = Number(updateData.reward_amount ?? 0)
     const updatedAssessment = assessment as { id: string }
 
-    if (rewardAmount > 0 && body.student_id) {
-      const transactionToInsert: TransactionInsert = {
-        student_id: body.student_id,
-        assessment_id: updatedAssessment.id,
-        reward_type_id: targetRewardType?.id || null,
-        achievement_event_id: null,
-        transaction_type: 'earn',
-        amount: rewardAmount,
-        description: `${body.title || 'Assessment'} - ${rewardCategoryName}`,
-        category: rewardCategoryName,
-        transaction_date: body.due_date || new Date().toISOString().split('T')[0],
-      }
-
-      await supabase.from('transactions').insert(transactionToInsert)
-    }
+    await insertAssessmentRewardTransactions(supabase, {
+      studentId: body.student_id,
+      assessmentId: updatedAssessment.id,
+      title: body.title,
+      dueDate: body.due_date,
+      rewardItems: rewardItemsForTransactions,
+      legacyRewardAmount: rewardAmount,
+      selectedRewardTypeId: body.reward_type_id || null,
+    })
 
     return NextResponse.json({ success: true, data: assessment })
   } catch (err) {

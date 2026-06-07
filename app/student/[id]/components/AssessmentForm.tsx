@@ -3,7 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { calculateRewardFromRule } from '@/lib/rewardFormula'
+import {
+  calculateRewardOutputsFromRule,
+  parseRewardConfig,
+  type CalculatedRewardItem,
+  type RewardConfigItem,
+} from '@/lib/rewardFormula'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
 import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
 import AiAssessmentImport from './AiAssessmentImport'
@@ -43,6 +48,7 @@ interface RewardRule {
   max_score: number | null
   reward_amount: number
   reward_formula?: string | null
+  reward_config?: RewardConfigItem[] | null
   priority: number
   display_order?: number | null
   is_active: boolean
@@ -120,6 +126,25 @@ export default function AssessmentForm({
 
   const selectedRewardType = rewardTypes.find((type) => type.id === selectedRewardTypeId)
   const rewardUnit = selectedRewardType?.default_unit || (locale === 'zh-TW' ? '元' : 'units')
+  const fallbackRewardName = locale === 'zh-TW' ? '獎勵' : 'Reward'
+
+  const getRewardTypeByRef = (item: { type_id?: string | null; type_key?: string | null }) => {
+    return rewardTypes.find((type) =>
+      (item.type_id && type.id === item.type_id) ||
+      (item.type_key && type.type_key === item.type_key)
+    )
+  }
+
+  const getRewardItemName = (item: { type_id?: string | null; type_key?: string | null }) => {
+    const type = getRewardTypeByRef(item)
+    return type?.display_name || item.type_key || selectedRewardType?.display_name || fallbackRewardName
+  }
+
+  const formatRewardItemAmount = (item: CalculatedRewardItem) => {
+    const type = getRewardTypeByRef(item)
+    const unit = item.unit || type?.default_unit || (!item.type_id && !item.type_key ? rewardUnit : '')
+    return `${item.amount}${unit ? ` ${unit}` : ''}`
+  }
 
   useEffect(() => {
     async function loadRewardTypes() {
@@ -232,16 +257,6 @@ export default function AssessmentForm({
     return false
   }) : undefined
 
-  const expectedReward = matchingRule && actualScore !== null && actualPercentage !== null
-    ? calculateRewardFromRule({
-        ruleRewardAmount: matchingRule.reward_amount,
-        ruleRewardFormula: matchingRule.reward_formula,
-        score: actualScore,
-        percentage: actualPercentage,
-        maxScore,
-      })
-    : 0
-
   // 用於顯示的百分比（根據評分方式）
   const displayPercentage = scoreType === 'letter' && grade
     ? actualPercentage
@@ -257,6 +272,69 @@ export default function AssessmentForm({
       .replace(/M/g, t('formulaVars.maxScore'))
       .replace(/P/g, t('formulaVars.percentage'))
   }
+
+  const getStaticRewardDisplays = (rule: RewardRule) => {
+    const configItems = parseRewardConfig(rule.reward_config)
+
+    if (configItems.length > 0) {
+      return configItems.map((item, index) => {
+        const type = getRewardTypeByRef(item)
+        const formula = item.formula?.trim()
+        const amount = Math.max(0, Math.round(Number(item.amount ?? 0)))
+        const unit = item.unit || type?.default_unit || ''
+
+        return {
+          key: `config-${item.type_id || item.type_key || index}`,
+          name: type?.display_name || item.type_key || fallbackRewardName,
+          amountText: formula ? `(${formatFormulaForDisplay(formula)})` : `${amount}${unit ? ` ${unit}` : ''}`,
+        }
+      })
+    }
+
+    if (rule.reward_formula) {
+      return [{
+        key: 'legacy-formula',
+        name: selectedRewardType?.display_name || fallbackRewardName,
+        amountText: `(${formatFormulaForDisplay(rule.reward_formula)})`,
+      }]
+    }
+
+    const amount = Math.max(0, Math.round(Number(rule.reward_amount ?? 0)))
+    return [{
+      key: 'legacy-amount',
+      name: selectedRewardType?.display_name || fallbackRewardName,
+      amountText: `${amount}${rewardUnit ? ` ${rewardUnit}` : ''}`,
+    }]
+  }
+
+  const getRuleRewardDisplays = (rule: RewardRule) => {
+    if (actualScore !== null && actualPercentage !== null) {
+      try {
+        const rewardOutput = calculateRewardOutputsFromRule({
+          ruleRewardAmount: rule.reward_amount,
+          ruleRewardFormula: rule.reward_formula,
+          ruleRewardConfig: rule.reward_config,
+          score: actualScore,
+          percentage: actualPercentage,
+          maxScore,
+        })
+
+        if (rewardOutput.rewards.length > 0) {
+          return rewardOutput.rewards.map((item, index) => ({
+            key: `calculated-${item.type_id || item.type_key || index}`,
+            name: getRewardItemName(item),
+            amountText: formatRewardItemAmount(item),
+          }))
+        }
+      } catch {
+        return getStaticRewardDisplays(rule)
+      }
+    }
+
+    return getStaticRewardDisplays(rule)
+  }
+
+  const expectedRewardDisplays = matchingRule ? getRuleRewardDisplays(matchingRule) : []
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -811,7 +889,7 @@ export default function AssessmentForm({
           />
         </div>
 
-        {/* 分數預覽與預期獎金 */}
+        {/* 分數預覽與預期獎勵 */}
         {((scoreType === 'numeric' && score !== null) || (scoreType === 'letter' && grade)) && displayPercentage !== null && (
           <div className={`p-3 rounded-lg border-2 ${
             matchingRule 
@@ -840,11 +918,18 @@ export default function AssessmentForm({
               {matchingRule ? (
                 <div className="text-right">
                   <p className="text-sm text-gray-600">
-                    {locale === 'zh-TW' ? '預期獎金' : 'Expected Reward'}
+                    {locale === 'zh-TW' ? '預期獎勵' : 'Expected Reward'}
                   </p>
-                  <p className="text-2xl font-bold text-green-600">
-                    +{expectedReward} {rewardUnit}
-                  </p>
+                  <div className="space-y-1">
+                    {expectedRewardDisplays.length > 0 ? expectedRewardDisplays.map((reward) => (
+                      <div key={reward.key}>
+                        <p className="text-xs font-semibold text-gray-500">{reward.name}</p>
+                        <p className="text-2xl font-bold text-green-600">+{reward.amountText}</p>
+                      </div>
+                    )) : (
+                      <p className="text-2xl font-bold text-green-600">+0 {rewardUnit}</p>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500">
                     {locale === 'zh-TW' ? '根據' : 'Based on'} &quot;{matchingRule.rule_name}&quot;
                   </p>
@@ -948,8 +1033,7 @@ export default function AssessmentForm({
 
                 // 檢查是否為當前匹配的規則
                 const isMatching = matchingRule?.id === rule.id
-                const formulaDisplay = rule.reward_formula ? formatFormulaForDisplay(rule.reward_formula) : ''
-                const amountDisplay = Math.max(0, Math.round(Number(rule.reward_amount ?? 0)))
+                const rewardDisplays = getRuleRewardDisplays(rule)
 
                 return (
                   <div 
@@ -964,19 +1048,24 @@ export default function AssessmentForm({
                       <span className={`px-2 py-1 rounded text-xs font-semibold ${ruleTypeBadge}`}>
                         {ruleTypeLabel}
                       </span>
-                      <p className={`text-base font-bold ${isMatching ? 'text-green-700 text-lg' : 'text-green-600'}`}>
-                        {rule.reward_formula ? `+(${formulaDisplay})` : `$${amountDisplay}`}
-                      </p>
+                      <div className="text-right">
+                        {rewardDisplays.map((reward) => (
+                          <p
+                            key={reward.key}
+                            className={`text-base font-bold ${isMatching ? 'text-green-700 text-lg' : 'text-green-600'}`}
+                          >
+                            {reward.name}: +{reward.amountText}
+                          </p>
+                        ))}
+                      </div>
                     </div>
                     <div>
                       <p className="font-semibold text-sm text-gray-800 truncate" title={rule.rule_name}>
                         {rule.rule_name}
                       </p>
                       <p className="text-xs text-gray-600">{scoreRange}</p>
-                      {rule.reward_formula && (
-                        <p className="text-[11px] text-gray-500">
-                          {t('formulaLabel')}: {formulaDisplay}
-                        </p>
+                      {rewardDisplays.some((reward) => reward.amountText.startsWith('(')) && (
+                        <p className="text-[11px] text-gray-500">{t('formulaLabel')}</p>
                       )}
                     </div>
                     <p className="text-xs text-gray-500">

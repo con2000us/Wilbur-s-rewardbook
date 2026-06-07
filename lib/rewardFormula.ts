@@ -186,4 +186,144 @@ export function calculateRewardFromRule(params: {
   return Math.max(0, Math.round(fallback))
 }
 
+export type RewardConfigItem = {
+  type_id?: string | null
+  type_key?: string | null
+  amount?: number | string | null
+  formula?: string | null
+  unit?: string | null
+}
 
+export type CalculatedRewardItem = {
+  type_id: string | null
+  type_key: string | null
+  amount: number
+  formula: string | null
+  unit: string | null
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  return value as Record<string, unknown>
+}
+
+function stringOrNull(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+export function parseRewardConfig(input: unknown): RewardConfigItem[] {
+  let value = input
+
+  if (typeof value === 'string') {
+    try {
+      value = JSON.parse(value)
+    } catch {
+      return []
+    }
+  }
+
+  if (!Array.isArray(value)) return []
+
+  const items: RewardConfigItem[] = []
+
+  for (const item of value) {
+    const record = asRecord(item)
+    if (!record) continue
+
+    items.push({
+      type_id: stringOrNull(record.type_id),
+      type_key: stringOrNull(record.type_key),
+      amount: typeof record.amount === 'number' || typeof record.amount === 'string' ? record.amount : null,
+      formula: stringOrNull(record.formula),
+      unit: stringOrNull(record.unit),
+    })
+  }
+
+  return items
+}
+
+export function calculateRewardConfigItems(params: {
+  ruleRewardConfig?: unknown
+  score: number
+  percentage: number
+  maxScore: number
+}) {
+  const { ruleRewardConfig, score, percentage, maxScore } = params
+
+  return parseRewardConfig(ruleRewardConfig)
+    .map((item) => {
+      const formula = item.formula?.trim() || null
+      const amount = formula
+        ? calculateRewardFromRule({
+            ruleRewardAmount: 0,
+            ruleRewardFormula: formula,
+            score,
+            percentage,
+            maxScore,
+          })
+        : Math.max(0, Math.round(Number(item.amount ?? 0)))
+
+      if (!isFiniteNumber(amount)) return null
+
+      return {
+        type_id: item.type_id || null,
+        type_key: item.type_key || null,
+        amount,
+        formula,
+        unit: item.unit || null,
+      } satisfies CalculatedRewardItem
+    })
+    .filter((item): item is CalculatedRewardItem => item !== null && item.amount > 0)
+}
+
+export function calculateRewardOutputsFromRule(params: {
+  ruleRewardAmount?: unknown
+  ruleRewardFormula?: unknown
+  ruleRewardConfig?: unknown
+  score: number
+  percentage: number
+  maxScore: number
+}) {
+  const configRewards = calculateRewardConfigItems({
+    ruleRewardConfig: params.ruleRewardConfig,
+    score: params.score,
+    percentage: params.percentage,
+    maxScore: params.maxScore,
+  })
+
+  if (configRewards.length > 0) {
+    const moneyTotal = configRewards
+      .filter((item) => item.type_key === 'money')
+      .reduce((sum, item) => sum + item.amount, 0)
+
+    return {
+      rewardAmount: moneyTotal > 0 ? moneyTotal : configRewards[0].amount,
+      rewards: configRewards,
+      usesRewardConfig: true,
+    }
+  }
+
+  const rewardAmount = calculateRewardFromRule({
+    ruleRewardAmount: params.ruleRewardAmount,
+    ruleRewardFormula: params.ruleRewardFormula,
+    score: params.score,
+    percentage: params.percentage,
+    maxScore: params.maxScore,
+  })
+
+  return {
+    rewardAmount,
+    rewards: rewardAmount > 0
+      ? [{
+          type_id: null,
+          type_key: null,
+          amount: rewardAmount,
+          formula: typeof params.ruleRewardFormula === 'string' && params.ruleRewardFormula.trim()
+            ? params.ruleRewardFormula.trim()
+            : null,
+          unit: null,
+        } satisfies CalculatedRewardItem]
+      : [],
+    usesRewardConfig: false,
+  }
+}
