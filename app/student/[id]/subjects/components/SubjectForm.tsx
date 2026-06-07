@@ -26,7 +26,7 @@ interface Props {
   studentId: string
   subject?: Subject  // 如果有值就是編輯模式
   existingSubjects: ExistingSubject[]
-  onSuccess?: () => void  // 成功後的回調
+  onSuccess?: (subject?: Subject) => void  // 成功後的回調
   onCancel?: () => void  // 取消的回調
 }
 
@@ -143,7 +143,7 @@ export default function SubjectForm({ studentId, subject, existingSubjects, onSu
           // Modal 模式：調用回調並刷新
           router.refresh()
           setTimeout(() => {
-            onSuccess()
+            onSuccess(result.data)
           }, 1000)
         } else {
           // 獨立頁面模式：跳轉回科目頁面

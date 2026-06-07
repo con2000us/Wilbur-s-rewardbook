@@ -26,7 +26,7 @@ interface SubjectModalProps {
   studentId: string
   subject?: Subject
   existingSubjects: ExistingSubject[]
-  onSuccess?: () => void
+  onSuccess?: (subject?: Subject) => void
 }
 
 export default function SubjectModal({
@@ -52,9 +52,9 @@ export default function SubjectModal({
     }
   }, [])
 
-  const handleSuccess = () => {
+  const handleSuccess = (updatedSubject?: Subject) => {
     if (onSuccess) {
-      onSuccess()
+      onSuccess(updatedSubject)
     }
     // 延遲關閉以顯示成功訊息
     setTimeout(() => {
@@ -80,4 +80,3 @@ export default function SubjectModal({
     </Modal>
   )
 }
-

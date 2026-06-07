@@ -153,7 +153,23 @@ const SubjectsPageClient = forwardRef<SubjectsPageClientRef, Props>(({ studentId
     setEditingSubject(null)
   }
 
-  const handleSubjectModalSuccess = () => {
+  const handleSubjectModalSuccess = (updatedSubject?: Subject) => {
+    if (updatedSubject) {
+      justSavedRef.current = true
+      setSortedSubjectsState((currentSubjects) => {
+        const nextSubjects = currentSubjects.some((subject) => subject.id === updatedSubject.id)
+          ? currentSubjects.map((subject) =>
+              subject.id === updatedSubject.id ? { ...subject, ...updatedSubject } : subject
+            )
+          : [...currentSubjects, updatedSubject]
+
+        return [...nextSubjects].sort((a, b) => a.order_index - b.order_index)
+      })
+      setEditingSubject((currentSubject) =>
+        currentSubject?.id === updatedSubject.id ? { ...currentSubject, ...updatedSubject } : currentSubject
+      )
+    }
+
     router.refresh()
   }
 
@@ -500,4 +516,3 @@ const SubjectsPageClient = forwardRef<SubjectsPageClientRef, Props>(({ studentId
 SubjectsPageClient.displayName = 'SubjectsPageClient'
 
 export default SubjectsPageClient
-
