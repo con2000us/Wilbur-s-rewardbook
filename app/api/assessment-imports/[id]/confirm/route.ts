@@ -41,6 +41,16 @@ function cleanNumber(value: unknown) {
   return Number.isFinite(number) ? number : null
 }
 
+function cleanScoringMode(value: unknown) {
+  if (value === null || value === undefined || value === '') return 'scored'
+  if (value === 'scored' || value === 'record_only') return value
+  return null
+}
+
+function cleanBoolean(value: unknown, defaultValue: boolean) {
+  return typeof value === 'boolean' ? value : defaultValue
+}
+
 function todayInTaipei() {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Taipei',
@@ -175,6 +185,15 @@ export async function POST(
   try {
     const supabase = createClient()
     const body = await request.json().catch(() => ({}))
+    const scoringMode = cleanScoringMode(body.scoring_mode)
+
+    if (!scoringMode) {
+      return NextResponse.json({ error: 'Invalid scoring_mode' }, { status: 400 })
+    }
+
+    const isRecordOnly = scoringMode === 'record_only'
+    const countsTowardAverage = isRecordOnly ? false : cleanBoolean(body.counts_toward_average, true)
+    const countsTowardReward = isRecordOnly ? false : cleanBoolean(body.counts_toward_reward, true)
 
     const { data: draft, error: draftError } = await supabase
       .from('assessment_import_drafts')
@@ -199,7 +218,7 @@ export async function POST(
       subject_id: 'subject_id' in body ? body.subject_id || null : draft.subject_id,
       title: 'title' in body ? cleanText(body.title) : draft.title,
       assessment_type: 'assessment_type' in body ? body.assessment_type || null : draft.assessment_type,
-      score: 'score' in body ? cleanNumber(body.score) : draft.score,
+      score: isRecordOnly ? null : ('score' in body ? cleanNumber(body.score) : draft.score),
       max_score: 'max_score' in body ? cleanNumber(body.max_score) || 100 : draft.max_score,
       assessment_date: 'assessment_date' in body
         ? body.assessment_date || todayInTaipei()
@@ -247,7 +266,7 @@ export async function POST(
       assessment_type: effectiveDraft.assessment_type,
       score: effectiveDraft.score,
       max_score: effectiveDraft.max_score,
-      percentage: effectiveDraft.score != null && effectiveDraft.max_score
+      percentage: !isRecordOnly && effectiveDraft.score != null && effectiveDraft.max_score
         ? Math.round((Number(effectiveDraft.score) / Number(effectiveDraft.max_score)) * 10000) / 100
         : null,
       assessment_date: effectiveDraft.assessment_date,
@@ -292,8 +311,11 @@ export async function POST(
       due_date: effectiveDraft.assessment_date,
       notes: effectiveDraft.notes,
       score_type: 'numeric',
-      manual_reward: body.manual_reward,
-      reward_type_id: body.reward_type_id || null,
+      scoring_mode: scoringMode,
+      counts_toward_average: countsTowardAverage,
+      counts_toward_reward: countsTowardReward,
+      manual_reward: isRecordOnly ? null : body.manual_reward,
+      reward_type_id: isRecordOnly ? null : body.reward_type_id || null,
       image_urls: [],
     })
 

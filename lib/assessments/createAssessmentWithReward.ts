@@ -10,9 +10,10 @@ type SubjectGradeRow = Pick<Database['public']['Tables']['subjects']['Row'], 'gr
 type StudentIdRow = Pick<Database['public']['Tables']['students']['Row'], 'id'>
 
 type SupabaseClientLike = ReturnType<typeof createClient>
+type AssessmentScoringMode = 'scored' | 'record_only'
 
-type AssessmentWriteData = AssessmentInsert & {
-  image_urls?: unknown[]
+type AssessmentWriteData = Omit<AssessmentInsert, 'image_urls'> & {
+  image_urls?: Json | null
 }
 
 export type AssessmentCreatePayload = {
@@ -26,7 +27,10 @@ export type AssessmentCreatePayload = {
   notes?: string | null
   score_type?: string | null
   grade?: string | null
-  image_urls?: unknown[]
+  image_urls?: Json[] | null
+  scoring_mode?: string | null
+  counts_toward_average?: boolean | null
+  counts_toward_reward?: boolean | null
   score?: number | null
   manual_reward?: number | string | null
   reward_type_id?: string | null
@@ -47,6 +51,16 @@ function shouldRetryWithoutGradeColumns(error: { code?: string; message?: string
     error?.code === 'PGRST204' &&
     (error.message?.includes('grade') || error.message?.includes('score_type'))
   )
+}
+
+function normalizeScoringMode(value?: string | null): AssessmentScoringMode {
+  if (!value) return 'scored'
+  if (value === 'scored' || value === 'record_only') return value
+  throw new AssessmentCreateError('Invalid scoring_mode', 400)
+}
+
+function booleanOrDefault(value: boolean | null | undefined, defaultValue: boolean) {
+  return typeof value === 'boolean' ? value : defaultValue
 }
 
 function fallbackRewardAmount(percentage: number, hasRules: boolean) {
@@ -107,32 +121,55 @@ export async function createAssessmentWithReward(
     throw new AssessmentCreateError('subject_id and title are required', 400)
   }
 
+  const scoringMode = normalizeScoringMode(body.scoring_mode)
+  const isRecordOnly = scoringMode === 'record_only'
+  const countsTowardAverage = isRecordOnly
+    ? false
+    : booleanOrDefault(body.counts_toward_average, true)
+  const countsTowardReward = isRecordOnly
+    ? false
+    : booleanOrDefault(body.counts_toward_reward, true)
+
   const assessmentData: AssessmentWriteData = {
     subject_id: body.subject_id,
     title: body.title,
     assessment_type: body.assessment_type,
     max_score: body.max_score || 100,
-    status: body.status || 'upcoming',
+    status: isRecordOnly ? 'completed' : body.status || 'upcoming',
     due_date: body.due_date || null,
     notes: body.notes || null,
-    score_type: body.score_type || 'numeric',
-    grade: body.grade || null,
+    score_type: isRecordOnly ? 'numeric' : body.score_type || 'numeric',
+    grade: isRecordOnly ? null : body.grade || null,
     image_urls: body.image_urls || [],
+    scoring_mode: scoringMode,
+    counts_toward_average: countsTowardAverage,
+    counts_toward_reward: countsTowardReward,
+    reward_amount: 0,
   }
 
-  const { data: subjectData } = await supabase
-    .from('subjects')
-    .select('grade_mapping')
-    .eq('id', body.subject_id)
-    .single()
+  if (isRecordOnly) {
+    assessmentData.score = null
+    assessmentData.percentage = null
+    assessmentData.grade = null
+    assessmentData.completed_date = new Date().toISOString()
+  }
 
-  const subjectGradeMapping = (subjectData as SubjectGradeRow | null)?.grade_mapping || null
+  let subjectGradeMapping: Json | null = null
+  if (!isRecordOnly) {
+    const { data: subjectData } = await supabase
+      .from('subjects')
+      .select('grade_mapping')
+      .eq('id', body.subject_id)
+      .single()
+
+    subjectGradeMapping = (subjectData as SubjectGradeRow | null)?.grade_mapping || null
+  }
   let actualScore: number | null = null
   let actualPercentage: number | null = null
   let rewardItemsForTransactions: CalculatedRewardItem[] = []
   const maxScore = Number(assessmentData.max_score ?? 100)
 
-  if (assessmentData.score_type === 'letter') {
+  if (!isRecordOnly && assessmentData.score_type === 'letter') {
     if (!body.grade) {
       throw new AssessmentCreateError('grade is required for letter score type', 400)
     }
@@ -141,7 +178,7 @@ export async function createAssessmentWithReward(
     assessmentData.score = actualScore
     assessmentData.percentage = actualPercentage
     assessmentData.grade = body.grade
-  } else if (assessmentData.score_type === 'numeric' && body.score !== null && body.score !== undefined) {
+  } else if (!isRecordOnly && assessmentData.score_type === 'numeric' && body.score !== null && body.score !== undefined) {
     actualScore = Number(body.score)
     actualPercentage = (actualScore / maxScore) * 100
     assessmentData.score = actualScore
@@ -153,58 +190,62 @@ export async function createAssessmentWithReward(
     assessmentData.status = 'completed'
     assessmentData.completed_date = new Date().toISOString()
 
-    const { data: rulesData, error: rulesError } = await supabase
-      .from('reward_rules')
-      .select('*')
-      .eq('is_active', true)
-      .order('priority', { ascending: false })
+    if (countsTowardReward) {
+      const { data: rulesData, error: rulesError } = await supabase
+        .from('reward_rules')
+        .select('*')
+        .eq('is_active', true)
+        .order('priority', { ascending: false })
 
-    if (rulesError) {
-      throw new AssessmentCreateError('Failed to fetch reward rules: ' + rulesError.message, 500)
-    }
+      if (rulesError) {
+        throw new AssessmentCreateError('Failed to fetch reward rules: ' + rulesError.message, 500)
+      }
 
-    let rules = (rulesData as RewardRuleRow[] | null) || []
-    const studentIdsInRules = new Set(
-      rules
-        .map((rule) => rule.student_id)
-        .filter((id): id is string => id !== null && id !== undefined)
-    )
-
-    if (studentIdsInRules.size > 0) {
-      const { data: validStudents } = await supabase
-        .from('students')
-        .select('id')
-        .in('id', Array.from(studentIdsInRules))
-
-      const validStudentIds = new Set(
-        ((validStudents as StudentIdRow[] | null) || []).map((student) => student.id)
+      let rules = (rulesData as RewardRuleRow[] | null) || []
+      const studentIdsInRules = new Set(
+        rules
+          .map((rule) => rule.student_id)
+          .filter((id): id is string => id !== null && id !== undefined)
       )
-      rules = rules.filter((rule) => !rule.student_id || validStudentIds.has(rule.student_id))
-    }
 
-    const matchedRule = findMatchingRule({
-      rules,
-      assessmentType: body.assessment_type,
-      subjectId: body.subject_id,
-      studentId: body.student_id,
-      percentage: actualPercentage,
-    })
+      if (studentIdsInRules.size > 0) {
+        const { data: validStudents } = await supabase
+          .from('students')
+          .select('id')
+          .in('id', Array.from(studentIdsInRules))
 
-    if (body.manual_reward !== null && body.manual_reward !== undefined) {
-      assessmentData.reward_amount = Math.max(0, Math.round(Number(body.manual_reward)))
-    } else if (matchedRule) {
-      const rewardOutput = calculateRewardOutputsFromRule({
-        ruleRewardAmount: matchedRule.reward_amount,
-        ruleRewardFormula: matchedRule.reward_formula,
-        ruleRewardConfig: matchedRule.reward_config,
-        score: actualScore,
+        const validStudentIds = new Set(
+          ((validStudents as StudentIdRow[] | null) || []).map((student) => student.id)
+        )
+        rules = rules.filter((rule) => !rule.student_id || validStudentIds.has(rule.student_id))
+      }
+
+      const matchedRule = findMatchingRule({
+        rules,
+        assessmentType: body.assessment_type,
+        subjectId: body.subject_id,
+        studentId: body.student_id,
         percentage: actualPercentage,
-        maxScore,
       })
-      assessmentData.reward_amount = rewardOutput.rewardAmount
-      rewardItemsForTransactions = rewardOutput.usesRewardConfig ? rewardOutput.rewards : []
+
+      if (body.manual_reward !== null && body.manual_reward !== undefined) {
+        assessmentData.reward_amount = Math.max(0, Math.round(Number(body.manual_reward)))
+      } else if (matchedRule) {
+        const rewardOutput = calculateRewardOutputsFromRule({
+          ruleRewardAmount: matchedRule.reward_amount,
+          ruleRewardFormula: matchedRule.reward_formula,
+          ruleRewardConfig: matchedRule.reward_config,
+          score: actualScore,
+          percentage: actualPercentage,
+          maxScore,
+        })
+        assessmentData.reward_amount = rewardOutput.rewardAmount
+        rewardItemsForTransactions = rewardOutput.usesRewardConfig ? rewardOutput.rewards : []
+      } else {
+        assessmentData.reward_amount = fallbackRewardAmount(actualPercentage, rules.length > 0)
+      }
     } else {
-      assessmentData.reward_amount = fallbackRewardAmount(actualPercentage, rules.length > 0)
+      assessmentData.reward_amount = 0
     }
   }
 

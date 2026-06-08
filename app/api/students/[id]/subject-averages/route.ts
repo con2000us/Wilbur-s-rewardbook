@@ -43,6 +43,7 @@ export async function GET(
       .select('subject_id, percentage, title, assessment_type, due_date, completed_date, created_at')
       .in('subject_id', subjectIds)
       .eq('status', 'completed')
+      .eq('counts_toward_average', true)
       .not('percentage', 'is', null)
 
     if (assessmentsError) {

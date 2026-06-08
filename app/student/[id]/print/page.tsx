@@ -357,7 +357,11 @@ export default async function PrintPage({
                       {assessment.title}
                     </td>
                     <td className="border border-gray-300 p-2 text-center font-semibold">
-                      {assessment.score_type === 'letter' && assessment.grade ? (
+                      {assessment.scoring_mode === 'record_only' ? (
+                        <span className="text-xs font-bold text-slate-500">
+                          {locale === 'zh-TW' ? '不計分' : 'No score'}
+                        </span>
+                      ) : assessment.score_type === 'letter' && assessment.grade ? (
                         <span className="text-lg font-bold">
                           {assessment.grade}
                           {assessment.score !== null && (
@@ -371,7 +375,9 @@ export default async function PrintPage({
                       )}
                     </td>
                     <td className="border border-gray-300 p-2 text-center">
-                      {assessment.percentage !== null ? `${assessment.percentage.toFixed(1)}%` : '-'}
+                      {assessment.scoring_mode === 'record_only'
+                        ? (locale === 'zh-TW' ? '不列入' : 'Excluded')
+                        : assessment.percentage !== null ? `${assessment.percentage.toFixed(1)}%` : '-'}
                     </td>
                     <td className="border border-gray-300 p-2 text-center font-semibold text-green-600">
                       {assessment.reward_amount > 0 ? `$${assessment.reward_amount}` : '-'}
@@ -397,4 +403,3 @@ export default async function PrintPage({
     </div>
   )
 }
-

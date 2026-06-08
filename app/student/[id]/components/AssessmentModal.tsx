@@ -24,6 +24,9 @@ interface Assessment {
   reward_amount: number | null
   grade: string | null
   score_type: string | null
+  scoring_mode?: string | null
+  counts_toward_average?: boolean | null
+  counts_toward_reward?: boolean | null
   image_urls?: Array<{ url: string; path: string; size: number; width?: number; height?: number }> | null
   notes?: string | null
 }
@@ -126,4 +129,3 @@ export default function AssessmentModal({
     </Modal>
   )
 }
-

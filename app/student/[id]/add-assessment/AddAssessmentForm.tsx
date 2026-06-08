@@ -13,7 +13,7 @@ interface Subject {
   name: string
   color: string
   icon: string
-  grade_mapping?: any
+  grade_mapping?: unknown
 }
 
 interface RewardRule {
@@ -38,6 +38,25 @@ interface Props {
   defaultAssessmentType: string
 }
 
+type ScoreType = 'numeric' | 'letter' | 'record_only'
+
+interface AssessmentPayload {
+  student_id: string
+  subject_id: string
+  title: string
+  assessment_type: string | null
+  score_type: 'numeric' | 'letter'
+  scoring_mode: 'scored' | 'record_only'
+  counts_toward_average: boolean
+  counts_toward_reward: boolean
+  max_score: number
+  due_date: string | null
+  manual_reward: number | null
+  image_urls: UploadedImage[]
+  score?: number | null
+  grade?: Grade | null
+}
+
 export default function AddAssessmentForm({ studentId, subjects, rewardRules, defaultAssessmentType }: Props) {
   const router = useRouter()
   const t = useTranslations('assessment')
@@ -49,7 +68,7 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
   const [success, setSuccess] = useState(false)
   const [selectedSubjectId, setSelectedSubjectId] = useState(subjects[0]?.id || '')
   const [selectedAssessmentType, setSelectedAssessmentType] = useState(defaultAssessmentType)
-  const [scoreType, setScoreType] = useState<'numeric' | 'letter'>('numeric')
+  const [scoreType, setScoreType] = useState<ScoreType>('numeric')
   const [score, setScore] = useState<number | null>(null)
   const [grade, setGrade] = useState<Grade | null>(null)
   const [maxScore, setMaxScore] = useState(100)
@@ -95,6 +114,7 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
   }
 
   const applicableRules = getApplicableRules()
+  const isRecordOnly = scoreType === 'record_only'
 
   // 獲取當前選中科目的等級對應
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId)
@@ -104,10 +124,10 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
   let actualScore: number | null = null
   let actualPercentage: number | null = null
 
-  if (scoreType === 'letter' && grade) {
+  if (!isRecordOnly && scoreType === 'letter' && grade) {
     actualScore = gradeToScore(grade, subjectGradeMapping)
     actualPercentage = gradeToPercentage(grade, maxScore, subjectGradeMapping)
-  } else if (scoreType === 'numeric' && score !== null) {
+  } else if (!isRecordOnly && scoreType === 'numeric' && score !== null) {
     actualScore = score
     actualPercentage = maxScore > 0 ? (score / maxScore) * 100 : null
   }
@@ -146,7 +166,9 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
     : 0
 
   // 用於顯示的百分比
-  const displayPercentage = scoreType === 'letter' && grade
+  const displayPercentage = isRecordOnly
+    ? null
+    : scoreType === 'letter' && grade
     ? actualPercentage
     : score !== null && maxScore > 0
     ? (score / maxScore) * 100
@@ -199,18 +221,21 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
         title = `${dateStr} ${subjectName} ${typeName}`
       }
       
-      const manualReward = formData.get('manual_reward')
+      const manualReward = isRecordOnly ? null : formData.get('manual_reward')
       
       // 根據評分方式設定分數或等級
-      const payload: any = {
+      const payload: AssessmentPayload = {
         student_id: studentId,
-        subject_id: formData.get('subject_id'),
+        subject_id: (formData.get('subject_id') as string) || '',
         title: title,
-        assessment_type: formData.get('assessment_type'),
-        score_type: scoreType,
-        max_score: parseFloat(formData.get('max_score') as string) || 100,
-        due_date: formData.get('due_date') || null,
-        manual_reward: manualReward ? parseFloat(manualReward as string) : null,
+        assessment_type: (formData.get('assessment_type') as string) || null,
+        score_type: isRecordOnly ? 'numeric' : scoreType,
+        scoring_mode: isRecordOnly ? 'record_only' : 'scored',
+        counts_toward_average: !isRecordOnly,
+        counts_toward_reward: !isRecordOnly,
+        max_score: isRecordOnly ? 100 : parseFloat(formData.get('max_score') as string) || 100,
+        due_date: (formData.get('due_date') as string) || null,
+        manual_reward: !isRecordOnly && manualReward ? parseFloat(manualReward as string) : null,
         image_urls: imageUrls,
       }
 
@@ -218,7 +243,10 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
       const selectedSubject = subjects.find(s => s.id === formData.get('subject_id') as string)
       const subjectGradeMapping = selectedSubject?.grade_mapping
 
-      if (scoreType === 'letter') {
+      if (isRecordOnly) {
+        payload.score = null
+        payload.grade = null
+      } else if (scoreType === 'letter') {
         // 等級制：必須選擇等級
         if (!grade) {
           setError(locale === 'zh-TW' ? '請選擇等級' : 'Please select a grade')
@@ -513,153 +541,172 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
           <select
             value={scoreType}
             onChange={(e) => {
-              const newType = e.target.value as 'numeric' | 'letter'
+              const newType = e.target.value as ScoreType
               setScoreType(newType)
               if (newType === 'letter') {
                 setScore(null) // 清除數字分數
-              } else {
+              } else if (newType === 'numeric') {
                 setGrade(null) // 清除等級
+              } else {
+                setScore(null)
+                setGrade(null)
               }
             }}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="numeric">{locale === 'zh-TW' ? '數字分數' : 'Numeric Score'}</option>
             <option value="letter">{locale === 'zh-TW' ? '等級制 (A+ ~ F)' : 'Letter Grade (A+ ~ F)'}</option>
+            <option value="record_only">{locale === 'zh-TW' ? '不計分，只留紀錄' : 'No Score, Record Only'}</option>
           </select>
         </div>
 
-        {/* 分數 */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {scoreType === 'letter' 
-                ? (locale === 'zh-TW' ? '等級' : 'Grade')
-                : `${t('score')} (${locale === 'zh-TW' ? '選填' : 'Optional'})`
-              }
-            </label>
-            {scoreType === 'numeric' ? (
-              <>
-            <input
-              name="score"
-              type="number"
-              min="0"
-              max="150"
-              step="0.5"
-              value={score ?? ''}
-              onChange={(e) => setScore(e.target.value ? parseFloat(e.target.value) : null)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder={locale === 'zh-TW' ? '例如：95' : 'e.g.: 95'}
-            />
-            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-              <span className="material-icons-outlined text-sm">lightbulb</span>
-              {locale === 'zh-TW' ? '留空表示尚未完成' : 'Leave blank if not completed'}
-            </p>
-              </>
-            ) : (
-              <>
-                <select
-                  value={grade || ''}
-                  onChange={(e) => setGrade(e.target.value ? (e.target.value as Grade) : null)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">{locale === 'zh-TW' ? '請選擇等級' : 'Select Grade'}</option>
-                  {GRADE_OPTIONS.map(g => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                  <span className="material-icons-outlined text-sm">lightbulb</span>
-                  {locale === 'zh-TW' ? '選擇等級後會自動轉換為分數計算獎金' : 'Grade will be converted to score for reward calculation'}
-                </p>
-              </>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {t('maxScore')}
-            </label>
-            <input
-              name="max_score"
-              type="number"
-              min="1"
-              value={maxScore}
-              onChange={(e) => setMaxScore(parseInt(e.target.value) || 100)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {/* 分數預覽與預期獎金 */}
-        {((scoreType === 'numeric' && score !== null) || (scoreType === 'letter' && grade)) && displayPercentage !== null && (
-          <div className={`p-4 rounded-lg border-2 ${
-            matchingRule 
-              ? 'bg-green-50 border-green-300' 
-              : 'bg-gray-50 border-gray-200'
-          }`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {scoreType === 'letter' ? (
-                    <>
-                      {locale === 'zh-TW' ? '等級' : 'Grade'}: <span className="font-bold text-gray-800 text-xl">{grade}</span>
-                      {actualScore !== null && (
-                        <span className="ml-2 text-gray-500">
-                          ({locale === 'zh-TW' ? '相當於' : 'equivalent to'} {actualScore.toFixed(1)}/{maxScore}, {displayPercentage.toFixed(1)}%)
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {locale === 'zh-TW' ? '分數' : 'Score'}: <span className="font-bold text-gray-800">{score}/{maxScore}</span> ({displayPercentage.toFixed(1)}%)
-                    </>
-                  )}
-                </p>
-              </div>
-              {matchingRule ? (
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">
-                    {locale === 'zh-TW' ? '預期獎金' : 'Expected Reward'}
-                  </p>
-                  <p className="text-2xl font-bold text-green-600">
-                    +${expectedReward}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {locale === 'zh-TW' ? '根據' : 'Based on'} "{matchingRule.rule_name}"
-                  </p>
-                </div>
-              ) : (
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">
-                    {locale === 'zh-TW' ? '無匹配規則' : 'No matching rule'}
-                  </p>
-                  <p className="text-xl font-bold text-gray-400">
-                    $0
-                  </p>
-                </div>
-              )}
+        {isRecordOnly ? (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            <div className="flex items-start gap-2">
+              <span className="material-icons-outlined text-base text-slate-500">inventory_2</span>
+              <p>
+                {locale === 'zh-TW'
+                  ? '這筆評量會保留日期、備註與圖片，不列入平均，也不會產生獎勵。'
+                  : 'This assessment keeps the date, notes, and images without affecting averages or rewards.'}
+              </p>
             </div>
           </div>
-        )}
+        ) : (
+          <>
+            {/* 分數 */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {scoreType === 'letter'
+                    ? (locale === 'zh-TW' ? '等級' : 'Grade')
+                    : `${t('score')} (${locale === 'zh-TW' ? '選填' : 'Optional'})`
+                  }
+                </label>
+                {scoreType === 'numeric' ? (
+                  <>
+                    <input
+                      name="score"
+                      type="number"
+                      min="0"
+                      max="150"
+                      step="0.5"
+                      value={score ?? ''}
+                      onChange={(e) => setScore(e.target.value ? parseFloat(e.target.value) : null)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder={locale === 'zh-TW' ? '例如：95' : 'e.g.: 95'}
+                    />
+                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                      <span className="material-icons-outlined text-sm">lightbulb</span>
+                      {locale === 'zh-TW' ? '留空表示尚未完成' : 'Leave blank if not completed'}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <select
+                      value={grade || ''}
+                      onChange={(e) => setGrade(e.target.value ? (e.target.value as Grade) : null)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">{locale === 'zh-TW' ? '請選擇等級' : 'Select Grade'}</option>
+                      {GRADE_OPTIONS.map(g => (
+                        <option key={g} value={g}>{g}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                      <span className="material-icons-outlined text-sm">lightbulb</span>
+                      {locale === 'zh-TW' ? '選擇等級後會自動轉換為分數計算獎金' : 'Grade will be converted to score for reward calculation'}
+                    </p>
+                  </>
+                )}
+              </div>
 
-        {/* 獎金金額 */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {t('manualReward')}
-          </label>
-          <input
-            name="manual_reward"
-            type="number"
-            min="0"
-            step="1"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={t('manualRewardHint')}
-          />
-          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-            <span className="material-icons-outlined text-sm">lightbulb</span>
-            {t('manualRewardHint')}
-          </p>
-        </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('maxScore')}
+                </label>
+                <input
+                  name="max_score"
+                  type="number"
+                  min="1"
+                  value={maxScore}
+                  onChange={(e) => setMaxScore(parseInt(e.target.value) || 100)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* 分數預覽與預期獎金 */}
+            {((scoreType === 'numeric' && score !== null) || (scoreType === 'letter' && grade)) && displayPercentage !== null && (
+              <div className={`p-4 rounded-lg border-2 ${
+                matchingRule
+                  ? 'bg-green-50 border-green-300'
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">
+                      {scoreType === 'letter' ? (
+                        <>
+                          {locale === 'zh-TW' ? '等級' : 'Grade'}: <span className="font-bold text-gray-800 text-xl">{grade}</span>
+                          {actualScore !== null && (
+                            <span className="ml-2 text-gray-500">
+                              ({locale === 'zh-TW' ? '相當於' : 'equivalent to'} {actualScore.toFixed(1)}/{maxScore}, {displayPercentage.toFixed(1)}%)
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {locale === 'zh-TW' ? '分數' : 'Score'}: <span className="font-bold text-gray-800">{score}/{maxScore}</span> ({displayPercentage.toFixed(1)}%)
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  {matchingRule ? (
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600">
+                        {locale === 'zh-TW' ? '預期獎金' : 'Expected Reward'}
+                      </p>
+                      <p className="text-2xl font-bold text-green-600">
+                        +${expectedReward}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {locale === 'zh-TW' ? '根據' : 'Based on'} &quot;{matchingRule.rule_name}&quot;
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-right">
+                      <p className="text-sm text-gray-500">
+                        {locale === 'zh-TW' ? '無匹配規則' : 'No matching rule'}
+                      </p>
+                      <p className="text-xl font-bold text-gray-400">
+                        $0
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 獎金金額 */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {t('manualReward')}
+              </label>
+              <input
+                name="manual_reward"
+                type="number"
+                min="0"
+                step="1"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={t('manualRewardHint')}
+              />
+              <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                <span className="material-icons-outlined text-sm">lightbulb</span>
+                {t('manualRewardHint')}
+              </p>
+            </div>
+          </>
+        )}
 
         {/* 日期 */}
         <div>
@@ -690,7 +737,7 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
         </div>
 
         {/* 獎金規則預覽（可折疊） */}
-        {selectedSubjectId && applicableRules.length > 0 ? (
+        {!isRecordOnly && selectedSubjectId && applicableRules.length > 0 ? (
           <div className={`border-2 rounded-lg overflow-hidden ${matchingRule ? 'border-green-300' : 'border-blue-200'}`}>
             {/* 折疊按鈕 */}
             <button
@@ -837,7 +884,7 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
               </div>
             </div>
           </div>
-        ) : selectedSubjectId ? (
+        ) : !isRecordOnly && selectedSubjectId ? (
           <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <p className="text-gray-600 text-sm flex items-center gap-2">
               <span className="material-icons-outlined text-sm">info</span>

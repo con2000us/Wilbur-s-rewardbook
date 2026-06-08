@@ -14,6 +14,9 @@ interface AssessmentRecord {
   assessment_type?: string
   grade?: string | null
   score_type?: string | null
+  scoring_mode?: string | null
+  counts_toward_average?: boolean | null
+  counts_toward_reward?: boolean | null
   image_urls?: Array<{ url: string }> | null
   mistakes?: Array<{
     id?: string
@@ -124,7 +127,8 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
   const scoreColor = getScoreColor(record.score)
   const gradeColor = getGradeColor(record.grade)
   
-  const isLetterGrade = record.score_type === 'letter' && record.grade
+  const isRecordOnly = record.scoring_mode === 'record_only'
+  const isLetterGrade = !isRecordOnly && record.score_type === 'letter' && record.grade
   
   // 格式化日期顯示
   const formatDisplayDate = (dateString: string | null) => {
@@ -230,8 +234,13 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
           </div>
         </div>
         <div className="flex flex-col items-end gap-2 ml-4 -mt-2">
-          <div className="flex items-baseline gap-1">
-            {isLetterGrade ? (
+          <div className={isRecordOnly ? 'flex items-center gap-1' : 'flex items-baseline gap-1'}>
+            {isRecordOnly ? (
+              <div className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-500">
+                <span className="material-icons-outlined text-sm">inventory_2</span>
+                {locale === 'zh-TW' ? '不計分' : 'No score'}
+              </div>
+            ) : isLetterGrade ? (
               <span className={`text-[43px] font-black ${gradeColor}`}>{record.grade}</span>
             ) : (
               <>

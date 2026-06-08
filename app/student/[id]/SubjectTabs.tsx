@@ -33,6 +33,9 @@ interface Assessment {
   assessment_type?: string
   grade?: string | null
   score_type?: string | null
+  scoring_mode?: string | null
+  counts_toward_average?: boolean | null
+  counts_toward_reward?: boolean | null
   description?: string | null
   image_urls?: Array<{ url: string; path: string; size: number; width?: number; height?: number }> | null
   mistakes?: Array<{
@@ -935,6 +938,9 @@ export default function SubjectTabs({
                   assessment_type: assessment.assessment_type,
                   grade: assessment.grade,
                   score_type: assessment.score_type,
+                  scoring_mode: assessment.scoring_mode,
+                  counts_toward_average: assessment.counts_toward_average,
+                  counts_toward_reward: assessment.counts_toward_reward,
                   image_urls: assessment.image_urls,
                   mistakes: assessment.mistakes,
                   notes: assessment.notes,

@@ -135,6 +135,9 @@ export interface Database {
           notes: string | null
           grade: string | null
           score_type: string | null
+          scoring_mode: string
+          counts_toward_average: boolean
+          counts_toward_reward: boolean
           created_at: string
           updated_at: string
         }
@@ -155,6 +158,9 @@ export interface Database {
           notes?: string | null
           grade?: string | null
           score_type?: string | null
+          scoring_mode?: string
+          counts_toward_average?: boolean
+          counts_toward_reward?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -175,6 +181,9 @@ export interface Database {
           notes?: string | null
           grade?: string | null
           score_type?: string | null
+          scoring_mode?: string
+          counts_toward_average?: boolean
+          counts_toward_reward?: boolean
           created_at?: string
           updated_at?: string
         }

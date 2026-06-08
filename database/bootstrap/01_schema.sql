@@ -3274,8 +3274,12 @@ CREATE TABLE public.assessments (
     updated_at timestamp with time zone DEFAULT now(),
     grade text,
     score_type text DEFAULT 'numeric'::text,
+    scoring_mode text DEFAULT 'scored'::text NOT NULL,
+    counts_toward_average boolean DEFAULT true NOT NULL,
+    counts_toward_reward boolean DEFAULT true NOT NULL,
     CONSTRAINT assessments_assessment_type_check CHECK ((assessment_type = ANY (ARRAY['exam'::text, 'homework'::text, 'quiz'::text, 'project'::text]))),
     CONSTRAINT assessments_grade_check CHECK ((grade = ANY (ARRAY['A+'::text, 'A'::text, 'A-'::text, 'B+'::text, 'B'::text, 'B-'::text, 'C+'::text, 'C'::text, 'C-'::text, 'D+'::text, 'D'::text, 'D-'::text, 'F'::text]))),
+    CONSTRAINT assessments_scoring_mode_check CHECK ((scoring_mode = ANY (ARRAY['scored'::text, 'record_only'::text]))),
     CONSTRAINT assessments_score_type_check CHECK ((score_type = ANY (ARRAY['numeric'::text, 'letter'::text]))),
     CONSTRAINT assessments_status_check CHECK ((status = ANY (ARRAY['upcoming'::text, 'completed'::text, 'graded'::text])))
 );
@@ -3303,7 +3307,10 @@ CREATE TABLE public.assessments_backup (
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     grade text,
-    score_type text
+    score_type text,
+    scoring_mode text,
+    counts_toward_average boolean,
+    counts_toward_reward boolean
 );
 
 
@@ -5112,6 +5119,13 @@ CREATE INDEX idx_assessments_due_date ON public.assessments USING btree (due_dat
 --
 
 CREATE INDEX idx_assessments_status ON public.assessments USING btree (status);
+
+
+--
+-- Name: idx_assessments_average_included; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_assessments_average_included ON public.assessments USING btree (subject_id, status) WHERE ((counts_toward_average = true) AND (percentage IS NOT NULL));
 
 
 --

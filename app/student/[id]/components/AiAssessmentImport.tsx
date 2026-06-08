@@ -102,6 +102,7 @@ interface RewardType {
 
 type Phase = 'upload' | 'processing' | 'review' | 'confirmed'
 type ProcessingMode = 'multimodal' | 'pipeline'
+type ScoringMode = 'scored' | 'record_only'
 const MAX_FILES_PER_IMPORT = 6
 
 function todayLocalDate() {
@@ -155,6 +156,7 @@ export default function AiAssessmentImport({ studentId, subjects, assessmentType
   const [editNotes, setEditNotes] = useState('')
   const [editManualReward, setEditManualReward] = useState('')
   const [editRewardTypeId, setEditRewardTypeId] = useState('')
+  const [editScoringMode, setEditScoringMode] = useState<ScoringMode>('scored')
   const [rewardTypes, setRewardTypes] = useState<RewardType[]>([])
   const [confirming, setConfirming] = useState(false)
   const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null)
@@ -437,6 +439,8 @@ export default function AiAssessmentImport({ studentId, subjects, assessmentType
     setFiles([])
     setPreviewUrls([])
     setEditManualReward('')
+    setEditRewardTypeId('')
+    setEditScoringMode('scored')
     setConfirming(false)
     setProcessingStartedAt(null)
     setElapsedSeconds(0)
@@ -458,6 +462,8 @@ export default function AiAssessmentImport({ studentId, subjects, assessmentType
     setPreviewUrls([])
     setError('')
     setEditManualReward('')
+    setEditRewardTypeId('')
+    setEditScoringMode('scored')
     setConfirming(false)
     setProcessingStartedAt(null)
     setElapsedSeconds(0)
@@ -489,6 +495,7 @@ export default function AiAssessmentImport({ studentId, subjects, assessmentType
       m.ai_reason
     )
   )
+  const isImportRecordOnly = editScoringMode === 'record_only'
 
   const buildMistakePayload = () => editableMistakes.map((m) => ({
     question_number: m.question_number || null,
@@ -504,12 +511,15 @@ export default function AiAssessmentImport({ studentId, subjects, assessmentType
     subject_id: editSubjectId || null,
     title: editTitle,
     assessment_type: editType || null,
-    score: editScore ? parseFloat(editScore) : null,
-    max_score: editMaxScore ? parseFloat(editMaxScore) : null,
+    score: isImportRecordOnly ? null : editScore ? parseFloat(editScore) : null,
+    max_score: isImportRecordOnly ? 100 : editMaxScore ? parseFloat(editMaxScore) : null,
     assessment_date: editDate || todayLocalDate(),
     notes: editNotes,
-    manual_reward: editManualReward ? parseFloat(editManualReward) : null,
-    reward_type_id: editRewardTypeId || null,
+    manual_reward: isImportRecordOnly ? null : editManualReward ? parseFloat(editManualReward) : null,
+    reward_type_id: isImportRecordOnly ? null : editRewardTypeId || null,
+    scoring_mode: editScoringMode,
+    counts_toward_average: !isImportRecordOnly,
+    counts_toward_reward: !isImportRecordOnly,
     mistakes: buildMistakePayload(),
   })
 
@@ -1107,8 +1117,44 @@ export default function AiAssessmentImport({ studentId, subjects, assessmentType
             </select>
           </div>
 
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-slate-700">
+              {isZh ? '評分方式' : 'Scoring Method'}
+            </label>
+            <select
+              value={editScoringMode}
+              onChange={(e) => {
+                const nextMode = e.target.value as ScoringMode
+                setEditScoringMode(nextMode)
+                if (nextMode === 'record_only') {
+                  setEditScore('')
+                  setEditManualReward('')
+                  setEditRewardTypeId('')
+                }
+              }}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="scored">{isZh ? '計分評量' : 'Scored Assessment'}</option>
+              <option value="record_only">{isZh ? '不計分，只留紀錄' : 'No Score, Record Only'}</option>
+            </select>
+          </div>
+
+          {isImportRecordOnly && (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+              <div className="flex items-start gap-2">
+                <span className="material-icons-outlined text-base text-slate-500">inventory_2</span>
+                <p>
+                  {isZh
+                    ? '確認後會保存考卷圖片、日期與備註，不列入平均，也不產生獎勵。'
+                    : 'Confirming will keep images, date, and notes without affecting averages or rewards.'}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Score / Max Score */}
-          <div className="grid grid-cols-2 gap-3">
+          {!isImportRecordOnly && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-semibold text-slate-700">
                 {isZh ? '分數' : 'Score'}
@@ -1134,6 +1180,7 @@ export default function AiAssessmentImport({ studentId, subjects, assessmentType
               />
             </div>
           </div>
+          )}
 
           {/* Date */}
           <div>
@@ -1195,7 +1242,8 @@ export default function AiAssessmentImport({ studentId, subjects, assessmentType
           )}
 
           {/* Reward override */}
-          <div className="grid grid-cols-2 gap-3">
+          {!isImportRecordOnly && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-semibold text-slate-700">
                 {isZh ? '手動獎勵' : 'Manual Reward'}
@@ -1228,6 +1276,7 @@ export default function AiAssessmentImport({ studentId, subjects, assessmentType
               </select>
             </div>
           </div>
+          )}
 
           {/* Editable mistakes */}
           <div>
