@@ -3241,14 +3241,30 @@ CREATE TABLE public.achievement_event_reward_rules (
 CREATE TABLE public.achievement_events (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     event_key text,
-    name_zh text NOT NULL,
-    name_en text,
-    description_zh text,
-    description_en text,
+    name text NOT NULL,
+    description text,
     is_active boolean DEFAULT true NOT NULL,
     display_order integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: achievement_event_translations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.achievement_event_translations (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    event_id uuid NOT NULL REFERENCES public.achievement_events(id) ON DELETE CASCADE,
+    locale text NOT NULL,
+    name text NOT NULL,
+    description text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT achievement_event_translations_locale_check CHECK ((locale = ANY (ARRAY['zh-TW'::text, 'en'::text]))),
+    CONSTRAINT achievement_event_translations_event_id_locale_key UNIQUE (event_id, locale),
+    CONSTRAINT achievement_event_translations_pkey PRIMARY KEY (id)
 );
 
 
@@ -3512,10 +3528,8 @@ COMMENT ON COLUMN public.custom_reward_types.display_name IS '憟蝐餃??�
 CREATE TABLE public.exchange_rules (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     rule_key text,
-    name_zh text NOT NULL,
-    name_en text,
-    description_zh text,
-    description_en text,
+    name text NOT NULL,
+    description text,
     required_reward_type_id uuid,
     required_amount numeric(10,2) NOT NULL,
     reward_item text,
@@ -3525,6 +3539,24 @@ CREATE TABLE public.exchange_rules (
     updated_at timestamp with time zone DEFAULT now(),
     reward_type_id uuid,
     reward_amount numeric(10,2)
+);
+
+
+--
+-- Name: exchange_rule_translations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.exchange_rule_translations (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    rule_id uuid NOT NULL REFERENCES public.exchange_rules(id) ON DELETE CASCADE,
+    locale text NOT NULL,
+    name text NOT NULL,
+    description text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT exchange_rule_translations_locale_check CHECK ((locale = ANY (ARRAY['zh-TW'::text, 'en'::text]))),
+    CONSTRAINT exchange_rule_translations_rule_id_locale_key UNIQUE (rule_id, locale),
+    CONSTRAINT exchange_rule_translations_pkey PRIMARY KEY (id)
 );
 
 
@@ -5119,6 +5151,20 @@ CREATE UNIQUE INDEX idx_achievement_events_event_key_unique ON public.achievemen
 
 
 --
+-- Name: idx_achievement_event_translations_event_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_achievement_event_translations_event_id ON public.achievement_event_translations USING btree (event_id);
+
+
+--
+-- Name: idx_achievement_event_translations_locale; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_achievement_event_translations_locale ON public.achievement_event_translations USING btree (locale);
+
+
+--
 -- Name: idx_assessments_due_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5214,6 +5260,20 @@ CREATE INDEX idx_exchange_rules_is_active ON public.exchange_rules USING btree (
 --
 
 CREATE UNIQUE INDEX idx_exchange_rules_rule_key_unique ON public.exchange_rules USING btree (rule_key);
+
+
+--
+-- Name: idx_exchange_rule_translations_rule_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_exchange_rule_translations_rule_id ON public.exchange_rule_translations USING btree (rule_id);
+
+
+--
+-- Name: idx_exchange_rule_translations_locale; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_exchange_rule_translations_locale ON public.exchange_rule_translations USING btree (locale);
 
 
 --
@@ -5497,6 +5557,13 @@ CREATE TRIGGER update_assessments_updated_at BEFORE UPDATE ON public.assessments
 
 
 --
+-- Name: achievement_event_translations update_achievement_event_translations_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_achievement_event_translations_updated_at BEFORE UPDATE ON public.achievement_event_translations FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
 -- Name: ai_provider_configs update_ai_provider_configs_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5515,6 +5582,13 @@ CREATE TRIGGER update_assessment_import_drafts_updated_at BEFORE UPDATE ON publi
 --
 
 CREATE TRIGGER update_assessment_import_jobs_updated_at BEFORE UPDATE ON public.assessment_import_jobs FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: exchange_rule_translations update_exchange_rule_translations_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_exchange_rule_translations_updated_at BEFORE UPDATE ON public.exchange_rule_translations FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
@@ -6650,6 +6724,7 @@ ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.achievement_event_reward_rules TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.achievement_event_translations TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.achievement_events TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.ai_assessment_logs TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.ai_provider_configs TO anon, authenticated;
@@ -6660,6 +6735,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessment_mistakes TO anon
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessments TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.backups TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.custom_reward_types TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.exchange_rule_translations TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.exchange_rules TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.goal_template_event_links TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.goal_templates TO anon, authenticated;

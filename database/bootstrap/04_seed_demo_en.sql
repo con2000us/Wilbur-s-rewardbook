@@ -5,12 +5,6 @@
 -- 3) Default event reward mappings
 -- 4) Demo exchange rules + translations
 
-ALTER TABLE achievement_events
-ADD COLUMN IF NOT EXISTS event_key TEXT;
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_achievement_events_event_key_unique
-ON achievement_events(event_key);
-
 CREATE TABLE IF NOT EXISTS achievement_event_translations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   event_id UUID NOT NULL REFERENCES achievement_events(id) ON DELETE CASCADE,
@@ -27,12 +21,6 @@ CREATE TRIGGER update_achievement_event_translations_updated_at
 BEFORE UPDATE ON achievement_event_translations
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
-
-ALTER TABLE exchange_rules
-ADD COLUMN IF NOT EXISTS rule_key TEXT;
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_exchange_rules_rule_key_unique
-ON exchange_rules(rule_key);
 
 CREATE TABLE IF NOT EXISTS exchange_rule_translations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -51,35 +39,48 @@ BEFORE UPDATE ON exchange_rule_translations
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
-INSERT INTO achievement_events (event_key, name_zh, name_en, description_zh, description_en, is_active, display_order)
+CREATE TEMP TABLE bootstrap_demo_achievement_events (
+  event_key TEXT PRIMARY KEY,
+  zh_name TEXT NOT NULL,
+  en_name TEXT NOT NULL,
+  zh_description TEXT,
+  en_description TEXT,
+  reward_type_key TEXT NOT NULL,
+  default_amount NUMERIC NOT NULL,
+  display_order INTEGER NOT NULL
+) ON COMMIT DROP;
+
+INSERT INTO bootstrap_demo_achievement_events
 VALUES
-  ('homework_on_time', 'Homework On Time', 'Homework On Time', 'Submit homework on time', 'Submit homework on time', TRUE, 1),
-  ('self_review', 'Self Review', 'Self Review', 'Take initiative to review', 'Take initiative to review', TRUE, 2),
-  ('great_quiz_performance', 'Great Quiz Performance', 'Great Quiz Performance', 'Reach target score in quiz', 'Reach target score in quiz', TRUE, 3),
-  ('active_participation', 'Active Participation', 'Active Participation', 'Actively participate in class', 'Actively participate in class', TRUE, 4),
-  ('help_classmates', 'Help Classmates', 'Help Classmates', 'Help classmates proactively', 'Help classmates proactively', TRUE, 5)
+  ('homework_on_time', '作業準時繳交', 'Homework On Time', '準時完成並繳交作業', 'Submit homework on time', 'points', 5::numeric, 1),
+  ('self_review', '主動複習', 'Self Review', '主動整理與複習學習內容', 'Take initiative to review', 'stars', 1::numeric, 2),
+  ('great_quiz_performance', '小考表現優秀', 'Great Quiz Performance', '小考達到目標分數', 'Reach target score in quiz', 'money', 10::numeric, 3),
+  ('active_participation', '課堂積極參與', 'Active Participation', '積極參與課堂活動與討論', 'Actively participate in class', 'hearts', 1::numeric, 4),
+  ('help_classmates', '主動幫助同學', 'Help Classmates', '主動協助同學解決問題', 'Help classmates proactively', 'diamonds', 1::numeric, 5);
+
+INSERT INTO achievement_events (event_key, name, description, is_active, display_order)
+SELECT event_key, en_name, en_description, TRUE, display_order
+FROM bootstrap_demo_achievement_events
 ON CONFLICT (event_key) DO UPDATE SET
-  name_zh = EXCLUDED.name_zh,
-  name_en = EXCLUDED.name_en,
-  description_zh = EXCLUDED.description_zh,
-  description_en = EXCLUDED.description_en,
+  name = EXCLUDED.name,
+  description = EXCLUDED.description,
   is_active = EXCLUDED.is_active,
   display_order = EXCLUDED.display_order,
   updated_at = NOW();
 
 INSERT INTO achievement_event_translations (event_id, locale, name, description)
-SELECT id, 'en', name_en, description_en
-FROM achievement_events
-WHERE event_key IN ('homework_on_time', 'self_review', 'great_quiz_performance', 'active_participation', 'help_classmates')
+SELECT e.id, 'en', x.en_name, x.en_description
+FROM bootstrap_demo_achievement_events x
+JOIN achievement_events e ON e.event_key = x.event_key
 ON CONFLICT (event_id, locale) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,
   updated_at = NOW();
 
 INSERT INTO achievement_event_translations (event_id, locale, name, description)
-SELECT id, 'zh-TW', name_zh, description_zh
-FROM achievement_events
-WHERE event_key IN ('homework_on_time', 'self_review', 'great_quiz_performance', 'active_participation', 'help_classmates')
+SELECT e.id, 'zh-TW', x.zh_name, x.zh_description
+FROM bootstrap_demo_achievement_events x
+JOIN achievement_events e ON e.event_key = x.event_key
 ON CONFLICT (event_id, locale) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,
@@ -91,89 +92,82 @@ SELECT
   rt.id,
   x.default_amount,
   TRUE
-FROM (
-  VALUES
-    ('homework_on_time', 'points', 5::numeric),
-    ('self_review', 'stars', 1::numeric),
-    ('great_quiz_performance', 'money', 10::numeric),
-    ('active_participation', 'hearts', 1::numeric),
-    ('help_classmates', 'diamonds', 1::numeric)
-) AS x(event_key, reward_type_key, default_amount)
+FROM bootstrap_demo_achievement_events x
 JOIN achievement_events e ON e.event_key = x.event_key
 JOIN custom_reward_types rt ON rt.type_key = x.reward_type_key
 ON CONFLICT (event_id, reward_type_id) DO UPDATE SET
   default_amount = EXCLUDED.default_amount,
   is_default = EXCLUDED.is_default;
 
+CREATE TEMP TABLE bootstrap_demo_exchange_rules (
+  rule_key TEXT PRIMARY KEY,
+  zh_name TEXT NOT NULL,
+  en_name TEXT NOT NULL,
+  zh_description TEXT,
+  en_description TEXT,
+  required_type_key TEXT NOT NULL,
+  required_amount NUMERIC NOT NULL,
+  reward_type_key TEXT NOT NULL,
+  reward_amount NUMERIC NOT NULL,
+  display_order INTEGER NOT NULL
+) ON COMMIT DROP;
+
+INSERT INTO bootstrap_demo_exchange_rules
+VALUES
+  ('points_to_money_basic', '點數兌換金錢', 'Points to Money', '使用 100 點兌換 10 元', 'Exchange 100 points for 10 money', 'points', 100::numeric, 'money', 10::numeric, 1),
+  ('stars_to_diamonds', '星星兌換鑽石', 'Stars to Diamonds', '使用 5 顆星星兌換 1 顆鑽石', 'Exchange 5 stars for 1 diamond', 'stars', 5::numeric, 'diamonds', 1::numeric, 2);
+
 INSERT INTO exchange_rules (
   rule_key,
-  name_zh,
-  name_en,
-  description_zh,
-  description_en,
+  name,
+  description,
   required_reward_type_id,
   required_amount,
   reward_type_id,
   reward_amount,
+  reward_item,
   is_active,
   display_order
 )
 SELECT
   x.rule_key,
-  x.name_zh,
-  x.name_en,
-  x.description_zh,
-  x.description_en,
+  x.en_name,
+  x.en_description,
   req.id,
   x.required_amount,
   reward.id,
   x.reward_amount,
+  x.en_description,
   TRUE,
   x.display_order
-FROM (
-  VALUES
-    ('points_to_money_basic', 'Points to Money', 'Points to Money', 'Exchange 100 points for 10 money', 'Exchange 100 points for 10 money', 'points', 100::numeric, 'money', 10::numeric, 1),
-    ('stars_to_diamonds', 'Stars to Diamonds', 'Stars to Diamonds', 'Exchange 5 stars for 1 diamond', 'Exchange 5 stars for 1 diamond', 'stars', 5::numeric, 'diamonds', 1::numeric, 2)
-) AS x(
-  rule_key,
-  name_zh,
-  name_en,
-  description_zh,
-  description_en,
-  required_type_key,
-  required_amount,
-  reward_type_key,
-  reward_amount,
-  display_order
-)
+FROM bootstrap_demo_exchange_rules x
 JOIN custom_reward_types req ON req.type_key = x.required_type_key
 JOIN custom_reward_types reward ON reward.type_key = x.reward_type_key
 ON CONFLICT (rule_key) DO UPDATE SET
-  name_zh = EXCLUDED.name_zh,
-  name_en = EXCLUDED.name_en,
-  description_zh = EXCLUDED.description_zh,
-  description_en = EXCLUDED.description_en,
+  name = EXCLUDED.name,
+  description = EXCLUDED.description,
   required_reward_type_id = EXCLUDED.required_reward_type_id,
   required_amount = EXCLUDED.required_amount,
   reward_type_id = EXCLUDED.reward_type_id,
   reward_amount = EXCLUDED.reward_amount,
+  reward_item = EXCLUDED.reward_item,
   is_active = EXCLUDED.is_active,
   display_order = EXCLUDED.display_order,
   updated_at = NOW();
 
 INSERT INTO exchange_rule_translations (rule_id, locale, name, description)
-SELECT id, 'en', name_en, description_en
-FROM exchange_rules
-WHERE rule_key IN ('points_to_money_basic', 'stars_to_diamonds')
+SELECT r.id, 'en', x.en_name, x.en_description
+FROM bootstrap_demo_exchange_rules x
+JOIN exchange_rules r ON r.rule_key = x.rule_key
 ON CONFLICT (rule_id, locale) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,
   updated_at = NOW();
 
 INSERT INTO exchange_rule_translations (rule_id, locale, name, description)
-SELECT id, 'zh-TW', name_zh, description_zh
-FROM exchange_rules
-WHERE rule_key IN ('points_to_money_basic', 'stars_to_diamonds')
+SELECT r.id, 'zh-TW', x.zh_name, x.zh_description
+FROM bootstrap_demo_exchange_rules x
+JOIN exchange_rules r ON r.rule_key = x.rule_key
 ON CONFLICT (rule_id, locale) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,

@@ -49,7 +49,8 @@ export async function POST(request: Request) {
       locale: selectedLocale,
       demoDataImported: importDemoData,
     })
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to initialize'
     try {
       const supabase = createClient()
       await appendInitializationLog(
@@ -58,9 +59,9 @@ export async function POST(request: Request) {
         selectedLocale,
         importDemoData,
         false,
-        error.message || 'unknown error'
+        message
       )
     } catch {}
-    return NextResponse.json({ error: error.message || 'Failed to initialize' }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
