@@ -3240,6 +3240,7 @@ CREATE TABLE public.achievement_event_reward_rules (
 
 CREATE TABLE public.achievement_events (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    event_key text,
     name_zh text NOT NULL,
     name_en text,
     description_zh text,
@@ -3510,6 +3511,7 @@ COMMENT ON COLUMN public.custom_reward_types.display_name IS '憟蝐餃??�
 
 CREATE TABLE public.exchange_rules (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    rule_key text,
     name_zh text NOT NULL,
     name_en text,
     description_zh text,
@@ -5110,6 +5112,13 @@ CREATE INDEX idx_achievement_events_display_order ON public.achievement_events U
 
 
 --
+-- Name: idx_achievement_events_event_key_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_achievement_events_event_key_unique ON public.achievement_events USING btree (event_key);
+
+
+--
 -- Name: idx_assessments_due_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5198,6 +5207,13 @@ CREATE INDEX idx_exchange_rules_display_order ON public.exchange_rules USING btr
 --
 
 CREATE INDEX idx_exchange_rules_is_active ON public.exchange_rules USING btree (is_active);
+
+
+--
+-- Name: idx_exchange_rules_rule_key_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_exchange_rules_rule_key_unique ON public.exchange_rules USING btree (rule_key);
 
 
 --
