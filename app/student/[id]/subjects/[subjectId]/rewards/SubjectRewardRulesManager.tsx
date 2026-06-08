@@ -220,18 +220,15 @@ export default function SubjectRewardRulesManager({
         // 如果是更新規則，立即更新本地狀態
         if (editingRule && result.data) {
           const updatedRule = result.data
-          
-          // 判斷規則類型並更新對應的列表
+
+          // 規則類型可能在編輯時改變，先從兩個列表移除舊項，再放回正確列表。
+          setSortedExclusiveRules(prevRules => prevRules.filter(r => r.id !== editingRule.id))
+          setSortedSubjectOnlyRules(prevRules => prevRules.filter(r => r.id !== editingRule.id))
+
           if (updatedRule.student_id && updatedRule.subject_id) {
-            // 專屬規則（科目+學生）
-            setSortedExclusiveRules(prevRules => 
-              prevRules.map(r => r.id === editingRule.id ? updatedRule : r)
-            )
+            setSortedExclusiveRules(prevRules => sortRules([...prevRules, updatedRule]))
           } else if (updatedRule.subject_id) {
-            // 科目規則（僅科目）
-            setSortedSubjectOnlyRules(prevRules => 
-              prevRules.map(r => r.id === editingRule.id ? updatedRule : r)
-            )
+            setSortedSubjectOnlyRules(prevRules => sortRules([...prevRules, updatedRule]))
           }
           
           // 標記剛剛更新完成，防止 useEffect 覆蓋當前狀態
@@ -411,52 +408,10 @@ export default function SubjectRewardRulesManager({
       return
     }
     if (!isReorderingExclusive) {
-      // 合併更新：保留本地已更新的規則狀態，即使新數據中沒有也要保留
-      setSortedExclusiveRules(prevRules => {
-        const newRules = sortRules(exclusiveRules)
-        // 創建一個映射，保留本地已更新的規則狀態
-        const localUpdates = new Map(prevRules.map(r => [r.id, r]))
-        
-        // 合併：優先使用本地更新，如果本地沒有則使用新數據
-        const mergedRules = new Map()
-        
-        // 先添加所有本地規則（包括可能被過濾掉的）
-        prevRules.forEach(rule => {
-          mergedRules.set(rule.id, rule)
-        })
-        
-        // 然後用新數據更新（如果新數據中有更新的版本）
-        newRules.forEach(rule => {
-          mergedRules.set(rule.id, localUpdates.get(rule.id) || rule)
-        })
-        
-        // 轉換回數組並排序
-        return sortRules(Array.from(mergedRules.values()))
-      })
+      setSortedExclusiveRules(sortRules(exclusiveRules))
     }
     if (!isReorderingSubject) {
-      // 合併更新：保留本地已更新的規則狀態，即使新數據中沒有也要保留
-      setSortedSubjectOnlyRules(prevRules => {
-        const newRules = sortRules(subjectOnlyRules)
-        // 創建一個映射，保留本地已更新的規則狀態
-        const localUpdates = new Map(prevRules.map(r => [r.id, r]))
-        
-        // 合併：優先使用本地更新，如果本地沒有則使用新數據
-        const mergedRules = new Map()
-        
-        // 先添加所有本地規則（包括可能被過濾掉的）
-        prevRules.forEach(rule => {
-          mergedRules.set(rule.id, rule)
-        })
-        
-        // 然後用新數據更新（如果新數據中有更新的版本）
-        newRules.forEach(rule => {
-          mergedRules.set(rule.id, localUpdates.get(rule.id) || rule)
-        })
-        
-        // 轉換回數組並排序
-        return sortRules(Array.from(mergedRules.values()))
-      })
+      setSortedSubjectOnlyRules(sortRules(subjectOnlyRules))
     }
   }, [exclusiveRules, subjectOnlyRules, isReorderingExclusive, isReorderingSubject])
 

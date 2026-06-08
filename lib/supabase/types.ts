@@ -135,6 +135,7 @@ export interface Database {
           notes: string | null
           grade: string | null
           score_type: string | null
+          image_urls: Json | null
           scoring_mode: string
           counts_toward_average: boolean
           counts_toward_reward: boolean
@@ -158,6 +159,7 @@ export interface Database {
           notes?: string | null
           grade?: string | null
           score_type?: string | null
+          image_urls?: Json | null
           scoring_mode?: string
           counts_toward_average?: boolean
           counts_toward_reward?: boolean
@@ -181,6 +183,7 @@ export interface Database {
           notes?: string | null
           grade?: string | null
           score_type?: string | null
+          image_urls?: Json | null
           scoring_mode?: string
           counts_toward_average?: boolean
           counts_toward_reward?: boolean
@@ -785,4 +788,3 @@ export interface Database {
     Enums: {}
   }
 }
-

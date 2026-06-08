@@ -2,6 +2,14 @@
 -- Ensure default reward types are exactly:
 -- points, money, hearts, stars, diamonds
 
+-- Schema patch for existing DBs created before grade_mapping was in 01_schema.sql
+ALTER TABLE public.subjects
+ADD COLUMN IF NOT EXISTS grade_mapping JSONB DEFAULT NULL;
+
+-- Schema patch for existing DBs created before assessment images were in 01_schema.sql
+ALTER TABLE public.assessments
+ADD COLUMN IF NOT EXISTS image_urls JSONB DEFAULT '[]'::jsonb;
+
 DO $$
 BEGIN
   IF EXISTS (

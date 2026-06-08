@@ -3274,6 +3274,7 @@ CREATE TABLE public.assessments (
     updated_at timestamp with time zone DEFAULT now(),
     grade text,
     score_type text DEFAULT 'numeric'::text,
+    image_urls jsonb DEFAULT '[]'::jsonb,
     scoring_mode text DEFAULT 'scored'::text NOT NULL,
     counts_toward_average boolean DEFAULT true NOT NULL,
     counts_toward_reward boolean DEFAULT true NOT NULL,
@@ -3821,6 +3822,7 @@ CREATE TABLE public.subjects (
     color text DEFAULT '#4a9eff'::text,
     icon text DEFAULT '??'::text,
     order_index integer DEFAULT 0,
+    grade_mapping jsonb,
     created_at timestamp with time zone DEFAULT now()
 );
 

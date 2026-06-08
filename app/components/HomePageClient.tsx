@@ -186,8 +186,8 @@ function StudentCard({
           }
         }}
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        <div className="mb-4 flex flex-col gap-3">
+          <div className="flex min-w-0 items-center gap-3 text-left">
             <span
               className="home-student-avatar"
               style={{ background: avatar.gradientStyle }}
@@ -200,8 +200,8 @@ function StudentCard({
             </div>
           </div>
           <div
-            className="home-stat-strip mb-0 grid grid-cols-3 p-3"
-            style={{ background: 'transparent', border: 0, boxShadow: 'none', marginTop: 3 }}
+            className="home-stat-strip mb-0 mx-auto grid grid-cols-3 p-3"
+            style={{ background: 'transparent', border: 0, boxShadow: 'none' }}
           >
             <div className="flex min-w-[61px] flex-col items-center">
               <span className="home-stat-value text-primary">{formatAverageScore(averageScore)}</span>
