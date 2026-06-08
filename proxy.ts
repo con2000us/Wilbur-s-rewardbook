@@ -10,9 +10,10 @@ export async function proxy(request: NextRequest) {
   const isLoginPage = pathname === '/login'
   const isAuthApi = pathname === '/api/auth' || pathname.startsWith('/api/auth/')
   const isPublicI18nApi = pathname === '/api/i18n/set-locale'
+  const isPublicBootstrapApi = pathname === '/api/bootstrap/init-status'
   const isApiRequest = pathname.startsWith('/api/')
 
-  if (!isAuthenticated && !isLoginPage && !isAuthApi && !isPublicI18nApi) {
+  if (!isAuthenticated && !isLoginPage && !isAuthApi && !isPublicI18nApi && !isPublicBootstrapApi) {
     if (isApiRequest) {
       return NextResponse.json(
         { errorCode: 'AUTH_REQUIRED', error: 'Authentication required.' },

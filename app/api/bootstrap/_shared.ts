@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { locales, type Locale } from '@/lib/i18n/config'
 
 interface DemoEventSeed {
@@ -110,12 +111,12 @@ export function parseLocale(input: string | undefined): Locale {
   return locales.includes(input as Locale) ? (input as Locale) : 'en'
 }
 
-export async function upsertSetting(supabase: any, key: string, value: string) {
-  return supabase.from('site_settings').upsert({ key, value } as any, { onConflict: 'key' })
+export async function upsertSetting(supabase: SupabaseClient, key: string, value: string) {
+  return supabase.from('site_settings').upsert({ key, value }, { onConflict: 'key' })
 }
 
 export async function appendInitializationLog(
-  supabase: any,
+  supabase: SupabaseClient,
   action: BootstrapLogAction,
   locale: Locale,
   importDemoData: boolean,
@@ -151,7 +152,7 @@ export async function appendInitializationLog(
   await upsertSetting(supabase, 'initialization_logs', JSON.stringify(nextLogs))
 }
 
-export async function ensureRewardTypes(supabase: any, selectedLocale: Locale) {
+export async function ensureRewardTypes(supabase: SupabaseClient, selectedLocale: Locale) {
   const rewardTypeDisplayNames =
     selectedLocale === 'zh-TW'
       ? {
@@ -187,16 +188,133 @@ export async function ensureRewardTypes(supabase: any, selectedLocale: Locale) {
 
   const { error } = await supabase
     .from('custom_reward_types')
-    .upsert(rewardTypes as any, { onConflict: 'type_key' })
+    .upsert(rewardTypes, { onConflict: 'type_key' })
 
   if (error) {
     throw new Error(error.message)
   }
 }
 
-export async function importDemoSeedData(supabase: any) {
-  const eventKeyCheck = await supabase.from('achievement_events').select('event_key').limit(1)
-  const hasEventKey = !eventKeyCheck.error
+async function tableHasColumn(supabase: SupabaseClient, table: string, column: string) {
+  const { error } = await supabase.from(table).select(column).limit(1)
+  return !error
+}
+
+function addColumnValue(payload: Record<string, unknown>, hasColumn: boolean, key: string, value: unknown) {
+  if (hasColumn) {
+    payload[key] = value
+  }
+}
+
+type EventSchema = {
+  hasEventKey: boolean
+  hasName: boolean
+  hasDescription: boolean
+  hasNameZh: boolean
+  hasNameEn: boolean
+  hasDescriptionZh: boolean
+  hasDescriptionEn: boolean
+}
+
+type ExchangeRuleSchema = {
+  hasRuleKey: boolean
+  hasName: boolean
+  hasDescription: boolean
+  hasNameZh: boolean
+  hasNameEn: boolean
+  hasDescriptionZh: boolean
+  hasDescriptionEn: boolean
+  hasRewardItem: boolean
+  hasRewardTypeId: boolean
+  hasRewardAmount: boolean
+}
+
+function buildEventPayload(seed: DemoEventSeed, schema: EventSchema) {
+  const payload: Record<string, unknown> = {
+    is_active: true,
+    display_order: seed.displayOrder,
+  }
+
+  addColumnValue(payload, schema.hasEventKey, 'event_key', seed.key)
+  addColumnValue(payload, schema.hasName, 'name', seed.nameZh)
+  addColumnValue(payload, schema.hasDescription, 'description', seed.descriptionZh)
+  addColumnValue(payload, schema.hasNameZh, 'name_zh', seed.nameZh)
+  addColumnValue(payload, schema.hasNameEn, 'name_en', seed.nameEn)
+  addColumnValue(payload, schema.hasDescriptionZh, 'description_zh', seed.descriptionZh)
+  addColumnValue(payload, schema.hasDescriptionEn, 'description_en', seed.descriptionEn)
+
+  return payload
+}
+
+function getEventLookup(seed: DemoEventSeed, schema: EventSchema) {
+  if (schema.hasNameZh) return { column: 'name_zh', value: seed.nameZh }
+  if (schema.hasName) return { column: 'name', value: seed.nameZh }
+  if (schema.hasNameEn) return { column: 'name_en', value: seed.nameEn }
+  return null
+}
+
+function buildExchangeRulePayload(
+  seed: DemoExchangeRuleSeed,
+  schema: ExchangeRuleSchema,
+  requiredRewardTypeId: string,
+  rewardTypeId: string
+) {
+  const payload: Record<string, unknown> = {
+    required_reward_type_id: requiredRewardTypeId,
+    required_amount: seed.requiredAmount,
+    is_active: true,
+    display_order: seed.displayOrder,
+  }
+
+  addColumnValue(payload, schema.hasRuleKey, 'rule_key', seed.key)
+  addColumnValue(payload, schema.hasName, 'name', seed.nameZh)
+  addColumnValue(payload, schema.hasDescription, 'description', seed.descriptionZh)
+  addColumnValue(payload, schema.hasNameZh, 'name_zh', seed.nameZh)
+  addColumnValue(payload, schema.hasNameEn, 'name_en', seed.nameEn)
+  addColumnValue(payload, schema.hasDescriptionZh, 'description_zh', seed.descriptionZh)
+  addColumnValue(payload, schema.hasDescriptionEn, 'description_en', seed.descriptionEn)
+  addColumnValue(payload, schema.hasRewardItem, 'reward_item', seed.descriptionZh)
+  addColumnValue(payload, schema.hasRewardTypeId, 'reward_type_id', rewardTypeId)
+  addColumnValue(payload, schema.hasRewardAmount, 'reward_amount', seed.rewardAmount)
+
+  return payload
+}
+
+function getExchangeRuleLookup(seed: DemoExchangeRuleSeed, schema: ExchangeRuleSchema) {
+  if (schema.hasNameZh) return { column: 'name_zh', value: seed.nameZh }
+  if (schema.hasName) return { column: 'name', value: seed.nameZh }
+  if (schema.hasNameEn) return { column: 'name_en', value: seed.nameEn }
+  return null
+}
+
+export async function importDemoSeedData(supabase: SupabaseClient) {
+  const [
+    hasEventKey,
+    hasEventName,
+    hasEventDescription,
+    hasEventNameZh,
+    hasEventNameEn,
+    hasEventDescriptionZh,
+    hasEventDescriptionEn,
+  ] = await Promise.all([
+    tableHasColumn(supabase, 'achievement_events', 'event_key'),
+    tableHasColumn(supabase, 'achievement_events', 'name'),
+    tableHasColumn(supabase, 'achievement_events', 'description'),
+    tableHasColumn(supabase, 'achievement_events', 'name_zh'),
+    tableHasColumn(supabase, 'achievement_events', 'name_en'),
+    tableHasColumn(supabase, 'achievement_events', 'description_zh'),
+    tableHasColumn(supabase, 'achievement_events', 'description_en'),
+  ])
+
+  const eventSchema: EventSchema = {
+    hasEventKey,
+    hasName: hasEventName,
+    hasDescription: hasEventDescription,
+    hasNameZh: hasEventNameZh,
+    hasNameEn: hasEventNameEn,
+    hasDescriptionZh: hasEventDescriptionZh,
+    hasDescriptionEn: hasEventDescriptionEn,
+  }
 
   const translationTableCheck = await supabase
     .from('achievement_event_translations')
@@ -204,8 +322,42 @@ export async function importDemoSeedData(supabase: any) {
     .limit(1)
   const hasTranslationTable = !translationTableCheck.error
 
-  const exchangeRuleKeyCheck = await supabase.from('exchange_rules').select('rule_key').limit(1)
-  const hasExchangeRuleKey = !exchangeRuleKeyCheck.error
+  const [
+    hasExchangeRuleKey,
+    hasExchangeRuleName,
+    hasExchangeRuleDescription,
+    hasExchangeRuleNameZh,
+    hasExchangeRuleNameEn,
+    hasExchangeRuleDescriptionZh,
+    hasExchangeRuleDescriptionEn,
+    hasRewardItem,
+    hasRewardTypeId,
+    hasRewardAmount,
+  ] = await Promise.all([
+    tableHasColumn(supabase, 'exchange_rules', 'rule_key'),
+    tableHasColumn(supabase, 'exchange_rules', 'name'),
+    tableHasColumn(supabase, 'exchange_rules', 'description'),
+    tableHasColumn(supabase, 'exchange_rules', 'name_zh'),
+    tableHasColumn(supabase, 'exchange_rules', 'name_en'),
+    tableHasColumn(supabase, 'exchange_rules', 'description_zh'),
+    tableHasColumn(supabase, 'exchange_rules', 'description_en'),
+    tableHasColumn(supabase, 'exchange_rules', 'reward_item'),
+    tableHasColumn(supabase, 'exchange_rules', 'reward_type_id'),
+    tableHasColumn(supabase, 'exchange_rules', 'reward_amount'),
+  ])
+
+  const exchangeRuleSchema: ExchangeRuleSchema = {
+    hasRuleKey: hasExchangeRuleKey,
+    hasName: hasExchangeRuleName,
+    hasDescription: hasExchangeRuleDescription,
+    hasNameZh: hasExchangeRuleNameZh,
+    hasNameEn: hasExchangeRuleNameEn,
+    hasDescriptionZh: hasExchangeRuleDescriptionZh,
+    hasDescriptionEn: hasExchangeRuleDescriptionEn,
+    hasRewardItem,
+    hasRewardTypeId,
+    hasRewardAmount,
+  }
 
   const exchangeRuleTranslationCheck = await supabase
     .from('exchange_rule_translations')
@@ -222,27 +374,19 @@ export async function importDemoSeedData(supabase: any) {
     throw new Error(rewardTypeError.message)
   }
 
-  const rewardTypeIdByKey = (rewardTypeRows || []).reduce((map: Record<string, string>, row: any) => {
+  const rewardTypeIdByKey = (rewardTypeRows || []).reduce((map: Record<string, string>, row) => {
     map[row.type_key] = row.id
     return map
   }, {})
 
   for (const seed of demoSeeds) {
     let eventId: string | null = null
+    const eventPayload = buildEventPayload(seed, eventSchema)
 
-    if (hasEventKey) {
+    if (eventSchema.hasEventKey) {
       const { data: eventRow, error: eventError } = await supabase
         .from('achievement_events')
-        .upsert(
-          {
-            event_key: seed.key,
-            name: seed.nameZh,
-            description: seed.descriptionZh,
-            is_active: true,
-            display_order: seed.displayOrder,
-          } as any,
-          { onConflict: 'event_key' }
-        )
+        .upsert(eventPayload, { onConflict: 'event_key' })
         .select('id')
         .single()
 
@@ -251,23 +395,28 @@ export async function importDemoSeedData(supabase: any) {
       }
       eventId = eventRow?.id || null
     } else {
-      const { data: existingEvent } = await supabase
+      const eventLookup = getEventLookup(seed, eventSchema)
+      if (!eventLookup) {
+        throw new Error('Unsupported achievement_events schema: no usable name column found')
+      }
+
+      const { data: existingEvent, error: existingEventError } = await supabase
         .from('achievement_events')
         .select('id')
-        .eq('name', seed.nameZh)
+        .eq(eventLookup.column, eventLookup.value)
+        .limit(1)
         .maybeSingle()
+
+      if (existingEventError) {
+        throw new Error(existingEventError.message)
+      }
 
       if (existingEvent?.id) {
         eventId = existingEvent.id
       } else {
         const { data: insertedEvent, error: insertEventError } = await supabase
           .from('achievement_events')
-          .insert({
-            name: seed.nameZh,
-            description: seed.descriptionZh,
-            is_active: true,
-            display_order: seed.displayOrder,
-          } as any)
+          .insert(eventPayload)
           .select('id')
           .single()
 
@@ -297,7 +446,7 @@ export async function importDemoSeedData(supabase: any) {
               name: seed.nameEn,
               description: seed.descriptionEn,
             },
-          ] as any,
+          ],
           { onConflict: 'event_id,locale' }
         )
 
@@ -316,7 +465,7 @@ export async function importDemoSeedData(supabase: any) {
             reward_type_id: rewardTypeId,
             default_amount: seed.defaultAmount,
             is_default: true,
-          } as any,
+          },
           { onConflict: 'event_id,reward_type_id' }
         )
 
@@ -332,24 +481,12 @@ export async function importDemoSeedData(supabase: any) {
     if (!requiredRewardTypeId || !rewardTypeId) continue
 
     let ruleId: string | null = null
+    const rulePayload = buildExchangeRulePayload(seed, exchangeRuleSchema, requiredRewardTypeId, rewardTypeId)
 
-    if (hasExchangeRuleKey) {
+    if (exchangeRuleSchema.hasRuleKey) {
       const { data: ruleRow, error: ruleError } = await supabase
         .from('exchange_rules')
-        .upsert(
-          {
-            rule_key: seed.key,
-            name: seed.nameZh,
-            description: seed.descriptionZh,
-            required_reward_type_id: requiredRewardTypeId,
-            required_amount: seed.requiredAmount,
-            reward_type_id: rewardTypeId,
-            reward_amount: seed.rewardAmount,
-            is_active: true,
-            display_order: seed.displayOrder,
-          } as any,
-          { onConflict: 'rule_key' }
-        )
+        .upsert(rulePayload, { onConflict: 'rule_key' })
         .select('id')
         .single()
 
@@ -358,29 +495,28 @@ export async function importDemoSeedData(supabase: any) {
       }
       ruleId = ruleRow?.id || null
     } else {
-      const { data: existingRule } = await supabase
+      const ruleLookup = getExchangeRuleLookup(seed, exchangeRuleSchema)
+      if (!ruleLookup) {
+        throw new Error('Unsupported exchange_rules schema: no usable name column found')
+      }
+
+      const { data: existingRule, error: existingRuleError } = await supabase
         .from('exchange_rules')
         .select('id')
-        .eq('name', seed.nameZh)
+        .eq(ruleLookup.column, ruleLookup.value)
+        .limit(1)
         .maybeSingle()
+
+      if (existingRuleError) {
+        throw new Error(existingRuleError.message)
+      }
 
       if (existingRule?.id) {
         ruleId = existingRule.id
       } else {
         const { data: insertedRule, error: insertRuleError } = await supabase
           .from('exchange_rules')
-          .insert(
-            {
-              name: seed.nameZh,
-              description: seed.descriptionZh,
-              required_reward_type_id: requiredRewardTypeId,
-              required_amount: seed.requiredAmount,
-              reward_type_id: rewardTypeId,
-              reward_amount: seed.rewardAmount,
-              is_active: true,
-              display_order: seed.displayOrder,
-            } as any
-          )
+          .insert(rulePayload)
           .select('id')
           .single()
 
@@ -409,7 +545,7 @@ export async function importDemoSeedData(supabase: any) {
             name: seed.nameEn,
             description: seed.descriptionEn,
           },
-        ] as any,
+        ],
         { onConflict: 'rule_id,locale' }
       )
 
