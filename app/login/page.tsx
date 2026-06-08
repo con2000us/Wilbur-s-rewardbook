@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import Cookies from 'js-cookie'
@@ -39,13 +39,19 @@ export default function LoginPage() {
   }, [])
 
   const handleLanguageChange = (newLocale: Locale) => {
-    Cookies.set('NEXT_LOCALE', newLocale, { expires: 365 })
+    Cookies.set('NEXT_LOCALE', newLocale, { expires: 365, path: '/' })
     router.refresh()
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
+
+    if (!password.trim()) {
+      setError(t('passwordRequired'))
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -74,7 +80,6 @@ export default function LoginPage() {
           }
         }
 
-        // 登入成功，重定向到原始頁面或首頁
         const redirect = searchParams.get('redirect') || '/'
         router.push(redirect)
         router.refresh()
@@ -85,7 +90,7 @@ export default function LoginPage() {
           setError(t('tryAgainLater'))
         }
       }
-    } catch (err) {
+    } catch {
       setError(t('tryAgainLater'))
     } finally {
       setLoading(false)
@@ -165,7 +170,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading || !password}
+            disabled={loading}
             className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {loading ? (needsInitialization ? t('initializing') : t('validating')) : t('login')}
@@ -179,4 +184,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

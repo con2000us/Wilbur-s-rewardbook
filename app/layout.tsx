@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 // Viewport 設置 - 確保手機正確顯示
 export const viewport: Viewport = {
   width: 'device-width',
-  initialScale: 0.8, // 首頁之外的頁面使用較小的縮放
+  initialScale: 1.0,
   maximumScale: 5.0,
   userScalable: true,
   // 添加以下屬性以更好地支援移動設備
@@ -39,8 +39,9 @@ export async function generateMetadata(): Promise<Metadata> {
     .eq('key', 'site_name')
     .single()
   
-  // @ts-ignore - Supabase type inference issue with select queries
-  const siteName = (siteNameSetting as any)?.value || "Wilbur's RewardBook"
+  const siteName = typeof siteNameSetting?.value === 'string' && siteNameSetting.value.trim()
+    ? siteNameSetting.value
+    : "Wilbur's RewardBook"
   
   return {
     title: siteName,

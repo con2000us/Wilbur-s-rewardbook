@@ -37,6 +37,7 @@
     "passwordLabel": "密碼",
     "languageLabel": "語言",
     "passwordPlaceholder": "輸入密碼",
+    "passwordRequired": "請輸入密碼",
     "validating": "驗證中...",
     "initializing": "初始化中...",
     "login": "登入",
