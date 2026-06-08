@@ -3,7 +3,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import Cookies from 'js-cookie'
 import { localeNames, locales, type Locale } from '@/lib/i18n/config'
 
 export default function LoginPage() {
@@ -17,6 +16,16 @@ export default function LoginPage() {
   const [initLoading, setInitLoading] = useState(true)
   const [needsInitialization, setNeedsInitialization] = useState(false)
   const [importDemoData, setImportDemoData] = useState(true)
+  const redirectPath = searchParams.get('redirect') || '/'
+  const loginRedirectPath = `/login${redirectPath !== '/' ? `?redirect=${encodeURIComponent(redirectPath)}` : ''}`
+  const queryError = (() => {
+    const errorCode = searchParams.get('error')
+    if (errorCode === 'invalid') return t('invalidPassword')
+    if (errorCode === 'init') return t('initFailed')
+    if (errorCode === 'server') return t('tryAgainLater')
+    return ''
+  })()
+  const displayError = error || queryError
 
   useEffect(() => {
     async function loadInitStatus() {
@@ -37,11 +46,6 @@ export default function LoginPage() {
 
     loadInitStatus()
   }, [])
-
-  const handleLanguageChange = (newLocale: Locale) => {
-    Cookies.set('NEXT_LOCALE', newLocale, { expires: 365, path: '/' })
-    router.refresh()
-  }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -80,8 +84,7 @@ export default function LoginPage() {
           }
         }
 
-        const redirect = searchParams.get('redirect') || '/'
-        router.push(redirect)
+        router.push(redirectPath)
         router.refresh()
       } else {
         if (data?.errorCode === 'INVALID_PASSWORD') {
@@ -109,10 +112,10 @@ export default function LoginPage() {
           <p className="text-sm font-medium text-gray-700 mb-2">{t('languageLabel')}</p>
           <div className="grid grid-cols-2 gap-2">
             {locales.map((loc) => (
-              <button
+              <a
                 key={loc}
-                type="button"
-                onClick={() => handleLanguageChange(loc)}
+                href={`/api/i18n/set-locale?locale=${encodeURIComponent(loc)}&redirect=${encodeURIComponent(loginRedirectPath)}`}
+                aria-current={locale === loc ? 'true' : undefined}
                 className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
                   locale === loc
                     ? 'bg-primary/10 border-primary/40 text-primary'
@@ -120,7 +123,7 @@ export default function LoginPage() {
                 }`}
               >
                 {localeNames[loc]}
-              </button>
+              </a>
             ))}
           </div>
         </div>
@@ -144,13 +147,17 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form action="/api/auth/login-form" method="post" onSubmit={handleSubmit} className="space-y-6">
+          <input type="hidden" name="redirect" value={redirectPath} />
+          <input type="hidden" name="locale" value={locale} />
+          <input type="hidden" name="importDemoData" value={importDemoData ? 'true' : 'false'} />
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
               {t('passwordLabel')}
             </label>
             <input
               id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -162,9 +169,9 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && (
+          {displayError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {error}
+              {displayError}
             </div>
           )}
 

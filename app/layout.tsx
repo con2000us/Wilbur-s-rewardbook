@@ -5,7 +5,6 @@ import { cookies } from 'next/headers';
 import { defaultLocale } from '@/lib/i18n/config';
 import { createClient } from '@/lib/supabase/server';
 import StudentSettingsModalProvider from './components/StudentSettingsModalProvider';
-import ThemeDebugProbe from './components/ThemeDebugProbe';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -88,7 +87,6 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <ThemeDebugProbe />
           {children}
           <StudentSettingsModalProvider />
         </NextIntlClientProvider>
