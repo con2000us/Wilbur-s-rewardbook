@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AUTH_COOKIE_NAME, isValidAuthToken } from './lib/auth/session'
+import { absoluteRequestUrl } from './lib/http/requestUrl'
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
@@ -19,7 +20,7 @@ export async function proxy(request: NextRequest) {
       )
     }
 
-    const loginUrl = new URL('/login', request.url)
+    const loginUrl = absoluteRequestUrl(request, '/login')
     const redirectPath = `${pathname}${request.nextUrl.search}`
 
     if (redirectPath !== '/') {
@@ -30,7 +31,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isAuthenticated && isLoginPage) {
-    return NextResponse.redirect(new URL('/', request.url))
+    return NextResponse.redirect(absoluteRequestUrl(request, '/'))
   }
 
   return NextResponse.next()

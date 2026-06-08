@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AUTH_COOKIE_NAME, createAuthToken, getSitePassword } from '@/lib/auth/session'
+import { absoluteRequestUrl } from '@/lib/http/requestUrl'
 import { createClient } from '@/lib/supabase/server'
 import {
   appendInitializationLog,
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
   const redirectPath = safeRedirectPath(formData.get('redirect'))
   const locale = parseLocale(typeof formData.get('locale') === 'string' ? String(formData.get('locale')) : undefined)
   const importDemoData = formData.get('importDemoData') === 'true'
-  const loginUrl = new URL('/login', request.url)
+  const loginUrl = absoluteRequestUrl(request, '/login')
   loginUrl.searchParams.set('redirect', redirectPath)
 
   const correctPassword = getSitePassword()
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(loginUrl, 303)
   }
 
-  const response = NextResponse.redirect(new URL(redirectPath, request.url), 303)
+  const response = NextResponse.redirect(absoluteRequestUrl(request, redirectPath), 303)
   response.cookies.set(AUTH_COOKIE_NAME, await createAuthToken(correctPassword), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
