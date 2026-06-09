@@ -57,7 +57,7 @@ export async function insertAssessmentRewardTransactions(
   const transactions: TransactionInsert[] = positiveRewardItems.length > 0
     ? positiveRewardItems.map((item) => {
         const rewardType = findRewardTypeForItem(item, rewardTypes)
-        const categoryName = rewardType?.display_name || item.type_key || 'Reward'
+        const categoryName = rewardType?.display_name || 'Reward'
 
         return {
           student_id: studentId,

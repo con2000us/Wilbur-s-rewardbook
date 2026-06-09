@@ -1,11 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useTranslations } from 'next-intl'
-import {
-  normalizeAssessmentTypes,
-  type AssessmentType,
-} from '@/lib/assessmentTypes'
+import { useState } from 'react'
+
+// ════════════════════════════════════════════════════════════
+// 輔助函式
+// ════════════════════════════════════════════════════════════
 
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -14,13 +13,9 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-function formatUsage(usage: Record<string, number>, labels: Record<string, string>) {
-  const details = Object.entries(usage)
-    .filter(([, count]) => count > 0)
-    .map(([key, count]) => `${labels[key] || key} ${count}`)
-
-  return details.length > 0 ? ` (${details.join('、')})` : ''
-}
+// ════════════════════════════════════════════════════════════
+// Material Icon 分類（與 SubjectForm 一致的圖示選擇器）
+// ════════════════════════════════════════════════════════════
 
 const ICON_CATEGORIES: Record<string, string[]> = {
   '文件': ['assignment', 'checklist_rtl', 'edit_note', 'fact_check', 'history_edu', 'description', 'summarize', 'contract_edit', 'draw', 'ink_pen'],
@@ -30,36 +25,51 @@ const ICON_CATEGORIES: Record<string, string[]> = {
   '一般': ['star', 'favorite', 'thumb_up', 'auto_awesome', 'workspace_premium', 'verified', 'bolt', 'local_fire_department', 'diamond'],
 }
 
-type Draft = {
-  display_name: string
+// ════════════════════════════════════════════════════════════
+// 模擬資料
+// ════════════════════════════════════════════════════════════
+
+type AssessmentTypeItem = {
+  id: string
+  typeKey: string
+  displayName: string
   icon: string
   color: string
+  isActive: boolean
+  isSystem: boolean
+  displayOrder: number
 }
 
-export default function AssessmentTypesManager() {
-  const t = useTranslations('settingsRewards.assessmentTypes')
-  const [types, setTypes] = useState<AssessmentType[]>([])
-  const [newType, setNewType] = useState<Draft>({
-    display_name: '',
-    icon: 'assignment',
-    color: '#64748b',
-  })
-  const [loading, setLoading] = useState(false)
-  const [savingId, setSavingId] = useState<string | null>(null)
-  const [error, setError] = useState('')
+const MOCK_TYPES: AssessmentTypeItem[] = [
+  { id: 'at-1', typeKey: 'exam',          displayName: '考試',   icon: 'fact_check',     color: '#F43F5E', isActive: true,  isSystem: true,  displayOrder: 1 },
+  { id: 'at-2', typeKey: 'homework',      displayName: '作業',   icon: 'edit_note',      color: '#6a99e0', isActive: true,  isSystem: true,  displayOrder: 2 },
+  { id: 'at-3', typeKey: 'quiz',          displayName: '小考',   icon: 'checklist_rtl',  color: '#F59E0B', isActive: true,  isSystem: true,  displayOrder: 3 },
+  { id: 'at-4', typeKey: 'project',       displayName: '專題',   icon: 'science',        color: '#10B981', isActive: true,  isSystem: true,  displayOrder: 4 },
+  { id: 'at-5', typeKey: 'presentation',  displayName: '報告',   icon: 'menu_book',      color: '#A855F7', isActive: true,  isSystem: true,  displayOrder: 5 },
+  { id: 'at-6', typeKey: 'experiment',    displayName: '實驗',   icon: 'biotech',        color: '#06B6D4', isActive: true,  isSystem: false, displayOrder: 6 },
+  { id: 'at-7', typeKey: 'competition',   displayName: '競賽',   icon: 'sports_score',   color: '#3B82F6', isActive: false, isSystem: false, displayOrder: 7 },
+]
 
-  // ── Toast ──
+// ════════════════════════════════════════════════════════════
+// 主頁面
+// ════════════════════════════════════════════════════════════
+
+export default function AssessmentTypesDemoPage() {
+  const [types, setTypes] = useState<AssessmentTypeItem[]>(MOCK_TYPES)
   const [toast, setToast] = useState<string | null>(null)
 
   // ── 新增 Modal ──
   const [showAddModal, setShowAddModal] = useState(false)
+  const [addName, setAddName] = useState('')
+  const [addIcon, setAddIcon] = useState('assignment')
+  const [addColor, setAddColor] = useState('#64748b')
   const [addCustomIcon, setAddCustomIcon] = useState('')
   const [addPickerVisible, setAddPickerVisible] = useState(true)
   const [addCategory, setAddCategory] = useState('文件')
 
   // ── 編輯 Modal ──
   const [showEditModal, setShowEditModal] = useState(false)
-  const [editTypeId, setEditTypeId] = useState<string | null>(null)
+  const [editId, setEditId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editIcon, setEditIcon] = useState('assignment')
   const [editColor, setEditColor] = useState('#64748b')
@@ -67,229 +77,89 @@ export default function AssessmentTypesManager() {
   const [editPickerVisible, setEditPickerVisible] = useState(true)
   const [editCategory, setEditCategory] = useState('文件')
 
-  const sortedTypes = useMemo(() => normalizeAssessmentTypes(types), [types])
-
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(null), 2200)
   }
 
-  const loadTypes = useCallback(async function loadTypes() {
-    setError('')
-    try {
-      const response = await fetch('/api/assessment-types/list?includeInactive=true')
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || t('errors.load'))
-      }
-
-      const list = normalizeAssessmentTypes(data.types || [])
-      setTypes(list)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.load'))
-    }
-  }, [t])
-
-  useEffect(() => {
-    loadTypes()
-  }, [loadTypes])
-
-  async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setLoading(true)
-    setError('')
-
-    try {
-      const response = await fetch('/api/assessment-types/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newType),
-      })
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || t('errors.create'))
-      }
-      setNewType({ display_name: '', icon: 'assignment', color: '#64748b' })
-      setShowAddModal(false)
-      showToast('✅ 評量類別已新增')
-      await loadTypes()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.create'))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleToggleActive(type: AssessmentType) {
-    if (!type.id) return
-    const willRestore = type.is_active === false
-
-    if (!willRestore && !window.confirm(t('confirmDelete'))) {
-      return
-    }
-
-    setSavingId(type.id)
-    setError('')
-
-    try {
-      const endpoint = type.is_active === false
-        ? '/api/assessment-types/update'
-        : '/api/assessment-types/delete'
-      const body = type.is_active === false
-        ? { id: type.id, is_active: true }
-        : { id: type.id }
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || t('errors.update'))
-      }
-      showToast(
-        willRestore
-          ? t('restored')
-          : t('deleted')
-      )
-      await loadTypes()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.update'))
-    } finally {
-      setSavingId(null)
-    }
-  }
-
-  async function handleHardDelete(type: AssessmentType) {
-    if (!type.id || type.is_system) return
-    if (!window.confirm(t('confirmPermanentDelete'))) return
-
-    setSavingId(type.id)
-    setError('')
-
-    try {
-      const response = await fetch('/api/assessment-types/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: type.id, mode: 'hard' }),
-      })
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        const usageMessage = data.usage ? formatUsage(data.usage, {
-          assessments: t('usage.assessments'),
-          reward_rules: t('usage.rewardRules'),
-          assessment_import_drafts: t('usage.importDrafts'),
-        }) : ''
-        throw new Error(`${data.error || t('errors.delete')}${usageMessage}`)
-      }
-
-      showToast(t('permanentlyDeleted'))
-      await loadTypes()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.delete'))
-    } finally {
-      setSavingId(null)
-    }
-  }
-
-  async function moveType(type: AssessmentType, direction: -1 | 1) {
-    const index = sortedTypes.findIndex((item) => item.id === type.id)
-    const targetIndex = index + direction
-    if (index < 0 || targetIndex < 0 || targetIndex >= sortedTypes.length) return
-
-    const reordered = [...sortedTypes]
-    const [moved] = reordered.splice(index, 1)
-    reordered.splice(targetIndex, 0, moved)
-
-    setTypes(reordered.map((item, itemIndex) => ({
-      ...item,
-      display_order: itemIndex + 1,
-    })))
-
-    try {
-      const response = await fetch('/api/assessment-types/reorder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          assessmentTypeOrders: reordered
-            .filter((item) => item.id)
-            .map((item, itemIndex) => ({ id: item.id, display_order: itemIndex + 1 })),
-        }),
-      })
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || t('errors.reorder'))
-      }
-      await loadTypes()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.reorder'))
-      await loadTypes()
-    }
-  }
-
-  // ── Modal 輔助函式 ──
-
+  // ── 新增邏輯 ──
   const openAddModal = () => {
-    setNewType({ display_name: '', icon: 'assignment', color: '#64748b' })
+    setAddName('')
+    setAddIcon('assignment')
+    setAddColor('#64748b')
     setAddCustomIcon('')
     setAddPickerVisible(true)
     setAddCategory('文件')
     setShowAddModal(true)
   }
 
-  const openEditModal = (type: AssessmentType) => {
-    const id = type.id || type.type_key
-    setEditTypeId(id)
-    setEditName(type.display_name)
+  const handleAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!addName.trim()) return
+    const icon = addCustomIcon.trim() || addIcon
+    const typeKey = addName.trim().toLowerCase().replace(/\s+/g, '_')
+    const newType: AssessmentTypeItem = {
+      id: `at-new-${Date.now()}`,
+      typeKey,
+      displayName: addName.trim(),
+      icon,
+      color: addColor,
+      isActive: true,
+      isSystem: false,
+      displayOrder: types.length + 1,
+    }
+    setTypes([...types, newType])
+    setShowAddModal(false)
+    showToast('✅ 評量類別已新增')
+  }
+
+  // ── 編輯邏輯 ──
+  const openEditModal = (type: AssessmentTypeItem) => {
+    setEditId(type.id)
+    setEditName(type.displayName)
     setEditIcon(type.icon)
-    setEditColor(type.color || '#64748b')
+    setEditColor(type.color)
     setEditCustomIcon('')
     setEditPickerVisible(true)
     setEditCategory('文件')
     setShowEditModal(true)
   }
 
-  const handleEditSubmit = async () => {
-    if (!editTypeId || !editName.trim()) return
+  const handleEditSubmit = () => {
+    if (!editName.trim() || !editId) return
     const icon = editCustomIcon.trim() || editIcon
-    const type = sortedTypes.find((t) => (t.id || t.type_key) === editTypeId)
-    if (!type || !type.id) return
-
-    setSavingId(type.id)
-    setError('')
-    try {
-      const response = await fetch('/api/assessment-types/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: type.id, display_name: editName.trim(), icon, color: editColor }),
-      })
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || t('errors.update'))
-      }
-      await loadTypes()
-      setShowEditModal(false)
-      showToast('✅ 評量類別已更新')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.update'))
-    } finally {
-      setSavingId(null)
-    }
+    setTypes(types.map(t =>
+      t.id === editId ? { ...t, displayName: editName.trim(), icon, color: editColor } : t
+    ))
+    setShowEditModal(false)
+    showToast('✅ 評量類別已更新')
   }
 
-  // ── 統計與計算 ──
+  const handleToggle = (id: string) => {
+    setTypes(types.map(t => t.id === id ? { ...t, isActive: !t.isActive } : t))
+    const target = types.find(t => t.id === id)
+    showToast(target?.isActive ? '⏸ 已停用' : '✅ 已啟用')
+  }
 
-  const stats = useMemo(() => {
-    const active = sortedTypes.filter((t) => t.is_active !== false).length
-    return {
-      total: sortedTypes.length,
-      active,
-    }
-  }, [sortedTypes])
+  const handleDelete = (id: string) => {
+    setTypes(types.filter(t => t.id !== id))
+    showToast('🗑 已刪除')
+  }
 
-  const effectiveAddIcon = addCustomIcon.trim() || newType.icon
-  const effectiveEditIcon = editCustomIcon.trim() || editIcon
+  const moveType = (id: string, dir: -1 | 1) => {
+    const index = types.findIndex(t => t.id === id)
+    if (index < 0) return
+    const target = index + dir
+    if (target < 0 || target >= types.length) return
+    const reordered = [...types]
+    ;[reordered[index], reordered[target]] = [reordered[target], reordered[index]]
+    setTypes(reordered.map((t, i) => ({ ...t, displayOrder: i + 1 })))
+    showToast('🔄 排序已更新')
+  }
+
+  const activeCount = types.filter(t => t.isActive).length
+  const currentAddIcon = addCustomIcon.trim() || addIcon
+  const currentEditIcon = editCustomIcon.trim() || editIcon
 
   return (
     <div
@@ -309,169 +179,156 @@ export default function AssessmentTypesManager() {
                 <span className="material-icons-outlined text-white text-2xl">category</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
-                <p className="text-sm text-gray-500">{t('keyRule')}</p>
+                <h1 className="text-2xl font-bold text-gray-900">評量類別管理</h1>
+                <p className="text-sm text-gray-500">定義評量類型（考試、作業、專題…），設定代表圖示與顏色，在全系統中一致顯示。</p>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 font-medium">
+                🎯 Demo 預覽模式
+              </span>
             </div>
           </div>
 
-          {/* ── 錯誤提示 ── */}
-          {error && (
-            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 animate-fadeIn">
-              {error}
-            </div>
-          )}
-
           {/* ── 統計小卡 ── */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <div className="glass-card rounded-2xl p-4">
-              <div className="text-2xl font-black text-gray-900">{stats.total}</div>
+              <div className="text-2xl font-black text-gray-900">{types.length}</div>
               <div className="text-xs text-gray-500 mt-1">全部類別</div>
             </div>
             <div className="glass-card rounded-2xl p-4">
-              <div className="text-2xl font-black text-emerald-600">{stats.active}</div>
+              <div className="text-2xl font-black text-emerald-600">{activeCount}</div>
               <div className="text-xs text-gray-500 mt-1">已啟用</div>
+            </div>
+            <div className="glass-card rounded-2xl p-4">
+              <div className="text-2xl font-black text-amber-500">{types.filter(t => t.isSystem).length}</div>
+              <div className="text-xs text-gray-500 mt-1">系統預設</div>
+            </div>
+            <div className="glass-card rounded-2xl p-4">
+              <div className="text-2xl font-black text-purple-500">{types.filter(t => !t.isSystem).length}</div>
+              <div className="text-xs text-gray-500 mt-1">自訂類別</div>
             </div>
           </div>
 
           {/* ── 操作列 ── */}
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-gray-500">{stats.total} 個類別 · 使用箭頭調整排序</p>
+            <p className="text-sm text-gray-500">{types.length} 個類別 · 拖曳排序或使用箭頭調整順序</p>
             <button
               onClick={openAddModal}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white transition hover:opacity-90 shadow-md shadow-primary/20 cursor-pointer"
             >
               <span className="material-icons-outlined text-lg">add</span>
-              {t('add')}
+              新增類別
             </button>
           </div>
 
           {/* ── 類別列表 ── */}
           <div className="space-y-2">
-            {sortedTypes.length === 0 ? (
+            {types.length === 0 ? (
               <div className="rounded-2xl border-2 border-dashed border-gray-200 p-10 text-center">
                 <span className="material-icons-outlined text-5xl text-gray-300 mb-3 block">category</span>
-                <p className="text-sm text-gray-400 font-medium">{t('noTypes')}</p>
+                <p className="text-sm text-gray-400 font-medium">尚無評量類別</p>
                 <p className="text-xs text-gray-300 mt-1">點擊上方按鈕新增第一個類別</p>
               </div>
             ) : (
-              sortedTypes.map((type, index) => {
-                const id = type.id || type.type_key
-                const isSaving = savingId === id
-
-                return (
-                  <div
-                    key={id}
-                    className={`grid gap-3 rounded-2xl border p-4 md:grid-cols-[auto_1fr_auto_auto_auto_auto] md:items-center transition-all ${
-                      type.is_active !== false
-                        ? 'bg-white border-gray-100 hover:shadow-md'
-                        : 'bg-gray-50/80 border-gray-200 opacity-75'
-                    }`}
-                  >
-                    {/* 圖示預覽 */}
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="flex h-11 w-11 items-center justify-center rounded-xl flex-shrink-0"
-                        style={{ backgroundColor: hexToRgba(type.color || '#64748b', 0.12) }}
-                      >
-                        <span className="material-icons-outlined text-xl" style={{ color: type.color || '#64748b' }}>
-                          {type.icon}
-                        </span>
-                      </div>
-                      <div className="md:hidden flex flex-col gap-0.5">
-                        <span className={`text-[10px] font-bold ${type.is_active !== false ? 'text-emerald-600' : 'text-gray-400'}`}>
-                          {type.is_active === false ? t('inactive') : t('active')}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 名稱 */}
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-sm font-bold text-gray-900 truncate">{type.display_name}</span>
-                    </div>
-
-                    {/* 顏色指示 */}
-                    <div className="hidden md:flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-md border border-gray-200 flex-shrink-0" style={{ backgroundColor: type.color || '#64748b' }} />
-                      <span className="font-mono text-[11px] text-gray-400">{type.color || '#64748b'}</span>
-                    </div>
-
-                    {/* 標籤 */}
-                    <div className="hidden md:flex items-center gap-1.5">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${
-                        type.is_active !== false
-                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                          : 'bg-gray-100 text-gray-400 border-gray-200'
-                      }`}>
-                        {type.is_active === false ? t('inactive') : t('active')}
+              types.map((type, index) => (
+                <div
+                  key={type.id}
+                  className={`grid gap-3 rounded-2xl border p-4 md:grid-cols-[auto_1fr_auto_auto_auto_auto] md:items-center transition-all ${
+                    type.isActive
+                      ? 'bg-white border-gray-100 hover:shadow-md'
+                      : 'bg-gray-50/80 border-gray-200 opacity-75'
+                  }`}
+                >
+                  {/* 圖示預覽 */}
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="flex h-11 w-11 items-center justify-center rounded-xl flex-shrink-0"
+                      style={{ backgroundColor: hexToRgba(type.color, 0.12) }}
+                    >
+                      <span className="material-icons-outlined text-xl" style={{ color: type.color }}>
+                        {type.icon}
                       </span>
                     </div>
-
-                    {/* 排序 */}
-                    <div className="flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => moveType(type, -1)}
-                        disabled={index === 0}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        title={t('moveUp')}
-                        aria-label={t('moveUp')}
-                      >
-                        <span className="material-icons-outlined text-sm">keyboard_arrow_up</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveType(type, 1)}
-                        disabled={index === sortedTypes.length - 1}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        title={t('moveDown')}
-                        aria-label={t('moveDown')}
-                      >
-                        <span className="material-icons-outlined text-sm">keyboard_arrow_down</span>
-                      </button>
-                    </div>
-
-                    {/* 操作按鈕 */}
-                    <div className="flex flex-wrap items-center justify-end gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => openEditModal(type)}
-                        disabled={isSaving}
-                        className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        <span className="material-icons-outlined text-sm">edit</span>
-                        編輯
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleActive(type)}
-                        disabled={isSaving}
-                        className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 ${
-                          type.is_active === false
-                            ? 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
-                            : 'border-amber-200 text-amber-700 hover:bg-amber-50'
-                        }`}
-                      >
-                        <span className="material-icons-outlined text-sm">
-                          {type.is_active === false ? 'restore' : 'visibility_off'}
-                        </span>
-                        {type.is_active === false ? t('restore') : t('delete')}
-                      </button>
-                      {!type.is_system && (
-                        <button
-                          type="button"
-                          onClick={() => handleHardDelete(type)}
-                          disabled={isSaving}
-                          className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          <span className="material-icons-outlined text-sm">delete_forever</span>
-                          {t('permanentDelete')}
-                        </button>
-                      )}
+                    <div className="md:hidden flex flex-col gap-0.5">
+                      <span className="font-mono text-[10px] text-gray-400 uppercase">{type.typeKey}</span>
+                      <span className={`text-[10px] font-bold ${type.isActive ? 'text-emerald-600' : 'text-gray-400'}`}>
+                        {type.isActive ? '啟用中' : '已停用'}
+                      </span>
                     </div>
                   </div>
-                )
-              })
+
+                  {/* 名稱 + key */}
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="text-sm font-bold text-gray-900 truncate">{type.displayName}</span>
+                    <span className="hidden md:block font-mono text-[11px] text-gray-400">{type.typeKey}</span>
+                  </div>
+
+                  {/* 顏色指示 */}
+                  <div className="hidden md:flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-md border border-gray-200 flex-shrink-0" style={{ backgroundColor: type.color }} />
+                    <span className="font-mono text-[11px] text-gray-400">{type.color}</span>
+                  </div>
+
+                  {/* 標籤 */}
+                  <div className="hidden md:flex items-center gap-1.5">
+                    {type.isSystem && (
+                      <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-600 border border-sky-100">系統</span>
+                    )}
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${
+                      type.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-gray-100 text-gray-400 border-gray-200'
+                    }`}>
+                      {type.isActive ? '啟用' : '停用'}
+                    </span>
+                  </div>
+
+                  {/* 排序 */}
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => moveType(type.id, -1)}
+                      disabled={index === 0}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      title="上移"
+                    >
+                      <span className="material-icons-outlined text-sm">keyboard_arrow_up</span>
+                    </button>
+                    <button
+                      onClick={() => moveType(type.id, 1)}
+                      disabled={index === types.length - 1}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      title="下移"
+                    >
+                      <span className="material-icons-outlined text-sm">keyboard_arrow_down</span>
+                    </button>
+                  </div>
+
+                  {/* 操作按鈕 */}
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button
+                      onClick={() => openEditModal(type)}
+                      className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+                    >
+                      <span className="material-icons-outlined text-sm">edit</span>
+                      編輯
+                    </button>
+                    <button
+                      onClick={() => handleToggle(type.id)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                      <span className="material-icons-outlined text-sm">{type.isActive ? 'toggle_off' : 'toggle_on'}</span>
+                      {type.isActive ? '停用' : '啟用'}
+                    </button>
+                    {!type.isSystem && (
+                      <button
+                        onClick={() => handleDelete(type.id)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
+                      >
+                        <span className="material-icons-outlined text-sm">delete_outline</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
             )}
           </div>
 
@@ -482,10 +339,10 @@ export default function AssessmentTypesManager() {
               <div>
                 <p className="text-sm font-bold text-sky-800">關於評量類別</p>
                 <ul className="mt-1.5 text-xs text-sky-600 space-y-1 list-disc list-inside">
-                  <li>隱藏會把類別從新增評量與 AI 匯入選單移除，既有評量不受影響。</li>
-                  <li>自己新增且未被使用的類別可以刪除。</li>
+                  <li><strong>系統類別</strong>（考試、作業、小考、專題、報告）不可刪除，但可編輯名稱、圖示、顏色。</li>
+                  <li><strong>自訂類別</strong>可自由新增、編輯、刪除，排序決定在表單中的顯示順序。</li>
                   <li>圖示選用 Material Icons，會在評量表單、列表、列印頁面中統一顯示。</li>
-                  <li>評量類別的資料 key 由系統自動生成，無法手動修改。</li>
+                  <li>停用的類別不會出現在新增評量的下拉選單中，但既有評量不受影響。</li>
                 </ul>
               </div>
             </div>
@@ -494,7 +351,7 @@ export default function AssessmentTypesManager() {
       </div>
 
       {/* ════════════════════════════════════════════════════════
-          新增 Modal
+          新增 Modal — 完全對齊 SubjectForm 排版風格
       ════════════════════════════════════════════════════════ */}
       {showAddModal && (
         <div className="fixed inset-0 flex items-center justify-center p-4 animate-fadeIn" style={{ zIndex: 99999 }}>
@@ -505,9 +362,8 @@ export default function AssessmentTypesManager() {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-              <h2 className="text-2xl font-bold text-gray-800">新增評量類別</h2>
+              <h2 className="text-2xl font-bold text-gray-800">➕ 新增評量類別</h2>
               <button
-                type="button"
                 onClick={() => setShowAddModal(false)}
                 className="p-2 rounded-lg hover:bg-gray-100 transition-all cursor-pointer"
                 aria-label="關閉"
@@ -519,7 +375,7 @@ export default function AssessmentTypesManager() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleCreate} className="flex flex-col" style={{ minHeight: 0 }}>
+            <form onSubmit={handleAddSubmit} className="flex flex-col" style={{ minHeight: 0 }}>
               <div className="p-8 space-y-8 flex-1 overflow-y-auto min-h-0">
                 {/* Two-Column: Name + Color | Icon Preview */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -533,8 +389,8 @@ export default function AssessmentTypesManager() {
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-slate-900"
                         placeholder="例如：口試、實作…"
                         type="text"
-                        value={newType.display_name}
-                        onChange={(e) => setNewType({ ...newType, display_name: e.target.value })}
+                        value={addName}
+                        onChange={(e) => setAddName(e.target.value)}
                         required
                       />
                     </div>
@@ -546,12 +402,12 @@ export default function AssessmentTypesManager() {
                         <input
                           className="h-12 w-20 p-1 rounded-lg border border-slate-200 bg-white cursor-pointer overflow-hidden"
                           type="color"
-                          value={newType.color}
-                          onChange={(e) => setNewType({ ...newType, color: e.target.value })}
+                          value={addColor}
+                          onChange={(e) => setAddColor(e.target.value)}
                         />
                         <div
                           className="px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm"
-                          style={{ backgroundColor: `${newType.color}20`, color: newType.color }}
+                          style={{ backgroundColor: `${addColor}20`, color: addColor }}
                         >
                           預覽
                         </div>
@@ -563,9 +419,9 @@ export default function AssessmentTypesManager() {
                   <div className="bg-white rounded-2xl p-6 flex flex-col items-center justify-center border border-dashed border-slate-300 transition-all">
                     <div
                       className="w-32 h-32 rounded-2xl flex items-center justify-center mb-4 shadow-sm"
-                      style={{ backgroundColor: `${newType.color}15`, color: newType.color }}
+                      style={{ backgroundColor: `${addColor}15`, color: addColor }}
                     >
-                      <span className="material-icons-outlined" style={{ fontSize: '4.8rem' }}>{effectiveAddIcon}</span>
+                      <span className="material-icons-outlined" style={{ fontSize: '4.8rem' }}>{currentAddIcon}</span>
                     </div>
                     <p className="text-xs font-medium text-slate-500 mb-4">目前圖示</p>
                     <button
@@ -611,9 +467,9 @@ export default function AssessmentTypesManager() {
                         <button
                           key={icon}
                           type="button"
-                          onClick={() => { setNewType({ ...newType, icon }); setAddCustomIcon('') }}
+                          onClick={() => { setAddIcon(icon); setAddCustomIcon('') }}
                           className={`aspect-square flex items-center justify-center rounded-xl transition-all cursor-pointer ${
-                            newType.icon === icon && !addCustomIcon.trim()
+                            addIcon === icon && !addCustomIcon.trim()
                               ? 'bg-primary/10 text-primary border-2 border-primary scale-110'
                               : 'hover:bg-slate-100 text-slate-600'
                           }`}
@@ -632,12 +488,7 @@ export default function AssessmentTypesManager() {
                       placeholder="自訂圖標名稱 (例如: fact_check, edit_note, science...)"
                       type="text"
                       value={addCustomIcon}
-                      onChange={(e) => {
-                        setAddCustomIcon(e.target.value)
-                        if (e.target.value.trim()) {
-                          setNewType({ ...newType, icon: e.target.value.trim() })
-                        }
-                      }}
+                      onChange={(e) => setAddCustomIcon(e.target.value)}
                     />
                   </div>
                 </div>
@@ -654,8 +505,7 @@ export default function AssessmentTypesManager() {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="px-12 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95 active:shadow-none cursor-pointer disabled:opacity-50"
+                  className="px-12 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95 active:shadow-none cursor-pointer"
                 >
                   <span className="material-icons-outlined text-lg">save</span>
                   建立類別
@@ -667,7 +517,7 @@ export default function AssessmentTypesManager() {
       )}
 
       {/* ════════════════════════════════════════════════════════
-          編輯 Modal
+          編輯 Modal — 完全對齊 SubjectForm 排版風格
       ════════════════════════════════════════════════════════ */}
       {showEditModal && (
         <div className="fixed inset-0 flex items-center justify-center p-4 animate-fadeIn" style={{ zIndex: 99999 }}>
@@ -678,9 +528,8 @@ export default function AssessmentTypesManager() {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-              <h2 className="text-2xl font-bold text-gray-800">編輯評量類別</h2>
+              <h2 className="text-2xl font-bold text-gray-800">✏️ 編輯評量類別</h2>
               <button
-                type="button"
                 onClick={() => setShowEditModal(false)}
                 className="p-2 rounded-lg hover:bg-gray-100 transition-all cursor-pointer"
                 aria-label="關閉"
@@ -734,7 +583,7 @@ export default function AssessmentTypesManager() {
                       className="w-32 h-32 rounded-2xl flex items-center justify-center mb-4 shadow-sm"
                       style={{ backgroundColor: `${editColor}15`, color: editColor }}
                     >
-                      <span className="material-icons-outlined" style={{ fontSize: '4.8rem' }}>{effectiveEditIcon}</span>
+                      <span className="material-icons-outlined" style={{ fontSize: '4.8rem' }}>{currentEditIcon}</span>
                     </div>
                     <p className="text-xs font-medium text-slate-500 mb-4">目前圖示</p>
                     <button
@@ -816,8 +665,7 @@ export default function AssessmentTypesManager() {
                 <button
                   type="button"
                   onClick={handleEditSubmit}
-                  disabled={savingId === editTypeId}
-                  className="px-12 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95 active:shadow-none cursor-pointer disabled:opacity-50"
+                  className="px-12 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95 active:shadow-none cursor-pointer"
                 >
                   <span className="material-icons-outlined text-lg">save</span>
                   儲存變更

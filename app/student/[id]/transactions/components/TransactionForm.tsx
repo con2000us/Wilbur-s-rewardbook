@@ -145,7 +145,7 @@ export default function TransactionForm({ studentId, transaction, onSuccess, onC
 
   // 取得顯示名稱（根據語言）
   const getDisplayName = (type: CustomRewardType): string => {
-    return type.display_name || type.type_key
+    return type.display_name || ''
   }
 
   const selectedType = customTypes.find((type) => getDisplayName(type) === selectedCategory)

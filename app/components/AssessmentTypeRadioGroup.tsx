@@ -58,7 +58,7 @@ export default function AssessmentTypeRadioGroup({
               {type.icon || 'assignment'}
             </span>
             <span className={`${compact ? 'text-center text-sm' : 'text-lg'} font-medium text-gray-800`}>
-              {type.display_name || type.type_key}
+              {type.display_name || ''}
             </span>
             {type.is_active === false && type.type_key === currentType && (
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">

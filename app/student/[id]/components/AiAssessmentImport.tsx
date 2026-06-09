@@ -1270,7 +1270,7 @@ export default function AiAssessmentImport({ studentId, subjects, assessmentType
                 <option value="">{isZh ? '預設' : 'Default'}</option>
                 {rewardTypes.map((type) => (
                   <option key={type.id} value={type.id}>
-                    {type.display_name || type.type_key}
+                    {type.display_name || ''}
                   </option>
                 ))}
               </select>

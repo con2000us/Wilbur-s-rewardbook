@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import {
   calculateRewardOutputsFromRule,
@@ -89,7 +90,7 @@ export default function AssessmentForm({
   rewardRules, 
   assessment,
   initialSubjectId,
-  defaultAssessmentType = 'exam',
+  defaultAssessmentType = 'quiz',
   assessmentTypes = [],
   onSuccess,
   onCancel
@@ -136,6 +137,9 @@ export default function AssessmentForm({
     assessmentTypes,
     assessment?.assessment_type || defaultAssessmentType
   )
+  const activeAssessmentTypeOptions = assessmentTypeOptions.filter((type) => type.is_active !== false)
+  const hasActiveAssessmentTypes = activeAssessmentTypeOptions.length > 0
+  const canSubmitAssessmentType = isEditMode || hasActiveAssessmentTypes
   const selectedAssessmentTypeLabel = getAssessmentTypeLabel(
     assessmentTypeOptions,
     selectedAssessmentType,
@@ -143,7 +147,7 @@ export default function AssessmentForm({
   )
 
   const getRewardTypeDisplayName = (type: RewardType) => {
-    return type.display_name || type.type_key
+    return type.display_name || ''
   }
 
   const selectedRewardType = rewardTypes.find((type) => type.id === selectedRewardTypeId)
@@ -159,7 +163,7 @@ export default function AssessmentForm({
 
   const getRewardItemName = (item: { type_id?: string | null; type_key?: string | null }) => {
     const type = getRewardTypeByRef(item)
-    return type?.display_name || item.type_key || selectedRewardType?.display_name || fallbackRewardName
+    return type?.display_name || selectedRewardType?.display_name || fallbackRewardName
   }
 
   const formatRewardItemAmount = (item: CalculatedRewardItem) => {
@@ -201,6 +205,14 @@ export default function AssessmentForm({
 
     loadAiStatus()
   }, [isEditMode])
+
+  useEffect(() => {
+    if (isEditMode) return
+    const activeTypes = normalizeAssessmentTypes(assessmentTypes).filter((type) => type.is_active !== false)
+    if (activeTypes.length > 0 && !activeTypes.some((type) => type.type_key === selectedAssessmentType)) {
+      setSelectedAssessmentType(activeTypes[0].type_key)
+    }
+  }, [assessmentTypes, isEditMode, selectedAssessmentType])
 
   // 根據選中的科目和評量類型篩選適用的規則
   const getApplicableRules = () => {
@@ -310,7 +322,7 @@ export default function AssessmentForm({
 
         return {
           key: `config-${item.type_id || item.type_key || index}`,
-          name: type?.display_name || item.type_key || fallbackRewardName,
+          name: type?.display_name || fallbackRewardName,
           amountText: formula ? `(${formatFormulaForDisplay(formula)})` : `${amount}${unit ? ` ${unit}` : ''}`,
         }
       })
@@ -366,6 +378,12 @@ export default function AssessmentForm({
     setLoading(true)
     setError('')
     setSuccess(false)
+
+    if (!canSubmitAssessmentType) {
+      setError(locale === 'zh-TW' ? '請先在評量類別管理中啟用至少一個類別。' : 'Please enable at least one assessment type first.')
+      setLoading(false)
+      return
+    }
 
     const formData = new FormData(e.currentTarget)
     
@@ -564,8 +582,7 @@ export default function AssessmentForm({
         <AiAssessmentImport
           studentId={studentId}
           subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
-          assessmentTypes={assessmentTypeOptions
-            .filter((type) => type.is_active !== false)
+          assessmentTypes={activeAssessmentTypeOptions
             .map((type) => ({ value: type.type_key, label: type.display_name }))}
           onConfirmed={() => {
             if (onSuccess) {
@@ -690,17 +707,34 @@ export default function AssessmentForm({
 
         {/* 評量類型 */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {t('type')} *
-          </label>
-          <AssessmentTypeRadioGroup
-            assessmentTypes={assessmentTypeOptions}
-            selectedType={selectedAssessmentType}
-            onChange={setSelectedAssessmentType}
-            currentType={assessment?.assessment_type}
-            compact
-            inactiveLabel={locale === 'zh-TW' ? '已停用' : 'Inactive'}
-          />
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <label className="block text-sm font-semibold text-gray-700">
+              {t('type')} *
+            </label>
+            <Link
+              href="/settings/rewards?tab=assessmentTypes"
+              className="inline-flex items-center gap-1 text-xs font-bold text-sky-700 transition hover:text-sky-900"
+            >
+              <span className="material-icons-outlined text-sm">settings</span>
+              {t('manageTypes')}
+            </Link>
+          </div>
+          {canSubmitAssessmentType ? (
+            <AssessmentTypeRadioGroup
+              assessmentTypes={isEditMode ? assessmentTypeOptions : activeAssessmentTypeOptions}
+              selectedType={selectedAssessmentType}
+              onChange={setSelectedAssessmentType}
+              currentType={assessment?.assessment_type}
+              compact
+              inactiveLabel={locale === 'zh-TW' ? '已停用' : 'Inactive'}
+            />
+          ) : (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+              {locale === 'zh-TW'
+                ? '目前沒有啟用中的評量類別。請到管理類別復原或新增類別後再新增評量。'
+                : 'No active assessment types are available. Restore or create a type before adding an assessment.'}
+            </div>
+          )}
         </div>
 
         {/* 評量標題與日期 */}
@@ -718,7 +752,7 @@ export default function AssessmentForm({
             />
             <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
               <span className="material-icons-outlined text-sm">lightbulb</span>
-              {locale === 'zh-TW' ? '留空將自動產生名稱，例如：12/25 考試' : 'Leave blank to auto-generate, e.g., 12/25 Exam'}
+              {locale === 'zh-TW' ? '留空將自動產生名稱，例如：12/25 測驗' : 'Leave blank to auto-generate, e.g., 12/25 Quiz'}
             </p>
           </div>
 
@@ -1128,7 +1162,7 @@ export default function AssessmentForm({
         <div className="flex gap-4 pt-4 border-t">
           <button
             type="submit"
-            disabled={loading || success || deleting}
+            disabled={loading || success || deleting || !canSubmitAssessmentType}
             className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 hover:-translate-y-1 hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 text-lg cursor-pointer"
           >
             {loading 

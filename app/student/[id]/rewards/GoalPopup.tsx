@@ -500,7 +500,7 @@ export default function GoalPopup({
                     </option>
                     {rewardTypes.map((type) => (
                       <option key={type.id} value={type.id}>
-                        {type.icon} {type.display_name || type.type_key}
+                        {type.icon} {type.display_name || ''}
                       </option>
                     ))}
                   </select>
@@ -675,7 +675,7 @@ export default function GoalPopup({
                         </option>
                         {rewardTypes.map((type) => (
                           <option key={type.id} value={type.id}>
-                            {type.icon} {type.display_name || type.type_key}
+                            {type.icon} {type.display_name || ''}
                           </option>
                         ))}
                       </select>

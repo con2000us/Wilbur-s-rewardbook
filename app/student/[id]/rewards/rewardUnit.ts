@@ -30,7 +30,7 @@ export function findRewardTypeForTransaction(
 }
 
 export function getRewardDisplayName(type: RewardTypeLike, locale: string): string {
-  return type.display_name || type.type_key || ''
+  return type.display_name || ''
 }
 
 export function getRewardUnit(type: RewardTypeLike, locale: string): string {

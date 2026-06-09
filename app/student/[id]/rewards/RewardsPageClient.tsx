@@ -1016,7 +1016,7 @@ export default function RewardsPageClient({ studentId, student }: Props) {
                     </div>
                     <div className="min-w-0 flex-1 pl-[2px] text-left sm:pl-[10px]">
                       <span className="block truncate text-xs font-bold leading-tight text-slate-600">
-                        {type.display_name || type.type_key}
+                        {type.display_name || ''}
                       </span>
                       <div className="mt-1 flex items-baseline justify-end gap-1">
                         <span className="text-xl font-bold leading-none text-slate-800">
@@ -1669,7 +1669,7 @@ export default function RewardsPageClient({ studentId, student }: Props) {
                 >
                   <span className="text-[40px] mb-2">{type.icon || '🎁'}</span>
                   <span className="text-xs font-semibold text-gray-500 mb-1">
-                    {type.display_name || type.type_key}
+                    {type.display_name || ''}
                   </span>
                   <div
                     className="text-3xl font-bold"
@@ -1869,7 +1869,7 @@ export default function RewardsPageClient({ studentId, student }: Props) {
                           <div className="flex items-center gap-1" style={{ color: goal.color }}>
                             <span>🎁</span>
                             <span className="font-semibold">
-                              {locale === 'zh-TW' ? '達成獎勵' : 'Reward'}：+{goal.reward_on_complete} {rt.display_name || rt.type_key}
+                              {locale === 'zh-TW' ? '達成獎勵' : 'Reward'}：+{goal.reward_on_complete} {rt.display_name || ''}
                             </span>
                           </div>
                         )}

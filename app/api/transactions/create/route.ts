@@ -26,14 +26,14 @@ export async function POST(request: NextRequest) {
         })
         if (mappedType) {
           rewardTypeId = mappedType.id
-          category = mappedType.display_name || mappedType.type_key || category
+          category = mappedType.display_name || category
         }
       }
 
       if (!category && rewardTypeId) {
         const matchedById = rewardTypes.find((type: any) => type.id === rewardTypeId)
         if (matchedById) {
-          category = matchedById.display_name || matchedById.type_key || null
+          category = matchedById.display_name || null
         }
       }
     }

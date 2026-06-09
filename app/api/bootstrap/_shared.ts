@@ -203,34 +203,52 @@ export async function ensureAssessmentTypes(supabase: SupabaseClient, selectedLo
   const displayNames =
     selectedLocale === 'zh-TW'
       ? {
-          exam: '\u8003\u8a66',
-          quiz: '\u5c0f\u8003',
+          quiz: '\u6e2c\u9a57',
+          exam: '\u5c0f\u8003',
+          term_exam: '\u6bb5\u8003',
           homework: '\u4f5c\u696d',
           project: '\u5c08\u984c',
         }
       : {
-          exam: 'Exam',
           quiz: 'Quiz',
+          exam: 'Small Quiz',
+          term_exam: 'Term Exam',
           homework: 'Homework',
           project: 'Project',
         }
 
   const assessmentTypes = [
-    { type_key: 'exam', icon: 'assignment', color: '#dc2626' },
     { type_key: 'quiz', icon: 'checklist_rtl', color: '#2563eb' },
+    { type_key: 'exam', icon: 'assignment', color: '#dc2626' },
+    { type_key: 'term_exam', icon: 'fact_check', color: '#f59e0b' },
     { type_key: 'homework', icon: 'edit_note', color: '#16a34a' },
     { type_key: 'project', icon: 'palette', color: '#9333ea' },
-  ].map((type, index) => ({
+  ]
+
+  const { data: existingTypes, error: existingError } = await supabase
+    .from('assessment_types')
+    .select('type_key, is_active')
+    .in('type_key', assessmentTypes.map((type) => type.type_key))
+
+  if (existingError) {
+    throw new Error(existingError.message)
+  }
+
+  const existingActiveByKey = new Map(
+    (existingTypes || []).map((type) => [type.type_key, type.is_active])
+  )
+
+  const payload = assessmentTypes.map((type, index) => ({
     ...type,
     display_name: displayNames[type.type_key as keyof typeof displayNames],
     display_order: index + 1,
-    is_active: true,
+    is_active: existingActiveByKey.get(type.type_key) ?? true,
     is_system: true,
   }))
 
   const { error } = await supabase
     .from('assessment_types')
-    .upsert(assessmentTypes, { onConflict: 'type_key' })
+    .upsert(payload, { onConflict: 'type_key' })
 
   if (error) {
     throw new Error(error.message)

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
 import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
@@ -317,9 +318,18 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
 
         {/* 評量類型 */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            評量類型 *
-          </label>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <label className="block text-sm font-semibold text-gray-700">
+              {t('type')} *
+            </label>
+            <Link
+              href="/settings/rewards?tab=assessmentTypes"
+              className="inline-flex items-center gap-1 text-xs font-bold text-sky-700 transition hover:text-sky-900"
+            >
+              <span className="material-icons-outlined text-sm">settings</span>
+              {t('manageTypes')}
+            </Link>
+          </div>
           <AssessmentTypeRadioGroup
             assessmentTypes={assessmentTypeOptions}
             selectedType={selectedAssessmentType}

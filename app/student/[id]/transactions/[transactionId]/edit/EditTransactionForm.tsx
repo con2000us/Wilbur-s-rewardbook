@@ -67,7 +67,7 @@ export default function EditTransactionForm({ studentId, transaction }: Props) {
 
   // 取得顯示名稱（根據語言）
   const getDisplayName = (type: CustomRewardType): string => {
-    return type.display_name || type.type_key
+    return type.display_name || ''
   }
 
   // 判斷是否為 emoji

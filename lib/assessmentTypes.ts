@@ -11,24 +11,33 @@ export interface AssessmentType {
   updated_at?: string | null
 }
 
-export const DEFAULT_ASSESSMENT_TYPE_KEY = 'exam'
+export const DEFAULT_ASSESSMENT_TYPE_KEY = 'quiz'
 
 export const DEFAULT_ASSESSMENT_TYPES: AssessmentType[] = [
-  {
-    type_key: 'exam',
-    display_name: 'Exam',
-    icon: 'assignment',
-    color: '#dc2626',
-    display_order: 1,
-    is_active: true,
-    is_system: true,
-  },
   {
     type_key: 'quiz',
     display_name: 'Quiz',
     icon: 'checklist_rtl',
     color: '#2563eb',
+    display_order: 1,
+    is_active: true,
+    is_system: true,
+  },
+  {
+    type_key: 'exam',
+    display_name: 'Small Quiz',
+    icon: 'assignment',
+    color: '#dc2626',
     display_order: 2,
+    is_active: true,
+    is_system: true,
+  },
+  {
+    type_key: 'term_exam',
+    display_name: 'Term Exam',
+    icon: 'fact_check',
+    color: '#f59e0b',
+    display_order: 3,
     is_active: true,
     is_system: true,
   },
@@ -37,7 +46,7 @@ export const DEFAULT_ASSESSMENT_TYPES: AssessmentType[] = [
     display_name: 'Homework',
     icon: 'edit_note',
     color: '#16a34a',
-    display_order: 3,
+    display_order: 4,
     is_active: true,
     is_system: true,
   },
@@ -46,7 +55,7 @@ export const DEFAULT_ASSESSMENT_TYPES: AssessmentType[] = [
     display_name: 'Project',
     icon: 'palette',
     color: '#9333ea',
-    display_order: 4,
+    display_order: 5,
     is_active: true,
     is_system: true,
   },

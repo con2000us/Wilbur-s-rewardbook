@@ -134,11 +134,11 @@ export async function createAssessmentWithReward(
     subject_id: body.subject_id,
     title: body.title,
     assessment_type: body.assessment_type,
-    max_score: body.max_score || 100,
+    max_score: isRecordOnly ? null : (body.max_score || 100),
     status: isRecordOnly ? 'completed' : body.status || 'upcoming',
     due_date: body.due_date || null,
     notes: body.notes || null,
-    score_type: isRecordOnly ? 'numeric' : body.score_type || 'numeric',
+    score_type: isRecordOnly ? null : (body.score_type || 'numeric'),
     grade: isRecordOnly ? null : body.grade || null,
     image_urls: body.image_urls || [],
     scoring_mode: scoringMode,
@@ -184,6 +184,17 @@ export async function createAssessmentWithReward(
     assessmentData.score = actualScore
     assessmentData.percentage = actualPercentage
     assessmentData.grade = null
+  } else if (!isRecordOnly) {
+    // No score or grade provided → auto record_only
+    assessmentData.scoring_mode = 'record_only'
+    assessmentData.score_type = null
+    assessmentData.score = null
+    assessmentData.percentage = null
+    assessmentData.max_score = null
+    assessmentData.counts_toward_reward = false
+    assessmentData.reward_amount = 0
+    assessmentData.status = 'completed'
+    assessmentData.completed_date = new Date().toISOString()
   }
 
   if (actualScore !== null && actualPercentage !== null) {

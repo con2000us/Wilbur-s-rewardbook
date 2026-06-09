@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 創建交易記錄（添加獎勵）
-    const displayName = rewardType.display_name || rewardType.type_key
+    const displayName = rewardType.display_name || ''
     // 將標題和備註組合為描述
     const earnDescription = notes 
       ? `${title} (${notes})`

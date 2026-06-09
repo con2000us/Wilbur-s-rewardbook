@@ -24,9 +24,9 @@ export async function GET(request: NextRequest) {
 
     const { data: subjects, error } = await supabase
       .from('subjects')
-      .select('id, name, created_at, display_order')
+      .select('id, name, created_at, order_index')
       .eq('student_id', studentId)
-      .order('display_order', { ascending: true })
+      .order('order_index', { ascending: true })
       .order('created_at', { ascending: true })
 
     if (error) {

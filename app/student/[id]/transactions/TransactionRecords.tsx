@@ -161,7 +161,7 @@ export default function TransactionRecords({ studentId, transactions, studentNam
   const getCategoryLabel = (transaction: any) => {
     const rewardType = findRewardTypeForTransaction(transaction, rewardTypes)
     if (rewardType) {
-      return rewardType.display_name || rewardType.type_key
+      return rewardType.display_name || (locale === 'zh-TW' ? '其他' : 'Other')
     }
     return transaction.category || (locale === 'zh-TW' ? '其他' : 'Other')
   }

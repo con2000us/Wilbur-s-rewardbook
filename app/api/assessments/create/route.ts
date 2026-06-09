@@ -10,6 +10,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as AssessmentCreatePayload
     const supabase = createClient()
+
+    // Validate student_id
+    if (!body.student_id) {
+      return NextResponse.json({ error: 'student_id is required' }, { status: 400 })
+    }
+
+    const { data: student } = await supabase
+      .from('students')
+      .select('id')
+      .eq('id', body.student_id)
+      .single()
+
+    if (!student) {
+      return NextResponse.json({ error: 'Student not found' }, { status: 400 })
+    }
+
     const created = await createAssessmentWithReward(supabase, body)
 
     return NextResponse.json({ success: true, data: created.assessment })

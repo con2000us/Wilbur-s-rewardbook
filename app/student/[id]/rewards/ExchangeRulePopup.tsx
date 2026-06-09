@@ -270,7 +270,7 @@ export default function ExchangeRulePopup({
               <option value="">{locale === 'zh-TW' ? '請選擇' : 'Please select'}</option>
               {rewardTypes.map((type) => (
                 <option key={type.id} value={type.id}>
-                  {type.display_name || type.type_key}
+                  {type.display_name || ''}
                 </option>
               ))}
             </select>
@@ -324,7 +324,7 @@ export default function ExchangeRulePopup({
                   <option value="">{locale === 'zh-TW' ? '請選擇' : 'Please select'}</option>
                   {rewardTypes.map((type) => (
                     <option key={type.id} value={type.id}>
-                      {type.display_name || type.type_key}
+                      {type.display_name || ''}
                     </option>
                   ))}
                 </select>

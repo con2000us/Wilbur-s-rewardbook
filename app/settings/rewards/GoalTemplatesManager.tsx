@@ -179,7 +179,7 @@ export default function GoalTemplatesManager() {
 
   const getRewardTypeName = (rt: RewardType | undefined) => {
     if (!rt) return ''
-    return rt.display_name || rt.type_key
+    return rt.display_name || ''
   }
 
   if (loading) {
@@ -925,7 +925,7 @@ function GoalTemplateFormModal({
                     <option value="">{t('selectRewardType') || '選擇獎勵類型'}</option>
                     {rewardTypes.map((type) => (
                       <option key={type.id} value={type.id}>
-                        {type.icon} {type.display_name || type.type_key}
+                        {type.icon} {type.display_name || ''}
                       </option>
                     ))}
                   </select>
@@ -1081,7 +1081,7 @@ function GoalTemplateFormModal({
                         <option value="">{t('selectRewardType') || '選擇獎勵類型'}</option>
                         {rewardTypes.map((type) => (
                           <option key={type.id} value={type.id}>
-                            {type.icon} {type.display_name || type.type_key}
+                            {type.icon} {type.display_name || ''}
                           </option>
                         ))}
                       </select>

@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
     // 檢查餘額是否足夠
     if (currentBalance < amount) {
       return NextResponse.json({ 
-        error: `Insufficient balance. Need ${amount} ${rewardType.display_name || rewardType.type_key}, but only have ${currentBalance}` 
+        error: `Insufficient balance. Need ${amount} ${rewardType.display_name || ''}, but only have ${currentBalance}` 
       }, { status: 400 })
     }
 
     // 創建交易記錄（使用獎勵）
-    const displayName = rewardType.display_name || rewardType.type_key
+    const displayName = rewardType.display_name || ''
     // 將標題和備註組合為描述
     const useDescription = notes 
       ? `${title} (${notes})`

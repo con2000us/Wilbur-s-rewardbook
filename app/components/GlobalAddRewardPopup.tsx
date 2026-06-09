@@ -192,7 +192,7 @@ export default function GlobalAddRewardPopup({
   }
 
   const getDisplayName = (type: CustomRewardType) => {
-    return type.display_name || type.type_key
+    return type.display_name || ''
   }
 
   const selectedRewardType = rewardTypes.find(t => t.id === formData.rewardTypeId)

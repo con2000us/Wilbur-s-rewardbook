@@ -70,7 +70,7 @@ export default function ExchangeRulesManager() {
   const getRewardType = (id: string) => rewardTypes.find((rt) => rt.id === id)
   const getRewardTypeName = (rt: RewardType | undefined) => {
     if (!rt) return ''
-    return rt.display_name || rt.type_key
+    return rt.display_name || ''
   }
 
   const handleSave = async (rule: ExchangeRule) => {
@@ -229,7 +229,7 @@ export default function ExchangeRulesManager() {
           rewardTypes={rewardTypes.map((rt) => ({
             id: rt.id,
             type_key: rt.type_key,
-            display_name: rt.display_name || rt.type_key,
+            display_name: rt.display_name || '',
           }))}
         />
       )}

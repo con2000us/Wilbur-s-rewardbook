@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 創建交易記錄
-    const displayName = rewardType.display_name || rewardType.type_key
+    const displayName = rewardType.display_name || ''
     const exchangeDescription = `Exchange: ${exchangeRule.name}`
 
     const transactionDate = new Date().toISOString().split('T')[0]
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Reward type to receive not found' }, { status: 404 })
       }
 
-      const rewardTypeToReceiveName = rewardTypeToReceive.display_name || rewardTypeToReceive.type_key
+      const rewardTypeToReceiveName = rewardTypeToReceive.display_name || ''
 
       // 創建扣除交易（原獎勵類型）
       const { data: deductTransaction, error: deductError } = await supabase

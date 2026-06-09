@@ -67,7 +67,7 @@ export default function AssessmentModal({
   rewardRules,
   assessment,
   initialSubjectId,
-  defaultAssessmentType = 'exam',
+  defaultAssessmentType = 'quiz',
   assessmentTypes = [],
   onSuccess
 }: AssessmentModalProps) {

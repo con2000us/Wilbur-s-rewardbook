@@ -122,10 +122,10 @@
     },
     "globalManagement": {
       "title": "Global Management",
-      "subtitle": "Cross-student shared settings (reward types, behavior events, goal templates, exchange rules)",
+      "subtitle": "Cross-student shared settings (reward types, assessment types, behavior events, goal templates, exchange rules)",
       "rewardsCenter": {
         "title": "Rewards Center",
-        "desc": "Manage reward types, behavior events, goal templates, and exchange rules"
+        "desc": "Manage reward types, assessment types, behavior events, goal templates, and exchange rules"
       },
       "rewardTypes": {
         "title": "Reward Types",
@@ -219,6 +219,7 @@
     "title": "Assessment Title",
     "titlePlaceholder": "e.g., First Monthly Exam",
     "type": "Assessment Type",
+    "manageTypes": "Manage Types",
     "optional": "Optional",
     "addAssessmentFor": "Add exam or homework record for {name}",
     "noSubjectsYet": "No subjects added yet",
@@ -229,8 +230,9 @@
     "clickInsert": "Click Insert row",
     "fillFields": "Fill in: student_id, name, color, icon",
     "types": {
-      "exam": "Exam",
       "quiz": "Quiz",
+      "exam": "Small Quiz",
+      "term_exam": "Term Exam",
       "homework": "Homework",
       "project": "Project"
     },
@@ -729,7 +731,7 @@
     "resourceUsageUnavailable": "Storage usage is currently unavailable",
     "refreshUsage": "Refresh Usage",
     "rewardsCenter": "Rewards Center",
-    "rewardsCenterDesc": "Manage reward types, behavior event templates, major goals, and exchange rules",
+    "rewardsCenterDesc": "Manage reward types, assessment types, behavior event templates, major goals, and exchange rules",
     "openRewardsCenter": "Open Rewards Center",
     "languages": {
       "zh-TW": "繁體中文",
@@ -1160,12 +1162,50 @@
   },
   "settingsRewards": {
     "title": "Rewards Center",
-    "subtitle": "Manage reward types, behavior events, major goals, and exchange rules",
+    "subtitle": "Manage reward types, assessment types, behavior events, major goals, and exchange rules",
     "tabRewardTypes": "Reward Types",
     "tabAssessmentTypes": "Assessment Types",
     "tabAchievementEvents": "Achievement Events",
     "tabGoalTemplates": "Major Goals",
-    "tabExchangeRules": "Exchange Rules"
+    "tabExchangeRules": "Exchange Rules",
+    "assessmentTypes": {
+      "title": "Assessment Types",
+      "keyRule": "The data key is fixed after creation; display name, icon, color, order, and active state can be changed.",
+      "add": "Add Type",
+      "name": "Display Name",
+      "icon": "Icon",
+      "color": "Color",
+      "key": "Data Key",
+      "active": "Active",
+      "inactive": "Inactive",
+      "system": "System",
+      "save": "Save",
+      "disable": "Disable",
+      "enable": "Enable",
+      "delete": "Hide",
+      "restore": "Restore",
+      "deleted": "Hidden",
+      "restored": "Restored",
+      "permanentDelete": "Delete",
+      "permanentlyDeleted": "Deleted",
+      "confirmDelete": "Hide this assessment type? It will no longer appear in new assessment forms, and existing records will stay unchanged.",
+      "confirmPermanentDelete": "Delete this assessment type? This cannot be undone.",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "noTypes": "No assessment types yet.",
+      "usage": {
+        "assessments": "assessments",
+        "rewardRules": "reward rules",
+        "importDrafts": "AI drafts"
+      },
+      "errors": {
+        "load": "Failed to load assessment types",
+        "create": "Failed to create assessment type",
+        "update": "Failed to update assessment type",
+        "reorder": "Failed to reorder assessment types",
+        "delete": "Failed to delete assessment type"
+      }
+    }
   },
   "goalTemplates": {
     "title": "Major Goal Templates",

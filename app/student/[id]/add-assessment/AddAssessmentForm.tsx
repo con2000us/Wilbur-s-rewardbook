@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { calculateRewardFromRule } from '@/lib/rewardFormula'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
@@ -86,6 +87,7 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
 
   const assessmentTypeOptions = normalizeAssessmentTypes(assessmentTypes, selectedAssessmentType)
   const activeAssessmentTypeOptions = assessmentTypeOptions.filter((type) => type.is_active !== false)
+  const hasActiveAssessmentTypes = activeAssessmentTypeOptions.length > 0
   const selectedAssessmentTypeLabel = getAssessmentTypeLabel(
     assessmentTypeOptions,
     selectedAssessmentType,
@@ -103,6 +105,13 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
       })
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    const activeTypes = normalizeAssessmentTypes(assessmentTypes).filter((type) => type.is_active !== false)
+    if (activeTypes.length > 0 && !activeTypes.some((type) => type.type_key === selectedAssessmentType)) {
+      setSelectedAssessmentType(activeTypes[0].type_key)
+    }
+  }, [assessmentTypes, selectedAssessmentType])
 
   useEffect(() => {
     fetch('/api/assessment-types/list')
@@ -215,6 +224,12 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
     setError('')
     setSuccess(false)
 
+    if (!hasActiveAssessmentTypes) {
+      setError(locale === 'zh-TW' ? '請先在評量類別管理中啟用至少一個類別。' : 'Please enable at least one assessment type first.')
+      setLoading(false)
+      return
+    }
+
     const formData = new FormData(e.currentTarget)
     
     try {
@@ -236,8 +251,9 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
         
         // 評量類型映射
         const typeMap: Record<string, string> = {
-          'exam': '考試',
-          'quiz': '小考',
+          'quiz': '測驗',
+          'exam': '小考',
+          'term_exam': '段考',
           'homework': '作業',
           'project': '專題'
         }
@@ -481,22 +497,39 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
           />
           <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
             <span className="material-icons-outlined text-sm">lightbulb</span>
-            {locale === 'zh-TW' ? '例如：12/16 國語 考試' : 'e.g.: 12/16 Chinese Exam'}
+            {locale === 'zh-TW' ? '例如：12/16 國語 測驗' : 'e.g.: 12/16 Chinese Quiz'}
           </p>
         </div>
 
         {/* 評量類型 */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            {t('type')} *
-          </label>
-          <AssessmentTypeRadioGroup
-            assessmentTypes={assessmentTypeOptions}
-            selectedType={selectedAssessmentType}
-            onChange={setSelectedAssessmentType}
-            currentType={selectedAssessmentType}
-            inactiveLabel={locale === 'zh-TW' ? '已停用' : 'Inactive'}
-          />
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <label className="block text-sm font-semibold text-gray-700">
+              {t('type')} *
+            </label>
+            <Link
+              href="/settings/rewards?tab=assessmentTypes"
+              className="inline-flex items-center gap-1 text-xs font-bold text-sky-700 transition hover:text-sky-900"
+            >
+              <span className="material-icons-outlined text-sm">settings</span>
+              {t('manageTypes')}
+            </Link>
+          </div>
+          {hasActiveAssessmentTypes ? (
+            <AssessmentTypeRadioGroup
+              assessmentTypes={activeAssessmentTypeOptions}
+              selectedType={selectedAssessmentType}
+              onChange={setSelectedAssessmentType}
+              currentType={selectedAssessmentType}
+              inactiveLabel={locale === 'zh-TW' ? '已停用' : 'Inactive'}
+            />
+          ) : (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+              {locale === 'zh-TW'
+                ? '目前沒有啟用中的評量類別。請到管理類別復原或新增類別後再新增評量。'
+                : 'No active assessment types are available. Restore or create a type before adding an assessment.'}
+            </div>
+          )}
         </div>
 
         {/* 評分方式選擇 */}
@@ -863,7 +896,7 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
         <div className="flex gap-4 pt-4">
           <button
             type="submit"
-            disabled={loading || success}
+            disabled={loading || success || !hasActiveAssessmentTypes}
             className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-lg"
           >
             {loading 

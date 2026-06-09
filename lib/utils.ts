@@ -102,9 +102,10 @@ export function getStatusColor(status: string): string {
 // 獲取評量類型標籤
 export function getAssessmentTypeLabel(type: string): string {
   const labels: Record<string, string> = {
-    exam: '考試',
+    quiz: '測驗',
+    exam: '小考',
+    term_exam: '段考',
     homework: '作業',
-    quiz: '小考',
     project: '專題'
   }
   return labels[type] || type

@@ -44,7 +44,7 @@ type AchievementEventPayload = {
 }
 
 function getRewardTypeName(rt: RewardType) {
-  return rt.display_name || rt.type_key
+  return rt.display_name || ''
 }
 
 export default function AchievementEventsManager() {
@@ -357,7 +357,7 @@ function EventFormModal({ event, rewardTypes, existingRules, onClose, onSaved }:
   }
 
   function getRewardTypeName(rt: RewardType) {
-    return rt.display_name || rt.type_key
+    return rt.display_name || ''
   }
 
   const usedRewardTypeIds = formRules.map(r => r.reward_type_id)

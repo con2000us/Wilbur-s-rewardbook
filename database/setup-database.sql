@@ -71,16 +71,16 @@ INSERT INTO assessment_types (
   is_active,
   is_system
 ) VALUES
-  ('exam', '考試', 'assignment', '#dc2626', 1, TRUE, TRUE),
-  ('quiz', '小考', 'checklist_rtl', '#2563eb', 2, TRUE, TRUE),
-  ('homework', '作業', 'edit_note', '#16a34a', 3, TRUE, TRUE),
-  ('project', '專題', 'palette', '#9333ea', 4, TRUE, TRUE)
+  ('quiz', '測驗', 'checklist_rtl', '#2563eb', 1, TRUE, TRUE),
+  ('exam', '小考', 'assignment', '#dc2626', 2, TRUE, TRUE),
+  ('term_exam', '段考', 'fact_check', '#f59e0b', 3, TRUE, TRUE),
+  ('homework', '作業', 'edit_note', '#16a34a', 4, TRUE, TRUE),
+  ('project', '專題', 'palette', '#9333ea', 5, TRUE, TRUE)
 ON CONFLICT (type_key) DO UPDATE SET
   display_name = EXCLUDED.display_name,
   icon = EXCLUDED.icon,
   color = EXCLUDED.color,
   display_order = EXCLUDED.display_order,
-  is_active = TRUE,
   is_system = TRUE,
   updated_at = NOW();
 
