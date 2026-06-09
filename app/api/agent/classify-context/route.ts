@@ -5,20 +5,34 @@ import sharp from 'sharp'
 
 const BUCKET_NAME = 'assessment-imports'
 const STITCH_DIR = 'classify'
-const IMG_WIDTH = 500
-const LABEL_HEIGHT = 36
-const SEPARATOR_HEIGHT = 4
-const TEMPLATE_COLOR = '#1a6e1a'
-const NEW_PAPER_COLOR = '#cc0000'
-const MAX_TOTAL_HEIGHT = 8000
-const DEFAULT_MAX_PER_SUBJECT = 2
 
-// ── 類型定義 ──
+// ── v2 拼圖參數 ──
+const CELL_WIDTH = 400
+const CELL_HEIGHT = 400
+const LABEL_BAR_HEIGHT = 24
+const TITLE_BAR_HEIGHT = 20
+const ROW_HEADER_HEIGHT = 28
+const ROW_SEPARATOR_HEIGHT = 2
+const DOUBLE_SEPARATOR_HEIGHT = 4
+const MAX_TOTAL_WIDTH = 1600
+const MAX_TOTAL_HEIGHT = 7500
+const MIN_CELL_WIDTH = 250
+const DEFAULT_MAX_TYPES_PER_SUBJECT = 3
+
+const ROW_HEADER_COLOR = '#1a6e1a'
+const NEW_ROW_HEADER_COLOR = '#cc0000'
+const LABEL_BAR_COLOR = '#333333'
+const TITLE_BAR_COLOR = '#666666'
+const ROW_SEP_COLOR = '#cccccc'
+const DOUBLE_SEP_COLOR = '#999999'
+
+// ── 類型 ──
 interface TemplatePaper {
   subject_name: string
   assessment_type: string
   title: string
   imageUrl: string
+  paperIndex: number
 }
 
 interface RequestBody {
@@ -27,14 +41,7 @@ interface RequestBody {
   max_per_subject?: number
 }
 
-function createLabelSvg(text: string, bgColor: string, width: number): Buffer {
-  const svg = `<svg width="${width}" height="${LABEL_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-    <rect width="${width}" height="${LABEL_HEIGHT}" fill="${bgColor}" rx="2"/>
-    <text x="8" y="${LABEL_HEIGHT / 2 + 6}" font-family="sans-serif" font-size="16" font-weight="bold" fill="white">${escapeXml(text)}</text>
-  </svg>`
-  return Buffer.from(svg)
-}
-
+// ── 輔助函式 ──
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -44,9 +51,64 @@ function escapeXml(str: string): string {
     .replace(/'/g, '&apos;')
 }
 
-function createSeparatorSvg(width: number): Buffer {
-  const svg = `<svg width="${width}" height="${SEPARATOR_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-    <rect width="${width}" height="${SEPARATOR_HEIGHT}" fill="#cccccc"/>
+function svgRect(width: number, height: number, fill: string, rx = 0): string {
+  return `<rect width="${width}" height="${height}" fill="${fill}"${rx ? ` rx="${rx}"` : ''}/>`
+}
+
+function svgText(
+  x: number,
+  y: number,
+  text: string,
+  fontSize: number,
+  fill = 'white',
+  fontWeight = 'bold',
+): string {
+  return `<text x="${x}" y="${y}" font-family="sans-serif" font-size="${fontSize}" font-weight="${fontWeight}" fill="${fill}">${escapeXml(text)}</text>`
+}
+
+function createRowHeaderSvg(text: string, bgColor: string, width: number): Buffer {
+  const svg = `<svg width="${width}" height="${ROW_HEADER_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+    ${svgRect(width, ROW_HEADER_HEIGHT, bgColor)}
+    ${svgText(8, ROW_HEADER_HEIGHT / 2 + 5, text, 14)}
+  </svg>`
+  return Buffer.from(svg)
+}
+
+function createSeparatorSvg(width: number, height: number, color: string): Buffer {
+  const svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    ${svgRect(width, height, color)}
+  </svg>`
+  return Buffer.from(svg)
+}
+
+function createCellLabelSvg(text: string, width: number): Buffer {
+  const svg = `<svg width="${width}" height="${LABEL_BAR_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+    ${svgRect(width, LABEL_BAR_HEIGHT, LABEL_BAR_COLOR)}
+    ${svgText(6, LABEL_BAR_HEIGHT / 2 + 4, text, 12)}
+  </svg>`
+  return Buffer.from(svg)
+}
+
+function createCellTitleSvg(text: string, width: number): Buffer {
+  const truncated = text.length > 20 ? text.slice(0, 18) + '…' : text
+  const svg = `<svg width="${width}" height="${TITLE_BAR_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+    ${svgRect(width, TITLE_BAR_HEIGHT, TITLE_BAR_COLOR)}
+    ${svgText(6, TITLE_BAR_HEIGHT / 2 + 4, `標題：${truncated}`, 10, '#ffffff', 'normal')}
+  </svg>`
+  return Buffer.from(svg)
+}
+
+function createPlaceholderSvg(width: number, height: number): Buffer {
+  const svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${width}" height="${height}" fill="#f0f0f0"/>
+    <text x="${width / 2}" y="${height / 2 + 6}" font-family="sans-serif" font-size="14" fill="#999" text-anchor="middle">⚠ 圖片載入失敗</text>
+  </svg>`
+  return Buffer.from(svg)
+}
+
+function createCellBorderSvg(width: number, height: number, color: string, strokeWidth: number): Buffer {
+  const svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    <rect x="${strokeWidth / 2}" y="${strokeWidth / 2}" width="${width - strokeWidth}" height="${height - strokeWidth}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>
   </svg>`
   return Buffer.from(svg)
 }
@@ -59,33 +121,74 @@ async function downloadImage(url: string): Promise<Buffer> {
   return Buffer.from(await response.arrayBuffer())
 }
 
-async function processImage(input: Buffer): Promise<sharp.Sharp> {
-  return sharp(input)
-    .resize({ width: IMG_WIDTH, withoutEnlargement: true })
-    .png()
+async function renderCell(
+  imageBuffer: Buffer | null,
+  labelText: string,
+  titleText: string,
+  cellWidth: number,
+  isNew: boolean,
+): Promise<Buffer> {
+  const imgAreaHeight = CELL_HEIGHT - LABEL_BAR_HEIGHT - TITLE_BAR_HEIGHT
+
+  // 縮放考卷圖片
+  let imgLayer: Buffer
+  let imgW = cellWidth
+  let imgH = imgAreaHeight
+
+  if (imageBuffer) {
+    const resized = await sharp(imageBuffer)
+      .resize({ width: cellWidth, height: imgAreaHeight, fit: 'inside', withoutEnlargement: true })
+      .png()
+      .toBuffer({ resolveWithObject: true })
+
+    imgW = resized.info.width
+    imgH = resized.info.height
+    imgLayer = resized.data
+  } else {
+    imgLayer = createPlaceholderSvg(cellWidth, imgAreaHeight)
+    imgW = cellWidth
+    imgH = imgAreaHeight
+  }
+
+  const compos: sharp.OverlayOptions[] = []
+
+  // 標籤列
+  compos.push({ input: createCellLabelSvg(labelText, cellWidth), top: 0, left: 0 })
+
+  // 圖片（置中）
+  const imgLeft = Math.max(0, Math.floor((cellWidth - imgW) / 2))
+  const imgTop = LABEL_BAR_HEIGHT + Math.max(0, Math.floor((imgAreaHeight - imgH) / 2))
+  compos.push({ input: imgLayer, top: imgTop, left: imgLeft })
+
+  // 標題列
+  compos.push({
+    input: createCellTitleSvg(titleText, cellWidth),
+    top: CELL_HEIGHT - TITLE_BAR_HEIGHT,
+    left: 0,
+  })
+
+  // 新考卷紅框
+  if (isNew) {
+    compos.push({ input: createCellBorderSvg(cellWidth, CELL_HEIGHT, NEW_ROW_HEADER_COLOR, 2), top: 0, left: 0 })
+  }
+
+  const cell = sharp({
+    create: {
+      width: cellWidth,
+      height: CELL_HEIGHT,
+      channels: 4,
+      background: { r: 255, g: 255, b: 255, alpha: 1 },
+    },
+  })
+
+  return cell.composite(compos.map((c) => ({ ...c, blend: 'over' }))).png().toBuffer()
 }
 
 /**
  * POST /api/agent/classify-context
  *
- * 統合型考卷分類端點：agent 一次呼叫即取得拼好的分類圖 + vision prompt + metadata。
- *
- * Request:
- * {
- *   student_id: string,
- *   new_image_urls: string[],
- *   max_per_subject?: number (default 2)
- * }
- *
- * Response:
- * {
- *   success: true,
- *   stitched_image_url: string,
- *   vision_prompt: string,
- *   reference_papers: TemplatePaper[],
- *   new_paper_index: number,
- *   total_papers: number
- * }
+ * v2: 科目分排網格佈局。每科目佔一排，該科目的各評量類型依序往右放。
+ * 新考卷獨佔最後一排（紅底標題 + 紅框）。
  */
 export async function POST(request: NextRequest) {
   try {
@@ -94,7 +197,7 @@ export async function POST(request: NextRequest) {
     // ── 1. 解析請求 ──
     const body: RequestBody = await request.json()
     const { student_id, new_image_urls } = body
-    const maxPerSubject = body.max_per_subject || DEFAULT_MAX_PER_SUBJECT
+    const maxTypesPerSubject = body.max_per_subject || DEFAULT_MAX_TYPES_PER_SUBJECT
 
     if (!student_id) {
       return NextResponse.json({ error: 'student_id is required' }, { status: 400 })
@@ -103,7 +206,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'new_image_urls must be a non-empty array' }, { status: 400 })
     }
 
-    // ── 2. 驗證 student_id 存在 ──
+    // ── 2. 驗證 student ──
     const { data: student, error: studentError } = await supabase
       .from('students')
       .select('id')
@@ -114,24 +217,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 })
     }
 
-    // ── 3. 查詢範本考卷 ──
+    // ── 3. 查詢科目（依 display_order 排序） ──
     const { data: subjects } = await supabase
       .from('subjects')
-      .select('id')
+      .select('id, name')
       .eq('student_id', student_id)
+      .order('order_index', { ascending: true })
 
-    const subjectIds = (subjects || []).map((s) => s.id)
-    const subjectNameMap = new Map<string, string>()
+    const subjectList = (subjects || []).map((s) => ({ id: s.id, name: s.name }))
+    const subjectIds = subjectList.map((s) => s.id)
+    const subjectNameById = new Map(subjectList.map((s) => [s.id, s.name]))
 
-    if (subjectIds.length > 0) {
-      const { data: subjectRows } = await supabase
-        .from('subjects')
-        .select('id, name')
-        .in('id', subjectIds)
+    // ── 4. 查詢評估類型（依 display_order 排序） ──
+    const { data: assessmentTypes } = await supabase
+      .from('assessment_types')
+      .select('type_key, display_order')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
 
-      ;(subjectRows || []).forEach((s) => (subjectNameMap.set(s.id, s.name)))
-    }
+    const typeOrder = new Map((assessmentTypes || []).map((t) => [t.type_key, t.display_order ?? 999]))
 
+    // ── 5. 查詢範本考卷 ──
     const { data: templates } = await supabase
       .from('assessments')
       .select('id, subject_id, title, assessment_type, image_urls, created_at')
@@ -139,125 +245,188 @@ export async function POST(request: NextRequest) {
       .not('image_urls', 'is', null)
       .order('created_at', { ascending: false })
 
-    // ── 4. 分組：每 (subject_name, assessment_type) 取最新 N 筆 ──
-    const groupMap = new Map<string, TemplatePaper[]>()
-    const referencePapers: TemplatePaper[] = []
+    // ── 6. 分組: subject → type → [papers] ──
+    //    subjectRows: 依 subject 排序
+    //    每個 subject 內，依 type display_order 排序
+    const subjectPaperMap = new Map<string, Map<string, TemplatePaper[]>>()
 
     for (const row of templates || []) {
       const imageUrls: any[] = Array.isArray(row.image_urls) ? row.image_urls : []
       if (imageUrls.length === 0) continue
 
-      const subjectName = subjectNameMap.get(row.subject_id) || 'Unknown'
-      const groupKey = `${subjectName}::${row.assessment_type || 'unknown'}`
-      const group = groupMap.get(groupKey) || []
+      const subjectId = row.subject_id
+      const subjectName = subjectNameById.get(subjectId) || 'Unknown'
+      const typeKey = row.assessment_type || 'unknown'
 
-      if (group.length >= maxPerSubject) continue
+      if (!subjectPaperMap.has(subjectId)) {
+        subjectPaperMap.set(subjectId, new Map())
+      }
+      const typeMap = subjectPaperMap.get(subjectId)!
 
-      const paper: TemplatePaper = {
+      if (!typeMap.has(typeKey)) {
+        typeMap.set(typeKey, [])
+      }
+      const papers = typeMap.get(typeKey)!
+
+      if (papers.length >= 1) continue // 每類型只取最新 1 張
+
+      papers.push({
         subject_name: subjectName,
-        assessment_type: row.assessment_type || 'unknown',
+        assessment_type: typeKey,
         title: row.title,
         imageUrl: imageUrls[0]?.url || '',
-      }
-
-      if (!paper.imageUrl) continue
-
-      group.push(paper)
-      groupMap.set(groupKey, group)
-      referencePapers.push(paper)
+        paperIndex: 0, // 後續賦值
+      })
     }
 
-    // ── 5. 下載所有圖片 ──
-    const downloads: { buffer: Buffer; isTemplate: boolean; paper: TemplatePaper | null }[] = []
+    // ── 過濾：只保留有範本的 subject ──
+    const activeSubjects = subjectList.filter((s) => subjectPaperMap.has(s.id))
 
-    for (const paper of referencePapers) {
-      try {
-        const buffer = await downloadImage(paper.imageUrl)
-        downloads.push({ buffer, isTemplate: true, paper })
-      } catch {
-        // 跳過無法下載的範本
-        console.warn('Skipping template image download failure:', paper.imageUrl)
-      }
+    // ── 計算每個 subject 的 type 列表（排序後） ──
+    const subjectTypeKeys: { subjectId: string; typeKeys: string[] }[] = []
+    let maxCols = 0
+
+    for (const subj of activeSubjects) {
+      const typeMap = subjectPaperMap.get(subj.id)!
+      const sortedTypes = Array.from(typeMap.keys()).sort(
+        (a, b) => (typeOrder.get(a) ?? 999) - (typeOrder.get(b) ?? 999),
+      )
+      // 限制每科目最多 maxTypesPerSubject 個類型
+      const limited = sortedTypes.slice(0, maxTypesPerSubject)
+      subjectTypeKeys.push({ subjectId: subj.id, typeKeys: limited })
+      if (limited.length > maxCols) maxCols = limited.length
     }
 
-    // 新考卷取第一張
-    const newImageUrl = new_image_urls[0]
+    // 無範本 → 只繪待分類行
+    const hasTemplates = activeSubjects.length > 0
+
+    // ── 7. 計算佈局 ──
+    let cellWidth = Math.floor(MAX_TOTAL_WIDTH / Math.max(maxCols, 1))
+    if (cellWidth > CELL_WIDTH) cellWidth = CELL_WIDTH
+    if (cellWidth < MIN_CELL_WIDTH) cellWidth = MIN_CELL_WIDTH
+
+    const totalWidth = cellWidth * Math.max(maxCols, 1)
+
+    // ── 8. 下載新考卷圖片 ──
     let newImageBuffer: Buffer
     try {
-      newImageBuffer = await downloadImage(newImageUrl)
+      newImageBuffer = await downloadImage(new_image_urls[0])
     } catch {
       return NextResponse.json(
-        { error: `Failed to download new image: ${newImageUrl}` },
+        { error: `Failed to download new image: ${new_image_urls[0]}` },
         { status: 400 },
       )
     }
 
-    // ── 6. 拼圖 ──
-    const stitchParts: sharp.OverlayOptions[] = []
+    // ── 9. 拼圖 ──
+    const compos: sharp.OverlayOptions[] = []
     let currentY = 0
     let paperIndex = 0
+    const paperMeta: { index: number; subject: string; type: string; isTemplate: boolean }[] = []
 
-    for (const dl of downloads) {
-      paperIndex++
-      const labelText = `【第${paperIndex}張】${dl.paper!.subject_name}·${dl.paper!.assessment_type}`
-      const labelSvg = createLabelSvg(labelText, TEMPLATE_COLOR, IMG_WIDTH)
-      const separator = createSeparatorSvg(IMG_WIDTH)
+    for (const { subjectId, typeKeys } of subjectTypeKeys) {
+      const subjectName = subjectNameById.get(subjectId) || 'Unknown'
+      const typeMap = subjectPaperMap.get(subjectId)!
 
-      const resized = await processImage(dl.buffer)
-      const resizedMeta = await resized.metadata()
-      const imgHeight = resizedMeta.height || 0
+      // 科目行標題
+      if (currentY + ROW_HEADER_HEIGHT > MAX_TOTAL_HEIGHT) break
+      compos.push({
+        input: createRowHeaderSvg(subjectName, ROW_HEADER_COLOR, totalWidth),
+        top: currentY,
+        left: 0,
+      })
+      currentY += ROW_HEADER_HEIGHT
 
-      if (currentY + LABEL_HEIGHT + imgHeight + SEPARATOR_HEIGHT > MAX_TOTAL_HEIGHT) break
+      // 繪製每個 type 的格子
+      let cellX = 0
+      for (const typeKey of typeKeys) {
+        const papers = typeMap.get(typeKey) || []
+        const paper = papers[0]
 
-      stitchParts.push({ input: labelSvg, top: currentY, left: 0 })
-      currentY += LABEL_HEIGHT
+        paperIndex++
+        const cellLabel = `【第${paperIndex}張】${subjectName} · ${typeKey}`
+        const cellTitle = paper?.title || ''
 
-      const { data: imgData, info: imgInfo } = await resized.toBuffer({ resolveWithObject: true })
-      stitchParts.push({ input: imgData, top: currentY, left: 0 })
-      currentY += imgInfo.height
+        let imgBuffer: Buffer | null = null
+        if (paper) {
+          try {
+            imgBuffer = await downloadImage(paper.imageUrl)
+          } catch {
+            // 下載失敗 → 顯示佔位
+          }
+        }
 
-      stitchParts.push({ input: separator, top: currentY, left: 0 })
-      currentY += SEPARATOR_HEIGHT
-    }
+        const cellBuffer = await renderCell(imgBuffer, cellLabel, cellTitle, cellWidth, false)
+        compos.push({ input: cellBuffer, top: currentY, left: cellX })
+        paperMeta.push({ index: paperIndex, subject: subjectName, type: typeKey, isTemplate: true })
+        cellX += cellWidth
+      }
 
-    const newPaperIndex = paperIndex + 1
+      currentY += CELL_HEIGHT
 
-    // 新考卷
-    {
-      const labelSvg = createLabelSvg(`【第${newPaperIndex}張】？？？  ← 待分類`, NEW_PAPER_COLOR, IMG_WIDTH)
-      const resized = await processImage(newImageBuffer)
-      const resizedMeta = await resized.metadata()
-      const imgHeight = resizedMeta.height || 0
-
-      if (currentY + LABEL_HEIGHT + imgHeight <= MAX_TOTAL_HEIGHT) {
-        stitchParts.push({ input: labelSvg, top: currentY, left: 0 })
-        currentY += LABEL_HEIGHT
-
-        const { data: imgData, info: imgInfo } = await resized.toBuffer({ resolveWithObject: true })
-        stitchParts.push({ input: imgData, top: currentY, left: 0 })
-        currentY += imgInfo.height
+      // 科目分隔線
+      if (currentY + ROW_SEPARATOR_HEIGHT <= MAX_TOTAL_HEIGHT) {
+        compos.push({
+          input: createSeparatorSvg(totalWidth, ROW_SEPARATOR_HEIGHT, ROW_SEP_COLOR),
+          top: currentY,
+          left: 0,
+        })
+        currentY += ROW_SEPARATOR_HEIGHT
       }
     }
 
-    // 若無任何範本，只拼新考卷並改 prompt
-    const hasTemplates = downloads.length > 0
+    // ── 10. 雙分隔線 ──
+    if (hasTemplates && currentY + DOUBLE_SEPARATOR_HEIGHT <= MAX_TOTAL_HEIGHT) {
+      compos.push({
+        input: createSeparatorSvg(totalWidth, DOUBLE_SEPARATOR_HEIGHT, DOUBLE_SEP_COLOR),
+        top: currentY,
+        left: 0,
+      })
+      currentY += DOUBLE_SEPARATOR_HEIGHT
+    }
 
-    // 產生拼圖
+    // ── 11. 待分類行 ──
+    const newPaperIndex = paperIndex + 1
+    if (currentY + ROW_HEADER_HEIGHT + CELL_HEIGHT <= MAX_TOTAL_HEIGHT) {
+      // 紅底標題
+      compos.push({
+        input: createRowHeaderSvg('❓ 待分類', NEW_ROW_HEADER_COLOR, totalWidth),
+        top: currentY,
+        left: 0,
+      })
+      currentY += ROW_HEADER_HEIGHT
+
+      // 新考卷格子
+      const cellBuffer = await renderCell(
+        newImageBuffer,
+        `【第${newPaperIndex}張】❓ 待分類`,
+        '',
+        cellWidth,
+        true,
+      )
+      compos.push({ input: cellBuffer, top: currentY, left: 0 })
+      paperMeta.push({ index: newPaperIndex, subject: 'unknown', type: 'unknown', isTemplate: false })
+      currentY += CELL_HEIGHT
+    }
+
+    // ── 12. 產生最終圖像 ──
+    const finalHeight = Math.max(currentY, 100)
+
     const canvas = sharp({
       create: {
-        width: IMG_WIDTH,
-        height: Math.max(currentY, 100),
+        width: totalWidth,
+        height: finalHeight,
         channels: 4,
         background: { r: 255, g: 255, b: 255, alpha: 1 },
       },
     })
 
     const stitchedBuffer = await canvas
-      .composite(stitchParts.map((p) => ({ ...p, blend: 'over' })))
-      .png({ quality: 88 })
+      .composite(compos.map((c) => ({ ...c, blend: 'over' })))
+      .png({ quality: 90 })
       .toBuffer()
 
-    // ── 7. 上傳拼圖 ──
+    // ── 13. 上傳 ──
     const adminClient = createAdminClient()
     const timestamp = new Date()
       .toISOString()
@@ -285,35 +454,42 @@ export async function POST(request: NextRequest) {
       .from(BUCKET_NAME)
       .getPublicUrl(filePath)
 
-    const stitchedImageUrl = urlData?.publicUrl || ''
-
-    // ── 8. 生成 vision prompt ──
-    const totalPapers = newPaperIndex
-
+    // ── 14. 生成 vision prompt ──
     let prompt: string
     if (!hasTemplates) {
       prompt =
-        '這張圖有1張考卷，它是新的考卷。\n\n請根據這張考卷的題型內容、排版格式、文字關鍵字來判斷科目。\n\n規則：\n- 仔細看題目文字來判斷科目\n- 只回答科目名稱，不要其他說明'
+        '這是一張考卷圖片。無範本可供參考。\n\n請根據這張考卷的題型內容、排版格式、文字關鍵字來判斷科目。\n\n規則：\n- 仔細看題目文字來判斷科目（例如：出現計算/時鐘/圖形→數學，出現拼音/閱讀/造句→國語）\n- 只回答科目名稱，不要其他說明'
     } else {
-      const templateLines = downloads.map(
-        (dl, i) => `第${i + 1}張是已知的 ${dl.paper!.subject_name}·${dl.paper!.assessment_type} 考卷。`,
-      )
+      const subjectNames = activeSubjects.map((s) => s.name).join('、')
       prompt =
-        `這張圖有${totalPapers}張考卷，每張頂部有標籤【第N張】。\n\n` +
-        templateLines.join('\n') +
-        `\n第${newPaperIndex}張是新的考卷（標示「？？？」），請根據它的題型內容、排版格式、文字關鍵字來判斷科目。\n\n` +
-        '規則：\n- 不要用「已知科目有X種所以新的一定是第X+1種」的排除法\n- 仔細看第' +
-        newPaperIndex +
-        '張的題目文字來判斷\n- 只回答科目名稱，不要其他說明'
+        '這是一張考卷分類對照圖。每種科目佔一排，科目名稱在左側綠色標題列。\n' +
+        `每個科目下方依評量類型排列範本考卷，每張考卷頂部有【第N張】標記。\n` +
+        `已知科目：${subjectNames}。\n` +
+        `最後一排（紅底）是新考卷，標示「❓待分類」。\n\n` +
+        '請根據新考卷的題型內容、排版格式、文字關鍵字，與上方各科目的範本比對，\n' +
+        '判斷新考卷最可能屬於哪個科目。\n\n' +
+        '規則：\n' +
+        '- 不要用「已知科目有X種所以新的一定是第X+1種」的排除法\n' +
+        '- 仔細看題目文字來判斷（例如：出現計算/時鐘/圖形→數學，出現拼音/閱讀/造句→國語）\n' +
+        '- 只回答科目名稱，不要其他說明'
     }
+
+    // ── 15. 整理 reference_papers ──
+    const referencePapers = paperMeta
+      .filter((m) => m.isTemplate)
+      .map((m) => ({
+        subject_name: m.subject,
+        assessment_type: m.type,
+        title: '', // 不記錄標題（簡化）
+      }))
 
     return NextResponse.json({
       success: true,
-      stitched_image_url: stitchedImageUrl,
+      stitched_image_url: urlData?.publicUrl || '',
       vision_prompt: prompt,
       reference_papers: referencePapers,
       new_paper_index: newPaperIndex,
-      total_papers: totalPapers,
+      total_papers: paperMeta.length,
     })
   } catch (error) {
     console.error('Classify context error:', error)
