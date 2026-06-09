@@ -42,6 +42,29 @@ SET display_order = CASE type_key
 END
 WHERE type_key IN ('points', 'money', 'hearts', 'stars', 'diamonds');
 
+-- Default assessment types.
+INSERT INTO public.assessment_types (
+  type_key,
+  display_name,
+  icon,
+  color,
+  display_order,
+  is_active,
+  is_system
+) VALUES
+  ('exam', '考試', 'assignment', '#dc2626', 1, TRUE, TRUE),
+  ('quiz', '小考', 'checklist_rtl', '#2563eb', 2, TRUE, TRUE),
+  ('homework', '作業', 'edit_note', '#16a34a', 3, TRUE, TRUE),
+  ('project', '專題', 'palette', '#9333ea', 4, TRUE, TRUE)
+ON CONFLICT (type_key) DO UPDATE SET
+  display_name = EXCLUDED.display_name,
+  icon = EXCLUDED.icon,
+  color = EXCLUDED.color,
+  display_order = EXCLUDED.display_order,
+  is_active = TRUE,
+  is_system = TRUE,
+  updated_at = NOW();
+
 -- Note:
 -- This default seed now keeps only required system-level data.
 -- Locale-specific demo data (achievement events and mapping rules)

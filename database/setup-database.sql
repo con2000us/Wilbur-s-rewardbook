@@ -48,6 +48,42 @@ CREATE TABLE IF NOT EXISTS subjects (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Step 3b: Create assessment_types table
+CREATE TABLE IF NOT EXISTS assessment_types (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  type_key TEXT UNIQUE NOT NULL,
+  display_name TEXT NOT NULL,
+  icon TEXT NOT NULL DEFAULT 'assignment',
+  color TEXT DEFAULT '#64748b',
+  display_order INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  is_system BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+INSERT INTO assessment_types (
+  type_key,
+  display_name,
+  icon,
+  color,
+  display_order,
+  is_active,
+  is_system
+) VALUES
+  ('exam', '考試', 'assignment', '#dc2626', 1, TRUE, TRUE),
+  ('quiz', '小考', 'checklist_rtl', '#2563eb', 2, TRUE, TRUE),
+  ('homework', '作業', 'edit_note', '#16a34a', 3, TRUE, TRUE),
+  ('project', '專題', 'palette', '#9333ea', 4, TRUE, TRUE)
+ON CONFLICT (type_key) DO UPDATE SET
+  display_name = EXCLUDED.display_name,
+  icon = EXCLUDED.icon,
+  color = EXCLUDED.color,
+  display_order = EXCLUDED.display_order,
+  is_active = TRUE,
+  is_system = TRUE,
+  updated_at = NOW();
+
 -- Step 4: Create assessments table
 -- 步驟 4: 創建評量表
 CREATE TABLE IF NOT EXISTS assessments (
@@ -55,7 +91,7 @@ CREATE TABLE IF NOT EXISTS assessments (
   subject_id UUID REFERENCES subjects(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
-  assessment_type TEXT CHECK (assessment_type IN ('exam', 'homework', 'quiz', 'project')),
+  assessment_type TEXT REFERENCES assessment_types(type_key) ON UPDATE CASCADE ON DELETE RESTRICT,
   score DECIMAL(5,2),
   max_score DECIMAL(5,2) DEFAULT 100,
   percentage DECIMAL(5,2),
@@ -74,7 +110,7 @@ CREATE TABLE IF NOT EXISTS assessments (
 CREATE TABLE IF NOT EXISTS transactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   student_id UUID REFERENCES students(id) ON DELETE CASCADE,
-  assessment_id UUID REFERENCES assessments(id) ON DELETE SET NULL,
+  assessment_id UUID REFERENCES assessments(id) ON DELETE CASCADE,
   transaction_type TEXT CHECK (transaction_type IN ('earn', 'spend', 'bonus', 'penalty', 'reset')),
   amount DECIMAL(10,2) NOT NULL,
   description TEXT,
@@ -99,7 +135,7 @@ CREATE TABLE IF NOT EXISTS reward_rules (
   priority INTEGER DEFAULT 0,
   is_active BOOLEAN DEFAULT TRUE,
   condition TEXT CHECK (condition IN ('score_equals', 'score_range', 'perfect_score')),
-  assessment_type TEXT,
+  assessment_type TEXT REFERENCES assessment_types(type_key) ON UPDATE CASCADE ON DELETE RESTRICT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -151,8 +187,12 @@ FROM students s;
 
 CREATE INDEX IF NOT EXISTS idx_subjects_student_id ON subjects(student_id);
 CREATE INDEX IF NOT EXISTS idx_assessments_subject_id ON assessments(subject_id);
+CREATE INDEX IF NOT EXISTS idx_assessments_assessment_type ON assessments(assessment_type);
 CREATE INDEX IF NOT EXISTS idx_assessments_status ON assessments(status);
 CREATE INDEX IF NOT EXISTS idx_assessments_due_date ON assessments(due_date);
+CREATE INDEX IF NOT EXISTS idx_assessment_types_type_key ON assessment_types(type_key);
+CREATE INDEX IF NOT EXISTS idx_assessment_types_display_order ON assessment_types(display_order);
+CREATE INDEX IF NOT EXISTS idx_assessment_types_is_active ON assessment_types(is_active);
 CREATE INDEX IF NOT EXISTS idx_transactions_student_id ON transactions(student_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON transactions(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_transactions_transaction_date ON transactions(transaction_date);
@@ -196,6 +236,7 @@ CREATE INDEX IF NOT EXISTS idx_transactions_assessment_id ON transactions(assess
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assessments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE assessment_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reward_rules ENABLE ROW LEVEL SECURITY;
 
@@ -203,24 +244,28 @@ ALTER TABLE reward_rules ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow public read access" ON students;
 DROP POLICY IF EXISTS "Allow public read access" ON subjects;
 DROP POLICY IF EXISTS "Allow public read access" ON assessments;
+DROP POLICY IF EXISTS "Allow public read access" ON assessment_types;
 DROP POLICY IF EXISTS "Allow public read access" ON transactions;
 DROP POLICY IF EXISTS "Allow public read access" ON reward_rules;
 
 DROP POLICY IF EXISTS "Allow insert" ON students;
 DROP POLICY IF EXISTS "Allow insert" ON subjects;
 DROP POLICY IF EXISTS "Allow insert" ON assessments;
+DROP POLICY IF EXISTS "Allow insert" ON assessment_types;
 DROP POLICY IF EXISTS "Allow insert" ON transactions;
 DROP POLICY IF EXISTS "Allow insert" ON reward_rules;
 
 DROP POLICY IF EXISTS "Allow update" ON students;
 DROP POLICY IF EXISTS "Allow update" ON subjects;
 DROP POLICY IF EXISTS "Allow update" ON assessments;
+DROP POLICY IF EXISTS "Allow update" ON assessment_types;
 DROP POLICY IF EXISTS "Allow update" ON transactions;
 DROP POLICY IF EXISTS "Allow update" ON reward_rules;
 
 DROP POLICY IF EXISTS "Allow delete" ON students;
 DROP POLICY IF EXISTS "Allow delete" ON subjects;
 DROP POLICY IF EXISTS "Allow delete" ON assessments;
+DROP POLICY IF EXISTS "Allow delete" ON assessment_types;
 DROP POLICY IF EXISTS "Allow delete" ON transactions;
 DROP POLICY IF EXISTS "Allow delete" ON reward_rules;
 
@@ -238,24 +283,28 @@ DROP POLICY IF EXISTS "Allow delete" ON reward_rules;
 CREATE POLICY "Allow public read access" ON students FOR SELECT USING (true);
 CREATE POLICY "Allow public read access" ON subjects FOR SELECT USING (true);
 CREATE POLICY "Allow public read access" ON assessments FOR SELECT USING (true);
+CREATE POLICY "Allow public read access" ON assessment_types FOR SELECT USING (true);
 CREATE POLICY "Allow public read access" ON transactions FOR SELECT USING (true);
 CREATE POLICY "Allow public read access" ON reward_rules FOR SELECT USING (true);
 
 CREATE POLICY "Allow insert" ON students FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow insert" ON subjects FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow insert" ON assessments FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow insert" ON assessment_types FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow insert" ON transactions FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow insert" ON reward_rules FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Allow update" ON students FOR UPDATE USING (true);
 CREATE POLICY "Allow update" ON subjects FOR UPDATE USING (true);
 CREATE POLICY "Allow update" ON assessments FOR UPDATE USING (true);
+CREATE POLICY "Allow update" ON assessment_types FOR UPDATE USING (true);
 CREATE POLICY "Allow update" ON transactions FOR UPDATE USING (true);
 CREATE POLICY "Allow update" ON reward_rules FOR UPDATE USING (true);
 
 CREATE POLICY "Allow delete" ON students FOR DELETE USING (true);
 CREATE POLICY "Allow delete" ON subjects FOR DELETE USING (true);
 CREATE POLICY "Allow delete" ON assessments FOR DELETE USING (true);
+CREATE POLICY "Allow delete" ON assessment_types FOR DELETE USING ((is_system = false));
 CREATE POLICY "Allow delete" ON transactions FOR DELETE USING (true);
 CREATE POLICY "Allow delete" ON reward_rules FOR DELETE USING (true);
 
@@ -314,6 +363,7 @@ ADD COLUMN IF NOT EXISTS subject_id UUID REFERENCES subjects(id) ON DELETE CASCA
 CREATE INDEX IF NOT EXISTS idx_reward_rules_subject_id ON reward_rules(subject_id);
 CREATE INDEX IF NOT EXISTS idx_reward_rules_student_id ON reward_rules(student_id);
 CREATE INDEX IF NOT EXISTS idx_reward_rules_active ON reward_rules(is_active);
+CREATE INDEX IF NOT EXISTS idx_reward_rules_assessment_type ON reward_rules(assessment_type);
 
 COMMENT ON COLUMN reward_rules.subject_id IS '科目ID（NULL表示適用所有科目）';
 COMMENT ON COLUMN reward_rules.student_id IS '學生ID（NULL表示適用所有學生）';

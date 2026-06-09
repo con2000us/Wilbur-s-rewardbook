@@ -8,6 +8,11 @@ import StudentSidebarHeader from './components/StudentSidebarHeader'
 import StudentFloatingQuickNav from './components/StudentFloatingQuickNav'
 import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import {
+  getDefaultAssessmentTypeKey,
+  normalizeAssessmentTypes,
+  type AssessmentType,
+} from '@/lib/assessmentTypes'
 
 interface Props {
   studentId: string
@@ -19,6 +24,7 @@ interface Props {
   transactions: any[]
   summary: any
   rewardRules: any[]
+  assessmentTypes: AssessmentType[]
 }
 
 export default function StudentRecords({ 
@@ -30,7 +36,8 @@ export default function StudentRecords({
   assessments, 
   transactions, 
   summary, 
-  rewardRules
+  rewardRules,
+  assessmentTypes
 }: Props) {
   const t = useTranslations('student')
   const tAssessment = useTranslations('assessment')
@@ -41,7 +48,7 @@ export default function StudentRecords({
   // Modal 狀態
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAssessment, setEditingAssessment] = useState<any>(null)
-  const [mostCommonType, setMostCommonType] = useState<string>('exam')
+  const [mostCommonType, setMostCommonType] = useState<string>(getDefaultAssessmentTypeKey(assessmentTypes))
   
   // 預設為當前月份（會在 useEffect 中根據最近結算調整）
   const currentMonth = new Date().toISOString().slice(0, 7)
@@ -66,12 +73,7 @@ export default function StudentRecords({
     totalPassbookSpent: 0,  // 非評量支出
     resetBaseInPeriod: 0,   // 該時間區段內的獎金存摺歸零基準
     nonAssessmentBalance: 0, // 獎金存摺非評量獎金部份的金額（收入-支出）
-    averageScores: {        // 各評量類型平均分數
-      exam: 0,
-      quiz: 0,
-      homework: 0,
-      project: 0
-    },
+    averageScores: {},
     totalAverage: 0         // 總平均分數
   })
 
@@ -138,12 +140,12 @@ export default function StudentRecords({
     // 計算最常用的評量類型
     const typeCounts: { [key: string]: number } = {}
     assessments.forEach(assessment => {
-      const type = assessment.assessment_type || 'exam'
+      const type = assessment.assessment_type || getDefaultAssessmentTypeKey(assessmentTypes)
       typeCounts[type] = (typeCounts[type] || 0) + 1
     })
     const mostCommon = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]
-    setMostCommonType(mostCommon ? mostCommon[0] : 'exam')
-  }, [assessments, currentMonth, selectedMonth, transactions])
+    setMostCommonType(mostCommon ? mostCommon[0] : getDefaultAssessmentTypeKey(assessmentTypes))
+  }, [assessments, assessmentTypes, currentMonth, selectedMonth, transactions])
 
   // 記住使用者「最後一次選擇的具體科目」
   // 目的：當目前 focused tab 是「全部」時，新增評量 popup 仍可預選上次的科目
@@ -333,12 +335,18 @@ export default function StudentRecords({
       assessmentsForAverage = filteredAssessmentsForReward.filter(a => a.subject_id === selectedSubject)
     }
     
-    const assessmentTypes = ['exam', 'quiz', 'homework', 'project'] as const
+    const knownAssessmentTypeKeys = normalizeAssessmentTypes(assessmentTypes).map((type) => type.type_key)
+    const assessmentTypeKeys = Array.from(new Set([
+      ...knownAssessmentTypeKeys,
+      ...assessmentsForAverage
+        .map((assessment) => assessment.assessment_type)
+        .filter((type): type is string => Boolean(type)),
+    ]))
     const averageScores: { [key: string]: number } = {}
     let totalScoreSum = 0
     let totalCount = 0
     
-    assessmentTypes.forEach(type => {
+    assessmentTypeKeys.forEach(type => {
       const typeAssessments = assessmentsForAverage.filter(a => 
         a.assessment_type === type && a.score !== null && a.score !== undefined
       )
@@ -389,12 +397,7 @@ export default function StudentRecords({
       totalPassbookSpent: nonAssessmentSpent,   // 非評量支出
       resetBaseInPeriod,
       nonAssessmentBalance,  // 非評量獎金部分的金額（收入-支出）
-      averageScores: {
-        exam: averageScores.exam || 0,
-        quiz: averageScores.quiz || 0,
-        homework: averageScores.homework || 0,
-        project: averageScores.project || 0
-      },
+      averageScores,
       totalAverage
     };
     setRewardBreakdown(newRewardBreakdown)
@@ -450,7 +453,7 @@ export default function StudentRecords({
     }
 
     setFilteredSummary(calculateFilteredStats())
-  }, [selectedMonth, selectedSubject, transactions, assessments, summary, calculateFromReset])
+  }, [selectedMonth, selectedSubject, transactions, assessments, summary, calculateFromReset, assessmentTypes])
 
   const formatMonth = (monthKey: string) => {
     const [year, month] = monthKey.split('-')
@@ -504,7 +507,7 @@ export default function StudentRecords({
     return () => mq.removeEventListener('change', update)
   }, [])
 
-  const mainPaddingTop = Math.max(0, floatingNavHeight - 10)
+  const mainPaddingTop = floatingNavHeight
 
   return (
     <>
@@ -585,6 +588,7 @@ export default function StudentRecords({
           setSelectedSubject={setSelectedSubject}
           resetDate={resetDate}
           rewardBreakdown={rewardBreakdown}
+          assessmentTypes={assessmentTypes}
           onEditAssessment={handleOpenEditModal}
           onOpenAddModal={handleOpenAddModal}
           selectedMonth={selectedMonth}
@@ -613,6 +617,7 @@ export default function StudentRecords({
         assessment={editingAssessment}
         initialSubjectId={selectedSubject || lastSelectedSubject || subjects?.[0]?.id || ''}
         defaultAssessmentType={mostCommonType}
+        assessmentTypes={assessmentTypes}
         onSuccess={handleModalSuccess}
       />
     </>

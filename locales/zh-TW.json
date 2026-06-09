@@ -1159,6 +1159,7 @@
     "title": "獎勵中心",
     "subtitle": "管理獎勵類型、行為事件、大型目標與兌換規則",
     "tabRewardTypes": "獎勵類型",
+    "tabAssessmentTypes": "評量類別",
     "tabAchievementEvents": "成就事件",
     "tabGoalTemplates": "大型目標",
     "tabExchangeRules": "小型兌換"

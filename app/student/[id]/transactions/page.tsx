@@ -5,6 +5,7 @@ import { parseStudentAvatar } from '@/lib/utils/studentTheme'
 import StudentSidebarHeader from '../components/StudentSidebarHeader'
 import StudentFloatingQuickNav from '../components/StudentFloatingQuickNav'
 import TransactionsContent, { TransactionsContentProvider, CategoryTagsSidebar, MainContent } from './TransactionsContent'
+import { fetchAssessmentTypes } from '@/lib/assessmentTypesServer'
 
 export default async function TransactionsPage({ 
   params 
@@ -62,6 +63,8 @@ export default async function TransactionsPage({
         .select('id, subject_id, title, assessment_type, due_date')
         .in('subject_id', subjectIds)
     : { data: [] as any[] }
+
+  const assessmentTypes = await fetchAssessmentTypes(supabase, { includeInactive: true })
 
   // 獲取所有學生（用於切換器）
   const { data: allStudents } = await supabase
@@ -127,8 +130,9 @@ export default async function TransactionsPage({
                 transactions={transactions || []}
                 summary={summary}
                 subjects={subjects || []}
-                assessments={assessments || []}
-              />
+            assessments={assessments || []}
+            assessmentTypes={assessmentTypes}
+          />
             </header>
           </div>
 
@@ -140,6 +144,7 @@ export default async function TransactionsPage({
             subjects={subjects || []}
             assessments={assessments || []}
             rewardTypes={rewardTypes || []}
+            assessmentTypes={assessmentTypes}
           />
         </TransactionsContentProvider>
       </div>

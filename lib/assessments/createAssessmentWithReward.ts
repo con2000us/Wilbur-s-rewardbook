@@ -256,18 +256,37 @@ export async function createAssessmentWithReward(
     .single()
 
   if (shouldRetryWithoutGradeColumns(error)) {
-    const fallbackData = { ...assessmentData }
-    delete fallbackData.grade
-    delete fallbackData.score_type
-
-    const retryResult = await supabase
+    // PGRST204 on .single() means PostgREST couldn't serialize the response,
+    // NOT that the INSERT failed. The row IS in the database.
+    // Query for it instead of doing a second INSERT (which would create a duplicate).
+    const { data: found, error: findError } = await supabase
       .from('assessments')
-      .insert(fallbackData)
-      .select()
+      .select('*')
+      .eq('subject_id', assessmentData.subject_id!)
+      .eq('title', assessmentData.title!)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .single()
 
-    assessment = retryResult.data
-    error = retryResult.error
+    if (found && !findError) {
+      assessment = found
+      error = null
+    } else {
+      // Row wasn't found — the insert may have actually failed.
+      // Retry without grade/score_type columns.
+      const fallbackData = { ...assessmentData }
+      delete fallbackData.grade
+      delete fallbackData.score_type
+
+      const retryResult = await supabase
+        .from('assessments')
+        .insert(fallbackData)
+        .select()
+        .single()
+
+      assessment = retryResult.data
+      error = retryResult.error
+    }
   }
 
   if (error) {

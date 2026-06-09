@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { getStudentThemeShadow, parseStudentAvatar } from '@/lib/utils/studentTheme'
-import AppActionCluster, { LanguageMenuButton } from '@/app/components/AppActionCluster'
+import AppActionCluster from '@/app/components/AppActionCluster'
 
 type Student = {
   id: string
@@ -49,7 +49,7 @@ const HEADER_BORDER_HEIGHT = 1
 const NAV_VERTICAL_CHROME_HEIGHT = 28
 
 const studentHeaderActionButtonClass =
-  'flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-primary/45 bg-white text-primary ring-2 ring-white/90 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95'
+  'flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-full border-2 border-primary/45 bg-white text-primary ring-2 ring-white/90 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95 sm:h-14 sm:w-14'
 
 const navConfig: Array<{ key: NavItemKey; icon: string; labelKey: MobileBottomNavLabelKey }> = [
   { key: 'records', icon: 'assignment', labelKey: 'records' },
@@ -136,13 +136,21 @@ function StudentAvatarBadge({
   fallbackName: string
   className?: string
 }) {
+  const isEmoji = Boolean(avatar.emoji && avatar.emoji.length <= 4)
+
   return (
     <span
-      className={`${className} flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white font-black text-primary shadow-sm ring-1 ring-white/70`}
+      className={`${className} student-avatar-badge flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white font-black shadow-md ring-2 ring-white`}
       style={{ background: avatar.gradientStyle }}
       aria-hidden="true"
     >
-      {avatar.emoji || fallbackName.charAt(0)}
+      <span
+        className={`leading-none translate-y-[-9%] drop-shadow-[0_1px_2px_rgba(15,23,42,0.28)] ${
+          isEmoji ? 'select-none' : 'text-slate-800'
+        }`}
+      >
+        {avatar.emoji || fallbackName.charAt(0)}
+      </span>
     </span>
   )
 }
@@ -206,17 +214,14 @@ export default function StudentFloatingQuickNav({
     (isZh ? '學生頁面' : 'Student page')
 
   const mobileNavItemBaseClass =
-    'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 transition-all duration-200 hover:-translate-y-1.5'
+    'flex min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-1 px-1 py-2 transition-all duration-200 active:scale-95'
   const mobileNavItemInactiveClass = mobileNavItemBaseClass
   const mobileNavItemActiveClass = `${mobileNavItemBaseClass} relative font-semibold after:absolute after:bottom-0 after:left-1/4 after:h-[2px] after:w-1/2 after:rounded-full after:bg-[var(--nav-accent)]`
 
   const getMobileNavItemStyle = (active: boolean): React.CSSProperties => {
     const { r, g, b } = getReadableThemeRgb(activeNavThemeHex)
-    const strokeAlpha = active ? 0.65 : 0.5
     return {
-      color: `rgb(${r}, ${g}, ${b})`,
-      WebkitTextStroke: `0.4px ${hexToRgba(activeNavThemeHex, strokeAlpha)}`,
-      paintOrder: 'stroke fill',
+      color: active ? `rgb(${Math.max(r - 18, 15)}, ${Math.max(g - 18, 23)}, ${Math.max(b - 18, 42)})` : '#475569',
       ...(active ? { ['--nav-accent' as string]: `rgb(${r}, ${g}, ${b})` } : {}),
     }
   }
@@ -323,22 +328,22 @@ export default function StudentFloatingQuickNav({
           className="rounded-none border-b border-white/70 backdrop-blur-md"
           style={headerShellStyle}
         >
-          <div ref={topBarRef} className="flex items-center justify-between gap-4 px-5 py-4">
-            <div className="flex min-w-0 items-center gap-3 text-left">
+          <div ref={topBarRef} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+            <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
               <StudentAvatarBadge
                 avatar={studentAvatar}
                 fallbackName={studentName}
-                className="h-16 w-16 text-4xl leading-none"
+                className="h-14 w-14 text-3xl leading-none sm:h-16 sm:w-16 sm:text-4xl"
               />
               <span className="min-w-0">
-                <span className="block truncate text-3xl font-bold leading-tight text-slate-800">
+                <span className="block truncate text-2xl font-bold leading-tight text-slate-800 sm:text-3xl">
                   {studentName}
                 </span>
                 <span className="block text-sm font-semibold text-primary">{currentPageLabel}</span>
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <Link
                 href="/settings"
                 className={studentHeaderActionButtonClass}
@@ -350,16 +355,6 @@ export default function StudentFloatingQuickNav({
               >
                 <span className="material-icons-outlined text-2xl">settings</span>
               </Link>
-
-              <LanguageMenuButton
-                variant="studentHeader"
-                title={isZh ? '語言' : 'Language'}
-                className={studentHeaderActionButtonClass}
-                iconClassName="text-2xl"
-                buttonStyle={{
-                  boxShadow: `${getStudentThemeShadow(themeHex, 'md')}, 0 8px 18px -8px rgba(15, 23, 42, 0.32)`,
-                }}
-              />
 
               <Link
                 href="/"
@@ -432,7 +427,7 @@ export default function StudentFloatingQuickNav({
                           key={student.id}
                           type="button"
                           onClick={() => handleStudentCardClick(student.id)}
-                          className={`relative flex h-44 w-32 shrink-0 flex-col items-center justify-center rounded-2xl p-3 text-center transition-all duration-200 hover:-translate-y-1.5 ${
+                          className={`relative flex h-44 w-32 shrink-0 touch-manipulation flex-col items-center justify-center rounded-2xl p-3 text-center transition-all duration-200 active:scale-[0.98] ${
                             active
                               ? 'border-[3px] text-slate-800'
                               : 'border border-slate-200 text-slate-700'
@@ -463,7 +458,7 @@ export default function StudentFloatingQuickNav({
                           <StudentAvatarBadge
                             avatar={parsedAvatar}
                             fallbackName={student.name}
-                            className="mb-3 h-16 w-16 text-2xl"
+                            className="mb-3 h-[4.5rem] w-[4.5rem] text-[2rem] leading-none"
                           />
                           <span className="block w-full truncate text-[17px] font-black leading-tight">{student.name}</span>
                         </button>
@@ -482,7 +477,7 @@ export default function StudentFloatingQuickNav({
                     const itemStyle = getMobileNavItemStyle(item.active)
                     const itemContent = (
                       <>
-                        <span className="material-icons-outlined text-[26px]">{item.icon}</span>
+                        <span className="material-icons-outlined text-[28px] leading-none">{item.icon}</span>
                         <span className="w-full text-center text-[13px] font-medium leading-tight">
                           {item.label}
                         </span>

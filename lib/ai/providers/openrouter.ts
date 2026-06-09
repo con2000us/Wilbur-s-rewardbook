@@ -465,6 +465,30 @@ Preserve line breaks when useful, numbers, Chinese/English text, score boxes, da
 Do not return JSON. Return plain OCR text only.`
 }
 
+function buildAssessmentTypesPromptLine(context: ExtractInput['context']) {
+  const assessmentTypes = context.assessmentTypes || []
+  if (assessmentTypes.length === 0) {
+    return '- Available assessment types: none configured'
+  }
+  return `- Available assessment types: ${assessmentTypes
+    .map((type) => `${type.type_key} (${type.display_name})`)
+    .join(', ')}`
+}
+
+function buildAssessmentTypeInstruction(context: ExtractInput['context']) {
+  const assessmentTypes = context.assessmentTypes || []
+  if (assessmentTypes.length === 0) {
+    return 'For "assessment_type", use null because no active assessment types are configured.'
+  }
+  const keys = assessmentTypes.map((type) => type.type_key).join(', ')
+  return `For "assessment_type", use exactly one active type_key from Available assessment types: ${keys}. Do not translate the type_key. Use null if uncertain.`
+}
+
+function buildAssessmentTypeSchemaDescription(context: ExtractInput['context']) {
+  const keys = (context.assessmentTypes || []).map((type) => `"${type.type_key}"`)
+  return keys.length > 0 ? `${keys.join(' | ')} | null` : 'string | null'
+}
+
 export function buildTextAnalysisSystemPrompt(context: ExtractInput['context'], locale = 'zh-TW', detectMistakes = false): string {
   const gradeLine = context.grade ? `- Student grade: ${context.grade}` : ''
   const outputLanguage = locale === 'zh-TW' ? 'Traditional Chinese (zh-TW)' : 'English'
@@ -489,6 +513,7 @@ Your job is to analyze the OCR-extracted text from an exam paper and extract str
 Context:
 ${gradeLine}
 ${subjectsLine}
+${buildAssessmentTypesPromptLine(context)}
 ${recentPatternsLine}
 ${archiveHintsLine}
 - Frontend locale: ${locale}
@@ -497,13 +522,13 @@ ${archiveHintsLine}
 IMPORTANT:
 1. Return ONLY valid JSON, no markdown wrapping.
 2. The "subject" field should be the best canonical subject from Available subjects when there is a clear match. If the paper subject is not listed, use the closest available subject and add an uncertainty explaining the mapping.
-3. For "assessment_type", use: exam, homework, quiz, or project. Use null if uncertain.
+3. ${buildAssessmentTypeInstruction(context)}
 4. Extract ALL visible scores and maximum scores.
 5. Include an "uncertainties" array for any fields you're not confident about.
 6. "confidence" should be a number 0.00-1.00 representing your overall confidence in the extraction.
 7. Respect confirmed subject mappings from past imports when they are relevant.
 8. In this rewardbook, Taiwanese elementary "生活" / "生活課程" should map to "社會" when "社會" is available and "生活" is not.
-9. User-facing strings in JSON values such as title, assessment_type, and uncertainty reasons must use the Required user-facing output language. Keep copied OCR answers in their original language.
+9. User-facing strings in JSON values such as title and uncertainty reasons must use the Required user-facing output language. Keep copied OCR answers in their original language.
 ${detectMistakes ? `10. For mistakes, extract: question_number, student_answer, correct_answer, mistake_type, knowledge_point, ai_reason, and confidence.
 11. The "mistakes" array should only include items where there is clear evidence that the student lost points or answered incorrectly. If a mark is ambiguous, put it in "uncertainties" instead.` : ''}
 
@@ -511,7 +536,7 @@ JSON schema:
 {
   "subject": "string (required)",
   "title": "string (optional assessment name)",
-  "assessment_type": "exam" | "homework" | "quiz" | "project" | null,
+  "assessment_type": ${buildAssessmentTypeSchemaDescription(context)},
   "score": number | null,
   "max_score": number | null,
   "assessment_date": "YYYY-MM-DD" | null,
@@ -553,6 +578,7 @@ Your job is to inspect one or more images from the same assessment and extract s
 Context:
 ${gradeLine}
 ${subjectsLine}
+${buildAssessmentTypesPromptLine(context)}
 ${recentPatternsLine}
 ${archiveHintsLine}
 - Frontend locale: ${locale}
@@ -563,20 +589,20 @@ IMPORTANT:
 2. Treat all images as pages/sides of the SAME assessment. Combine evidence across pages before deciding score, subject, date${detectMistakes ? ', and mistakes' : ''}.
 3. Read the visual evidence yourself. Do not rely on a separate OCR interpretation. ${detectMistakes ? 'Pay attention to red marks, circled items, check marks, crossed-out answers, corrected answers, handwritten teacher notes, and partial-credit annotations.' : 'Focus on official fields such as title, subject, date, score, and maximum score.'}
 4. The "subject" field should be the best canonical subject from Available subjects when there is a clear match. If the paper subject is not listed, use the closest available subject and add an uncertainty explaining the mapping.
-5. For "assessment_type", use: exam, homework, quiz, or project. Use null if uncertain.
+5. ${buildAssessmentTypeInstruction(context)}
 6. Extract ALL visible scores and maximum scores. When a score appears on only one page but the images are the same assessment, use that score for the whole assessment.
 7. Include an "uncertainties" array for any fields you're not confident about.
 8. "confidence" should be a number 0.00-1.00 representing your overall confidence in the extraction.
 9. Respect confirmed subject mappings from past imports when they are relevant.
 10. In this rewardbook, Taiwanese elementary "生活" / "生活課程" should map to "社會" when "社會" is available and "生活" is not.
-11. User-facing strings in JSON values such as title, assessment_type, and uncertainty reasons must use the Required user-facing output language. Keep copied answers in their original language.
+11. User-facing strings in JSON values such as title and uncertainty reasons must use the Required user-facing output language. Keep copied answers in their original language.
 ${detectMistakes ? `12. For mistakes, extract: question_number, student_answer, correct_answer, mistake_type, knowledge_point, ai_reason, and confidence. Only include items with clear visual evidence that the student got wrong or lost points. If a mark is ambiguous, put it in "uncertainties" instead of inventing a mistake.` : ''}
 
 JSON schema:
 {
   "subject": "string (required)",
   "title": "string (optional assessment name)",
-  "assessment_type": "exam" | "homework" | "quiz" | "project" | null,
+  "assessment_type": ${buildAssessmentTypeSchemaDescription(context)},
   "score": number | null,
   "max_score": number | null,
   "assessment_date": "YYYY-MM-DD" | null,

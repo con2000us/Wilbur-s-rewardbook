@@ -527,6 +527,10 @@ body {
 
 .home-student-card-body-selectable {
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .home-selected-overview {
@@ -743,6 +747,7 @@ body {
 }
 
 .home-student-card {
+  position: relative;
   display: flex;
   min-height: 100%;
   flex-direction: column;
@@ -754,6 +759,8 @@ body {
   box-shadow: 0 4px 15px -3px rgba(30, 41, 59, 0.02);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
@@ -796,7 +803,16 @@ body {
   font-size: 24px;
   line-height: 1;
   border-radius: 9999px;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.18),
+    0 4px 10px rgba(15, 23, 42, 0.12),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.72);
+}
+
+.student-avatar-badge {
+  box-shadow:
+    0 6px 14px rgba(15, 23, 42, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55);
 }
 
 .home-selected-badge {
@@ -852,7 +868,7 @@ body {
 
 .home-stat-label {
   max-width: 100%;
-  color: #64748b;
+  color: #475569;
   font-size: 12px;
   font-weight: 600;
   line-height: 16px;
@@ -889,9 +905,13 @@ body {
   border-top: 1px solid rgba(255, 255, 255, 0.42);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .student-action-btn {
+  position: relative;
+  z-index: 1;
   display: flex;
   min-height: 44px;
   flex-direction: column;
@@ -905,11 +925,14 @@ body {
   line-height: 1.2;
   text-decoration: none;
   border-radius: 14px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
 }
 
 .student-action-btn .material-symbols-outlined {
   font-size: 22px;
+  transform: translateY(-3%);
 }
 
 .student-action-btn:hover {
@@ -1256,6 +1279,20 @@ body {
 
   .home-student-card-body {
     padding: 16px 16px 0;
+  }
+
+  .home-student-avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+  }
+
+  .student-action-btn {
+    min-height: 48px;
+  }
+
+  .student-action-btn .material-symbols-outlined {
+    font-size: 24px;
   }
 
   .home-management-enter-link {

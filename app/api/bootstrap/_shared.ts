@@ -199,6 +199,44 @@ export async function ensureRewardTypes(supabase: SupabaseClient, selectedLocale
   }
 }
 
+export async function ensureAssessmentTypes(supabase: SupabaseClient, selectedLocale: Locale) {
+  const displayNames =
+    selectedLocale === 'zh-TW'
+      ? {
+          exam: '\u8003\u8a66',
+          quiz: '\u5c0f\u8003',
+          homework: '\u4f5c\u696d',
+          project: '\u5c08\u984c',
+        }
+      : {
+          exam: 'Exam',
+          quiz: 'Quiz',
+          homework: 'Homework',
+          project: 'Project',
+        }
+
+  const assessmentTypes = [
+    { type_key: 'exam', icon: 'assignment', color: '#dc2626' },
+    { type_key: 'quiz', icon: 'checklist_rtl', color: '#2563eb' },
+    { type_key: 'homework', icon: 'edit_note', color: '#16a34a' },
+    { type_key: 'project', icon: 'palette', color: '#9333ea' },
+  ].map((type, index) => ({
+    ...type,
+    display_name: displayNames[type.type_key as keyof typeof displayNames],
+    display_order: index + 1,
+    is_active: true,
+    is_system: true,
+  }))
+
+  const { error } = await supabase
+    .from('assessment_types')
+    .upsert(assessmentTypes, { onConflict: 'type_key' })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
 function buildEventPayload(seed: DemoEventSeed): AchievementEventInsert {
   return {
     event_key: seed.key,
@@ -257,28 +295,32 @@ export async function importDemoSeedData(supabase: SupabaseClient) {
     const eventId = eventRow?.id || null
     if (!eventId) continue
 
-    const { error: translationError } = await supabase
-      .from('achievement_event_translations')
-      .upsert(
-        [
-          {
-            event_id: eventId,
-            locale: 'zh-TW',
-            name: seed.nameZh,
-            description: seed.descriptionZh,
-          },
-          {
-            event_id: eventId,
-            locale: 'en',
-            name: seed.nameEn,
-            description: seed.descriptionEn,
-          },
-        ],
-        { onConflict: 'event_id,locale' }
-      )
+    try {
+      const { error: translationError } = await supabase
+        .from('achievement_event_translations')
+        .upsert(
+          [
+            {
+              event_id: eventId,
+              locale: 'zh-TW',
+              name: seed.nameZh,
+              description: seed.descriptionZh,
+            },
+            {
+              event_id: eventId,
+              locale: 'en',
+              name: seed.nameEn,
+              description: seed.descriptionEn,
+            },
+          ],
+          { onConflict: 'event_id,locale' }
+        )
 
-    if (translationError) {
-      throw new Error(translationError.message)
+      if (translationError) {
+        console.warn('Failed to upsert achievement_event_translation:', translationError.message)
+      }
+    } catch (err: any) {
+      console.warn('achievement_event_translations table may not exist, skipping translation upsert:', err.message)
     }
 
     const rewardTypeId = rewardTypeIdByKey[seed.rewardTypeKey]
@@ -319,28 +361,32 @@ export async function importDemoSeedData(supabase: SupabaseClient) {
     const ruleId = ruleRow?.id || null
     if (!ruleId) continue
 
-    const { error: translationError } = await supabase
-      .from('exchange_rule_translations')
-      .upsert(
-        [
-          {
-            rule_id: ruleId,
-            locale: 'zh-TW',
-            name: seed.nameZh,
-            description: seed.descriptionZh,
-          },
-          {
-            rule_id: ruleId,
-            locale: 'en',
-            name: seed.nameEn,
-            description: seed.descriptionEn,
-          },
-        ],
-        { onConflict: 'rule_id,locale' }
-      )
+    try {
+      const { error: translationError } = await supabase
+        .from('exchange_rule_translations')
+        .upsert(
+          [
+            {
+              rule_id: ruleId,
+              locale: 'zh-TW',
+              name: seed.nameZh,
+              description: seed.descriptionZh,
+            },
+            {
+              rule_id: ruleId,
+              locale: 'en',
+              name: seed.nameEn,
+              description: seed.descriptionEn,
+            },
+          ],
+          { onConflict: 'rule_id,locale' }
+        )
 
-    if (translationError) {
-      throw new Error(translationError.message)
+      if (translationError) {
+        console.warn('Failed to upsert exchange_rule_translation:', translationError.message)
+      }
+    } catch (err: any) {
+      console.warn('exchange_rule_translations table may not exist, skipping translation upsert:', err.message)
     }
   }
 }

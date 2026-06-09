@@ -6,6 +6,7 @@ import { parseStudentAvatar, getStudentBackgroundGradient } from '@/lib/utils/st
 import StudentHeaderWithDropdown from '@/app/components/StudentHeaderWithDropdown'
 import StudentFloatingQuickNav from '../../../components/StudentFloatingQuickNav'
 import HomeButton from '@/app/components/HomeButton'
+import { fetchAssessmentTypes } from '@/lib/assessmentTypesServer'
 
 export default async function EditAssessmentPage({ 
   params 
@@ -64,6 +65,11 @@ export default async function EditAssessmentPage({
     .eq('is_active', true)
     .order('priority', { ascending: false })
 
+  const assessmentTypes = await fetchAssessmentTypes(supabase, {
+    includeInactive: true,
+    currentTypeKey: (assessment as any).assessment_type,
+  })
+
   // 獲取所有學生（用於切換器）
   const { data: allStudents } = await supabase
     .from('students')
@@ -121,6 +127,7 @@ export default async function EditAssessmentPage({
             assessment={assessment}
             subjects={subjects || []}
             rewardRules={rewardRules || []}
+            assessmentTypes={assessmentTypes}
           />
         </div>
       </div>

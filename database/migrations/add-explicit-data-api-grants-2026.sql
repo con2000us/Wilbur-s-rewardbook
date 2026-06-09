@@ -22,6 +22,7 @@ DECLARE
     'assessment_import_jobs',
     'assessment_import_mistake_drafts',
     'assessment_mistakes',
+    'assessment_types',
     'assessments',
     'backups',
     'custom_reward_types',

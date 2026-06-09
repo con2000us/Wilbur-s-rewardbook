@@ -8,9 +8,11 @@ import CustomRewardTypesManager from '@/app/settings/CustomRewardTypesManager'
 import AchievementEventsManager from '@/app/achievement-events/AchievementEventsManager'
 import GoalTemplatesManager from './GoalTemplatesManager'
 import ExchangeRulesManager from './ExchangeRulesManager'
+import AssessmentTypesManager from './AssessmentTypesManager'
 
 const TABS = [
   { id: 'rewardTypes', icon: 'category', labelKey: 'tabRewardTypes' },
+  { id: 'assessmentTypes', icon: 'assignment', labelKey: 'tabAssessmentTypes' },
   { id: 'achievementEvents', icon: 'emoji_events', labelKey: 'tabAchievementEvents' },
   { id: 'goalTemplates', icon: 'flag', labelKey: 'tabGoalTemplates' },
   { id: 'exchangeRules', icon: 'swap_horiz', labelKey: 'tabExchangeRules' },
@@ -73,6 +75,7 @@ export default function SettingsRewardsPage() {
           {/* Tab Content */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 shadow-xl overflow-hidden">
             {activeTab === 'rewardTypes' && <CustomRewardTypesManager />}
+            {activeTab === 'assessmentTypes' && <AssessmentTypesManager />}
             {activeTab === 'achievementEvents' && <AchievementEventsManager />}
             {activeTab === 'goalTemplates' && <GoalTemplatesManager />}
             {activeTab === 'exchangeRules' && <ExchangeRulesManager />}

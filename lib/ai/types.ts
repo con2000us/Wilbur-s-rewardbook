@@ -71,6 +71,8 @@ export interface StudentContext {
   grade?: string
   /** System subjects belonging to this student */
   candidateSubjects: CandidateSubject[]
+  /** Active assessment types available for AI classification */
+  assessmentTypes?: CandidateAssessmentType[]
   /** Recent assessment name patterns for context */
   recentAssessmentPatterns?: string[]
   /** Confirmed AI import mappings from detected paper subject to chosen system subject */
@@ -80,6 +82,11 @@ export interface StudentContext {
 export interface CandidateSubject {
   id: string
   name: string
+}
+
+export interface CandidateAssessmentType {
+  type_key: string
+  display_name: string
 }
 
 export interface SubjectArchiveHint {
@@ -93,8 +100,8 @@ export interface AssessmentJsonOutput {
   subject: string
   /** Suggested assessment title */
   title: string
-  /** Assessment type: exam / homework / quiz / project */
-  assessment_type: 'exam' | 'homework' | 'quiz' | 'project' | null
+  /** Assessment type_key from active assessment_types, or null */
+  assessment_type: string | null
   /** Student's score */
   score: number | null
   /** Maximum possible score */

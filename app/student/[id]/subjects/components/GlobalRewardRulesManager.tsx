@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import RuleCard from './RuleCard'
+import type { AssessmentType } from '@/lib/assessmentTypes'
 
 interface RewardRule {
   id: string
@@ -40,7 +41,6 @@ export default function GlobalRewardRulesManager({
 }: Props) {
   const router = useRouter()
   const t = useTranslations('rewardRules')
-  const tAssessment = useTranslations('assessment')
   const tCommon = useTranslations('common')
   const formRef = useRef<HTMLFormElement>(null)
   const referenceCardRef = useRef<HTMLDivElement>(null)
@@ -67,8 +67,9 @@ export default function GlobalRewardRulesManager({
     reward_amount: '',
     priority: '20', // 學生規則預設優先級（全局規則為10）
     is_active: true,
-    assessment_type: '' as '' | 'exam' | 'quiz' | 'homework' | 'project',
+    assessment_type: '',
   })
+  const [assessmentTypes, setAssessmentTypes] = useState<AssessmentType[]>([])
 
   const isNumericReward = (value: string) => {
     const v = (value ?? '').trim()
@@ -111,6 +112,22 @@ export default function GlobalRewardRulesManager({
     })
     setShowAddForm(true)
   }
+
+  useEffect(() => {
+    async function loadAssessmentTypes() {
+      try {
+        const response = await fetch('/api/assessment-types/list?includeInactive=true')
+        const data = await response.json()
+        if (response.ok && data.success) {
+          setAssessmentTypes(data.types || [])
+        }
+      } catch (err) {
+        console.error('Failed to load assessment types:', err)
+      }
+    }
+
+    loadAssessmentTypes()
+  }, [])
 
   // 當表單展開且正在編輯時，等待展開動畫結束後滾動到對照規則卡片
   useEffect(() => {
@@ -720,14 +737,19 @@ export default function GlobalRewardRulesManager({
                 </label>
                 <select
                   value={formData.assessment_type}
-                  onChange={(e) => setFormData({ ...formData, assessment_type: e.target.value as any })}
+                  onChange={(e) => setFormData({ ...formData, assessment_type: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 >
                   <option value="">{t('allTypesGeneral')}</option>
-                  <option value="exam">📝 {tAssessment('types.exam')} - {t('higherReward')}</option>
-                  <option value="quiz">📋 {tAssessment('types.quiz')}</option>
-                  <option value="homework">📓 {tAssessment('types.homework')}</option>
-                  <option value="project">🎨 {tAssessment('types.project')}</option>
+                  {assessmentTypes.map((type) => (
+                    <option
+                      key={type.type_key}
+                      value={type.type_key}
+                      disabled={type.is_active === false && formData.assessment_type !== type.type_key}
+                    >
+                      {type.display_name}{type.is_active === false ? ' (inactive)' : ''}
+                    </option>
+                  ))}
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
                   💡 {t('assessmentTypeHint')}
@@ -1052,4 +1074,3 @@ export default function GlobalRewardRulesManager({
     </div>
   )
 }
-

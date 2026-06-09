@@ -47,6 +47,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
   const [clearStartDate, setClearStartDate] = useState('')
   const [clearEndDate, setClearEndDate] = useState('')
   const [selectedClearType, setSelectedClearType] = useState<'assessments' | 'transactions' | 'subjects' | 'all' | ''>('')
+  const [isDangerZoneExpanded, setIsDangerZoneExpanded] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const tKey = (key: string, values?: Record<string, any>) => (t as any)(key, values)
 
@@ -675,13 +676,13 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
         </div>
 
         {/* 第二行：選擇背景顏色和選擇 Emoji */}
-        <div className="flex items-start gap-6 mb-6">
+        <div className="flex flex-col gap-6 mb-6">
           {/* 選擇背景顏色 */}
-          <div className="flex-shrink-0 w-32">
+          <div className="flex-shrink-0">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               {t('selectColor')}
             </label>
-            <div className="flex flex-col gap-2" style={{ minHeight: '131px', marginTop: '8pt' }}>
+            <div className="flex gap-2" style={{ marginTop: '8pt' }}>
               <input
                 name="color"
                 type="color"
@@ -691,7 +692,7 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
                   const hex = e.target.value
                   setSelectedColorHex(hex)
                 }}
-                className="h-12 w-full border border-gray-300 rounded-lg cursor-pointer"
+                className="h-12 w-32 border border-gray-300 rounded-lg cursor-pointer"
               />
               <div 
                 className="px-4 py-2 rounded-full text-white font-semibold text-sm text-center"
@@ -834,145 +835,163 @@ export default function EditStudentForm({ student, onSuccess, onCancel, isModal 
 
         {/* 危險區域 */}
         <div className="border-t-2 border-red-200 pt-6 mt-6">
-          <h3 className="text-lg font-bold text-red-600 mb-2">⚠️ {t('dangerZone')}</h3>
-          
-          {/* 備份提醒 */}
-          <div className="mb-4 p-3 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
-            <p className="text-sm text-yellow-800 font-semibold mb-1">
-              💾 {tKey('backupSuggestionTitle')}
-            </p>
-            <p className="text-xs text-yellow-700">
-              {tKey('backupSuggestionDesc')}
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsDangerZoneExpanded(!isDangerZoneExpanded)}
+            className="w-full flex items-center justify-between gap-2 rounded-lg bg-red-50 px-3 py-2.5 text-left hover:bg-red-100 transition-colors duration-200 cursor-pointer"
+          >
+            <span className="flex items-center gap-2">
+              <span>{isDangerZoneExpanded ? '▼' : '▶'}</span>
+              <h3 className="text-lg font-bold text-red-600">⚠️ {t('dangerZone')}</h3>
+            </span>
+            <span className="text-sm text-red-500">
+              {isDangerZoneExpanded
+                ? (locale === 'zh-TW' ? '點擊收起' : 'Click to collapse')
+                : (locale === 'zh-TW' ? '點擊展開' : 'Click to expand')}
+            </span>
+          </button>
 
-          {/* 清除記錄 */}
-          <div className="mb-6">
-            <h4 className="text-md font-semibold text-orange-600 mb-2">{tKey('clear.sectionTitle')}</h4>
-            <p className="text-sm text-gray-600 mb-3">
-              {tKey('clear.sectionDesc')}
-            </p>
-            
-            {/* 刪除項目選擇與日期範圍 */}
-            <div className="space-y-3">
-              {/* 第一行：刪除項目選擇 */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">{tKey('clear.deleteItemLabel')}</label>
-                <select
-                  value={selectedClearType}
-                  onChange={(e) => {
-                    const newType = e.target.value as typeof selectedClearType
-                    setSelectedClearType(newType)
-                    // 如果選擇科目或全部，自動設為全部模式
-                    if (!newType || newType === 'subjects' || newType === 'all') {
-                      setClearDateMode('all')
-                    }
-                  }}
-                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer min-w-[180px]"
-                >
-                  <option value="">{tKey('clear.selectPlaceholder')}</option>
-                  <option value="assessments">🗑️ {tKey('clear.options.assessments')}</option>
-                  <option value="transactions">💰 {tKey('clear.options.transactions')}</option>
-                  <option value="subjects">📚 {tKey('clear.options.subjects')}</option>
-                  <option value="all">🧹 {tKey('clear.options.all')}</option>
-                </select>
+          {isDangerZoneExpanded && (
+            <div className="mt-4">
+              {/* 備份提醒 */}
+              <div className="mb-4 p-3 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+                <p className="text-sm text-yellow-800 font-semibold mb-1">
+                  💾 {tKey('backupSuggestionTitle')}
+                </p>
+                <p className="text-xs text-yellow-700">
+                  {tKey('backupSuggestionDesc')}
+                </p>
+              </div>
+
+              {/* 清除記錄 */}
+              <div className="mb-6">
+                <h4 className="text-md font-semibold text-orange-600 mb-2">{tKey('clear.sectionTitle')}</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  {tKey('clear.sectionDesc')}
+                </p>
+                
+                {/* 刪除項目選擇與日期範圍 */}
+                <div className="space-y-3">
+                  {/* 第一行：刪除項目選擇 */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">{tKey('clear.deleteItemLabel')}</label>
+                    <select
+                      value={selectedClearType}
+                      onChange={(e) => {
+                        const newType = e.target.value as typeof selectedClearType
+                        setSelectedClearType(newType)
+                        // 如果選擇科目或全部，自動設為全部模式
+                        if (!newType || newType === 'subjects' || newType === 'all') {
+                          setClearDateMode('all')
+                        }
+                      }}
+                      disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer min-w-[180px]"
+                    >
+                      <option value="">{tKey('clear.selectPlaceholder')}</option>
+                      <option value="assessments">🗑️ {tKey('clear.options.assessments')}</option>
+                      <option value="transactions">💰 {tKey('clear.options.transactions')}</option>
+                      <option value="subjects">📚 {tKey('clear.options.subjects')}</option>
+                      <option value="all">🧹 {tKey('clear.options.all')}</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleConfirmClear}
+                      disabled={loading || deleting || success || isExporting || isImporting || clearing !== null || !selectedClearType}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
+                    >
+                      {clearing ? tKey('clear.processing') : tCommon('confirm')}
+                    </button>
+                  </div>
+
+                  {/* 第二行：日期範圍選擇 */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">{tKey('clear.deleteRangeLabel')}</label>
+                    <div className="flex items-center gap-4">
+                      <label className={`flex items-center gap-2 ${isClearRangeDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                        <input
+                          type="radio"
+                          name="clearDateMode"
+                          value="all"
+                          checked={clearDateMode === 'all'}
+                          onChange={(e) => setClearDateMode(e.target.value as 'all' | 'range')}
+                          disabled={isClearRangeDisabled}
+                          className="cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <span className="text-sm">{tKey('clear.range.all')}</span>
+                      </label>
+                      <label className={`flex items-center gap-2 ${isClearRangeDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                        <input
+                          type="radio"
+                          name="clearDateMode"
+                          value="range"
+                          checked={clearDateMode === 'range'}
+                          onChange={(e) => setClearDateMode(e.target.value as 'all' | 'range')}
+                          disabled={isClearRangeDisabled}
+                          className="cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <span className="text-sm">{tKey('clear.range.dateRange')}</span>
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-700 whitespace-nowrap">{tKey('clear.startLabel')}</label>
+                        <input
+                          type="date"
+                          value={clearStartDate}
+                          onChange={(e) => setClearStartDate(e.target.value)}
+                          disabled={clearDateMode === 'all' || isClearRangeDisabled}
+                          className={`px-3 py-1 border border-gray-300 rounded-lg text-sm ${
+                            clearDateMode === 'all' || isClearRangeDisabled
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                              : 'bg-white'
+                          }`}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-700 whitespace-nowrap">{tKey('clear.endLabel')}</label>
+                        <input
+                          type="date"
+                          value={clearEndDate}
+                          onChange={(e) => setClearEndDate(e.target.value)}
+                          disabled={clearDateMode === 'all' || isClearRangeDisabled}
+                          className={`px-3 py-1 border border-gray-300 rounded-lg text-sm ${
+                            clearDateMode === 'all' || isClearRangeDisabled
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                              : 'bg-white'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 刪除學生 */}
+              <div className="border-t border-red-200 pt-4">
+                <h4 className="text-md font-semibold text-red-600 mb-2">{tKey('deleteStudentSectionTitle')}</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  {t('deleteWarning')}
+                </p>
+                <ul className="text-sm text-gray-600 mb-4 list-disc list-inside space-y-1">
+                  <li>{t('deleteWarning1')}</li>
+                  <li>{t('deleteWarning2')}</li>
+                  <li>{t('deleteWarning3')}</li>
+                  <li>{t('deleteWarning4')}</li>
+                  <li>{t('deleteWarning5')}</li>
+                  <li className="text-red-600 font-bold">{t('deleteWarningFinal')}</li>
+                </ul>
                 <button
                   type="button"
-                  onClick={handleConfirmClear}
-                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null || !selectedClearType}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer text-sm whitespace-nowrap"
+                  onClick={handleDelete}
+                  disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer"
                 >
-                  {clearing ? tKey('clear.processing') : tCommon('confirm')}
+                  {deleting ? t('deleting') : `🗑️ ${t('deleteThisStudent')}`}
                 </button>
               </div>
-
-              {/* 第二行：日期範圍選擇 */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">{tKey('clear.deleteRangeLabel')}</label>
-                <div className="flex items-center gap-4">
-                  <label className={`flex items-center gap-2 ${isClearRangeDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                    <input
-                      type="radio"
-                      name="clearDateMode"
-                      value="all"
-                      checked={clearDateMode === 'all'}
-                      onChange={(e) => setClearDateMode(e.target.value as 'all' | 'range')}
-                      disabled={isClearRangeDisabled}
-                      className="cursor-pointer disabled:cursor-not-allowed"
-                    />
-                    <span className="text-sm">{tKey('clear.range.all')}</span>
-                  </label>
-                  <label className={`flex items-center gap-2 ${isClearRangeDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                    <input
-                      type="radio"
-                      name="clearDateMode"
-                      value="range"
-                      checked={clearDateMode === 'range'}
-                      onChange={(e) => setClearDateMode(e.target.value as 'all' | 'range')}
-                      disabled={isClearRangeDisabled}
-                      className="cursor-pointer disabled:cursor-not-allowed"
-                    />
-                    <span className="text-sm">{tKey('clear.range.dateRange')}</span>
-                  </label>
-                </div>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-700 whitespace-nowrap">{tKey('clear.startLabel')}</label>
-                    <input
-                      type="date"
-                      value={clearStartDate}
-                      onChange={(e) => setClearStartDate(e.target.value)}
-                      disabled={clearDateMode === 'all' || isClearRangeDisabled}
-                      className={`px-3 py-1 border border-gray-300 rounded-lg text-sm ${
-                        clearDateMode === 'all' || isClearRangeDisabled
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                          : 'bg-white'
-                      }`}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-700 whitespace-nowrap">{tKey('clear.endLabel')}</label>
-                    <input
-                      type="date"
-                      value={clearEndDate}
-                      onChange={(e) => setClearEndDate(e.target.value)}
-                      disabled={clearDateMode === 'all' || isClearRangeDisabled}
-                      className={`px-3 py-1 border border-gray-300 rounded-lg text-sm ${
-                        clearDateMode === 'all' || isClearRangeDisabled
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                          : 'bg-white'
-                      }`}
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-
-          {/* 刪除學生 */}
-          <div className="border-t border-red-200 pt-4">
-            <h4 className="text-md font-semibold text-red-600 mb-2">{tKey('deleteStudentSectionTitle')}</h4>
-            <p className="text-sm text-gray-600 mb-3">
-              {t('deleteWarning')}
-            </p>
-            <ul className="text-sm text-gray-600 mb-4 list-disc list-inside space-y-1">
-              <li>{t('deleteWarning1')}</li>
-              <li>{t('deleteWarning2')}</li>
-              <li>{t('deleteWarning3')}</li>
-              <li>{t('deleteWarning4')}</li>
-              <li>{t('deleteWarning5')}</li>
-              <li className="text-red-600 font-bold">{t('deleteWarningFinal')}</li>
-            </ul>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={loading || deleting || success || isExporting || isImporting || clearing !== null}
-              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold cursor-pointer"
-            >
-              {deleting ? t('deleting') : `🗑️ ${t('deleteThisStudent')}`}
-            </button>
-          </div>
+          )}
         </div>
       </form>
     </>

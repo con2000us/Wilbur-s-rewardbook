@@ -50,8 +50,7 @@ CREATE TABLE IF NOT EXISTS public.assessment_import_drafts (
     detected_subject_name text,
     subject_candidates jsonb,  -- [{subject_id, name, confidence}] for AI suggestions
     title text,
-    assessment_type text
-        CHECK (assessment_type IS NULL OR assessment_type IN ('exam', 'homework', 'quiz', 'project')),
+    assessment_type text,
     score numeric(5,2),
     max_score numeric(5,2) DEFAULT 100,
     percentage numeric(5,2),

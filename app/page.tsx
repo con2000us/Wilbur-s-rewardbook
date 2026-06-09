@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getTranslations } from 'next-intl/server'
 import HomePageClient from './components/HomePageClient'
+import { fetchAssessmentTypes } from '@/lib/assessmentTypesServer'
 
 type SiteNameSetting = {
   value?: string | null
@@ -78,6 +79,8 @@ export default async function Home() {
     .eq('status', 'completed')
     .not('percentage', 'is', null)
 
+  const assessmentTypes = await fetchAssessmentTypes(supabase, { includeInactive: true })
+
   const studentAverageScores: Record<string, number> = {}
   const averageBuckets = new Map<string, { sum: number; count: number }>()
 
@@ -106,6 +109,7 @@ export default async function Home() {
       studentSummaries={(studentSummaries || []) as StudentSummaryRow[]}
       studentAverageScores={studentAverageScores}
       rewardTypes={(rewardTypes || []) as RewardTypeRow[]}
+      assessmentTypes={assessmentTypes}
     />
   )
 }

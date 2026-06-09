@@ -4,6 +4,12 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import AssessmentRecordCard from './components/AssessmentRecordCard'
+import {
+  getAssessmentTypeColor,
+  getAssessmentTypeIcon,
+  normalizeAssessmentTypes,
+  type AssessmentType,
+} from '@/lib/assessmentTypes'
 
 /** 與下方評量卡片列表共用斷點，需與卡片 grid 同步 */
 const ASSESSMENT_RECORDS_GRID =
@@ -76,12 +82,7 @@ interface RewardBreakdown {
   totalPassbookSpent?: number     // 非評量支出
   resetBaseInPeriod?: number      // 該時間區段內的獎金存摺歸零基準
   nonAssessmentBalance?: number,  // 獎金存摺非評量獎金部份的金額（收入-支出）
-  averageScores?: {               // 各評量類型平均分數
-    exam: number
-    quiz: number
-    homework: number
-    project: number
-  },
+  averageScores?: Record<string, number>,
   totalAverage?: number           // 總平均分數
 }
 
@@ -95,6 +96,7 @@ interface Props {
   setSelectedSubject: (subject: string) => void
   resetDate: Date | null
   rewardBreakdown: RewardBreakdown
+  assessmentTypes: AssessmentType[]
   onEditAssessment?: (assessment: Assessment) => void
   onOpenAddModal?: () => void
   selectedMonth?: string
@@ -122,6 +124,7 @@ export default function SubjectTabs({
   setSelectedSubject, 
   resetDate, 
   rewardBreakdown, 
+  assessmentTypes: assessmentTypesProp,
   onEditAssessment,
   onOpenAddModal,
   selectedMonth,
@@ -175,21 +178,15 @@ export default function SubjectTabs({
     loadPaginationSettings()
   }, [assessments])
 
-  const assessmentTypes = ['exam', 'quiz', 'homework', 'project'] as const
-  // 與評量表單 / 卡片一致（AssessmentForm、AssessmentRecordCard）
-  const assessmentTypeMeta: Record<(typeof assessmentTypes)[number], { icon: string; color: string }> = {
-    exam: { icon: 'assignment', color: '#dc2626' },
-    quiz: { icon: 'checklist_rtl', color: '#2563eb' },
-    homework: { icon: 'edit_note', color: '#16a34a' },
-    project: { icon: 'palette', color: '#9333ea' }
-  }
+  const assessmentTypes = normalizeAssessmentTypes(assessmentTypesProp)
+  const defaultAssessmentTypeKey = assessmentTypes[0]?.type_key || 'exam'
 
   // 過濾評量（科目多選 + 類型多選）
   const filteredBySubject = selectedSubjectIds.length > 0
     ? assessments.filter(a => selectedSubjectIds.includes(a.subject_id))
     : assessments
   const filteredAssessments = selectedAssessmentTypes.length > 0
-    ? filteredBySubject.filter(a => selectedAssessmentTypes.includes(a.assessment_type || 'exam'))
+    ? filteredBySubject.filter(a => selectedAssessmentTypes.includes(a.assessment_type || defaultAssessmentTypeKey))
     : filteredBySubject
 
   // 窄版 header 統計：本月平均、評量數、圖片數
@@ -390,19 +387,22 @@ export default function SubjectTabs({
           {/* 評量類型 pills（橫向捲動） */}
           <div className={NARROW_FILTER_SCROLLER}>
             {assessmentTypes.map((type) => {
-              const isSelected = selectedAssessmentTypes.includes(type)
-              const meta = assessmentTypeMeta[type]
+              const isSelected = selectedAssessmentTypes.includes(type.type_key)
+              const meta = {
+                icon: getAssessmentTypeIcon(assessmentTypes, type.type_key),
+                color: getAssessmentTypeColor(assessmentTypes, type.type_key),
+              }
               return (
                 <div
-                  key={`narrow-type-${type}`}
+                  key={`narrow-type-${type.type_key}`}
                   className="min-w-[84px] flex-1 flex justify-start"
                 >
                 <button
                   type="button"
                   onClick={() => {
                     const next = isSelected
-                      ? selectedAssessmentTypes.filter(item => item !== type)
-                      : [...selectedAssessmentTypes, type]
+                      ? selectedAssessmentTypes.filter(item => item !== type.type_key)
+                      : [...selectedAssessmentTypes, type.type_key]
                     setSelectedAssessmentTypes(next)
                   }}
                   className={`inline-flex w-auto max-w-full min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-bold border transition-colors cursor-pointer ${
@@ -419,7 +419,7 @@ export default function SubjectTabs({
                   <span className="material-icons-outlined text-base leading-none" style={{ color: meta.color }} aria-hidden="true">
                     {meta.icon}
                   </span>
-                  {tAssessment(`types.${type}`)}
+                  {type.display_name}
                 </button>
                 </div>
               )
@@ -435,11 +435,11 @@ export default function SubjectTabs({
           <div className="flex w-full min-w-full gap-2">
             <div className="flex-1 min-w-0 basis-0 rounded-2xl border border-white/70 bg-white/85 px-3 py-2.5 text-center shadow-sm">
               <p className="text-[11px] font-bold text-slate-500 leading-tight">{locale === 'zh-TW' ? '本月平均' : 'Avg'}</p>
-              <p className="mt-1 text-4xl font-black leading-none text-sky-700">{monthAverage.toFixed(1)}</p>
+              <p className="mt-1 text-[1.91rem] font-black leading-none text-sky-700">{monthAverage.toFixed(1)}</p>
             </div>
             <div className="flex-1 min-w-0 basis-0 rounded-2xl border border-white/70 bg-white/85 px-3 py-2.5 text-center shadow-sm">
               <p className="text-[11px] font-bold text-slate-500 leading-tight">{locale === 'zh-TW' ? '評量數' : 'Count'}</p>
-              <p className="mt-1 text-4xl font-black leading-none text-sky-700">{filteredAssessments.length}</p>
+              <p className="mt-1 text-[1.91rem] font-black leading-none text-sky-700">{filteredAssessments.length}</p>
             </div>
             <div className="flex-1 min-w-0 basis-0 rounded-2xl border border-white/70 bg-white/85 px-3 py-2.5 text-center shadow-sm">
               <p className="text-[11px] font-bold text-slate-500 leading-tight">{locale === 'zh-TW' ? '日期範圍' : 'Date range'}</p>
@@ -486,7 +486,7 @@ export default function SubjectTabs({
         {/* 月份下拉（narrow 版）：整列下方、螢幕中間，展開/收合動畫 */}
         <div
           className={`fixed inset-0 z-10 cursor-pointer transition-opacity duration-300 ease-out ${
-            isMonthPickerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+            isMonthPickerOpen ? 'opacity-100 pointer-events-auto' : 'hidden opacity-0 pointer-events-none'
           }`}
           onClick={() => setIsMonthPickerOpen && setIsMonthPickerOpen(false)}
           aria-hidden={!isMonthPickerOpen}
@@ -733,40 +733,43 @@ export default function SubjectTabs({
             className={`${ASSESSMENT_RECORDS_GRID} w-full min-w-0 items-start mt-2 min-[1192px]:flex min-[1192px]:justify-between min-[1192px]:items-start`}
           >
             <div className="min-w-0 w-fit max-w-full justify-self-start mt-[5px] max-[879px]:w-full max-[879px]:max-w-none min-[1024px]:max-[1191px]:w-full min-[1024px]:max-[1191px]:max-w-none">
-              <div className="grid grid-cols-4 items-center gap-1 bg-white/60 backdrop-blur-sm px-1 py-[5.5px] rounded-full border border-white/40 shadow-sm w-fit max-w-full max-[879px]:w-full max-[879px]:min-w-0 min-[1024px]:max-[1191px]:w-full min-[1024px]:max-[1191px]:min-w-0 min-w-0 overflow-x-auto">
-                  {assessmentTypes.map((type) => (
-                    <div key={type} className="min-w-[88px] flex justify-center">
+              <div className="flex items-center gap-1 bg-white/60 backdrop-blur-sm px-1 py-[5.5px] rounded-full border border-white/40 shadow-sm w-fit max-w-full max-[879px]:w-full max-[879px]:min-w-0 min-[1024px]:max-[1191px]:w-full min-[1024px]:max-[1191px]:min-w-0 min-w-0 overflow-x-auto">
+                  {assessmentTypes.map((type) => {
+                    const color = getAssessmentTypeColor(assessmentTypes, type.type_key)
+                    const icon = getAssessmentTypeIcon(assessmentTypes, type.type_key)
+                    const isSelected = selectedAssessmentTypes.includes(type.type_key)
+                    return (
+                    <div key={type.type_key} className="min-w-[88px] flex justify-center">
                     <button
                       type="button"
-                      aria-label={tAssessment(`types.${type}`)}
-                      title={tAssessment(`types.${type}`)}
+                      aria-label={type.display_name}
+                      title={type.display_name}
                       onClick={() => {
-                        const isSelected = selectedAssessmentTypes.includes(type)
                         const nextSelectedAssessmentTypes = isSelected
-                          ? selectedAssessmentTypes.filter((item) => item !== type)
-                          : [...selectedAssessmentTypes, type]
+                          ? selectedAssessmentTypes.filter((item) => item !== type.type_key)
+                          : [...selectedAssessmentTypes, type.type_key]
                         setSelectedAssessmentTypes(nextSelectedAssessmentTypes)
                       }}
                       className={`inline-flex w-auto max-w-full transition-all duration-200 items-center justify-center cursor-pointer min-h-[34px] px-4 py-1.5 rounded-full text-base gap-2 ${
-                        selectedAssessmentTypes.includes(type)
+                        isSelected
                           ? 'shadow-sm font-bold'
                           : 'font-medium text-slate-500 hover:bg-white/50'
                       }`}
-                      style={selectedAssessmentTypes.includes(type)
+                      style={isSelected
                         ? {
-                            border: `2px solid ${assessmentTypeMeta[type].color}`,
-                            color: assessmentTypeMeta[type].color,
-                            boxShadow: `0 0 0 1px ${assessmentTypeMeta[type].color}26, 0 8px 16px ${assessmentTypeMeta[type].color}1f`
+                            border: `2px solid ${color}`,
+                            color,
+                            boxShadow: `0 0 0 1px ${color}26, 0 8px 16px ${color}1f`
                           }
                         : { border: '1px solid transparent' }}
                       onMouseEnter={(e) => {
-                        if (!selectedAssessmentTypes.includes(type)) {
-                          e.currentTarget.style.borderColor = assessmentTypeMeta[type].color
-                          e.currentTarget.style.backgroundColor = `${assessmentTypeMeta[type].color}15`
+                        if (!isSelected) {
+                          e.currentTarget.style.borderColor = color
+                          e.currentTarget.style.backgroundColor = `${color}15`
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!selectedAssessmentTypes.includes(type)) {
+                        if (!isSelected) {
                           e.currentTarget.style.borderColor = 'transparent'
                           e.currentTarget.style.backgroundColor = ''
                         }
@@ -775,18 +778,19 @@ export default function SubjectTabs({
                       <span className="inline-flex items-center justify-center gap-2">
                         <span
                           className="material-icons-outlined text-[18px] leading-none"
-                          style={{ color: assessmentTypeMeta[type].color }}
+                          style={{ color }}
                           aria-hidden="true"
                         >
-                          {assessmentTypeMeta[type].icon}
+                          {icon}
                         </span>
                         <span className="whitespace-nowrap max-[879px]:inline min-[880px]:max-[1023px]:hidden min-[1024px]:max-[1191px]:inline min-[1192px]:inline">
-                          {tAssessment(`types.${type}`)}
+                          {type.display_name}
                         </span>
                       </span>
                     </button>
                     </div>
-                  ))}
+                    )
+                  })}
               </div>
             </div>
 
@@ -947,6 +951,7 @@ export default function SubjectTabs({
                   subjects: assessment.subjects,
                   description: assessment.description || assessment.title
                 }}
+                assessmentTypes={assessmentTypes}
                 onClick={() => onEditAssessment && onEditAssessment(assessment)}
               />
             )

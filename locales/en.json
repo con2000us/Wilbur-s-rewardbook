@@ -1162,6 +1162,7 @@
     "title": "Rewards Center",
     "subtitle": "Manage reward types, behavior events, major goals, and exchange rules",
     "tabRewardTypes": "Reward Types",
+    "tabAssessmentTypes": "Assessment Types",
     "tabAchievementEvents": "Achievement Events",
     "tabGoalTemplates": "Major Goals",
     "tabExchangeRules": "Exchange Rules"
@@ -1271,4 +1272,3 @@
     "loading": "Loading..."
   }
 }
-

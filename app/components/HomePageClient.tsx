@@ -7,7 +7,12 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { parseStudentAvatar } from '@/lib/utils/studentTheme'
 import StudentModal from './StudentModal'
+import EditStudentModal from './EditStudentModal'
 import AppActionCluster from './AppActionCluster'
+import {
+  getAssessmentTypeIcon as getDynamicAssessmentTypeIcon,
+  type AssessmentType,
+} from '@/lib/assessmentTypes'
 
 interface Student {
   id: string
@@ -42,16 +47,10 @@ interface Props {
   studentSummaries?: StudentSummary[]
   studentAverageScores?: Record<string, number>
   rewardTypes?: RewardType[]
+  assessmentTypes?: AssessmentType[]
 }
 
 const REWARD_STAT_VARIANTS = ['records', 'subjects', 'passbook', 'rewards'] as const
-
-const ASSESSMENT_TYPE_ICONS: Record<string, string> = {
-  exam: 'assignment',
-  quiz: 'checklist_rtl',
-  homework: 'edit_note',
-  project: 'palette',
-}
 
 const rewardCenterChildren = [
   {
@@ -128,17 +127,13 @@ type SubjectAverage = {
   }>
 }
 
-function getAssessmentTypeIcon(type: string | null | undefined) {
-  if (!type) return 'assignment'
-  return ASSESSMENT_TYPE_ICONS[type] || 'assignment'
-}
-
 function StudentCard({
   student,
   summary,
   averageScore,
   selected,
   onSelect,
+  onEdit,
   labels,
 }: {
   student: Student
@@ -146,6 +141,7 @@ function StudentCard({
   averageScore?: number
   selected: boolean
   onSelect: () => void
+  onEdit?: () => void
   labels: {
     selectedLabel: string
     workspaceLabel: string
@@ -173,6 +169,20 @@ function StudentCard({
       style={tintStyle}
       aria-label={`${student.name} 學生卡片`}
     >
+      {onEdit && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onEdit()
+          }}
+          className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow-sm transition-colors hover:bg-white hover:text-slate-600"
+          aria-label={`編輯 ${student.name} 的資料`}
+          title={`編輯 ${student.name} 的資料`}
+        >
+          <span className="material-symbols-outlined text-lg">settings</span>
+        </button>
+      )}
       <div
         className="home-student-card-body home-student-card-body-selectable"
         role="button"
@@ -201,7 +211,7 @@ function StudentCard({
           </div>
           <div
             className="home-stat-strip mb-0 mx-auto grid grid-cols-3 p-3"
-            style={{ background: 'transparent', border: 0, boxShadow: 'none' }}
+            style={{ background: 'transparent', border: 0, boxShadow: 'none', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
           >
             <div className="flex min-w-[61px] flex-col items-center">
               <span className="home-stat-value text-primary">{formatAverageScore(averageScore)}</span>
@@ -219,7 +229,7 @@ function StudentCard({
         </div>
       </div>
 
-      <div className="student-action-dock grid grid-cols-4 gap-1">
+      <div className="student-action-dock relative z-[1] grid grid-cols-4 gap-1">
         {labels.actions.map((action) => (
           <Link
             key={action.icon}
@@ -227,6 +237,7 @@ function StudentCard({
             className={`student-action-btn ${action.variant}`}
             title={action.label}
             aria-label={action.label}
+            onClick={(event) => event.stopPropagation()}
           >
             <span
               className="material-symbols-outlined"
@@ -245,12 +256,14 @@ function StudentCard({
 function SelectedStudentBar({
   student,
   rewardTypes,
+  assessmentTypes,
   labels,
   isOpen,
   onClose,
 }: {
   student: Student
   rewardTypes: RewardType[]
+  assessmentTypes: AssessmentType[]
   labels: {
     selectedLabel: string
     openStudentPage: string
@@ -434,7 +447,7 @@ function SelectedStudentBar({
                                     className="material-symbols-outlined home-subject-recent-score-icon"
                                     aria-hidden="true"
                                   >
-                                    {getAssessmentTypeIcon(assessment.assessment_type)}
+                                    {getDynamicAssessmentTypeIcon(assessmentTypes, assessment.assessment_type)}
                                   </span>
                                   <span className="home-subject-recent-score-value">
                                     {assessment.percentage.toFixed(1)}
@@ -495,6 +508,7 @@ export default function HomePageClient({
   studentSummaries = [],
   studentAverageScores = {},
   rewardTypes = [],
+  assessmentTypes = [],
 }: Props) {
   const t = useTranslations('home')
   const tCommon = useTranslations('common')
@@ -502,6 +516,7 @@ export default function HomePageClient({
   const tGm = useTranslations('home.globalManagement')
 
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false)
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null)
   const [isSelectedStudentPopupOpen, setIsSelectedStudentPopupOpen] = useState(false)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(students[0]?.id || null)
@@ -688,6 +703,7 @@ export default function HomePageClient({
                     averageScore={studentAverageScores[student.id]}
                     selected={student.id === selectedStudentIdResolved}
                     onSelect={() => handleStudentSelect(student.id)}
+                    onEdit={() => setEditingStudent(student)}
                     labels={{ ...cardLabels, actions: buildStudentActions(student) }}
                   />
                 ))}
@@ -738,6 +754,7 @@ export default function HomePageClient({
         <SelectedStudentBar
           student={selectedStudent}
           rewardTypes={rewardTypes}
+          assessmentTypes={assessmentTypes}
           labels={cardLabels}
           isOpen={isSelectedStudentPopupOpen}
           onClose={() => setIsSelectedStudentPopupOpen(false)}
@@ -751,6 +768,19 @@ export default function HomePageClient({
           window.location.reload()
         }}
       />
+
+      {editingStudent && (
+        <EditStudentModal
+          isOpen={!!editingStudent}
+          onClose={() => {
+            setEditingStudent(null)
+          }}
+          onSuccess={() => {
+            window.location.reload()
+          }}
+          student={editingStudent}
+        />
+      )}
     </div>
   )
 }

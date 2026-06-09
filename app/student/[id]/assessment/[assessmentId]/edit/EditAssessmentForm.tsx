@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
 import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
+import AssessmentTypeRadioGroup from '@/app/components/AssessmentTypeRadioGroup'
+import {
+  getAssessmentTypeLabel,
+  normalizeAssessmentTypes,
+  type AssessmentType,
+} from '@/lib/assessmentTypes'
 
 interface Subject {
   id: string
@@ -85,6 +91,24 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
   const [imageUrls, setImageUrls] = useState<UploadedImage[]>(
     Array.isArray(assessment.image_urls) ? assessment.image_urls : []
   )
+  const [assessmentTypes, setAssessmentTypes] = useState<AssessmentType[]>([])
+  const assessmentTypeOptions = normalizeAssessmentTypes(assessmentTypes, selectedAssessmentType)
+  const selectedAssessmentTypeLabel = getAssessmentTypeLabel(
+    assessmentTypeOptions,
+    selectedAssessmentType,
+    selectedAssessmentType
+  )
+
+  useEffect(() => {
+    fetch(`/api/assessment-types/list?includeInactive=true&currentType=${encodeURIComponent(selectedAssessmentType)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.types)) {
+          setAssessmentTypes(data.types)
+        }
+      })
+      .catch(() => {})
+  }, [selectedAssessmentType])
 
   const formatFormulaForDisplay = (formula?: string | null) => {
     const f = (formula ?? '').trim()
@@ -296,59 +320,13 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
           <label className="block text-sm font-semibold text-gray-700 mb-3">
             評量類型 *
           </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="relative flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300">
-              <input
-                type="radio"
-                name="assessment_type"
-                value="exam"
-                checked={selectedAssessmentType === 'exam'}
-                onChange={(e) => setSelectedAssessmentType(e.target.value)}
-                required
-                className="w-5 h-5 text-blue-600 accent-blue-600"
-              />
-              <span className="text-lg font-medium text-gray-800">📝 {t('types.exam')}</span>
-            </label>
-            
-            <label className="relative flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300">
-              <input
-                type="radio"
-                name="assessment_type"
-                value="quiz"
-                checked={selectedAssessmentType === 'quiz'}
-                onChange={(e) => setSelectedAssessmentType(e.target.value)}
-                required
-                className="w-5 h-5 text-blue-600 accent-blue-600"
-              />
-              <span className="text-lg font-medium text-gray-800">📋 {t('types.quiz')}</span>
-            </label>
-            
-            <label className="relative flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300">
-              <input
-                type="radio"
-                name="assessment_type"
-                value="homework"
-                checked={selectedAssessmentType === 'homework'}
-                onChange={(e) => setSelectedAssessmentType(e.target.value)}
-                required
-                className="w-5 h-5 text-blue-600 accent-blue-600"
-              />
-              <span className="text-lg font-medium text-gray-800">📓 {t('types.homework')}</span>
-            </label>
-            
-            <label className="relative flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300">
-              <input
-                type="radio"
-                name="assessment_type"
-                value="project"
-                checked={selectedAssessmentType === 'project'}
-                onChange={(e) => setSelectedAssessmentType(e.target.value)}
-                required
-                className="w-5 h-5 text-blue-600 accent-blue-600"
-              />
-              <span className="text-lg font-medium text-gray-800">🎨 {t('types.project')}</span>
-            </label>
-          </div>
+          <AssessmentTypeRadioGroup
+            assessmentTypes={assessmentTypeOptions}
+            selectedType={selectedAssessmentType}
+            onChange={setSelectedAssessmentType}
+            currentType={assessment.assessment_type}
+            inactiveLabel={locale === 'zh-TW' ? '已停用' : 'Inactive'}
+          />
         </div>
 
         {/* 評分方式選擇 */}
@@ -549,7 +527,7 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
                     </span>
                   </h3>
                   <p className="text-xs text-gray-500 text-left">
-                    {locale === 'zh-TW' ? '適用於' : 'For'}: {t(`types.${selectedAssessmentType}`)}
+                    {locale === 'zh-TW' ? '適用於' : 'For'}: {selectedAssessmentTypeLabel}
                   </p>
                 </div>
               </div>
@@ -734,4 +712,3 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
     </>
   )
 }
-

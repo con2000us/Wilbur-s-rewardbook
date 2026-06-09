@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import {
   appendInitializationLog,
+  ensureAssessmentTypes,
   ensureRewardTypes,
   importDemoSeedData,
   parseLocale,
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
     const supabase = createClient()
 
     await ensureRewardTypes(supabase, selectedLocale)
+    await ensureAssessmentTypes(supabase, selectedLocale)
     await importDemoSeedData(supabase)
 
     await upsertSetting(supabase, 'demo_data_imported', 'true')

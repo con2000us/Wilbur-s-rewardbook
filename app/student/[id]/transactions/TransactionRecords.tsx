@@ -6,6 +6,10 @@ import { useTranslations, useLocale } from 'next-intl'
 import TransactionModal from './components/TransactionModal'
 import { useRewardType } from './TransactionsContent'
 import { findRewardTypeForTransaction, getRewardUnit } from '../rewards/rewardUnit'
+import {
+  getAssessmentTypeLabel,
+  type AssessmentType,
+} from '@/lib/assessmentTypes'
 
 interface Props {
   studentId: string
@@ -18,9 +22,9 @@ interface Props {
   subjects?: any[]
   assessments?: any[]
   rewardTypes?: any[]
+  assessmentTypes?: AssessmentType[]
 }
 
-const ASSESSMENT_TYPE_KEYS = ['exam', 'quiz', 'homework', 'project'] as const
 type TransactionLike = {
   amount?: number | string | null
   created_at?: string | null
@@ -85,7 +89,7 @@ function getExchangeVisualInfo(transaction: TransactionLike, locale: string) {
   }
 }
 
-export default function TransactionRecords({ studentId, transactions, studentName, onEditTransaction, onAddTransaction, selectedRewardType, onRewardTypeSelect, subjects = [], assessments = [], rewardTypes = [] }: Props) {
+export default function TransactionRecords({ studentId, transactions, studentName, onEditTransaction, onAddTransaction, selectedRewardType, onRewardTypeSelect, subjects = [], assessments = [], rewardTypes = [], assessmentTypes = [] }: Props) {
   const t = useTranslations('transaction')
   const tStudent = useTranslations('student')
   const tCommon = useTranslations('common')
@@ -119,11 +123,9 @@ export default function TransactionRecords({ studentId, transactions, studentNam
     const subject = subjectId ? subjectById.get(subjectId) : null
     const subjectName = (subject?.name || '').trim()
     const typeRaw = (a.assessment_type || '').trim()
-    const typeLabel =
-      typeRaw &&
-      ASSESSMENT_TYPE_KEYS.includes(typeRaw as (typeof ASSESSMENT_TYPE_KEYS)[number])
-        ? tAssessment(`types.${typeRaw}` as 'types.exam')
-        : typeRaw
+    const typeLabel = typeRaw
+      ? getAssessmentTypeLabel(assessmentTypes, typeRaw, typeRaw)
+      : ''
 
     const sep = locale === 'zh-TW' ? ' · ' : ' · '
     const parts: string[] = []

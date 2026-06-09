@@ -1,8 +1,6 @@
---
+﻿--
 -- PostgreSQL database dump
 --
-
-\restrict J3whbaN4bNdxsrM8pFgVLt6fJ6ow0sDNE8PwrEikrLZaxRLBaGphErXnh2GKZ8I
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.3
@@ -10,7 +8,6 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -23,56 +20,56 @@ SET row_security = off;
 -- Name: auth; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA auth;
+CREATE SCHEMA IF NOT EXISTS auth;
 
 
 --
 -- Name: extensions; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA extensions;
+CREATE SCHEMA IF NOT EXISTS extensions;
 
 
 --
 -- Name: graphql; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA graphql;
+CREATE SCHEMA IF NOT EXISTS graphql;
 
 
 --
 -- Name: graphql_public; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA graphql_public;
+CREATE SCHEMA IF NOT EXISTS graphql_public;
 
 
 --
 -- Name: pgbouncer; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA pgbouncer;
+CREATE SCHEMA IF NOT EXISTS pgbouncer;
 
 
 --
 -- Name: realtime; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA realtime;
+CREATE SCHEMA IF NOT EXISTS realtime;
 
 
 --
 -- Name: storage; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA storage;
+CREATE SCHEMA IF NOT EXISTS storage;
 
 
 --
 -- Name: vault; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA vault;
+CREATE SCHEMA IF NOT EXISTS vault;
 
 
 --
@@ -135,193 +132,273 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 -- Name: aal_level; Type: TYPE; Schema: auth; Owner: -
 --
 
-CREATE TYPE auth.aal_level AS ENUM (
-    'aal1',
-    'aal2',
-    'aal3'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'aal_level' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+        CREATE TYPE auth.aal_level AS ENUM (
+            'aal1',
+            'aal2',
+            'aal3'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: code_challenge_method; Type: TYPE; Schema: auth; Owner: -
 --
 
-CREATE TYPE auth.code_challenge_method AS ENUM (
-    's256',
-    'plain'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'code_challenge_method' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+        CREATE TYPE auth.code_challenge_method AS ENUM (
+            's256',
+            'plain'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: factor_status; Type: TYPE; Schema: auth; Owner: -
 --
 
-CREATE TYPE auth.factor_status AS ENUM (
-    'unverified',
-    'verified'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_status' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+        CREATE TYPE auth.factor_status AS ENUM (
+            'unverified',
+            'verified'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: factor_type; Type: TYPE; Schema: auth; Owner: -
 --
 
-CREATE TYPE auth.factor_type AS ENUM (
-    'totp',
-    'webauthn',
-    'phone'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_type' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+        CREATE TYPE auth.factor_type AS ENUM (
+            'totp',
+            'webauthn',
+            'phone'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_authorization_status; Type: TYPE; Schema: auth; Owner: -
 --
 
-CREATE TYPE auth.oauth_authorization_status AS ENUM (
-    'pending',
-    'approved',
-    'denied',
-    'expired'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'oauth_authorization_status' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+        CREATE TYPE auth.oauth_authorization_status AS ENUM (
+            'pending',
+            'approved',
+            'denied',
+            'expired'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_client_type; Type: TYPE; Schema: auth; Owner: -
 --
 
-CREATE TYPE auth.oauth_client_type AS ENUM (
-    'public',
-    'confidential'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'oauth_client_type' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+        CREATE TYPE auth.oauth_client_type AS ENUM (
+            'public',
+            'confidential'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_registration_type; Type: TYPE; Schema: auth; Owner: -
 --
 
-CREATE TYPE auth.oauth_registration_type AS ENUM (
-    'dynamic',
-    'manual'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'oauth_registration_type' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+        CREATE TYPE auth.oauth_registration_type AS ENUM (
+            'dynamic',
+            'manual'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_response_type; Type: TYPE; Schema: auth; Owner: -
 --
 
-CREATE TYPE auth.oauth_response_type AS ENUM (
-    'code'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'oauth_response_type' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+        CREATE TYPE auth.oauth_response_type AS ENUM (
+            'code'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: one_time_token_type; Type: TYPE; Schema: auth; Owner: -
 --
 
-CREATE TYPE auth.one_time_token_type AS ENUM (
-    'confirmation_token',
-    'reauthentication_token',
-    'recovery_token',
-    'email_change_token_new',
-    'email_change_token_current',
-    'phone_change_token'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'one_time_token_type' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+        CREATE TYPE auth.one_time_token_type AS ENUM (
+            'confirmation_token',
+            'reauthentication_token',
+            'recovery_token',
+            'email_change_token_new',
+            'email_change_token_current',
+            'phone_change_token'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: action; Type: TYPE; Schema: realtime; Owner: -
 --
 
-CREATE TYPE realtime.action AS ENUM (
-    'INSERT',
-    'UPDATE',
-    'DELETE',
-    'TRUNCATE',
-    'ERROR'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'action' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'realtime')) THEN
+        CREATE TYPE realtime.action AS ENUM (
+            'INSERT',
+            'UPDATE',
+            'DELETE',
+            'TRUNCATE',
+            'ERROR'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: equality_op; Type: TYPE; Schema: realtime; Owner: -
 --
 
-CREATE TYPE realtime.equality_op AS ENUM (
-    'eq',
-    'neq',
-    'lt',
-    'lte',
-    'gt',
-    'gte',
-    'in'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'equality_op' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'realtime')) THEN
+        CREATE TYPE realtime.equality_op AS ENUM (
+            'eq',
+            'neq',
+            'lt',
+            'lte',
+            'gt',
+            'gte',
+            'in'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: user_defined_filter; Type: TYPE; Schema: realtime; Owner: -
 --
 
-CREATE TYPE realtime.user_defined_filter AS (
-	column_name text,
-	op realtime.equality_op,
-	value text
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_defined_filter' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'realtime')) THEN
+        CREATE TYPE realtime.user_defined_filter AS (
+            column_name text,
+            op realtime.equality_op,
+            value text
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: wal_column; Type: TYPE; Schema: realtime; Owner: -
 --
 
-CREATE TYPE realtime.wal_column AS (
-	name text,
-	type_name text,
-	type_oid oid,
-	value jsonb,
-	is_pkey boolean,
-	is_selectable boolean
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'wal_column' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'realtime')) THEN
+        CREATE TYPE realtime.wal_column AS (
+            name text,
+            type_name text,
+            type_oid oid,
+            value jsonb,
+            is_pkey boolean,
+            is_selectable boolean
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: wal_rls; Type: TYPE; Schema: realtime; Owner: -
 --
 
-CREATE TYPE realtime.wal_rls AS (
-	wal jsonb,
-	is_rls_enabled boolean,
-	subscription_ids uuid[],
-	errors text[]
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'wal_rls' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'realtime')) THEN
+        CREATE TYPE realtime.wal_rls AS (
+            wal jsonb,
+            is_rls_enabled boolean,
+            subscription_ids uuid[],
+            errors text[]
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: buckettype; Type: TYPE; Schema: storage; Owner: -
 --
 
-CREATE TYPE storage.buckettype AS ENUM (
-    'STANDARD',
-    'ANALYTICS',
-    'VECTOR'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'buckettype' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'storage')) THEN
+        CREATE TYPE storage.buckettype AS ENUM (
+            'STANDARD',
+            'ANALYTICS',
+            'VECTOR'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: assessment_import_job_status; Type: TYPE; Schema: public; Owner: -
 --
 
-CREATE TYPE public.assessment_import_job_status AS ENUM (
-    'pending',
-    'processing',
-    'completed',
-    'failed',
-    'cancelled'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'assessment_import_job_status' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')) THEN
+        CREATE TYPE public.assessment_import_job_status AS ENUM (
+            'pending',
+            'processing',
+            'completed',
+            'failed',
+            'cancelled'
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: email(); Type: FUNCTION; Schema: auth; Owner: -
 --
 
-CREATE FUNCTION auth.email() RETURNS text
+CREATE OR REPLACE FUNCTION auth.email() RETURNS text
     LANGUAGE sql STABLE
     AS $$
   select 
@@ -343,7 +420,7 @@ COMMENT ON FUNCTION auth.email() IS 'Deprecated. Use auth.jwt() -> ''email'' ins
 -- Name: jwt(); Type: FUNCTION; Schema: auth; Owner: -
 --
 
-CREATE FUNCTION auth.jwt() RETURNS jsonb
+CREATE OR REPLACE FUNCTION auth.jwt() RETURNS jsonb
     LANGUAGE sql STABLE
     AS $$
   select 
@@ -358,7 +435,7 @@ $$;
 -- Name: role(); Type: FUNCTION; Schema: auth; Owner: -
 --
 
-CREATE FUNCTION auth.role() RETURNS text
+CREATE OR REPLACE FUNCTION auth.role() RETURNS text
     LANGUAGE sql STABLE
     AS $$
   select 
@@ -380,7 +457,7 @@ COMMENT ON FUNCTION auth.role() IS 'Deprecated. Use auth.jwt() -> ''role'' inste
 -- Name: uid(); Type: FUNCTION; Schema: auth; Owner: -
 --
 
-CREATE FUNCTION auth.uid() RETURNS uuid
+CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
     LANGUAGE sql STABLE
     AS $$
   select 
@@ -402,7 +479,7 @@ COMMENT ON FUNCTION auth.uid() IS 'Deprecated. Use auth.jwt() -> ''sub'' instead
 -- Name: grant_pg_cron_access(); Type: FUNCTION; Schema: extensions; Owner: -
 --
 
-CREATE FUNCTION extensions.grant_pg_cron_access() RETURNS event_trigger
+CREATE OR REPLACE FUNCTION extensions.grant_pg_cron_access() RETURNS event_trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -446,7 +523,7 @@ COMMENT ON FUNCTION extensions.grant_pg_cron_access() IS 'Grants access to pg_cr
 -- Name: grant_pg_graphql_access(); Type: FUNCTION; Schema: extensions; Owner: -
 --
 
-CREATE FUNCTION extensions.grant_pg_graphql_access() RETURNS event_trigger
+CREATE OR REPLACE FUNCTION extensions.grant_pg_graphql_access() RETURNS event_trigger
     LANGUAGE plpgsql
     AS $_$
 DECLARE
@@ -511,7 +588,7 @@ COMMENT ON FUNCTION extensions.grant_pg_graphql_access() IS 'Grants access to pg
 -- Name: grant_pg_net_access(); Type: FUNCTION; Schema: extensions; Owner: -
 --
 
-CREATE FUNCTION extensions.grant_pg_net_access() RETURNS event_trigger
+CREATE OR REPLACE FUNCTION extensions.grant_pg_net_access() RETURNS event_trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -569,7 +646,7 @@ COMMENT ON FUNCTION extensions.grant_pg_net_access() IS 'Grants access to pg_net
 -- Name: pgrst_ddl_watch(); Type: FUNCTION; Schema: extensions; Owner: -
 --
 
-CREATE FUNCTION extensions.pgrst_ddl_watch() RETURNS event_trigger
+CREATE OR REPLACE FUNCTION extensions.pgrst_ddl_watch() RETURNS event_trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -579,7 +656,7 @@ BEGIN
   LOOP
     IF cmd.command_tag IN (
       'CREATE SCHEMA', 'ALTER SCHEMA'
-    , 'CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO', 'ALTER TABLE'
+    , 'CREATE TABLE', 'CREATE TABLE IF NOT EXISTS AS', 'SELECT INTO', 'ALTER TABLE'
     , 'CREATE FOREIGN TABLE', 'ALTER FOREIGN TABLE'
     , 'CREATE VIEW', 'ALTER VIEW'
     , 'CREATE MATERIALIZED VIEW', 'ALTER MATERIALIZED VIEW'
@@ -602,7 +679,7 @@ END; $$;
 -- Name: pgrst_drop_watch(); Type: FUNCTION; Schema: extensions; Owner: -
 --
 
-CREATE FUNCTION extensions.pgrst_drop_watch() RETURNS event_trigger
+CREATE OR REPLACE FUNCTION extensions.pgrst_drop_watch() RETURNS event_trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -633,7 +710,7 @@ END; $$;
 -- Name: set_graphql_placeholder(); Type: FUNCTION; Schema: extensions; Owner: -
 --
 
-CREATE FUNCTION extensions.set_graphql_placeholder() RETURNS event_trigger
+CREATE OR REPLACE FUNCTION extensions.set_graphql_placeholder() RETURNS event_trigger
     LANGUAGE plpgsql
     AS $_$
     DECLARE
@@ -697,7 +774,7 @@ COMMENT ON FUNCTION extensions.set_graphql_placeholder() IS 'Reintroduces placeh
 -- Name: graphql(text, text, jsonb, jsonb); Type: FUNCTION; Schema: graphql_public; Owner: -
 --
 
-CREATE FUNCTION graphql_public.graphql("operationName" text DEFAULT NULL::text, query text DEFAULT NULL::text, variables jsonb DEFAULT NULL::jsonb, extensions jsonb DEFAULT NULL::jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION graphql_public.graphql("operationName" text DEFAULT NULL::text, query text DEFAULT NULL::text, variables jsonb DEFAULT NULL::jsonb, extensions jsonb DEFAULT NULL::jsonb) RETURNS jsonb
     LANGUAGE plpgsql
     AS $$
             DECLARE
@@ -730,7 +807,7 @@ CREATE FUNCTION graphql_public.graphql("operationName" text DEFAULT NULL::text, 
 -- Name: get_auth(text); Type: FUNCTION; Schema: pgbouncer; Owner: -
 --
 
-CREATE FUNCTION pgbouncer.get_auth(p_usename text) RETURNS TABLE(username text, password text)
+CREATE OR REPLACE FUNCTION pgbouncer.get_auth(p_usename text) RETURNS TABLE(username text, password text)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $_$
@@ -754,7 +831,7 @@ CREATE FUNCTION pgbouncer.get_auth(p_usename text) RETURNS TABLE(username text, 
 -- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 
@@ -773,7 +850,7 @@ $$;
 -- Name: apply_rls(jsonb, integer); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.apply_rls(wal jsonb, max_record_bytes integer DEFAULT (1024 * 1024)) RETURNS SETOF realtime.wal_rls
+CREATE OR REPLACE FUNCTION realtime.apply_rls(wal jsonb, max_record_bytes integer DEFAULT (1024 * 1024)) RETURNS SETOF realtime.wal_rls
     LANGUAGE plpgsql
     AS $$
 declare
@@ -1081,7 +1158,7 @@ $$;
 -- Name: broadcast_changes(text, text, text, text, text, record, record, text); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.broadcast_changes(topic_name text, event_name text, operation text, table_name text, table_schema text, new record, old record, level text DEFAULT 'ROW'::text) RETURNS void
+CREATE OR REPLACE FUNCTION realtime.broadcast_changes(topic_name text, event_name text, operation text, table_name text, table_schema text, new record, old record, level text DEFAULT 'ROW'::text) RETURNS void
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -1110,7 +1187,7 @@ $$;
 -- Name: build_prepared_statement_sql(text, regclass, realtime.wal_column[]); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.build_prepared_statement_sql(prepared_statement_name text, entity regclass, columns realtime.wal_column[]) RETURNS text
+CREATE OR REPLACE FUNCTION realtime.build_prepared_statement_sql(prepared_statement_name text, entity regclass, columns realtime.wal_column[]) RETURNS text
     LANGUAGE sql
     AS $$
       /*
@@ -1143,7 +1220,7 @@ CREATE FUNCTION realtime.build_prepared_statement_sql(prepared_statement_name te
 -- Name: cast(text, regtype); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime."cast"(val text, type_ regtype) RETURNS jsonb
+CREATE OR REPLACE FUNCTION realtime."cast"(val text, type_ regtype) RETURNS jsonb
     LANGUAGE plpgsql IMMUTABLE
     AS $$
 declare
@@ -1162,7 +1239,7 @@ $$;
 -- Name: check_equality_op(realtime.equality_op, regtype, text, text); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.check_equality_op(op realtime.equality_op, type_ regtype, val_1 text, val_2 text) RETURNS boolean
+CREATE OR REPLACE FUNCTION realtime.check_equality_op(op realtime.equality_op, type_ regtype, val_1 text, val_2 text) RETURNS boolean
     LANGUAGE plpgsql IMMUTABLE
     AS $$
       /*
@@ -1201,7 +1278,7 @@ CREATE FUNCTION realtime.check_equality_op(op realtime.equality_op, type_ regtyp
 -- Name: is_visible_through_filters(realtime.wal_column[], realtime.user_defined_filter[]); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.is_visible_through_filters(columns realtime.wal_column[], filters realtime.user_defined_filter[]) RETURNS boolean
+CREATE OR REPLACE FUNCTION realtime.is_visible_through_filters(columns realtime.wal_column[], filters realtime.user_defined_filter[]) RETURNS boolean
     LANGUAGE sql IMMUTABLE
     AS $_$
     /*
@@ -1237,7 +1314,7 @@ CREATE FUNCTION realtime.is_visible_through_filters(columns realtime.wal_column[
 -- Name: list_changes(name, name, integer, integer); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.list_changes(publication name, slot_name name, max_changes integer, max_record_bytes integer) RETURNS TABLE(wal jsonb, is_rls_enabled boolean, subscription_ids uuid[], errors text[], slot_changes_count bigint)
+CREATE OR REPLACE FUNCTION realtime.list_changes(publication name, slot_name name, max_changes integer, max_record_bytes integer) RETURNS TABLE(wal jsonb, is_rls_enabled boolean, subscription_ids uuid[], errors text[], slot_changes_count bigint)
     LANGUAGE sql
     SET log_min_messages TO 'fatal'
     AS $$
@@ -1312,7 +1389,7 @@ $$;
 -- Name: quote_wal2json(regclass); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.quote_wal2json(entity regclass) RETURNS text
+CREATE OR REPLACE FUNCTION realtime.quote_wal2json(entity regclass) RETURNS text
     LANGUAGE sql IMMUTABLE STRICT
     AS $$
       select
@@ -1350,7 +1427,7 @@ CREATE FUNCTION realtime.quote_wal2json(entity regclass) RETURNS text
 -- Name: send(jsonb, text, text, boolean); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.send(payload jsonb, event text, topic text, private boolean DEFAULT true) RETURNS void
+CREATE OR REPLACE FUNCTION realtime.send(payload jsonb, event text, topic text, private boolean DEFAULT true) RETURNS void
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -1387,7 +1464,7 @@ $$;
 -- Name: subscription_check_filters(); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.subscription_check_filters() RETURNS trigger
+CREATE OR REPLACE FUNCTION realtime.subscription_check_filters() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
     /*
@@ -1461,7 +1538,7 @@ CREATE FUNCTION realtime.subscription_check_filters() RETURNS trigger
 -- Name: to_regrole(text); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.to_regrole(role_name text) RETURNS regrole
+CREATE OR REPLACE FUNCTION realtime.to_regrole(role_name text) RETURNS regrole
     LANGUAGE sql IMMUTABLE
     AS $$ select role_name::regrole $$;
 
@@ -1470,7 +1547,7 @@ CREATE FUNCTION realtime.to_regrole(role_name text) RETURNS regrole
 -- Name: topic(); Type: FUNCTION; Schema: realtime; Owner: -
 --
 
-CREATE FUNCTION realtime.topic() RETURNS text
+CREATE OR REPLACE FUNCTION realtime.topic() RETURNS text
     LANGUAGE sql STABLE
     AS $$
 select nullif(current_setting('realtime.topic', true), '')::text;
@@ -1481,7 +1558,7 @@ $$;
 -- Name: allow_any_operation(text[]); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.allow_any_operation(expected_operations text[]) RETURNS boolean
+CREATE OR REPLACE FUNCTION storage.allow_any_operation(expected_operations text[]) RETURNS boolean
     LANGUAGE sql STABLE
     AS $$
   WITH current_operation AS (
@@ -1512,7 +1589,7 @@ $$;
 -- Name: allow_only_operation(text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.allow_only_operation(expected_operation text) RETURNS boolean
+CREATE OR REPLACE FUNCTION storage.allow_only_operation(expected_operation text) RETURNS boolean
     LANGUAGE sql STABLE
     AS $$
   WITH current_operation AS (
@@ -1542,7 +1619,7 @@ $$;
 -- Name: can_insert_object(text, text, uuid, jsonb); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.can_insert_object(bucketid text, name text, owner uuid, metadata jsonb) RETURNS void
+CREATE OR REPLACE FUNCTION storage.can_insert_object(bucketid text, name text, owner uuid, metadata jsonb) RETURNS void
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -1559,7 +1636,7 @@ $$;
 -- Name: delete_leaf_prefixes(text[], text[]); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.delete_leaf_prefixes(bucket_ids text[], names text[]) RETURNS void
+CREATE OR REPLACE FUNCTION storage.delete_leaf_prefixes(bucket_ids text[], names text[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -1624,7 +1701,7 @@ $$;
 -- Name: enforce_bucket_name_length(); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.enforce_bucket_name_length() RETURNS trigger
+CREATE OR REPLACE FUNCTION storage.enforce_bucket_name_length() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 begin
@@ -1640,7 +1717,7 @@ $$;
 -- Name: extension(text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.extension(name text) RETURNS text
+CREATE OR REPLACE FUNCTION storage.extension(name text) RETURNS text
     LANGUAGE plpgsql IMMUTABLE
     AS $$
 DECLARE
@@ -1658,7 +1735,7 @@ $$;
 -- Name: filename(text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.filename(name text) RETURNS text
+CREATE OR REPLACE FUNCTION storage.filename(name text) RETURNS text
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -1674,7 +1751,7 @@ $$;
 -- Name: foldername(text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.foldername(name text) RETURNS text[]
+CREATE OR REPLACE FUNCTION storage.foldername(name text) RETURNS text[]
     LANGUAGE plpgsql IMMUTABLE
     AS $$
 DECLARE
@@ -1692,7 +1769,7 @@ $$;
 -- Name: get_common_prefix(text, text, text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.get_common_prefix(p_key text, p_prefix text, p_delimiter text) RETURNS text
+CREATE OR REPLACE FUNCTION storage.get_common_prefix(p_key text, p_prefix text, p_delimiter text) RETURNS text
     LANGUAGE sql IMMUTABLE
     AS $$
 SELECT CASE
@@ -1707,7 +1784,7 @@ $$;
 -- Name: get_level(text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.get_level(name text) RETURNS integer
+CREATE OR REPLACE FUNCTION storage.get_level(name text) RETURNS integer
     LANGUAGE sql IMMUTABLE STRICT
     AS $$
 SELECT array_length(string_to_array("name", '/'), 1);
@@ -1718,7 +1795,7 @@ $$;
 -- Name: get_prefix(text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.get_prefix(name text) RETURNS text
+CREATE OR REPLACE FUNCTION storage.get_prefix(name text) RETURNS text
     LANGUAGE sql IMMUTABLE STRICT
     AS $_$
 SELECT
@@ -1734,7 +1811,7 @@ $_$;
 -- Name: get_prefixes(text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.get_prefixes(name text) RETURNS text[]
+CREATE OR REPLACE FUNCTION storage.get_prefixes(name text) RETURNS text[]
     LANGUAGE plpgsql IMMUTABLE STRICT
     AS $$
 DECLARE
@@ -1761,7 +1838,7 @@ $$;
 -- Name: get_size_by_bucket(); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.get_size_by_bucket() RETURNS TABLE(size bigint, bucket_id text)
+CREATE OR REPLACE FUNCTION storage.get_size_by_bucket() RETURNS TABLE(size bigint, bucket_id text)
     LANGUAGE plpgsql STABLE
     AS $$
 BEGIN
@@ -1777,7 +1854,7 @@ $$;
 -- Name: list_multipart_uploads_with_delimiter(text, text, text, integer, text, text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.list_multipart_uploads_with_delimiter(bucket_id text, prefix_param text, delimiter_param text, max_keys integer DEFAULT 100, next_key_token text DEFAULT ''::text, next_upload_token text DEFAULT ''::text) RETURNS TABLE(key text, id text, created_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION storage.list_multipart_uploads_with_delimiter(bucket_id text, prefix_param text, delimiter_param text, max_keys integer DEFAULT 100, next_key_token text DEFAULT ''::text, next_upload_token text DEFAULT ''::text) RETURNS TABLE(key text, id text, created_at timestamp with time zone)
     LANGUAGE plpgsql
     AS $_$
 BEGIN
@@ -1823,7 +1900,7 @@ $_$;
 -- Name: list_objects_with_delimiter(text, text, text, integer, text, text, text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.list_objects_with_delimiter(_bucket_id text, prefix_param text, delimiter_param text, max_keys integer DEFAULT 100, start_after text DEFAULT ''::text, next_token text DEFAULT ''::text, sort_order text DEFAULT 'asc'::text) RETURNS TABLE(name text, id uuid, metadata jsonb, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION storage.list_objects_with_delimiter(_bucket_id text, prefix_param text, delimiter_param text, max_keys integer DEFAULT 100, start_after text DEFAULT ''::text, next_token text DEFAULT ''::text, sort_order text DEFAULT 'asc'::text) RETURNS TABLE(name text, id uuid, metadata jsonb, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone)
     LANGUAGE plpgsql STABLE
     AS $_$
 DECLARE
@@ -2038,7 +2115,7 @@ $_$;
 -- Name: operation(); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.operation() RETURNS text
+CREATE OR REPLACE FUNCTION storage.operation() RETURNS text
     LANGUAGE plpgsql STABLE
     AS $$
 BEGIN
@@ -2051,7 +2128,7 @@ $$;
 -- Name: protect_delete(); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.protect_delete() RETURNS trigger
+CREATE OR REPLACE FUNCTION storage.protect_delete() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -2070,7 +2147,7 @@ $$;
 -- Name: search(text, text, integer, integer, integer, text, text, text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.search(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text) RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
+CREATE OR REPLACE FUNCTION storage.search(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text) RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
     LANGUAGE plpgsql STABLE
     AS $_$
 DECLARE
@@ -2324,7 +2401,7 @@ $_$;
 -- Name: search_by_timestamp(text, text, integer, integer, text, text, text, text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.search_by_timestamp(p_prefix text, p_bucket_id text, p_limit integer, p_level integer, p_start_after text, p_sort_order text, p_sort_column text, p_sort_column_after text) RETURNS TABLE(key text, name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
+CREATE OR REPLACE FUNCTION storage.search_by_timestamp(p_prefix text, p_bucket_id text, p_limit integer, p_level integer, p_start_after text, p_sort_order text, p_sort_column text, p_sort_column_after text) RETURNS TABLE(key text, name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
     LANGUAGE plpgsql STABLE
     AS $_$
 DECLARE
@@ -2431,7 +2508,7 @@ $_$;
 -- Name: search_legacy_v1(text, text, integer, integer, integer, text, text, text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.search_legacy_v1(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text) RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
+CREATE OR REPLACE FUNCTION storage.search_legacy_v1(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text) RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
     LANGUAGE plpgsql STABLE
     AS $_$
 declare
@@ -2500,7 +2577,7 @@ $_$;
 -- Name: search_v2(text, text, integer, integer, text, text, text, text); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.search_v2(prefix text, bucket_name text, limits integer DEFAULT 100, levels integer DEFAULT 1, start_after text DEFAULT ''::text, sort_order text DEFAULT 'asc'::text, sort_column text DEFAULT 'name'::text, sort_column_after text DEFAULT ''::text) RETURNS TABLE(key text, name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
+CREATE OR REPLACE FUNCTION storage.search_v2(prefix text, bucket_name text, limits integer DEFAULT 100, levels integer DEFAULT 1, start_after text DEFAULT ''::text, sort_order text DEFAULT 'asc'::text, sort_column text DEFAULT 'name'::text, sort_column_after text DEFAULT ''::text) RETURNS TABLE(key text, name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
     LANGUAGE plpgsql STABLE
     AS $$
 DECLARE
@@ -2560,7 +2637,7 @@ $$;
 -- Name: update_updated_at_column(); Type: FUNCTION; Schema: storage; Owner: -
 --
 
-CREATE FUNCTION storage.update_updated_at_column() RETURNS trigger
+CREATE OR REPLACE FUNCTION storage.update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -2578,7 +2655,7 @@ SET default_table_access_method = heap;
 -- Name: audit_log_entries; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.audit_log_entries (
+CREATE TABLE IF NOT EXISTS auth.audit_log_entries (
     instance_id uuid,
     id uuid NOT NULL,
     payload json,
@@ -2598,7 +2675,7 @@ COMMENT ON TABLE auth.audit_log_entries IS 'Auth: Audit trail for user actions.'
 -- Name: custom_oauth_providers; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.custom_oauth_providers (
+CREATE TABLE IF NOT EXISTS auth.custom_oauth_providers (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     provider_type text NOT NULL,
     identifier text NOT NULL,
@@ -2648,7 +2725,7 @@ CREATE TABLE auth.custom_oauth_providers (
 -- Name: flow_state; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.flow_state (
+CREATE TABLE IF NOT EXISTS auth.flow_state (
     id uuid NOT NULL,
     user_id uuid,
     auth_code text,
@@ -2680,7 +2757,7 @@ COMMENT ON TABLE auth.flow_state IS 'Stores metadata for all OAuth/SSO login flo
 -- Name: identities; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.identities (
+CREATE TABLE IF NOT EXISTS auth.identities (
     provider_id text NOT NULL,
     user_id uuid NOT NULL,
     identity_data jsonb NOT NULL,
@@ -2711,7 +2788,7 @@ COMMENT ON COLUMN auth.identities.email IS 'Auth: Email is a generated column th
 -- Name: instances; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.instances (
+CREATE TABLE IF NOT EXISTS auth.instances (
     id uuid NOT NULL,
     uuid uuid,
     raw_base_config text,
@@ -2731,7 +2808,7 @@ COMMENT ON TABLE auth.instances IS 'Auth: Manages users across multiple sites.';
 -- Name: mfa_amr_claims; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.mfa_amr_claims (
+CREATE TABLE IF NOT EXISTS auth.mfa_amr_claims (
     session_id uuid NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
@@ -2751,7 +2828,7 @@ COMMENT ON TABLE auth.mfa_amr_claims IS 'auth: stores authenticator method refer
 -- Name: mfa_challenges; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.mfa_challenges (
+CREATE TABLE IF NOT EXISTS auth.mfa_challenges (
     id uuid NOT NULL,
     factor_id uuid NOT NULL,
     created_at timestamp with time zone NOT NULL,
@@ -2773,7 +2850,7 @@ COMMENT ON TABLE auth.mfa_challenges IS 'auth: stores metadata about challenge r
 -- Name: mfa_factors; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.mfa_factors (
+CREATE TABLE IF NOT EXISTS auth.mfa_factors (
     id uuid NOT NULL,
     user_id uuid NOT NULL,
     friendly_name text,
@@ -2808,7 +2885,7 @@ COMMENT ON COLUMN auth.mfa_factors.last_webauthn_challenge_data IS 'Stores the l
 -- Name: oauth_authorizations; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.oauth_authorizations (
+CREATE TABLE IF NOT EXISTS auth.oauth_authorizations (
     id uuid NOT NULL,
     authorization_id text NOT NULL,
     client_id uuid NOT NULL,
@@ -2841,7 +2918,7 @@ CREATE TABLE auth.oauth_authorizations (
 -- Name: oauth_client_states; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.oauth_client_states (
+CREATE TABLE IF NOT EXISTS auth.oauth_client_states (
     id uuid NOT NULL,
     provider_type text NOT NULL,
     code_verifier text,
@@ -2860,7 +2937,7 @@ COMMENT ON TABLE auth.oauth_client_states IS 'Stores OAuth states for third-part
 -- Name: oauth_clients; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.oauth_clients (
+CREATE TABLE IF NOT EXISTS auth.oauth_clients (
     id uuid NOT NULL,
     client_secret_hash text,
     registration_type auth.oauth_registration_type NOT NULL,
@@ -2885,7 +2962,7 @@ CREATE TABLE auth.oauth_clients (
 -- Name: oauth_consents; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.oauth_consents (
+CREATE TABLE IF NOT EXISTS auth.oauth_consents (
     id uuid NOT NULL,
     user_id uuid NOT NULL,
     client_id uuid NOT NULL,
@@ -2902,7 +2979,7 @@ CREATE TABLE auth.oauth_consents (
 -- Name: one_time_tokens; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.one_time_tokens (
+CREATE TABLE IF NOT EXISTS auth.one_time_tokens (
     id uuid NOT NULL,
     user_id uuid NOT NULL,
     token_type auth.one_time_token_type NOT NULL,
@@ -2918,7 +2995,7 @@ CREATE TABLE auth.one_time_tokens (
 -- Name: refresh_tokens; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.refresh_tokens (
+CREATE TABLE IF NOT EXISTS auth.refresh_tokens (
     instance_id uuid,
     id bigint NOT NULL,
     token character varying(255),
@@ -2942,7 +3019,7 @@ COMMENT ON TABLE auth.refresh_tokens IS 'Auth: Store of tokens used to refresh J
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE; Schema: auth; Owner: -
 --
 
-CREATE SEQUENCE auth.refresh_tokens_id_seq
+CREATE SEQUENCE IF NOT EXISTS auth.refresh_tokens_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -2961,7 +3038,7 @@ ALTER SEQUENCE auth.refresh_tokens_id_seq OWNED BY auth.refresh_tokens.id;
 -- Name: saml_providers; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.saml_providers (
+CREATE TABLE IF NOT EXISTS auth.saml_providers (
     id uuid NOT NULL,
     sso_provider_id uuid NOT NULL,
     entity_id text NOT NULL,
@@ -2988,7 +3065,7 @@ COMMENT ON TABLE auth.saml_providers IS 'Auth: Manages SAML Identity Provider co
 -- Name: saml_relay_states; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.saml_relay_states (
+CREATE TABLE IF NOT EXISTS auth.saml_relay_states (
     id uuid NOT NULL,
     sso_provider_id uuid NOT NULL,
     request_id text NOT NULL,
@@ -3012,7 +3089,7 @@ COMMENT ON TABLE auth.saml_relay_states IS 'Auth: Contains SAML Relay State info
 -- Name: schema_migrations; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.schema_migrations (
+CREATE TABLE IF NOT EXISTS auth.schema_migrations (
     version character varying(255) NOT NULL
 );
 
@@ -3028,7 +3105,7 @@ COMMENT ON TABLE auth.schema_migrations IS 'Auth: Manages updates to the auth sy
 -- Name: sessions; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.sessions (
+CREATE TABLE IF NOT EXISTS auth.sessions (
     id uuid NOT NULL,
     user_id uuid NOT NULL,
     created_at timestamp with time zone,
@@ -3080,7 +3157,7 @@ COMMENT ON COLUMN auth.sessions.refresh_token_counter IS 'Holds the ID (counter)
 -- Name: sso_domains; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.sso_domains (
+CREATE TABLE IF NOT EXISTS auth.sso_domains (
     id uuid NOT NULL,
     sso_provider_id uuid NOT NULL,
     domain text NOT NULL,
@@ -3101,7 +3178,7 @@ COMMENT ON TABLE auth.sso_domains IS 'Auth: Manages SSO email address domain map
 -- Name: sso_providers; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.sso_providers (
+CREATE TABLE IF NOT EXISTS auth.sso_providers (
     id uuid NOT NULL,
     resource_id text,
     created_at timestamp with time zone,
@@ -3129,7 +3206,7 @@ COMMENT ON COLUMN auth.sso_providers.resource_id IS 'Auth: Uniquely identifies a
 -- Name: users; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.users (
+CREATE TABLE IF NOT EXISTS auth.users (
     instance_id uuid,
     id uuid NOT NULL,
     aud character varying(255),
@@ -3187,7 +3264,7 @@ COMMENT ON COLUMN auth.users.is_sso_user IS 'Auth: Set this column to true when 
 -- Name: webauthn_challenges; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.webauthn_challenges (
+CREATE TABLE IF NOT EXISTS auth.webauthn_challenges (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid,
     challenge_type text NOT NULL,
@@ -3202,7 +3279,7 @@ CREATE TABLE auth.webauthn_challenges (
 -- Name: webauthn_credentials; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.webauthn_credentials (
+CREATE TABLE IF NOT EXISTS auth.webauthn_credentials (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
     credential_id bytea NOT NULL,
@@ -3224,7 +3301,7 @@ CREATE TABLE auth.webauthn_credentials (
 -- Name: achievement_event_reward_rules; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.achievement_event_reward_rules (
+CREATE TABLE IF NOT EXISTS public.achievement_event_reward_rules (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     event_id uuid NOT NULL,
     reward_type_id uuid NOT NULL,
@@ -3238,7 +3315,7 @@ CREATE TABLE public.achievement_event_reward_rules (
 -- Name: achievement_events; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.achievement_events (
+CREATE TABLE IF NOT EXISTS public.achievement_events (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     event_key text,
     name text NOT NULL,
@@ -3254,15 +3331,14 @@ CREATE TABLE public.achievement_events (
 -- Name: achievement_event_translations; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.achievement_event_translations (
+CREATE TABLE IF NOT EXISTS public.achievement_event_translations (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     event_id uuid NOT NULL REFERENCES public.achievement_events(id) ON DELETE CASCADE,
-    locale text NOT NULL,
+    locale text NOT NULL CHECK (locale IN ('zh-TW', 'en')),
     name text NOT NULL,
     description text,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT achievement_event_translations_locale_check CHECK ((locale = ANY (ARRAY['zh-TW'::text, 'en'::text]))),
     CONSTRAINT achievement_event_translations_event_id_locale_key UNIQUE (event_id, locale),
     CONSTRAINT achievement_event_translations_pkey PRIMARY KEY (id)
 );
@@ -3272,7 +3348,7 @@ CREATE TABLE public.achievement_event_translations (
 -- Name: assessments; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.assessments (
+CREATE TABLE IF NOT EXISTS public.assessments (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     subject_id uuid,
     title text NOT NULL,
@@ -3295,7 +3371,6 @@ CREATE TABLE public.assessments (
     scoring_mode text DEFAULT 'scored'::text NOT NULL,
     counts_toward_average boolean DEFAULT true NOT NULL,
     counts_toward_reward boolean DEFAULT true NOT NULL,
-    CONSTRAINT assessments_assessment_type_check CHECK ((assessment_type = ANY (ARRAY['exam'::text, 'homework'::text, 'quiz'::text, 'project'::text]))),
     CONSTRAINT assessments_grade_check CHECK ((grade = ANY (ARRAY['A+'::text, 'A'::text, 'A-'::text, 'B+'::text, 'B'::text, 'B-'::text, 'C+'::text, 'C'::text, 'C-'::text, 'D+'::text, 'D'::text, 'D-'::text, 'F'::text]))),
     CONSTRAINT assessments_scoring_mode_check CHECK ((scoring_mode = ANY (ARRAY['scored'::text, 'record_only'::text]))),
     CONSTRAINT assessments_score_type_check CHECK ((score_type = ANY (ARRAY['numeric'::text, 'letter'::text]))),
@@ -3307,7 +3382,7 @@ CREATE TABLE public.assessments (
 -- Name: assessments_backup; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.assessments_backup (
+CREATE TABLE IF NOT EXISTS public.assessments_backup (
     id uuid,
     subject_id uuid,
     title text,
@@ -3336,7 +3411,7 @@ CREATE TABLE public.assessments_backup (
 -- Name: ai_provider_configs; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.ai_provider_configs (
+CREATE TABLE IF NOT EXISTS public.ai_provider_configs (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     provider text DEFAULT 'openrouter'::text NOT NULL,
     label text,
@@ -3355,7 +3430,7 @@ CREATE TABLE public.ai_provider_configs (
 -- Name: assessment_import_drafts; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.assessment_import_drafts (
+CREATE TABLE IF NOT EXISTS public.assessment_import_drafts (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     job_id uuid NOT NULL,
     student_id uuid NOT NULL,
@@ -3373,7 +3448,6 @@ CREATE TABLE public.assessment_import_drafts (
     status text DEFAULT 'draft'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT assessment_import_drafts_assessment_type_check CHECK ((assessment_type = ANY (ARRAY['exam'::text, 'homework'::text, 'quiz'::text, 'project'::text]))),
     CONSTRAINT assessment_import_drafts_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'confirmed'::text, 'rejected'::text])))
 );
 
@@ -3382,7 +3456,7 @@ CREATE TABLE public.assessment_import_drafts (
 -- Name: assessment_import_jobs; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.assessment_import_jobs (
+CREATE TABLE IF NOT EXISTS public.assessment_import_jobs (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     student_id uuid NOT NULL,
     source_file_path text,
@@ -3409,7 +3483,7 @@ CREATE TABLE public.assessment_import_jobs (
 -- Name: ai_assessment_logs; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.ai_assessment_logs (
+CREATE TABLE IF NOT EXISTS public.ai_assessment_logs (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     job_id uuid,
     purpose text NOT NULL,
@@ -3430,7 +3504,7 @@ CREATE TABLE public.ai_assessment_logs (
 -- Name: assessment_import_mistake_drafts; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.assessment_import_mistake_drafts (
+CREATE TABLE IF NOT EXISTS public.assessment_import_mistake_drafts (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     draft_id uuid NOT NULL,
     question_number text,
@@ -3449,7 +3523,7 @@ CREATE TABLE public.assessment_import_mistake_drafts (
 -- Name: assessment_mistakes; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.assessment_mistakes (
+CREATE TABLE IF NOT EXISTS public.assessment_mistakes (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     assessment_id uuid NOT NULL,
     question_number text,
@@ -3467,7 +3541,7 @@ CREATE TABLE public.assessment_mistakes (
 -- Name: backups; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.backups (
+CREATE TABLE IF NOT EXISTS public.backups (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     name text NOT NULL,
     description text,
@@ -3482,7 +3556,35 @@ CREATE TABLE public.backups (
 -- Name: custom_reward_types; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.custom_reward_types (
+CREATE TABLE IF NOT EXISTS public.assessment_types (
+    id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
+    type_key text NOT NULL,
+    display_name text NOT NULL,
+    icon text DEFAULT 'assignment'::text NOT NULL,
+    color text DEFAULT '#64748b'::text,
+    display_order integer DEFAULT 0 NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    is_system boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: COLUMN assessment_types.type_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.assessment_types.type_key IS 'Stable key stored by assessments, reward_rules, and AI import drafts';
+
+
+--
+-- Name: COLUMN assessment_types.is_active; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.assessment_types.is_active IS 'Inactive assessment types remain available for historical records';
+
+
+CREATE TABLE IF NOT EXISTS public.custom_reward_types (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     type_key text NOT NULL,
     icon text DEFAULT '??'::text NOT NULL,
@@ -3504,28 +3606,28 @@ CREATE TABLE public.custom_reward_types (
 -- Name: COLUMN custom_reward_types.default_unit; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.custom_reward_types.default_unit IS '憸挽??嚗????霂剛??航銝?閬?雿?';
+COMMENT ON COLUMN public.custom_reward_types.default_unit IS 'Default unit of measurement for this reward type (e.g., points, coins)';
 
 
 --
 -- Name: COLUMN custom_reward_types.is_system; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.custom_reward_types.is_system IS '?臬銝箇頂蝏?霈曄掩??蝟餌?憸挽蝐餃?銝?';
+COMMENT ON COLUMN public.custom_reward_types.is_system IS 'Indicates whether this reward type is a system-defined default';
 
 
 --
 -- Name: COLUMN custom_reward_types.display_name; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.custom_reward_types.display_name IS '憟蝐餃??曄內?妍嚗?瑕颲隞颱?霂剛?嚗?;
+COMMENT ON COLUMN public.custom_reward_types.display_name IS 'Display name shown in the UI for this reward type';
 
 
 --
 -- Name: exchange_rules; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.exchange_rules (
+CREATE TABLE IF NOT EXISTS public.exchange_rules (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     rule_key text,
     name text NOT NULL,
@@ -3546,15 +3648,14 @@ CREATE TABLE public.exchange_rules (
 -- Name: exchange_rule_translations; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.exchange_rule_translations (
+CREATE TABLE IF NOT EXISTS public.exchange_rule_translations (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     rule_id uuid NOT NULL REFERENCES public.exchange_rules(id) ON DELETE CASCADE,
-    locale text NOT NULL,
+    locale text NOT NULL CHECK (locale IN ('zh-TW', 'en')),
     name text NOT NULL,
     description text,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT exchange_rule_translations_locale_check CHECK ((locale = ANY (ARRAY['zh-TW'::text, 'en'::text]))),
     CONSTRAINT exchange_rule_translations_rule_id_locale_key UNIQUE (rule_id, locale),
     CONSTRAINT exchange_rule_translations_pkey PRIMARY KEY (id)
 );
@@ -3564,49 +3665,49 @@ CREATE TABLE public.exchange_rule_translations (
 -- Name: TABLE exchange_rules; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.exchange_rules IS '??閬?銵剁?摰儔摮貊??臭誑?函??萄????';
+COMMENT ON TABLE public.exchange_rules IS 'Defines exchange rules for converting between reward types';
 
 
 --
 -- Name: COLUMN exchange_rules.required_reward_type_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.exchange_rules.required_reward_type_id IS '?閬??憿?ID';
+COMMENT ON COLUMN public.exchange_rules.required_reward_type_id IS 'Required reward type ID for this exchange rule';
 
 
 --
 -- Name: COLUMN exchange_rules.required_amount; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.exchange_rules.required_amount IS '?????賊?';
+COMMENT ON COLUMN public.exchange_rules.required_amount IS 'Amount of the required reward type needed for exchange';
 
 
 --
 -- Name: COLUMN exchange_rules.reward_item; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.exchange_rules.reward_item IS '?????菟??格?餈?;
+COMMENT ON COLUMN public.exchange_rules.reward_item IS 'Description of the reward item received upon exchange';
 
 
 --
 -- Name: COLUMN exchange_rules.reward_type_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.exchange_rules.reward_type_id IS '??敺???菟??D嚗???憿???嚗?;
+COMMENT ON COLUMN public.exchange_rules.reward_type_id IS 'Reward type ID granted by this exchange';
 
 
 --
 -- Name: COLUMN exchange_rules.reward_amount; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.exchange_rules.reward_amount IS '??敺???憿?撠?????';
+COMMENT ON COLUMN public.exchange_rules.reward_amount IS 'Amount of the reward type granted by this exchange';
 
 
 --
 -- Name: goal_templates; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.goal_templates (
+CREATE TABLE IF NOT EXISTS public.goal_templates (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     name text NOT NULL,
     description text,
@@ -3661,7 +3762,7 @@ COMMENT ON COLUMN public.goal_templates.consume_on_complete IS 'When true, match
 -- Name: goal_template_event_links; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.goal_template_event_links (
+CREATE TABLE IF NOT EXISTS public.goal_template_event_links (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     template_id uuid NOT NULL,
     event_id uuid NOT NULL
@@ -3672,7 +3773,7 @@ CREATE TABLE public.goal_template_event_links (
 -- Name: reward_rules; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.reward_rules (
+CREATE TABLE IF NOT EXISTS public.reward_rules (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     student_id uuid,
     rule_name text NOT NULL,
@@ -3705,7 +3806,7 @@ CREATE TABLE public.reward_rules (
 -- Name: COLUMN reward_rules.student_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.reward_rules.student_id IS '摮貊?ID嚗ULL銵函內?拍??飛??';
+COMMENT ON COLUMN public.reward_rules.student_id IS 'Student ID. NULL means the rule applies to all students';
 
 
 --
@@ -3719,21 +3820,21 @@ COMMENT ON COLUMN public.reward_rules.reward_formula IS 'Reward formula. Variabl
 -- Name: COLUMN reward_rules.subject_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.reward_rules.subject_id IS '蝘ID嚗ULL銵函內?拍????殷?';
+COMMENT ON COLUMN public.reward_rules.subject_id IS 'Subject ID. NULL means the rule applies to all subjects';
 
 
 --
 -- Name: COLUMN reward_rules.reward_config; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.reward_rules.reward_config IS '憟?蔭?啁?嚗??蝘??梁掩?撘?[{"type_id": "uuid", "type_key": "money", "amount": 10, "formula": null, "unit": "??}]';
+COMMENT ON COLUMN public.reward_rules.reward_config IS 'JSON configuration for reward rules. Format: [{"type_id": "uuid", "type_key": "money", "amount": 10, "formula": null, "unit": "points"}]';
 
 
 --
 -- Name: reward_rules_backup; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.reward_rules_backup (
+CREATE TABLE IF NOT EXISTS public.reward_rules_backup (
     id uuid,
     student_id uuid,
     rule_name text,
@@ -3758,7 +3859,7 @@ CREATE TABLE public.reward_rules_backup (
 -- Name: site_settings; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.site_settings (
+CREATE TABLE IF NOT EXISTS public.site_settings (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     key text NOT NULL,
     value text,
@@ -3771,7 +3872,7 @@ CREATE TABLE public.site_settings (
 -- Name: students; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.students (
+CREATE TABLE IF NOT EXISTS public.students (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     name text NOT NULL,
     email text,
@@ -3792,7 +3893,7 @@ CREATE TABLE public.students (
 -- Name: student_goals; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.student_goals (
+CREATE TABLE IF NOT EXISTS public.student_goals (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     student_id uuid NOT NULL,
     template_id uuid,
@@ -3849,7 +3950,7 @@ COMMENT ON COLUMN public.student_goals.consume_on_complete IS 'When true, matchi
 -- Name: subjects; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.subjects (
+CREATE TABLE IF NOT EXISTS public.subjects (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     student_id uuid,
     name text NOT NULL,
@@ -3865,7 +3966,7 @@ CREATE TABLE public.subjects (
 -- Name: transactions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.transactions (
+CREATE TABLE IF NOT EXISTS public.transactions (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     student_id uuid,
     assessment_id uuid,
@@ -3898,7 +3999,7 @@ COMMENT ON COLUMN public.transactions.goal_id IS 'Student goal that generated th
 -- Name: student_summary; Type: VIEW; Schema: public; Owner: -
 --
 
-CREATE VIEW public.student_summary AS
+CREATE OR REPLACE VIEW public.student_summary AS
  SELECT id AS student_id,
     name,
     reward_config,
@@ -3931,7 +4032,7 @@ CREATE VIEW public.student_summary AS
 -- Name: students_backup; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.students_backup (
+CREATE TABLE IF NOT EXISTS public.students_backup (
     id uuid,
     name text,
     email text,
@@ -3946,7 +4047,7 @@ CREATE TABLE public.students_backup (
 -- Name: subjects_backup; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.subjects_backup (
+CREATE TABLE IF NOT EXISTS public.subjects_backup (
     id uuid,
     student_id uuid,
     name text,
@@ -3961,7 +4062,7 @@ CREATE TABLE public.subjects_backup (
 -- Name: transactions_backup; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.transactions_backup (
+CREATE TABLE IF NOT EXISTS public.transactions_backup (
     id uuid,
     student_id uuid,
     assessment_id uuid,
@@ -3978,7 +4079,7 @@ CREATE TABLE public.transactions_backup (
 -- Name: messages; Type: TABLE; Schema: realtime; Owner: -
 --
 
-CREATE TABLE realtime.messages (
+CREATE TABLE IF NOT EXISTS realtime.messages (
     topic text NOT NULL,
     extension text NOT NULL,
     payload jsonb,
@@ -3995,7 +4096,7 @@ PARTITION BY RANGE (inserted_at);
 -- Name: schema_migrations; Type: TABLE; Schema: realtime; Owner: -
 --
 
-CREATE TABLE realtime.schema_migrations (
+CREATE TABLE IF NOT EXISTS realtime.schema_migrations (
     version bigint NOT NULL,
     inserted_at timestamp(0) without time zone
 );
@@ -4005,7 +4106,7 @@ CREATE TABLE realtime.schema_migrations (
 -- Name: subscription; Type: TABLE; Schema: realtime; Owner: -
 --
 
-CREATE TABLE realtime.subscription (
+CREATE TABLE IF NOT EXISTS realtime.subscription (
     id bigint NOT NULL,
     subscription_id uuid NOT NULL,
     entity regclass NOT NULL,
@@ -4022,21 +4123,26 @@ CREATE TABLE realtime.subscription (
 -- Name: subscription_id_seq; Type: SEQUENCE; Schema: realtime; Owner: -
 --
 
-ALTER TABLE realtime.subscription ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME realtime.subscription_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'subscription_id_seq' AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'realtime')) THEN
+        ALTER TABLE realtime.subscription ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+            SEQUENCE NAME realtime.subscription_id_seq
+            START WITH 1
+            INCREMENT BY 1
+            NO MINVALUE
+            NO MAXVALUE
+            CACHE 1
+        );
+    END IF;
+END$$;
 
 
 --
 -- Name: buckets; Type: TABLE; Schema: storage; Owner: -
 --
 
-CREATE TABLE storage.buckets (
+CREATE TABLE IF NOT EXISTS storage.buckets (
     id text NOT NULL,
     name text NOT NULL,
     owner uuid,
@@ -4062,7 +4168,7 @@ COMMENT ON COLUMN storage.buckets.owner IS 'Field is deprecated, use owner_id in
 -- Name: buckets_analytics; Type: TABLE; Schema: storage; Owner: -
 --
 
-CREATE TABLE storage.buckets_analytics (
+CREATE TABLE IF NOT EXISTS storage.buckets_analytics (
     name text NOT NULL,
     type storage.buckettype DEFAULT 'ANALYTICS'::storage.buckettype NOT NULL,
     format text DEFAULT 'ICEBERG'::text NOT NULL,
@@ -4077,7 +4183,7 @@ CREATE TABLE storage.buckets_analytics (
 -- Name: buckets_vectors; Type: TABLE; Schema: storage; Owner: -
 --
 
-CREATE TABLE storage.buckets_vectors (
+CREATE TABLE IF NOT EXISTS storage.buckets_vectors (
     id text NOT NULL,
     type storage.buckettype DEFAULT 'VECTOR'::storage.buckettype NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -4089,7 +4195,7 @@ CREATE TABLE storage.buckets_vectors (
 -- Name: migrations; Type: TABLE; Schema: storage; Owner: -
 --
 
-CREATE TABLE storage.migrations (
+CREATE TABLE IF NOT EXISTS storage.migrations (
     id integer NOT NULL,
     name character varying(100) NOT NULL,
     hash character varying(40) NOT NULL,
@@ -4101,7 +4207,7 @@ CREATE TABLE storage.migrations (
 -- Name: objects; Type: TABLE; Schema: storage; Owner: -
 --
 
-CREATE TABLE storage.objects (
+CREATE TABLE IF NOT EXISTS storage.objects (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     bucket_id text,
     name text,
@@ -4128,7 +4234,7 @@ COMMENT ON COLUMN storage.objects.owner IS 'Field is deprecated, use owner_id in
 -- Name: s3_multipart_uploads; Type: TABLE; Schema: storage; Owner: -
 --
 
-CREATE TABLE storage.s3_multipart_uploads (
+CREATE TABLE IF NOT EXISTS storage.s3_multipart_uploads (
     id text NOT NULL,
     in_progress_size bigint DEFAULT 0 NOT NULL,
     upload_signature text NOT NULL,
@@ -4146,7 +4252,7 @@ CREATE TABLE storage.s3_multipart_uploads (
 -- Name: s3_multipart_uploads_parts; Type: TABLE; Schema: storage; Owner: -
 --
 
-CREATE TABLE storage.s3_multipart_uploads_parts (
+CREATE TABLE IF NOT EXISTS storage.s3_multipart_uploads_parts (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     upload_id text NOT NULL,
     size bigint DEFAULT 0 NOT NULL,
@@ -4164,7 +4270,7 @@ CREATE TABLE storage.s3_multipart_uploads_parts (
 -- Name: vector_indexes; Type: TABLE; Schema: storage; Owner: -
 --
 
-CREATE TABLE storage.vector_indexes (
+CREATE TABLE IF NOT EXISTS storage.vector_indexes (
     id text DEFAULT gen_random_uuid() NOT NULL,
     name text NOT NULL COLLATE pg_catalog."C",
     bucket_id text NOT NULL,
@@ -4188,637 +4294,1301 @@ ALTER TABLE ONLY auth.refresh_tokens ALTER COLUMN id SET DEFAULT nextval('auth.r
 -- Name: mfa_amr_claims amr_id_pk; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.mfa_amr_claims
-    ADD CONSTRAINT amr_id_pk PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'amr_id_pk'
+        AND conrelid = 'auth.mfa_amr_claims'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.mfa_amr_claims
+            ADD CONSTRAINT amr_id_pk PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: audit_log_entries audit_log_entries_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.audit_log_entries
-    ADD CONSTRAINT audit_log_entries_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'audit_log_entries_pkey'
+        AND conrelid = 'auth.audit_log_entries'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.audit_log_entries
+            ADD CONSTRAINT audit_log_entries_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: custom_oauth_providers custom_oauth_providers_identifier_key; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.custom_oauth_providers
-    ADD CONSTRAINT custom_oauth_providers_identifier_key UNIQUE (identifier);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'custom_oauth_providers_identifier_key'
+        AND conrelid = 'auth.custom_oauth_providers'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.custom_oauth_providers
+            ADD CONSTRAINT custom_oauth_providers_identifier_key UNIQUE (identifier);
+    END IF;
+END$$;
 
 
 --
 -- Name: custom_oauth_providers custom_oauth_providers_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.custom_oauth_providers
-    ADD CONSTRAINT custom_oauth_providers_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'custom_oauth_providers_pkey'
+        AND conrelid = 'auth.custom_oauth_providers'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.custom_oauth_providers
+            ADD CONSTRAINT custom_oauth_providers_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: flow_state flow_state_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.flow_state
-    ADD CONSTRAINT flow_state_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'flow_state_pkey'
+        AND conrelid = 'auth.flow_state'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.flow_state
+            ADD CONSTRAINT flow_state_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: identities identities_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.identities
-    ADD CONSTRAINT identities_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'identities_pkey'
+        AND conrelid = 'auth.identities'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.identities
+            ADD CONSTRAINT identities_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: identities identities_provider_id_provider_unique; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.identities
-    ADD CONSTRAINT identities_provider_id_provider_unique UNIQUE (provider_id, provider);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'identities_provider_id_provider_unique'
+        AND conrelid = 'auth.identities'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.identities
+            ADD CONSTRAINT identities_provider_id_provider_unique UNIQUE (provider_id, provider);
+    END IF;
+END$$;
 
 
 --
 -- Name: instances instances_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.instances
-    ADD CONSTRAINT instances_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'instances_pkey'
+        AND conrelid = 'auth.instances'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.instances
+            ADD CONSTRAINT instances_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: mfa_amr_claims mfa_amr_claims_session_id_authentication_method_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.mfa_amr_claims
-    ADD CONSTRAINT mfa_amr_claims_session_id_authentication_method_pkey UNIQUE (session_id, authentication_method);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'mfa_amr_claims_session_id_authentication_method_pkey'
+        AND conrelid = 'auth.mfa_amr_claims'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.mfa_amr_claims
+            ADD CONSTRAINT mfa_amr_claims_session_id_authentication_method_pkey UNIQUE (session_id, authentication_method);
+    END IF;
+END$$;
 
 
 --
 -- Name: mfa_challenges mfa_challenges_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.mfa_challenges
-    ADD CONSTRAINT mfa_challenges_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'mfa_challenges_pkey'
+        AND conrelid = 'auth.mfa_challenges'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.mfa_challenges
+            ADD CONSTRAINT mfa_challenges_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: mfa_factors mfa_factors_last_challenged_at_key; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.mfa_factors
-    ADD CONSTRAINT mfa_factors_last_challenged_at_key UNIQUE (last_challenged_at);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'mfa_factors_last_challenged_at_key'
+        AND conrelid = 'auth.mfa_factors'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.mfa_factors
+            ADD CONSTRAINT mfa_factors_last_challenged_at_key UNIQUE (last_challenged_at);
+    END IF;
+END$$;
 
 
 --
 -- Name: mfa_factors mfa_factors_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.mfa_factors
-    ADD CONSTRAINT mfa_factors_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'mfa_factors_pkey'
+        AND conrelid = 'auth.mfa_factors'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.mfa_factors
+            ADD CONSTRAINT mfa_factors_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_authorizations oauth_authorizations_authorization_code_key; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_authorizations
-    ADD CONSTRAINT oauth_authorizations_authorization_code_key UNIQUE (authorization_code);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_authorizations_authorization_code_key'
+        AND conrelid = 'auth.oauth_authorizations'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_authorizations
+            ADD CONSTRAINT oauth_authorizations_authorization_code_key UNIQUE (authorization_code);
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_authorizations oauth_authorizations_authorization_id_key; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_authorizations
-    ADD CONSTRAINT oauth_authorizations_authorization_id_key UNIQUE (authorization_id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_authorizations_authorization_id_key'
+        AND conrelid = 'auth.oauth_authorizations'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_authorizations
+            ADD CONSTRAINT oauth_authorizations_authorization_id_key UNIQUE (authorization_id);
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_authorizations oauth_authorizations_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_authorizations
-    ADD CONSTRAINT oauth_authorizations_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_authorizations_pkey'
+        AND conrelid = 'auth.oauth_authorizations'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_authorizations
+            ADD CONSTRAINT oauth_authorizations_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_client_states oauth_client_states_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_client_states
-    ADD CONSTRAINT oauth_client_states_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_client_states_pkey'
+        AND conrelid = 'auth.oauth_client_states'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_client_states
+            ADD CONSTRAINT oauth_client_states_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_clients oauth_clients_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_clients
-    ADD CONSTRAINT oauth_clients_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_clients_pkey'
+        AND conrelid = 'auth.oauth_clients'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_clients
+            ADD CONSTRAINT oauth_clients_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_consents oauth_consents_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_consents
-    ADD CONSTRAINT oauth_consents_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_consents_pkey'
+        AND conrelid = 'auth.oauth_consents'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_consents
+            ADD CONSTRAINT oauth_consents_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_consents oauth_consents_user_client_unique; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_consents
-    ADD CONSTRAINT oauth_consents_user_client_unique UNIQUE (user_id, client_id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_consents_user_client_unique'
+        AND conrelid = 'auth.oauth_consents'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_consents
+            ADD CONSTRAINT oauth_consents_user_client_unique UNIQUE (user_id, client_id);
+    END IF;
+END$$;
 
 
 --
 -- Name: one_time_tokens one_time_tokens_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.one_time_tokens
-    ADD CONSTRAINT one_time_tokens_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'one_time_tokens_pkey'
+        AND conrelid = 'auth.one_time_tokens'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.one_time_tokens
+            ADD CONSTRAINT one_time_tokens_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: refresh_tokens refresh_tokens_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.refresh_tokens
-    ADD CONSTRAINT refresh_tokens_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'refresh_tokens_pkey'
+        AND conrelid = 'auth.refresh_tokens'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.refresh_tokens
+            ADD CONSTRAINT refresh_tokens_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: refresh_tokens refresh_tokens_token_unique; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.refresh_tokens
-    ADD CONSTRAINT refresh_tokens_token_unique UNIQUE (token);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'refresh_tokens_token_unique'
+        AND conrelid = 'auth.refresh_tokens'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.refresh_tokens
+            ADD CONSTRAINT refresh_tokens_token_unique UNIQUE (token);
+    END IF;
+END$$;
 
 
 --
 -- Name: saml_providers saml_providers_entity_id_key; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.saml_providers
-    ADD CONSTRAINT saml_providers_entity_id_key UNIQUE (entity_id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'saml_providers_entity_id_key'
+        AND conrelid = 'auth.saml_providers'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.saml_providers
+            ADD CONSTRAINT saml_providers_entity_id_key UNIQUE (entity_id);
+    END IF;
+END$$;
 
 
 --
 -- Name: saml_providers saml_providers_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.saml_providers
-    ADD CONSTRAINT saml_providers_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'saml_providers_pkey'
+        AND conrelid = 'auth.saml_providers'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.saml_providers
+            ADD CONSTRAINT saml_providers_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: saml_relay_states saml_relay_states_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.saml_relay_states
-    ADD CONSTRAINT saml_relay_states_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'saml_relay_states_pkey'
+        AND conrelid = 'auth.saml_relay_states'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.saml_relay_states
+            ADD CONSTRAINT saml_relay_states_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.schema_migrations
-    ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'schema_migrations_pkey'
+        AND conrelid = 'auth.schema_migrations'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.schema_migrations
+            ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+    END IF;
+END$$;
 
 
 --
 -- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.sessions
-    ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'sessions_pkey'
+        AND conrelid = 'auth.sessions'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.sessions
+            ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: sso_domains sso_domains_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.sso_domains
-    ADD CONSTRAINT sso_domains_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'sso_domains_pkey'
+        AND conrelid = 'auth.sso_domains'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.sso_domains
+            ADD CONSTRAINT sso_domains_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: sso_providers sso_providers_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.sso_providers
-    ADD CONSTRAINT sso_providers_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'sso_providers_pkey'
+        AND conrelid = 'auth.sso_providers'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.sso_providers
+            ADD CONSTRAINT sso_providers_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: users users_phone_key; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.users
-    ADD CONSTRAINT users_phone_key UNIQUE (phone);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'users_phone_key'
+        AND conrelid = 'auth.users'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.users
+            ADD CONSTRAINT users_phone_key UNIQUE (phone);
+    END IF;
+END$$;
 
 
 --
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'users_pkey'
+        AND conrelid = 'auth.users'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.users
+            ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: webauthn_challenges webauthn_challenges_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.webauthn_challenges
-    ADD CONSTRAINT webauthn_challenges_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'webauthn_challenges_pkey'
+        AND conrelid = 'auth.webauthn_challenges'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.webauthn_challenges
+            ADD CONSTRAINT webauthn_challenges_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: webauthn_credentials webauthn_credentials_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.webauthn_credentials
-    ADD CONSTRAINT webauthn_credentials_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'webauthn_credentials_pkey'
+        AND conrelid = 'auth.webauthn_credentials'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.webauthn_credentials
+            ADD CONSTRAINT webauthn_credentials_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: achievement_event_reward_rules achievement_event_reward_rules_event_id_reward_type_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.achievement_event_reward_rules
-    ADD CONSTRAINT achievement_event_reward_rules_event_id_reward_type_id_key UNIQUE (event_id, reward_type_id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'achievement_event_reward_rules_event_id_reward_type_id_key'
+        AND conrelid = 'public.achievement_event_reward_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.achievement_event_reward_rules
+            ADD CONSTRAINT achievement_event_reward_rules_event_id_reward_type_id_key UNIQUE (event_id, reward_type_id);
+    END IF;
+END$$;
 
 
 --
 -- Name: achievement_event_reward_rules achievement_event_reward_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.achievement_event_reward_rules
-    ADD CONSTRAINT achievement_event_reward_rules_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'achievement_event_reward_rules_pkey'
+        AND conrelid = 'public.achievement_event_reward_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.achievement_event_reward_rules
+            ADD CONSTRAINT achievement_event_reward_rules_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: achievement_events achievement_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.achievement_events
-    ADD CONSTRAINT achievement_events_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'achievement_events_pkey'
+        AND conrelid = 'public.achievement_events'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.achievement_events
+            ADD CONSTRAINT achievement_events_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: assessments assessments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.assessments
-    ADD CONSTRAINT assessments_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessments_pkey'
+        AND conrelid = 'public.assessments'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessments
+            ADD CONSTRAINT assessments_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: ai_assessment_logs ai_assessment_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.ai_assessment_logs
-    ADD CONSTRAINT ai_assessment_logs_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ai_assessment_logs_pkey'
+        AND conrelid = 'public.ai_assessment_logs'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.ai_assessment_logs
+            ADD CONSTRAINT ai_assessment_logs_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: ai_provider_configs ai_provider_configs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.ai_provider_configs
-    ADD CONSTRAINT ai_provider_configs_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ai_provider_configs_pkey'
+        AND conrelid = 'public.ai_provider_configs'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.ai_provider_configs
+            ADD CONSTRAINT ai_provider_configs_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: assessment_import_drafts assessment_import_drafts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.assessment_import_drafts
-    ADD CONSTRAINT assessment_import_drafts_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessment_import_drafts_pkey'
+        AND conrelid = 'public.assessment_import_drafts'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessment_import_drafts
+            ADD CONSTRAINT assessment_import_drafts_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: assessment_import_jobs assessment_import_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.assessment_import_jobs
-    ADD CONSTRAINT assessment_import_jobs_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessment_import_jobs_pkey'
+        AND conrelid = 'public.assessment_import_jobs'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessment_import_jobs
+            ADD CONSTRAINT assessment_import_jobs_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: assessment_import_mistake_drafts assessment_import_mistake_drafts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.assessment_import_mistake_drafts
-    ADD CONSTRAINT assessment_import_mistake_drafts_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessment_import_mistake_drafts_pkey'
+        AND conrelid = 'public.assessment_import_mistake_drafts'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessment_import_mistake_drafts
+            ADD CONSTRAINT assessment_import_mistake_drafts_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: assessment_mistakes assessment_mistakes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.assessment_mistakes
-    ADD CONSTRAINT assessment_mistakes_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessment_mistakes_pkey'
+        AND conrelid = 'public.assessment_mistakes'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessment_mistakes
+            ADD CONSTRAINT assessment_mistakes_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: backups backups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.backups
-    ADD CONSTRAINT backups_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'backups_pkey'
+        AND conrelid = 'public.backups'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.backups
+            ADD CONSTRAINT backups_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
+
+
+--
+-- Name: assessment_types assessment_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessment_types_pkey'
+        AND conrelid = 'public.assessment_types'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessment_types
+            ADD CONSTRAINT assessment_types_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
+
+
+--
+-- Name: assessment_types assessment_types_type_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessment_types_type_key_key'
+        AND conrelid = 'public.assessment_types'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessment_types
+            ADD CONSTRAINT assessment_types_type_key_key UNIQUE (type_key);
+    END IF;
+END$$;
 
 
 --
 -- Name: custom_reward_types custom_reward_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.custom_reward_types
-    ADD CONSTRAINT custom_reward_types_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'custom_reward_types_pkey'
+        AND conrelid = 'public.custom_reward_types'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.custom_reward_types
+            ADD CONSTRAINT custom_reward_types_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: custom_reward_types custom_reward_types_type_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.custom_reward_types
-    ADD CONSTRAINT custom_reward_types_type_key_key UNIQUE (type_key);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'custom_reward_types_type_key_key'
+        AND conrelid = 'public.custom_reward_types'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.custom_reward_types
+            ADD CONSTRAINT custom_reward_types_type_key_key UNIQUE (type_key);
+    END IF;
+END$$;
 
 
 --
 -- Name: exchange_rules exchange_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.exchange_rules
-    ADD CONSTRAINT exchange_rules_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'exchange_rules_pkey'
+        AND conrelid = 'public.exchange_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.exchange_rules
+            ADD CONSTRAINT exchange_rules_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: goal_template_event_links goal_template_event_links_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.goal_template_event_links
-    ADD CONSTRAINT goal_template_event_links_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'goal_template_event_links_pkey'
+        AND conrelid = 'public.goal_template_event_links'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.goal_template_event_links
+            ADD CONSTRAINT goal_template_event_links_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: goal_template_event_links goal_template_event_links_template_id_event_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.goal_template_event_links
-    ADD CONSTRAINT goal_template_event_links_template_id_event_id_key UNIQUE (template_id, event_id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'goal_template_event_links_template_id_event_id_key'
+        AND conrelid = 'public.goal_template_event_links'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.goal_template_event_links
+            ADD CONSTRAINT goal_template_event_links_template_id_event_id_key UNIQUE (template_id, event_id);
+    END IF;
+END$$;
 
 
 --
 -- Name: goal_templates goal_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.goal_templates
-    ADD CONSTRAINT goal_templates_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'goal_templates_pkey'
+        AND conrelid = 'public.goal_templates'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.goal_templates
+            ADD CONSTRAINT goal_templates_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: reward_rules reward_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.reward_rules
-    ADD CONSTRAINT reward_rules_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'reward_rules_pkey'
+        AND conrelid = 'public.reward_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.reward_rules
+            ADD CONSTRAINT reward_rules_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: site_settings site_settings_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.site_settings
-    ADD CONSTRAINT site_settings_key_key UNIQUE (key);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'site_settings_key_key'
+        AND conrelid = 'public.site_settings'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.site_settings
+            ADD CONSTRAINT site_settings_key_key UNIQUE (key);
+    END IF;
+END$$;
 
 
 --
 -- Name: site_settings site_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.site_settings
-    ADD CONSTRAINT site_settings_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'site_settings_pkey'
+        AND conrelid = 'public.site_settings'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.site_settings
+            ADD CONSTRAINT site_settings_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: students students_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.students
-    ADD CONSTRAINT students_email_key UNIQUE (email);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'students_email_key'
+        AND conrelid = 'public.students'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.students
+            ADD CONSTRAINT students_email_key UNIQUE (email);
+    END IF;
+END$$;
 
 
 --
 -- Name: students students_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.students
-    ADD CONSTRAINT students_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'students_pkey'
+        AND conrelid = 'public.students'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.students
+            ADD CONSTRAINT students_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: student_goals student_goals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.student_goals
-    ADD CONSTRAINT student_goals_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'student_goals_pkey'
+        AND conrelid = 'public.student_goals'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.student_goals
+            ADD CONSTRAINT student_goals_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: subjects subjects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.subjects
-    ADD CONSTRAINT subjects_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'subjects_pkey'
+        AND conrelid = 'public.subjects'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.subjects
+            ADD CONSTRAINT subjects_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: transactions transactions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'transactions_pkey'
+        AND conrelid = 'public.transactions'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.transactions
+            ADD CONSTRAINT transactions_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: messages messages_pkey; Type: CONSTRAINT; Schema: realtime; Owner: -
 --
 
-ALTER TABLE ONLY realtime.messages
-    ADD CONSTRAINT messages_pkey PRIMARY KEY (id, inserted_at);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'messages_pkey'
+        AND conrelid = 'realtime.messages'::regclass
+    ) THEN
+        ALTER TABLE ONLY realtime.messages
+            ADD CONSTRAINT messages_pkey PRIMARY KEY (id, inserted_at);
+    END IF;
+END$$;
 
 
 --
 -- Name: subscription pk_subscription; Type: CONSTRAINT; Schema: realtime; Owner: -
 --
 
-ALTER TABLE ONLY realtime.subscription
-    ADD CONSTRAINT pk_subscription PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'pk_subscription'
+        AND conrelid = 'realtime.subscription'::regclass
+    ) THEN
+        ALTER TABLE ONLY realtime.subscription
+            ADD CONSTRAINT pk_subscription PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: realtime; Owner: -
 --
 
-ALTER TABLE ONLY realtime.schema_migrations
-    ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'schema_migrations_pkey'
+        AND conrelid = 'realtime.schema_migrations'::regclass
+    ) THEN
+        ALTER TABLE ONLY realtime.schema_migrations
+            ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+    END IF;
+END$$;
 
 
 --
 -- Name: buckets_analytics buckets_analytics_pkey; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.buckets_analytics
-    ADD CONSTRAINT buckets_analytics_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'buckets_analytics_pkey'
+        AND conrelid = 'storage.buckets_analytics'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.buckets_analytics
+            ADD CONSTRAINT buckets_analytics_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: buckets buckets_pkey; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.buckets
-    ADD CONSTRAINT buckets_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'buckets_pkey'
+        AND conrelid = 'storage.buckets'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.buckets
+            ADD CONSTRAINT buckets_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: buckets_vectors buckets_vectors_pkey; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.buckets_vectors
-    ADD CONSTRAINT buckets_vectors_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'buckets_vectors_pkey'
+        AND conrelid = 'storage.buckets_vectors'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.buckets_vectors
+            ADD CONSTRAINT buckets_vectors_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: migrations migrations_name_key; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.migrations
-    ADD CONSTRAINT migrations_name_key UNIQUE (name);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'migrations_name_key'
+        AND conrelid = 'storage.migrations'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.migrations
+            ADD CONSTRAINT migrations_name_key UNIQUE (name);
+    END IF;
+END$$;
 
 
 --
 -- Name: migrations migrations_pkey; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.migrations
-    ADD CONSTRAINT migrations_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'migrations_pkey'
+        AND conrelid = 'storage.migrations'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.migrations
+            ADD CONSTRAINT migrations_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: objects objects_pkey; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.objects
-    ADD CONSTRAINT objects_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'objects_pkey'
+        AND conrelid = 'storage.objects'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.objects
+            ADD CONSTRAINT objects_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: s3_multipart_uploads_parts s3_multipart_uploads_parts_pkey; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.s3_multipart_uploads_parts
-    ADD CONSTRAINT s3_multipart_uploads_parts_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 's3_multipart_uploads_parts_pkey'
+        AND conrelid = 'storage.s3_multipart_uploads_parts'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.s3_multipart_uploads_parts
+            ADD CONSTRAINT s3_multipart_uploads_parts_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: s3_multipart_uploads s3_multipart_uploads_pkey; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.s3_multipart_uploads
-    ADD CONSTRAINT s3_multipart_uploads_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 's3_multipart_uploads_pkey'
+        AND conrelid = 'storage.s3_multipart_uploads'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.s3_multipart_uploads
+            ADD CONSTRAINT s3_multipart_uploads_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: vector_indexes vector_indexes_pkey; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.vector_indexes
-    ADD CONSTRAINT vector_indexes_pkey PRIMARY KEY (id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'vector_indexes_pkey'
+        AND conrelid = 'storage.vector_indexes'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.vector_indexes
+            ADD CONSTRAINT vector_indexes_pkey PRIMARY KEY (id);
+    END IF;
+END$$;
 
 
 --
 -- Name: audit_logs_instance_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX audit_logs_instance_id_idx ON auth.audit_log_entries USING btree (instance_id);
+CREATE INDEX IF NOT EXISTS audit_logs_instance_id_idx ON auth.audit_log_entries USING btree (instance_id);
 
 
 --
 -- Name: confirmation_token_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX confirmation_token_idx ON auth.users USING btree (confirmation_token) WHERE ((confirmation_token)::text !~ '^[0-9 ]*$'::text);
+CREATE UNIQUE INDEX IF NOT EXISTS confirmation_token_idx ON auth.users USING btree (confirmation_token) WHERE ((confirmation_token)::text !~ '^[0-9 ]*$'::text);
 
 
 --
 -- Name: custom_oauth_providers_created_at_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX custom_oauth_providers_created_at_idx ON auth.custom_oauth_providers USING btree (created_at);
+CREATE INDEX IF NOT EXISTS custom_oauth_providers_created_at_idx ON auth.custom_oauth_providers USING btree (created_at);
 
 
 --
 -- Name: custom_oauth_providers_enabled_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX custom_oauth_providers_enabled_idx ON auth.custom_oauth_providers USING btree (enabled);
+CREATE INDEX IF NOT EXISTS custom_oauth_providers_enabled_idx ON auth.custom_oauth_providers USING btree (enabled);
 
 
 --
 -- Name: custom_oauth_providers_identifier_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX custom_oauth_providers_identifier_idx ON auth.custom_oauth_providers USING btree (identifier);
+CREATE INDEX IF NOT EXISTS custom_oauth_providers_identifier_idx ON auth.custom_oauth_providers USING btree (identifier);
 
 
 --
 -- Name: custom_oauth_providers_provider_type_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX custom_oauth_providers_provider_type_idx ON auth.custom_oauth_providers USING btree (provider_type);
+CREATE INDEX IF NOT EXISTS custom_oauth_providers_provider_type_idx ON auth.custom_oauth_providers USING btree (provider_type);
 
 
 --
 -- Name: email_change_token_current_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX email_change_token_current_idx ON auth.users USING btree (email_change_token_current) WHERE ((email_change_token_current)::text !~ '^[0-9 ]*$'::text);
+CREATE UNIQUE INDEX IF NOT EXISTS email_change_token_current_idx ON auth.users USING btree (email_change_token_current) WHERE ((email_change_token_current)::text !~ '^[0-9 ]*$'::text);
 
 
 --
 -- Name: email_change_token_new_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX email_change_token_new_idx ON auth.users USING btree (email_change_token_new) WHERE ((email_change_token_new)::text !~ '^[0-9 ]*$'::text);
+CREATE UNIQUE INDEX IF NOT EXISTS email_change_token_new_idx ON auth.users USING btree (email_change_token_new) WHERE ((email_change_token_new)::text !~ '^[0-9 ]*$'::text);
 
 
 --
 -- Name: factor_id_created_at_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX factor_id_created_at_idx ON auth.mfa_factors USING btree (user_id, created_at);
+CREATE INDEX IF NOT EXISTS factor_id_created_at_idx ON auth.mfa_factors USING btree (user_id, created_at);
 
 
 --
 -- Name: flow_state_created_at_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX flow_state_created_at_idx ON auth.flow_state USING btree (created_at DESC);
+CREATE INDEX IF NOT EXISTS flow_state_created_at_idx ON auth.flow_state USING btree (created_at DESC);
 
 
 --
 -- Name: identities_email_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX identities_email_idx ON auth.identities USING btree (email text_pattern_ops);
+CREATE INDEX IF NOT EXISTS identities_email_idx ON auth.identities USING btree (email text_pattern_ops);
 
 
 --
@@ -4832,252 +5602,252 @@ COMMENT ON INDEX auth.identities_email_idx IS 'Auth: Ensures indexed queries on 
 -- Name: identities_user_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX identities_user_id_idx ON auth.identities USING btree (user_id);
+CREATE INDEX IF NOT EXISTS identities_user_id_idx ON auth.identities USING btree (user_id);
 
 
 --
 -- Name: idx_auth_code; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX idx_auth_code ON auth.flow_state USING btree (auth_code);
+CREATE INDEX IF NOT EXISTS idx_auth_code ON auth.flow_state USING btree (auth_code);
 
 
 --
 -- Name: idx_oauth_client_states_created_at; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX idx_oauth_client_states_created_at ON auth.oauth_client_states USING btree (created_at);
+CREATE INDEX IF NOT EXISTS idx_oauth_client_states_created_at ON auth.oauth_client_states USING btree (created_at);
 
 
 --
 -- Name: idx_user_id_auth_method; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX idx_user_id_auth_method ON auth.flow_state USING btree (user_id, authentication_method);
+CREATE INDEX IF NOT EXISTS idx_user_id_auth_method ON auth.flow_state USING btree (user_id, authentication_method);
 
 
 --
 -- Name: mfa_challenge_created_at_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX mfa_challenge_created_at_idx ON auth.mfa_challenges USING btree (created_at DESC);
+CREATE INDEX IF NOT EXISTS mfa_challenge_created_at_idx ON auth.mfa_challenges USING btree (created_at DESC);
 
 
 --
 -- Name: mfa_factors_user_friendly_name_unique; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX mfa_factors_user_friendly_name_unique ON auth.mfa_factors USING btree (friendly_name, user_id) WHERE (TRIM(BOTH FROM friendly_name) <> ''::text);
+CREATE UNIQUE INDEX IF NOT EXISTS mfa_factors_user_friendly_name_unique ON auth.mfa_factors USING btree (friendly_name, user_id) WHERE (TRIM(BOTH FROM friendly_name) <> ''::text);
 
 
 --
 -- Name: mfa_factors_user_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX mfa_factors_user_id_idx ON auth.mfa_factors USING btree (user_id);
+CREATE INDEX IF NOT EXISTS mfa_factors_user_id_idx ON auth.mfa_factors USING btree (user_id);
 
 
 --
 -- Name: oauth_auth_pending_exp_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX oauth_auth_pending_exp_idx ON auth.oauth_authorizations USING btree (expires_at) WHERE (status = 'pending'::auth.oauth_authorization_status);
+CREATE INDEX IF NOT EXISTS oauth_auth_pending_exp_idx ON auth.oauth_authorizations USING btree (expires_at) WHERE (status = 'pending'::auth.oauth_authorization_status);
 
 
 --
 -- Name: oauth_clients_deleted_at_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX oauth_clients_deleted_at_idx ON auth.oauth_clients USING btree (deleted_at);
+CREATE INDEX IF NOT EXISTS oauth_clients_deleted_at_idx ON auth.oauth_clients USING btree (deleted_at);
 
 
 --
 -- Name: oauth_consents_active_client_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX oauth_consents_active_client_idx ON auth.oauth_consents USING btree (client_id) WHERE (revoked_at IS NULL);
+CREATE INDEX IF NOT EXISTS oauth_consents_active_client_idx ON auth.oauth_consents USING btree (client_id) WHERE (revoked_at IS NULL);
 
 
 --
 -- Name: oauth_consents_active_user_client_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX oauth_consents_active_user_client_idx ON auth.oauth_consents USING btree (user_id, client_id) WHERE (revoked_at IS NULL);
+CREATE INDEX IF NOT EXISTS oauth_consents_active_user_client_idx ON auth.oauth_consents USING btree (user_id, client_id) WHERE (revoked_at IS NULL);
 
 
 --
 -- Name: oauth_consents_user_order_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX oauth_consents_user_order_idx ON auth.oauth_consents USING btree (user_id, granted_at DESC);
+CREATE INDEX IF NOT EXISTS oauth_consents_user_order_idx ON auth.oauth_consents USING btree (user_id, granted_at DESC);
 
 
 --
 -- Name: one_time_tokens_relates_to_hash_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX one_time_tokens_relates_to_hash_idx ON auth.one_time_tokens USING hash (relates_to);
+CREATE INDEX IF NOT EXISTS one_time_tokens_relates_to_hash_idx ON auth.one_time_tokens USING hash (relates_to);
 
 
 --
 -- Name: one_time_tokens_token_hash_hash_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX one_time_tokens_token_hash_hash_idx ON auth.one_time_tokens USING hash (token_hash);
+CREATE INDEX IF NOT EXISTS one_time_tokens_token_hash_hash_idx ON auth.one_time_tokens USING hash (token_hash);
 
 
 --
 -- Name: one_time_tokens_user_id_token_type_key; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX one_time_tokens_user_id_token_type_key ON auth.one_time_tokens USING btree (user_id, token_type);
+CREATE UNIQUE INDEX IF NOT EXISTS one_time_tokens_user_id_token_type_key ON auth.one_time_tokens USING btree (user_id, token_type);
 
 
 --
 -- Name: reauthentication_token_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX reauthentication_token_idx ON auth.users USING btree (reauthentication_token) WHERE ((reauthentication_token)::text !~ '^[0-9 ]*$'::text);
+CREATE UNIQUE INDEX IF NOT EXISTS reauthentication_token_idx ON auth.users USING btree (reauthentication_token) WHERE ((reauthentication_token)::text !~ '^[0-9 ]*$'::text);
 
 
 --
 -- Name: recovery_token_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX recovery_token_idx ON auth.users USING btree (recovery_token) WHERE ((recovery_token)::text !~ '^[0-9 ]*$'::text);
+CREATE UNIQUE INDEX IF NOT EXISTS recovery_token_idx ON auth.users USING btree (recovery_token) WHERE ((recovery_token)::text !~ '^[0-9 ]*$'::text);
 
 
 --
 -- Name: refresh_tokens_instance_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX refresh_tokens_instance_id_idx ON auth.refresh_tokens USING btree (instance_id);
+CREATE INDEX IF NOT EXISTS refresh_tokens_instance_id_idx ON auth.refresh_tokens USING btree (instance_id);
 
 
 --
 -- Name: refresh_tokens_instance_id_user_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX refresh_tokens_instance_id_user_id_idx ON auth.refresh_tokens USING btree (instance_id, user_id);
+CREATE INDEX IF NOT EXISTS refresh_tokens_instance_id_user_id_idx ON auth.refresh_tokens USING btree (instance_id, user_id);
 
 
 --
 -- Name: refresh_tokens_parent_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX refresh_tokens_parent_idx ON auth.refresh_tokens USING btree (parent);
+CREATE INDEX IF NOT EXISTS refresh_tokens_parent_idx ON auth.refresh_tokens USING btree (parent);
 
 
 --
 -- Name: refresh_tokens_session_id_revoked_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX refresh_tokens_session_id_revoked_idx ON auth.refresh_tokens USING btree (session_id, revoked);
+CREATE INDEX IF NOT EXISTS refresh_tokens_session_id_revoked_idx ON auth.refresh_tokens USING btree (session_id, revoked);
 
 
 --
 -- Name: refresh_tokens_updated_at_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX refresh_tokens_updated_at_idx ON auth.refresh_tokens USING btree (updated_at DESC);
+CREATE INDEX IF NOT EXISTS refresh_tokens_updated_at_idx ON auth.refresh_tokens USING btree (updated_at DESC);
 
 
 --
 -- Name: saml_providers_sso_provider_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX saml_providers_sso_provider_id_idx ON auth.saml_providers USING btree (sso_provider_id);
+CREATE INDEX IF NOT EXISTS saml_providers_sso_provider_id_idx ON auth.saml_providers USING btree (sso_provider_id);
 
 
 --
 -- Name: saml_relay_states_created_at_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX saml_relay_states_created_at_idx ON auth.saml_relay_states USING btree (created_at DESC);
+CREATE INDEX IF NOT EXISTS saml_relay_states_created_at_idx ON auth.saml_relay_states USING btree (created_at DESC);
 
 
 --
 -- Name: saml_relay_states_for_email_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX saml_relay_states_for_email_idx ON auth.saml_relay_states USING btree (for_email);
+CREATE INDEX IF NOT EXISTS saml_relay_states_for_email_idx ON auth.saml_relay_states USING btree (for_email);
 
 
 --
 -- Name: saml_relay_states_sso_provider_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX saml_relay_states_sso_provider_id_idx ON auth.saml_relay_states USING btree (sso_provider_id);
+CREATE INDEX IF NOT EXISTS saml_relay_states_sso_provider_id_idx ON auth.saml_relay_states USING btree (sso_provider_id);
 
 
 --
 -- Name: sessions_not_after_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX sessions_not_after_idx ON auth.sessions USING btree (not_after DESC);
+CREATE INDEX IF NOT EXISTS sessions_not_after_idx ON auth.sessions USING btree (not_after DESC);
 
 
 --
 -- Name: sessions_oauth_client_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX sessions_oauth_client_id_idx ON auth.sessions USING btree (oauth_client_id);
+CREATE INDEX IF NOT EXISTS sessions_oauth_client_id_idx ON auth.sessions USING btree (oauth_client_id);
 
 
 --
 -- Name: sessions_user_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX sessions_user_id_idx ON auth.sessions USING btree (user_id);
+CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON auth.sessions USING btree (user_id);
 
 
 --
 -- Name: sso_domains_domain_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX sso_domains_domain_idx ON auth.sso_domains USING btree (lower(domain));
+CREATE UNIQUE INDEX IF NOT EXISTS sso_domains_domain_idx ON auth.sso_domains USING btree (lower(domain));
 
 
 --
 -- Name: sso_domains_sso_provider_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX sso_domains_sso_provider_id_idx ON auth.sso_domains USING btree (sso_provider_id);
+CREATE INDEX IF NOT EXISTS sso_domains_sso_provider_id_idx ON auth.sso_domains USING btree (sso_provider_id);
 
 
 --
 -- Name: sso_providers_resource_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX sso_providers_resource_id_idx ON auth.sso_providers USING btree (lower(resource_id));
+CREATE UNIQUE INDEX IF NOT EXISTS sso_providers_resource_id_idx ON auth.sso_providers USING btree (lower(resource_id));
 
 
 --
 -- Name: sso_providers_resource_id_pattern_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX sso_providers_resource_id_pattern_idx ON auth.sso_providers USING btree (resource_id text_pattern_ops);
+CREATE INDEX IF NOT EXISTS sso_providers_resource_id_pattern_idx ON auth.sso_providers USING btree (resource_id text_pattern_ops);
 
 
 --
 -- Name: unique_phone_factor_per_user; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX unique_phone_factor_per_user ON auth.mfa_factors USING btree (user_id, phone);
+CREATE UNIQUE INDEX IF NOT EXISTS unique_phone_factor_per_user ON auth.mfa_factors USING btree (user_id, phone);
 
 
 --
 -- Name: user_id_created_at_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX user_id_created_at_idx ON auth.sessions USING btree (user_id, created_at);
+CREATE INDEX IF NOT EXISTS user_id_created_at_idx ON auth.sessions USING btree (user_id, created_at);
 
 
 --
 -- Name: users_email_partial_key; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX users_email_partial_key ON auth.users USING btree (email) WHERE (is_sso_user = false);
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_partial_key ON auth.users USING btree (email) WHERE (is_sso_user = false);
 
 
 --
@@ -5091,960 +5861,1573 @@ COMMENT ON INDEX auth.users_email_partial_key IS 'Auth: A partial unique index t
 -- Name: users_instance_id_email_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX users_instance_id_email_idx ON auth.users USING btree (instance_id, lower((email)::text));
+CREATE INDEX IF NOT EXISTS users_instance_id_email_idx ON auth.users USING btree (instance_id, lower((email)::text));
 
 
 --
 -- Name: users_instance_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX users_instance_id_idx ON auth.users USING btree (instance_id);
+CREATE INDEX IF NOT EXISTS users_instance_id_idx ON auth.users USING btree (instance_id);
 
 
 --
 -- Name: users_is_anonymous_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX users_is_anonymous_idx ON auth.users USING btree (is_anonymous);
+CREATE INDEX IF NOT EXISTS users_is_anonymous_idx ON auth.users USING btree (is_anonymous);
 
 
 --
 -- Name: webauthn_challenges_expires_at_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX webauthn_challenges_expires_at_idx ON auth.webauthn_challenges USING btree (expires_at);
+CREATE INDEX IF NOT EXISTS webauthn_challenges_expires_at_idx ON auth.webauthn_challenges USING btree (expires_at);
 
 
 --
 -- Name: webauthn_challenges_user_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX webauthn_challenges_user_id_idx ON auth.webauthn_challenges USING btree (user_id);
+CREATE INDEX IF NOT EXISTS webauthn_challenges_user_id_idx ON auth.webauthn_challenges USING btree (user_id);
 
 
 --
 -- Name: webauthn_credentials_credential_id_key; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE UNIQUE INDEX webauthn_credentials_credential_id_key ON auth.webauthn_credentials USING btree (credential_id);
+CREATE UNIQUE INDEX IF NOT EXISTS webauthn_credentials_credential_id_key ON auth.webauthn_credentials USING btree (credential_id);
 
 
 --
 -- Name: webauthn_credentials_user_id_idx; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX webauthn_credentials_user_id_idx ON auth.webauthn_credentials USING btree (user_id);
+CREATE INDEX IF NOT EXISTS webauthn_credentials_user_id_idx ON auth.webauthn_credentials USING btree (user_id);
 
 
 --
 -- Name: idx_achievement_events_display_order; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_achievement_events_display_order ON public.achievement_events USING btree (display_order);
+CREATE INDEX IF NOT EXISTS idx_achievement_events_display_order ON public.achievement_events USING btree (display_order);
 
 
 --
 -- Name: idx_achievement_events_event_key_unique; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_achievement_events_event_key_unique ON public.achievement_events USING btree (event_key);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_achievement_events_event_key_unique ON public.achievement_events USING btree (event_key);
 
 
 --
 -- Name: idx_achievement_event_translations_event_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_achievement_event_translations_event_id ON public.achievement_event_translations USING btree (event_id);
+CREATE INDEX IF NOT EXISTS idx_achievement_event_translations_event_id ON public.achievement_event_translations USING btree (event_id);
 
 
 --
 -- Name: idx_achievement_event_translations_locale; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_achievement_event_translations_locale ON public.achievement_event_translations USING btree (locale);
+CREATE INDEX IF NOT EXISTS idx_achievement_event_translations_locale ON public.achievement_event_translations USING btree (locale);
 
 
 --
 -- Name: idx_assessments_due_date; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_assessments_due_date ON public.assessments USING btree (due_date);
+CREATE INDEX IF NOT EXISTS idx_assessments_due_date ON public.assessments USING btree (due_date);
 
 
 --
 -- Name: idx_assessments_status; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_assessments_status ON public.assessments USING btree (status);
+CREATE INDEX IF NOT EXISTS idx_assessments_status ON public.assessments USING btree (status);
 
 
 --
 -- Name: idx_assessments_average_included; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_assessments_average_included ON public.assessments USING btree (subject_id, status) WHERE ((counts_toward_average = true) AND (percentage IS NOT NULL));
+CREATE INDEX IF NOT EXISTS idx_assessments_average_included ON public.assessments USING btree (subject_id, status) WHERE ((counts_toward_average = true) AND (percentage IS NOT NULL));
 
 
 --
 -- Name: idx_assessments_subject_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_assessments_subject_id ON public.assessments USING btree (subject_id);
+CREATE INDEX IF NOT EXISTS idx_assessments_subject_id ON public.assessments USING btree (subject_id);
+
+
+--
+-- Name: idx_assessments_assessment_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX IF NOT EXISTS idx_assessments_assessment_type ON public.assessments USING btree (assessment_type);
+
+
+--
+-- Name: idx_assessment_import_drafts_assessment_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX IF NOT EXISTS idx_assessment_import_drafts_assessment_type ON public.assessment_import_drafts USING btree (assessment_type);
+
+
+--
+-- Name: idx_assessment_types_display_order; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX IF NOT EXISTS idx_assessment_types_display_order ON public.assessment_types USING btree (display_order);
+
+
+--
+-- Name: idx_assessment_types_is_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX IF NOT EXISTS idx_assessment_types_is_active ON public.assessment_types USING btree (is_active);
+
+
+--
+-- Name: idx_assessment_types_type_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX IF NOT EXISTS idx_assessment_types_type_key ON public.assessment_types USING btree (type_key);
 
 
 --
 -- Name: idx_backups_created_at; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_backups_created_at ON public.backups USING btree (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_backups_created_at ON public.backups USING btree (created_at DESC);
 
 
 --
 -- Name: idx_backups_name; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_backups_name ON public.backups USING btree (name);
+CREATE INDEX IF NOT EXISTS idx_backups_name ON public.backups USING btree (name);
 
 
 --
 -- Name: idx_custom_reward_types_display_order; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_custom_reward_types_display_order ON public.custom_reward_types USING btree (display_order);
+CREATE INDEX IF NOT EXISTS idx_custom_reward_types_display_order ON public.custom_reward_types USING btree (display_order);
 
 
 --
 -- Name: idx_custom_reward_types_is_system; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_custom_reward_types_is_system ON public.custom_reward_types USING btree (is_system);
+CREATE INDEX IF NOT EXISTS idx_custom_reward_types_is_system ON public.custom_reward_types USING btree (is_system);
 
 
 --
 -- Name: idx_custom_reward_types_type_key; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_custom_reward_types_type_key ON public.custom_reward_types USING btree (type_key);
+CREATE INDEX IF NOT EXISTS idx_custom_reward_types_type_key ON public.custom_reward_types USING btree (type_key);
 
 
 --
 -- Name: idx_event_reward_rules_event_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_event_reward_rules_event_id ON public.achievement_event_reward_rules USING btree (event_id);
+CREATE INDEX IF NOT EXISTS idx_event_reward_rules_event_id ON public.achievement_event_reward_rules USING btree (event_id);
 
 
 --
 -- Name: idx_event_reward_rules_reward_type_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_event_reward_rules_reward_type_id ON public.achievement_event_reward_rules USING btree (reward_type_id);
+CREATE INDEX IF NOT EXISTS idx_event_reward_rules_reward_type_id ON public.achievement_event_reward_rules USING btree (reward_type_id);
 
 
 --
 -- Name: idx_exchange_rules_display_order; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_exchange_rules_display_order ON public.exchange_rules USING btree (display_order);
+CREATE INDEX IF NOT EXISTS idx_exchange_rules_display_order ON public.exchange_rules USING btree (display_order);
 
 
 --
 -- Name: idx_exchange_rules_is_active; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_exchange_rules_is_active ON public.exchange_rules USING btree (is_active);
+CREATE INDEX IF NOT EXISTS idx_exchange_rules_is_active ON public.exchange_rules USING btree (is_active);
 
 
 --
 -- Name: idx_exchange_rules_rule_key_unique; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_exchange_rules_rule_key_unique ON public.exchange_rules USING btree (rule_key);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_exchange_rules_rule_key_unique ON public.exchange_rules USING btree (rule_key);
 
 
 --
 -- Name: idx_exchange_rule_translations_rule_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_exchange_rule_translations_rule_id ON public.exchange_rule_translations USING btree (rule_id);
+CREATE INDEX IF NOT EXISTS idx_exchange_rule_translations_rule_id ON public.exchange_rule_translations USING btree (rule_id);
 
 
 --
 -- Name: idx_exchange_rule_translations_locale; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_exchange_rule_translations_locale ON public.exchange_rule_translations USING btree (locale);
+CREATE INDEX IF NOT EXISTS idx_exchange_rule_translations_locale ON public.exchange_rule_translations USING btree (locale);
 
 
 --
 -- Name: idx_exchange_rules_reward_type; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_exchange_rules_reward_type ON public.exchange_rules USING btree (required_reward_type_id);
+CREATE INDEX IF NOT EXISTS idx_exchange_rules_reward_type ON public.exchange_rules USING btree (required_reward_type_id);
 
 
 --
 -- Name: idx_exchange_rules_reward_type_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_exchange_rules_reward_type_id ON public.exchange_rules USING btree (reward_type_id);
+CREATE INDEX IF NOT EXISTS idx_exchange_rules_reward_type_id ON public.exchange_rules USING btree (reward_type_id);
 
 
 --
 -- Name: idx_goal_template_event_links_event; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_goal_template_event_links_event ON public.goal_template_event_links USING btree (event_id);
+CREATE INDEX IF NOT EXISTS idx_goal_template_event_links_event ON public.goal_template_event_links USING btree (event_id);
 
 
 --
 -- Name: idx_goal_template_event_links_template; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_goal_template_event_links_template ON public.goal_template_event_links USING btree (template_id);
+CREATE INDEX IF NOT EXISTS idx_goal_template_event_links_template ON public.goal_template_event_links USING btree (template_id);
 
 
 --
 -- Name: idx_goal_templates_display_order; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_goal_templates_display_order ON public.goal_templates USING btree (display_order);
+CREATE INDEX IF NOT EXISTS idx_goal_templates_display_order ON public.goal_templates USING btree (display_order);
 
 
 --
 -- Name: idx_goal_templates_is_active; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_goal_templates_is_active ON public.goal_templates USING btree (is_active);
+CREATE INDEX IF NOT EXISTS idx_goal_templates_is_active ON public.goal_templates USING btree (is_active);
 
 
 --
 -- Name: idx_goal_templates_tracking_reward_type_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_goal_templates_tracking_reward_type_id ON public.goal_templates USING btree (tracking_reward_type_id);
+CREATE INDEX IF NOT EXISTS idx_goal_templates_tracking_reward_type_id ON public.goal_templates USING btree (tracking_reward_type_id);
 
 
 --
 -- Name: idx_reward_rules_active; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_reward_rules_active ON public.reward_rules USING btree (is_active);
+CREATE INDEX IF NOT EXISTS idx_reward_rules_active ON public.reward_rules USING btree (is_active);
 
 
 --
 -- Name: idx_reward_rules_display_order; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_reward_rules_display_order ON public.reward_rules USING btree (display_order);
+CREATE INDEX IF NOT EXISTS idx_reward_rules_display_order ON public.reward_rules USING btree (display_order);
 
 
 --
 -- Name: idx_reward_rules_student_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_reward_rules_student_id ON public.reward_rules USING btree (student_id);
+CREATE INDEX IF NOT EXISTS idx_reward_rules_student_id ON public.reward_rules USING btree (student_id);
 
 
 --
 -- Name: idx_reward_rules_subject_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_reward_rules_subject_id ON public.reward_rules USING btree (subject_id);
+CREATE INDEX IF NOT EXISTS idx_reward_rules_subject_id ON public.reward_rules USING btree (subject_id);
+
+
+--
+-- Name: idx_reward_rules_assessment_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX IF NOT EXISTS idx_reward_rules_assessment_type ON public.reward_rules USING btree (assessment_type);
 
 
 --
 -- Name: idx_students_display_order; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_students_display_order ON public.students USING btree (display_order);
+CREATE INDEX IF NOT EXISTS idx_students_display_order ON public.students USING btree (display_order);
 
 
 --
 -- Name: idx_student_goals_display_order; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_student_goals_display_order ON public.student_goals USING btree (display_order);
+CREATE INDEX IF NOT EXISTS idx_student_goals_display_order ON public.student_goals USING btree (display_order);
 
 
 --
 -- Name: idx_student_goals_is_active; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_student_goals_is_active ON public.student_goals USING btree (is_active);
+CREATE INDEX IF NOT EXISTS idx_student_goals_is_active ON public.student_goals USING btree (is_active);
 
 
 --
 -- Name: idx_student_goals_status; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_student_goals_status ON public.student_goals USING btree (status);
+CREATE INDEX IF NOT EXISTS idx_student_goals_status ON public.student_goals USING btree (status);
 
 
 --
 -- Name: idx_student_goals_student_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_student_goals_student_id ON public.student_goals USING btree (student_id);
+CREATE INDEX IF NOT EXISTS idx_student_goals_student_id ON public.student_goals USING btree (student_id);
 
 
 --
 -- Name: idx_student_goals_template_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_student_goals_template_id ON public.student_goals USING btree (template_id);
+CREATE INDEX IF NOT EXISTS idx_student_goals_template_id ON public.student_goals USING btree (template_id);
 
 
 --
 -- Name: idx_student_goals_tracking_reward_type_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_student_goals_tracking_reward_type_id ON public.student_goals USING btree (tracking_reward_type_id);
+CREATE INDEX IF NOT EXISTS idx_student_goals_tracking_reward_type_id ON public.student_goals USING btree (tracking_reward_type_id);
 
 
 --
 -- Name: idx_student_goals_tracking_started_at; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_student_goals_tracking_started_at ON public.student_goals USING btree (tracking_started_at);
+CREATE INDEX IF NOT EXISTS idx_student_goals_tracking_started_at ON public.student_goals USING btree (tracking_started_at);
 
 
 --
 -- Name: idx_subjects_student_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_subjects_student_id ON public.subjects USING btree (student_id);
+CREATE INDEX IF NOT EXISTS idx_subjects_student_id ON public.subjects USING btree (student_id);
 
 
 --
 -- Name: idx_transactions_achievement_event_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_transactions_achievement_event_id ON public.transactions USING btree (achievement_event_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_achievement_event_id ON public.transactions USING btree (achievement_event_id);
 
 
 --
 -- Name: idx_transactions_assessment_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_transactions_assessment_id ON public.transactions USING btree (assessment_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_assessment_id ON public.transactions USING btree (assessment_id);
 
 
 --
 -- Name: idx_transactions_created_at; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_transactions_created_at ON public.transactions USING btree (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON public.transactions USING btree (created_at DESC);
 
 
 --
 -- Name: idx_transactions_consumed_by_goal_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_transactions_consumed_by_goal_id ON public.transactions USING btree (consumed_by_goal_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_consumed_by_goal_id ON public.transactions USING btree (consumed_by_goal_id);
 
 
 --
 -- Name: idx_transactions_goal_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_transactions_goal_id ON public.transactions USING btree (goal_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_goal_id ON public.transactions USING btree (goal_id);
 
 
 --
 -- Name: idx_transactions_reward_type_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_transactions_reward_type_id ON public.transactions USING btree (reward_type_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_reward_type_id ON public.transactions USING btree (reward_type_id);
 
 
 --
 -- Name: idx_transactions_student_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_transactions_student_id ON public.transactions USING btree (student_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_student_id ON public.transactions USING btree (student_id);
 
 
 --
 -- Name: idx_transactions_transaction_date; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_transactions_transaction_date ON public.transactions USING btree (transaction_date);
+CREATE INDEX IF NOT EXISTS idx_transactions_transaction_date ON public.transactions USING btree (transaction_date);
 
 
 --
 -- Name: ix_realtime_subscription_entity; Type: INDEX; Schema: realtime; Owner: -
 --
 
-CREATE INDEX ix_realtime_subscription_entity ON realtime.subscription USING btree (entity);
+CREATE INDEX IF NOT EXISTS ix_realtime_subscription_entity ON realtime.subscription USING btree (entity);
 
 
 --
 -- Name: messages_inserted_at_topic_index; Type: INDEX; Schema: realtime; Owner: -
 --
 
-CREATE INDEX messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+CREATE INDEX IF NOT EXISTS messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
 
 
 --
 -- Name: subscription_subscription_id_entity_filters_action_filter_key; Type: INDEX; Schema: realtime; Owner: -
 --
 
-CREATE UNIQUE INDEX subscription_subscription_id_entity_filters_action_filter_key ON realtime.subscription USING btree (subscription_id, entity, filters, action_filter);
+CREATE UNIQUE INDEX IF NOT EXISTS subscription_subscription_id_entity_filters_action_filter_key ON realtime.subscription USING btree (subscription_id, entity, filters, action_filter);
 
 
 --
 -- Name: bname; Type: INDEX; Schema: storage; Owner: -
 --
 
-CREATE UNIQUE INDEX bname ON storage.buckets USING btree (name);
+CREATE UNIQUE INDEX IF NOT EXISTS bname ON storage.buckets USING btree (name);
 
 
 --
 -- Name: bucketid_objname; Type: INDEX; Schema: storage; Owner: -
 --
 
-CREATE UNIQUE INDEX bucketid_objname ON storage.objects USING btree (bucket_id, name);
+CREATE UNIQUE INDEX IF NOT EXISTS bucketid_objname ON storage.objects USING btree (bucket_id, name);
 
 
 --
 -- Name: buckets_analytics_unique_name_idx; Type: INDEX; Schema: storage; Owner: -
 --
 
-CREATE UNIQUE INDEX buckets_analytics_unique_name_idx ON storage.buckets_analytics USING btree (name) WHERE (deleted_at IS NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS buckets_analytics_unique_name_idx ON storage.buckets_analytics USING btree (name) WHERE (deleted_at IS NULL);
 
 
 --
 -- Name: idx_multipart_uploads_list; Type: INDEX; Schema: storage; Owner: -
 --
 
-CREATE INDEX idx_multipart_uploads_list ON storage.s3_multipart_uploads USING btree (bucket_id, key, created_at);
+CREATE INDEX IF NOT EXISTS idx_multipart_uploads_list ON storage.s3_multipart_uploads USING btree (bucket_id, key, created_at);
 
 
 --
 -- Name: idx_objects_bucket_id_name; Type: INDEX; Schema: storage; Owner: -
 --
 
-CREATE INDEX idx_objects_bucket_id_name ON storage.objects USING btree (bucket_id, name COLLATE "C");
+CREATE INDEX IF NOT EXISTS idx_objects_bucket_id_name ON storage.objects USING btree (bucket_id, name COLLATE "C");
 
 
 --
 -- Name: idx_objects_bucket_id_name_lower; Type: INDEX; Schema: storage; Owner: -
 --
 
-CREATE INDEX idx_objects_bucket_id_name_lower ON storage.objects USING btree (bucket_id, lower(name) COLLATE "C");
+CREATE INDEX IF NOT EXISTS idx_objects_bucket_id_name_lower ON storage.objects USING btree (bucket_id, lower(name) COLLATE "C");
 
 
 --
 -- Name: name_prefix_search; Type: INDEX; Schema: storage; Owner: -
 --
 
-CREATE INDEX name_prefix_search ON storage.objects USING btree (name text_pattern_ops);
+CREATE INDEX IF NOT EXISTS name_prefix_search ON storage.objects USING btree (name text_pattern_ops);
 
 
 --
 -- Name: vector_indexes_name_bucket_id_idx; Type: INDEX; Schema: storage; Owner: -
 --
 
-CREATE UNIQUE INDEX vector_indexes_name_bucket_id_idx ON storage.vector_indexes USING btree (name, bucket_id);
+CREATE UNIQUE INDEX IF NOT EXISTS vector_indexes_name_bucket_id_idx ON storage.vector_indexes USING btree (name, bucket_id);
 
 
 --
 -- Name: assessments update_assessments_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_assessments_updated_at BEFORE UPDATE ON public.assessments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_assessments_updated_at' AND tgrelid = 'public.assessments'::regclass) THEN
+        CREATE TRIGGER update_assessments_updated_at BEFORE UPDATE ON public.assessments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+    END IF;
+END$$;
 
 
 --
 -- Name: achievement_event_translations update_achievement_event_translations_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_achievement_event_translations_updated_at BEFORE UPDATE ON public.achievement_event_translations FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_achievement_event_translations_updated_at' AND tgrelid = 'public.achievement_event_translations'::regclass) THEN
+        CREATE TRIGGER update_achievement_event_translations_updated_at BEFORE UPDATE ON public.achievement_event_translations FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+    END IF;
+END$$;
 
 
 --
 -- Name: ai_provider_configs update_ai_provider_configs_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_ai_provider_configs_updated_at BEFORE UPDATE ON public.ai_provider_configs FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_ai_provider_configs_updated_at' AND tgrelid = 'public.ai_provider_configs'::regclass) THEN
+        CREATE TRIGGER update_ai_provider_configs_updated_at BEFORE UPDATE ON public.ai_provider_configs FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+    END IF;
+END$$;
 
 
 --
 -- Name: assessment_import_drafts update_assessment_import_drafts_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_assessment_import_drafts_updated_at BEFORE UPDATE ON public.assessment_import_drafts FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_assessment_import_drafts_updated_at' AND tgrelid = 'public.assessment_import_drafts'::regclass) THEN
+        CREATE TRIGGER update_assessment_import_drafts_updated_at BEFORE UPDATE ON public.assessment_import_drafts FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+    END IF;
+END$$;
 
 
 --
 -- Name: assessment_import_jobs update_assessment_import_jobs_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_assessment_import_jobs_updated_at BEFORE UPDATE ON public.assessment_import_jobs FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_assessment_import_jobs_updated_at' AND tgrelid = 'public.assessment_import_jobs'::regclass) THEN
+        CREATE TRIGGER update_assessment_import_jobs_updated_at BEFORE UPDATE ON public.assessment_import_jobs FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+    END IF;
+END$$;
 
 
 --
 -- Name: exchange_rule_translations update_exchange_rule_translations_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_exchange_rule_translations_updated_at BEFORE UPDATE ON public.exchange_rule_translations FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_exchange_rule_translations_updated_at' AND tgrelid = 'public.exchange_rule_translations'::regclass) THEN
+        CREATE TRIGGER update_exchange_rule_translations_updated_at BEFORE UPDATE ON public.exchange_rule_translations FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+    END IF;
+END$$;
 
 
 --
 -- Name: backups update_backups_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_backups_updated_at BEFORE UPDATE ON public.backups FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_backups_updated_at' AND tgrelid = 'public.backups'::regclass) THEN
+        CREATE TRIGGER update_backups_updated_at BEFORE UPDATE ON public.backups FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+    END IF;
+END$$;
 
 
 --
 -- Name: site_settings update_site_settings_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_site_settings_updated_at BEFORE UPDATE ON public.site_settings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_site_settings_updated_at' AND tgrelid = 'public.site_settings'::regclass) THEN
+        CREATE TRIGGER update_site_settings_updated_at BEFORE UPDATE ON public.site_settings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+    END IF;
+END$$;
 
 
 --
 -- Name: students update_students_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON public.students FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_students_updated_at' AND tgrelid = 'public.students'::regclass) THEN
+        CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON public.students FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+    END IF;
+END$$;
 
 
 --
 -- Name: subscription tr_check_filters; Type: TRIGGER; Schema: realtime; Owner: -
 --
 
-CREATE TRIGGER tr_check_filters BEFORE INSERT OR UPDATE ON realtime.subscription FOR EACH ROW EXECUTE FUNCTION realtime.subscription_check_filters();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'tr_check_filters' AND tgrelid = 'realtime.subscription'::regclass) THEN
+        CREATE TRIGGER tr_check_filters BEFORE INSERT OR UPDATE ON realtime.subscription FOR EACH ROW EXECUTE FUNCTION realtime.subscription_check_filters();
+    END IF;
+END$$;
 
 
 --
 -- Name: buckets enforce_bucket_name_length_trigger; Type: TRIGGER; Schema: storage; Owner: -
 --
 
-CREATE TRIGGER enforce_bucket_name_length_trigger BEFORE INSERT OR UPDATE OF name ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.enforce_bucket_name_length();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'enforce_bucket_name_length_trigger' AND tgrelid = 'storage.buckets'::regclass) THEN
+        CREATE TRIGGER enforce_bucket_name_length_trigger BEFORE INSERT OR UPDATE OF name ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.enforce_bucket_name_length();
+    END IF;
+END$$;
 
 
 --
 -- Name: buckets protect_buckets_delete; Type: TRIGGER; Schema: storage; Owner: -
 --
 
-CREATE TRIGGER protect_buckets_delete BEFORE DELETE ON storage.buckets FOR EACH STATEMENT EXECUTE FUNCTION storage.protect_delete();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'protect_buckets_delete' AND tgrelid = 'storage.buckets'::regclass) THEN
+        CREATE TRIGGER protect_buckets_delete BEFORE DELETE ON storage.buckets FOR EACH STATEMENT EXECUTE FUNCTION storage.protect_delete();
+    END IF;
+END$$;
 
 
 --
 -- Name: objects protect_objects_delete; Type: TRIGGER; Schema: storage; Owner: -
 --
 
-CREATE TRIGGER protect_objects_delete BEFORE DELETE ON storage.objects FOR EACH STATEMENT EXECUTE FUNCTION storage.protect_delete();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'protect_objects_delete' AND tgrelid = 'storage.objects'::regclass) THEN
+        CREATE TRIGGER protect_objects_delete BEFORE DELETE ON storage.objects FOR EACH STATEMENT EXECUTE FUNCTION storage.protect_delete();
+    END IF;
+END$$;
 
 
 --
 -- Name: objects update_objects_updated_at; Type: TRIGGER; Schema: storage; Owner: -
 --
 
-CREATE TRIGGER update_objects_updated_at BEFORE UPDATE ON storage.objects FOR EACH ROW EXECUTE FUNCTION storage.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_objects_updated_at' AND tgrelid = 'storage.objects'::regclass) THEN
+        CREATE TRIGGER update_objects_updated_at BEFORE UPDATE ON storage.objects FOR EACH ROW EXECUTE FUNCTION storage.update_updated_at_column();
+    END IF;
+END$$;
 
 
 --
 -- Name: identities identities_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.identities
-    ADD CONSTRAINT identities_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'identities_user_id_fkey'
+        AND conrelid = 'auth.identities'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.identities
+            ADD CONSTRAINT identities_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: mfa_amr_claims mfa_amr_claims_session_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.mfa_amr_claims
-    ADD CONSTRAINT mfa_amr_claims_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'mfa_amr_claims_session_id_fkey'
+        AND conrelid = 'auth.mfa_amr_claims'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.mfa_amr_claims
+            ADD CONSTRAINT mfa_amr_claims_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: mfa_challenges mfa_challenges_auth_factor_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.mfa_challenges
-    ADD CONSTRAINT mfa_challenges_auth_factor_id_fkey FOREIGN KEY (factor_id) REFERENCES auth.mfa_factors(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'mfa_challenges_auth_factor_id_fkey'
+        AND conrelid = 'auth.mfa_challenges'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.mfa_challenges
+            ADD CONSTRAINT mfa_challenges_auth_factor_id_fkey FOREIGN KEY (factor_id) REFERENCES auth.mfa_factors(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: mfa_factors mfa_factors_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.mfa_factors
-    ADD CONSTRAINT mfa_factors_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'mfa_factors_user_id_fkey'
+        AND conrelid = 'auth.mfa_factors'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.mfa_factors
+            ADD CONSTRAINT mfa_factors_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_authorizations oauth_authorizations_client_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_authorizations
-    ADD CONSTRAINT oauth_authorizations_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.oauth_clients(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_authorizations_client_id_fkey'
+        AND conrelid = 'auth.oauth_authorizations'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_authorizations
+            ADD CONSTRAINT oauth_authorizations_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.oauth_clients(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_authorizations oauth_authorizations_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_authorizations
-    ADD CONSTRAINT oauth_authorizations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_authorizations_user_id_fkey'
+        AND conrelid = 'auth.oauth_authorizations'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_authorizations
+            ADD CONSTRAINT oauth_authorizations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_consents oauth_consents_client_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_consents
-    ADD CONSTRAINT oauth_consents_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.oauth_clients(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_consents_client_id_fkey'
+        AND conrelid = 'auth.oauth_consents'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_consents
+            ADD CONSTRAINT oauth_consents_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.oauth_clients(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: oauth_consents oauth_consents_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.oauth_consents
-    ADD CONSTRAINT oauth_consents_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'oauth_consents_user_id_fkey'
+        AND conrelid = 'auth.oauth_consents'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.oauth_consents
+            ADD CONSTRAINT oauth_consents_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: one_time_tokens one_time_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.one_time_tokens
-    ADD CONSTRAINT one_time_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'one_time_tokens_user_id_fkey'
+        AND conrelid = 'auth.one_time_tokens'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.one_time_tokens
+            ADD CONSTRAINT one_time_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: refresh_tokens refresh_tokens_session_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.refresh_tokens
-    ADD CONSTRAINT refresh_tokens_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'refresh_tokens_session_id_fkey'
+        AND conrelid = 'auth.refresh_tokens'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.refresh_tokens
+            ADD CONSTRAINT refresh_tokens_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: saml_providers saml_providers_sso_provider_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.saml_providers
-    ADD CONSTRAINT saml_providers_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES auth.sso_providers(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'saml_providers_sso_provider_id_fkey'
+        AND conrelid = 'auth.saml_providers'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.saml_providers
+            ADD CONSTRAINT saml_providers_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES auth.sso_providers(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: saml_relay_states saml_relay_states_flow_state_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.saml_relay_states
-    ADD CONSTRAINT saml_relay_states_flow_state_id_fkey FOREIGN KEY (flow_state_id) REFERENCES auth.flow_state(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'saml_relay_states_flow_state_id_fkey'
+        AND conrelid = 'auth.saml_relay_states'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.saml_relay_states
+            ADD CONSTRAINT saml_relay_states_flow_state_id_fkey FOREIGN KEY (flow_state_id) REFERENCES auth.flow_state(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: saml_relay_states saml_relay_states_sso_provider_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.saml_relay_states
-    ADD CONSTRAINT saml_relay_states_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES auth.sso_providers(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'saml_relay_states_sso_provider_id_fkey'
+        AND conrelid = 'auth.saml_relay_states'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.saml_relay_states
+            ADD CONSTRAINT saml_relay_states_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES auth.sso_providers(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: sessions sessions_oauth_client_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.sessions
-    ADD CONSTRAINT sessions_oauth_client_id_fkey FOREIGN KEY (oauth_client_id) REFERENCES auth.oauth_clients(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'sessions_oauth_client_id_fkey'
+        AND conrelid = 'auth.sessions'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.sessions
+            ADD CONSTRAINT sessions_oauth_client_id_fkey FOREIGN KEY (oauth_client_id) REFERENCES auth.oauth_clients(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: sessions sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.sessions
-    ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'sessions_user_id_fkey'
+        AND conrelid = 'auth.sessions'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.sessions
+            ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: sso_domains sso_domains_sso_provider_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.sso_domains
-    ADD CONSTRAINT sso_domains_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES auth.sso_providers(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'sso_domains_sso_provider_id_fkey'
+        AND conrelid = 'auth.sso_domains'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.sso_domains
+            ADD CONSTRAINT sso_domains_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES auth.sso_providers(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: webauthn_challenges webauthn_challenges_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.webauthn_challenges
-    ADD CONSTRAINT webauthn_challenges_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'webauthn_challenges_user_id_fkey'
+        AND conrelid = 'auth.webauthn_challenges'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.webauthn_challenges
+            ADD CONSTRAINT webauthn_challenges_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: webauthn_credentials webauthn_credentials_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.webauthn_credentials
-    ADD CONSTRAINT webauthn_credentials_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'webauthn_credentials_user_id_fkey'
+        AND conrelid = 'auth.webauthn_credentials'::regclass
+    ) THEN
+        ALTER TABLE ONLY auth.webauthn_credentials
+            ADD CONSTRAINT webauthn_credentials_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: achievement_event_reward_rules achievement_event_reward_rules_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.achievement_event_reward_rules
-    ADD CONSTRAINT achievement_event_reward_rules_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.achievement_events(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'achievement_event_reward_rules_event_id_fkey'
+        AND conrelid = 'public.achievement_event_reward_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.achievement_event_reward_rules
+            ADD CONSTRAINT achievement_event_reward_rules_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.achievement_events(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: achievement_event_reward_rules achievement_event_reward_rules_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.achievement_event_reward_rules
-    ADD CONSTRAINT achievement_event_reward_rules_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'achievement_event_reward_rules_reward_type_id_fkey'
+        AND conrelid = 'public.achievement_event_reward_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.achievement_event_reward_rules
+            ADD CONSTRAINT achievement_event_reward_rules_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: assessments assessments_subject_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.assessments
-    ADD CONSTRAINT assessments_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessments_subject_id_fkey'
+        AND conrelid = 'public.assessments'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessments
+            ADD CONSTRAINT assessments_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id) ON DELETE CASCADE;
+    END IF;
+END$$;
+
+
+--
+-- Name: assessments assessments_assessment_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessments_assessment_type_fkey'
+        AND conrelid = 'public.assessments'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessments
+            ADD CONSTRAINT assessments_assessment_type_fkey FOREIGN KEY (assessment_type) REFERENCES public.assessment_types(type_key) ON UPDATE CASCADE ON DELETE RESTRICT;
+    END IF;
+END$$;
 
 
 --
 -- Name: ai_assessment_logs ai_assessment_logs_job_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.ai_assessment_logs
-    ADD CONSTRAINT ai_assessment_logs_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.assessment_import_jobs(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ai_assessment_logs_job_id_fkey'
+        AND conrelid = 'public.ai_assessment_logs'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.ai_assessment_logs
+            ADD CONSTRAINT ai_assessment_logs_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.assessment_import_jobs(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: assessment_import_drafts assessment_import_drafts_job_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.assessment_import_drafts
-    ADD CONSTRAINT assessment_import_drafts_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.assessment_import_jobs(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessment_import_drafts_job_id_fkey'
+        AND conrelid = 'public.assessment_import_drafts'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessment_import_drafts
+            ADD CONSTRAINT assessment_import_drafts_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.assessment_import_jobs(id) ON DELETE CASCADE;
+    END IF;
+END$$;
+
+
+--
+-- Name: assessment_import_drafts assessment_import_drafts_assessment_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessment_import_drafts_assessment_type_fkey'
+        AND conrelid = 'public.assessment_import_drafts'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessment_import_drafts
+            ADD CONSTRAINT assessment_import_drafts_assessment_type_fkey FOREIGN KEY (assessment_type) REFERENCES public.assessment_types(type_key) ON UPDATE CASCADE ON DELETE RESTRICT;
+    END IF;
+END$$;
 
 
 --
 -- Name: assessment_import_mistake_drafts assessment_import_mistake_drafts_draft_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.assessment_import_mistake_drafts
-    ADD CONSTRAINT assessment_import_mistake_drafts_draft_id_fkey FOREIGN KEY (draft_id) REFERENCES public.assessment_import_drafts(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessment_import_mistake_drafts_draft_id_fkey'
+        AND conrelid = 'public.assessment_import_mistake_drafts'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessment_import_mistake_drafts
+            ADD CONSTRAINT assessment_import_mistake_drafts_draft_id_fkey FOREIGN KEY (draft_id) REFERENCES public.assessment_import_drafts(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: assessment_mistakes assessment_mistakes_assessment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.assessment_mistakes
-    ADD CONSTRAINT assessment_mistakes_assessment_id_fkey FOREIGN KEY (assessment_id) REFERENCES public.assessments(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'assessment_mistakes_assessment_id_fkey'
+        AND conrelid = 'public.assessment_mistakes'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.assessment_mistakes
+            ADD CONSTRAINT assessment_mistakes_assessment_id_fkey FOREIGN KEY (assessment_id) REFERENCES public.assessments(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: exchange_rules exchange_rules_required_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.exchange_rules
-    ADD CONSTRAINT exchange_rules_required_reward_type_id_fkey FOREIGN KEY (required_reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'exchange_rules_required_reward_type_id_fkey'
+        AND conrelid = 'public.exchange_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.exchange_rules
+            ADD CONSTRAINT exchange_rules_required_reward_type_id_fkey FOREIGN KEY (required_reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: exchange_rules exchange_rules_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.exchange_rules
-    ADD CONSTRAINT exchange_rules_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'exchange_rules_reward_type_id_fkey'
+        AND conrelid = 'public.exchange_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.exchange_rules
+            ADD CONSTRAINT exchange_rules_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: goal_template_event_links goal_template_event_links_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.goal_template_event_links
-    ADD CONSTRAINT goal_template_event_links_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.achievement_events(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'goal_template_event_links_event_id_fkey'
+        AND conrelid = 'public.goal_template_event_links'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.goal_template_event_links
+            ADD CONSTRAINT goal_template_event_links_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.achievement_events(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: goal_template_event_links goal_template_event_links_template_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.goal_template_event_links
-    ADD CONSTRAINT goal_template_event_links_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.goal_templates(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'goal_template_event_links_template_id_fkey'
+        AND conrelid = 'public.goal_template_event_links'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.goal_template_event_links
+            ADD CONSTRAINT goal_template_event_links_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.goal_templates(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: goal_templates goal_templates_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.goal_templates
-    ADD CONSTRAINT goal_templates_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'goal_templates_reward_type_id_fkey'
+        AND conrelid = 'public.goal_templates'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.goal_templates
+            ADD CONSTRAINT goal_templates_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: goal_templates goal_templates_tracking_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.goal_templates
-    ADD CONSTRAINT goal_templates_tracking_reward_type_id_fkey FOREIGN KEY (tracking_reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'goal_templates_tracking_reward_type_id_fkey'
+        AND conrelid = 'public.goal_templates'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.goal_templates
+            ADD CONSTRAINT goal_templates_tracking_reward_type_id_fkey FOREIGN KEY (tracking_reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE SET NULL;
+    END IF;
+END$$;
 
 
 --
 -- Name: reward_rules reward_rules_student_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.reward_rules
-    ADD CONSTRAINT reward_rules_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'reward_rules_student_id_fkey'
+        AND conrelid = 'public.reward_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.reward_rules
+            ADD CONSTRAINT reward_rules_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: reward_rules reward_rules_subject_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.reward_rules
-    ADD CONSTRAINT reward_rules_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'reward_rules_subject_id_fkey'
+        AND conrelid = 'public.reward_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.reward_rules
+            ADD CONSTRAINT reward_rules_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id) ON DELETE CASCADE;
+    END IF;
+END$$;
+
+
+--
+-- Name: reward_rules reward_rules_assessment_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'reward_rules_assessment_type_fkey'
+        AND conrelid = 'public.reward_rules'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.reward_rules
+            ADD CONSTRAINT reward_rules_assessment_type_fkey FOREIGN KEY (assessment_type) REFERENCES public.assessment_types(type_key) ON UPDATE CASCADE ON DELETE RESTRICT;
+    END IF;
+END$$;
 
 
 --
 -- Name: student_goals student_goals_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.student_goals
-    ADD CONSTRAINT student_goals_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'student_goals_reward_type_id_fkey'
+        AND conrelid = 'public.student_goals'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.student_goals
+            ADD CONSTRAINT student_goals_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: student_goals student_goals_student_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.student_goals
-    ADD CONSTRAINT student_goals_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'student_goals_student_id_fkey'
+        AND conrelid = 'public.student_goals'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.student_goals
+            ADD CONSTRAINT student_goals_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: student_goals student_goals_template_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.student_goals
-    ADD CONSTRAINT student_goals_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.goal_templates(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'student_goals_template_id_fkey'
+        AND conrelid = 'public.student_goals'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.student_goals
+            ADD CONSTRAINT student_goals_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.goal_templates(id) ON DELETE SET NULL;
+    END IF;
+END$$;
 
 
 --
 -- Name: student_goals student_goals_tracking_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.student_goals
-    ADD CONSTRAINT student_goals_tracking_reward_type_id_fkey FOREIGN KEY (tracking_reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'student_goals_tracking_reward_type_id_fkey'
+        AND conrelid = 'public.student_goals'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.student_goals
+            ADD CONSTRAINT student_goals_tracking_reward_type_id_fkey FOREIGN KEY (tracking_reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE SET NULL;
+    END IF;
+END$$;
 
 
 --
 -- Name: subjects subjects_student_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.subjects
-    ADD CONSTRAINT subjects_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'subjects_student_id_fkey'
+        AND conrelid = 'public.subjects'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.subjects
+            ADD CONSTRAINT subjects_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: transactions transactions_achievement_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_achievement_event_id_fkey FOREIGN KEY (achievement_event_id) REFERENCES public.achievement_events(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'transactions_achievement_event_id_fkey'
+        AND conrelid = 'public.transactions'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.transactions
+            ADD CONSTRAINT transactions_achievement_event_id_fkey FOREIGN KEY (achievement_event_id) REFERENCES public.achievement_events(id) ON DELETE SET NULL;
+    END IF;
+END$$;
 
 
 --
 -- Name: transactions transactions_assessment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_assessment_id_fkey FOREIGN KEY (assessment_id) REFERENCES public.assessments(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'transactions_assessment_id_fkey'
+        AND conrelid = 'public.transactions'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.transactions
+            ADD CONSTRAINT transactions_assessment_id_fkey FOREIGN KEY (assessment_id) REFERENCES public.assessments(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: transactions transactions_consumed_by_goal_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_consumed_by_goal_id_fkey FOREIGN KEY (consumed_by_goal_id) REFERENCES public.student_goals(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'transactions_consumed_by_goal_id_fkey'
+        AND conrelid = 'public.transactions'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.transactions
+            ADD CONSTRAINT transactions_consumed_by_goal_id_fkey FOREIGN KEY (consumed_by_goal_id) REFERENCES public.student_goals(id) ON DELETE SET NULL;
+    END IF;
+END$$;
 
 
 --
 -- Name: transactions transactions_goal_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_goal_id_fkey FOREIGN KEY (goal_id) REFERENCES public.student_goals(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'transactions_goal_id_fkey'
+        AND conrelid = 'public.transactions'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.transactions
+            ADD CONSTRAINT transactions_goal_id_fkey FOREIGN KEY (goal_id) REFERENCES public.student_goals(id) ON DELETE SET NULL;
+    END IF;
+END$$;
 
 
 --
 -- Name: transactions transactions_reward_rule_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_reward_rule_id_fkey FOREIGN KEY (reward_rule_id) REFERENCES public.reward_rules(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'transactions_reward_rule_id_fkey'
+        AND conrelid = 'public.transactions'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.transactions
+            ADD CONSTRAINT transactions_reward_rule_id_fkey FOREIGN KEY (reward_rule_id) REFERENCES public.reward_rules(id) ON DELETE SET NULL;
+    END IF;
+END$$;
 
 
 --
 -- Name: transactions transactions_reward_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'transactions_reward_type_id_fkey'
+        AND conrelid = 'public.transactions'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.transactions
+            ADD CONSTRAINT transactions_reward_type_id_fkey FOREIGN KEY (reward_type_id) REFERENCES public.custom_reward_types(id) ON DELETE SET NULL;
+    END IF;
+END$$;
 
 
 --
 -- Name: transactions transactions_student_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'transactions_student_id_fkey'
+        AND conrelid = 'public.transactions'::regclass
+    ) THEN
+        ALTER TABLE ONLY public.transactions
+            ADD CONSTRAINT transactions_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: objects objects_bucketId_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.objects
-    ADD CONSTRAINT "objects_bucketId_fkey" FOREIGN KEY (bucket_id) REFERENCES storage.buckets(id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'objects_bucketId_fkey'
+        AND conrelid = 'storage.objects'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.objects
+            ADD CONSTRAINT "objects_bucketId_fkey" FOREIGN KEY (bucket_id) REFERENCES storage.buckets(id);
+    END IF;
+END$$;
 
 
 --
 -- Name: s3_multipart_uploads s3_multipart_uploads_bucket_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.s3_multipart_uploads
-    ADD CONSTRAINT s3_multipart_uploads_bucket_id_fkey FOREIGN KEY (bucket_id) REFERENCES storage.buckets(id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 's3_multipart_uploads_bucket_id_fkey'
+        AND conrelid = 'storage.s3_multipart_uploads'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.s3_multipart_uploads
+            ADD CONSTRAINT s3_multipart_uploads_bucket_id_fkey FOREIGN KEY (bucket_id) REFERENCES storage.buckets(id);
+    END IF;
+END$$;
 
 
 --
 -- Name: s3_multipart_uploads_parts s3_multipart_uploads_parts_bucket_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.s3_multipart_uploads_parts
-    ADD CONSTRAINT s3_multipart_uploads_parts_bucket_id_fkey FOREIGN KEY (bucket_id) REFERENCES storage.buckets(id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 's3_multipart_uploads_parts_bucket_id_fkey'
+        AND conrelid = 'storage.s3_multipart_uploads_parts'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.s3_multipart_uploads_parts
+            ADD CONSTRAINT s3_multipart_uploads_parts_bucket_id_fkey FOREIGN KEY (bucket_id) REFERENCES storage.buckets(id);
+    END IF;
+END$$;
 
 
 --
 -- Name: s3_multipart_uploads_parts s3_multipart_uploads_parts_upload_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.s3_multipart_uploads_parts
-    ADD CONSTRAINT s3_multipart_uploads_parts_upload_id_fkey FOREIGN KEY (upload_id) REFERENCES storage.s3_multipart_uploads(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 's3_multipart_uploads_parts_upload_id_fkey'
+        AND conrelid = 'storage.s3_multipart_uploads_parts'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.s3_multipart_uploads_parts
+            ADD CONSTRAINT s3_multipart_uploads_parts_upload_id_fkey FOREIGN KEY (upload_id) REFERENCES storage.s3_multipart_uploads(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 
 --
 -- Name: vector_indexes vector_indexes_bucket_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.vector_indexes
-    ADD CONSTRAINT vector_indexes_bucket_id_fkey FOREIGN KEY (bucket_id) REFERENCES storage.buckets_vectors(id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'vector_indexes_bucket_id_fkey'
+        AND conrelid = 'storage.vector_indexes'::regclass
+    ) THEN
+        ALTER TABLE ONLY storage.vector_indexes
+            ADD CONSTRAINT vector_indexes_bucket_id_fkey FOREIGN KEY (bucket_id) REFERENCES storage.buckets_vectors(id);
+    END IF;
+END$$;
 
 
 --
@@ -6147,6 +7530,7 @@ ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
 -- Name: ai_assessment_logs Allow public delete on ai_assessment_logs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public delete on ai_assessment_logs" ON public.ai_assessment_logs;
 CREATE POLICY "Allow public delete on ai_assessment_logs" ON public.ai_assessment_logs FOR DELETE USING (true);
 
 
@@ -6154,6 +7538,7 @@ CREATE POLICY "Allow public delete on ai_assessment_logs" ON public.ai_assessmen
 -- Name: ai_assessment_logs Allow public insert on ai_assessment_logs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public insert on ai_assessment_logs" ON public.ai_assessment_logs;
 CREATE POLICY "Allow public insert on ai_assessment_logs" ON public.ai_assessment_logs FOR INSERT WITH CHECK (true);
 
 
@@ -6161,6 +7546,7 @@ CREATE POLICY "Allow public insert on ai_assessment_logs" ON public.ai_assessmen
 -- Name: ai_assessment_logs Allow public select on ai_assessment_logs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public select on ai_assessment_logs" ON public.ai_assessment_logs;
 CREATE POLICY "Allow public select on ai_assessment_logs" ON public.ai_assessment_logs FOR SELECT USING (true);
 
 
@@ -6168,6 +7554,7 @@ CREATE POLICY "Allow public select on ai_assessment_logs" ON public.ai_assessmen
 -- Name: ai_provider_configs Allow delete on ai_provider_configs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete on ai_provider_configs" ON public.ai_provider_configs;
 CREATE POLICY "Allow delete on ai_provider_configs" ON public.ai_provider_configs FOR DELETE USING (true);
 
 
@@ -6175,6 +7562,7 @@ CREATE POLICY "Allow delete on ai_provider_configs" ON public.ai_provider_config
 -- Name: ai_provider_configs Allow insert on ai_provider_configs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert on ai_provider_configs" ON public.ai_provider_configs;
 CREATE POLICY "Allow insert on ai_provider_configs" ON public.ai_provider_configs FOR INSERT WITH CHECK (true);
 
 
@@ -6182,6 +7570,7 @@ CREATE POLICY "Allow insert on ai_provider_configs" ON public.ai_provider_config
 -- Name: ai_provider_configs Allow public read on ai_provider_configs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public read on ai_provider_configs" ON public.ai_provider_configs;
 CREATE POLICY "Allow public read on ai_provider_configs" ON public.ai_provider_configs FOR SELECT USING (true);
 
 
@@ -6189,6 +7578,7 @@ CREATE POLICY "Allow public read on ai_provider_configs" ON public.ai_provider_c
 -- Name: ai_provider_configs Allow update on ai_provider_configs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update on ai_provider_configs" ON public.ai_provider_configs;
 CREATE POLICY "Allow update on ai_provider_configs" ON public.ai_provider_configs FOR UPDATE USING (true);
 
 
@@ -6196,6 +7586,7 @@ CREATE POLICY "Allow update on ai_provider_configs" ON public.ai_provider_config
 -- Name: assessment_import_drafts Allow public insert on assessment_import_drafts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public insert on assessment_import_drafts" ON public.assessment_import_drafts;
 CREATE POLICY "Allow public insert on assessment_import_drafts" ON public.assessment_import_drafts FOR INSERT WITH CHECK (true);
 
 
@@ -6203,6 +7594,7 @@ CREATE POLICY "Allow public insert on assessment_import_drafts" ON public.assess
 -- Name: assessment_import_drafts Allow public select on assessment_import_drafts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public select on assessment_import_drafts" ON public.assessment_import_drafts;
 CREATE POLICY "Allow public select on assessment_import_drafts" ON public.assessment_import_drafts FOR SELECT USING (true);
 
 
@@ -6210,6 +7602,7 @@ CREATE POLICY "Allow public select on assessment_import_drafts" ON public.assess
 -- Name: assessment_import_drafts Allow public update on assessment_import_drafts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public update on assessment_import_drafts" ON public.assessment_import_drafts;
 CREATE POLICY "Allow public update on assessment_import_drafts" ON public.assessment_import_drafts FOR UPDATE USING (true);
 
 
@@ -6217,6 +7610,7 @@ CREATE POLICY "Allow public update on assessment_import_drafts" ON public.assess
 -- Name: assessment_import_jobs Allow public insert on assessment_import_jobs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public insert on assessment_import_jobs" ON public.assessment_import_jobs;
 CREATE POLICY "Allow public insert on assessment_import_jobs" ON public.assessment_import_jobs FOR INSERT WITH CHECK (true);
 
 
@@ -6224,6 +7618,7 @@ CREATE POLICY "Allow public insert on assessment_import_jobs" ON public.assessme
 -- Name: assessment_import_jobs Allow public select on assessment_import_jobs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public select on assessment_import_jobs" ON public.assessment_import_jobs;
 CREATE POLICY "Allow public select on assessment_import_jobs" ON public.assessment_import_jobs FOR SELECT USING (true);
 
 
@@ -6231,6 +7626,7 @@ CREATE POLICY "Allow public select on assessment_import_jobs" ON public.assessme
 -- Name: assessment_import_jobs Allow public update on assessment_import_jobs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public update on assessment_import_jobs" ON public.assessment_import_jobs;
 CREATE POLICY "Allow public update on assessment_import_jobs" ON public.assessment_import_jobs FOR UPDATE USING (true);
 
 
@@ -6238,6 +7634,7 @@ CREATE POLICY "Allow public update on assessment_import_jobs" ON public.assessme
 -- Name: assessment_import_mistake_drafts Allow public delete on assessment_import_mistake_drafts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public delete on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts;
 CREATE POLICY "Allow public delete on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts FOR DELETE USING (true);
 
 
@@ -6245,6 +7642,7 @@ CREATE POLICY "Allow public delete on assessment_import_mistake_drafts" ON publi
 -- Name: assessment_import_mistake_drafts Allow public insert on assessment_import_mistake_drafts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public insert on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts;
 CREATE POLICY "Allow public insert on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts FOR INSERT WITH CHECK (true);
 
 
@@ -6252,6 +7650,7 @@ CREATE POLICY "Allow public insert on assessment_import_mistake_drafts" ON publi
 -- Name: assessment_import_mistake_drafts Allow public select on assessment_import_mistake_drafts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public select on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts;
 CREATE POLICY "Allow public select on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts FOR SELECT USING (true);
 
 
@@ -6259,6 +7658,7 @@ CREATE POLICY "Allow public select on assessment_import_mistake_drafts" ON publi
 -- Name: assessment_import_mistake_drafts Allow public update on assessment_import_mistake_drafts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public update on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts;
 CREATE POLICY "Allow public update on assessment_import_mistake_drafts" ON public.assessment_import_mistake_drafts FOR UPDATE USING (true);
 
 
@@ -6266,6 +7666,7 @@ CREATE POLICY "Allow public update on assessment_import_mistake_drafts" ON publi
 -- Name: assessment_mistakes Allow public delete on assessment_mistakes; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public delete on assessment_mistakes" ON public.assessment_mistakes;
 CREATE POLICY "Allow public delete on assessment_mistakes" ON public.assessment_mistakes FOR DELETE USING (true);
 
 
@@ -6273,6 +7674,7 @@ CREATE POLICY "Allow public delete on assessment_mistakes" ON public.assessment_
 -- Name: assessment_mistakes Allow public insert on assessment_mistakes; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public insert on assessment_mistakes" ON public.assessment_mistakes;
 CREATE POLICY "Allow public insert on assessment_mistakes" ON public.assessment_mistakes FOR INSERT WITH CHECK (true);
 
 
@@ -6280,6 +7682,7 @@ CREATE POLICY "Allow public insert on assessment_mistakes" ON public.assessment_
 -- Name: assessment_mistakes Allow public select on assessment_mistakes; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public select on assessment_mistakes" ON public.assessment_mistakes;
 CREATE POLICY "Allow public select on assessment_mistakes" ON public.assessment_mistakes FOR SELECT USING (true);
 
 
@@ -6287,12 +7690,14 @@ CREATE POLICY "Allow public select on assessment_mistakes" ON public.assessment_
 -- Name: assessment_mistakes Allow public update on assessment_mistakes; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public update on assessment_mistakes" ON public.assessment_mistakes;
 CREATE POLICY "Allow public update on assessment_mistakes" ON public.assessment_mistakes FOR UPDATE USING (true);
 
 --
 -- Name: assessments Allow delete; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete" ON public.assessments;
 CREATE POLICY "Allow delete" ON public.assessments FOR DELETE USING (true);
 
 
@@ -6300,6 +7705,7 @@ CREATE POLICY "Allow delete" ON public.assessments FOR DELETE USING (true);
 -- Name: backups Allow delete; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete" ON public.backups;
 CREATE POLICY "Allow delete" ON public.backups FOR DELETE USING (true);
 
 
@@ -6307,6 +7713,7 @@ CREATE POLICY "Allow delete" ON public.backups FOR DELETE USING (true);
 -- Name: reward_rules Allow delete; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete" ON public.reward_rules;
 CREATE POLICY "Allow delete" ON public.reward_rules FOR DELETE USING (true);
 
 
@@ -6314,6 +7721,7 @@ CREATE POLICY "Allow delete" ON public.reward_rules FOR DELETE USING (true);
 -- Name: students Allow delete; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete" ON public.students;
 CREATE POLICY "Allow delete" ON public.students FOR DELETE USING (true);
 
 
@@ -6321,6 +7729,7 @@ CREATE POLICY "Allow delete" ON public.students FOR DELETE USING (true);
 -- Name: subjects Allow delete; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete" ON public.subjects;
 CREATE POLICY "Allow delete" ON public.subjects FOR DELETE USING (true);
 
 
@@ -6328,20 +7737,47 @@ CREATE POLICY "Allow delete" ON public.subjects FOR DELETE USING (true);
 -- Name: transactions Allow delete; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete" ON public.transactions;
 CREATE POLICY "Allow delete" ON public.transactions FOR DELETE USING (true);
+
+
+--
+-- Name: assessment_types Allow delete assessment types; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow delete assessment types" ON public.assessment_types;
+CREATE POLICY "Allow delete assessment types" ON public.assessment_types FOR DELETE USING ((is_system = false));
 
 
 --
 -- Name: custom_reward_types Allow delete custom reward types; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete custom reward types" ON public.custom_reward_types;
 CREATE POLICY "Allow delete custom reward types" ON public.custom_reward_types FOR DELETE USING ((is_system = false));
+
+
+--
+-- Name: achievement_events Allow delete achievement events; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow delete achievement events" ON public.achievement_events;
+CREATE POLICY "Allow delete achievement events" ON public.achievement_events FOR DELETE USING (true);
+
+
+--
+-- Name: achievement_event_reward_rules Allow delete achievement event reward rules; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow delete achievement event reward rules" ON public.achievement_event_reward_rules;
+CREATE POLICY "Allow delete achievement event reward rules" ON public.achievement_event_reward_rules FOR DELETE USING (true);
 
 
 --
 -- Name: exchange_rules Allow delete exchange rules; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete exchange rules" ON public.exchange_rules;
 CREATE POLICY "Allow delete exchange rules" ON public.exchange_rules FOR DELETE USING (true);
 
 
@@ -6349,6 +7785,7 @@ CREATE POLICY "Allow delete exchange rules" ON public.exchange_rules FOR DELETE 
 -- Name: assessments Allow insert; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert" ON public.assessments;
 CREATE POLICY "Allow insert" ON public.assessments FOR INSERT WITH CHECK (true);
 
 
@@ -6356,6 +7793,7 @@ CREATE POLICY "Allow insert" ON public.assessments FOR INSERT WITH CHECK (true);
 -- Name: backups Allow insert; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert" ON public.backups;
 CREATE POLICY "Allow insert" ON public.backups FOR INSERT WITH CHECK (true);
 
 
@@ -6363,6 +7801,7 @@ CREATE POLICY "Allow insert" ON public.backups FOR INSERT WITH CHECK (true);
 -- Name: reward_rules Allow insert; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert" ON public.reward_rules;
 CREATE POLICY "Allow insert" ON public.reward_rules FOR INSERT WITH CHECK (true);
 
 
@@ -6370,6 +7809,7 @@ CREATE POLICY "Allow insert" ON public.reward_rules FOR INSERT WITH CHECK (true)
 -- Name: site_settings Allow insert; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert" ON public.site_settings;
 CREATE POLICY "Allow insert" ON public.site_settings FOR INSERT WITH CHECK (true);
 
 
@@ -6377,6 +7817,7 @@ CREATE POLICY "Allow insert" ON public.site_settings FOR INSERT WITH CHECK (true
 -- Name: students Allow insert; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert" ON public.students;
 CREATE POLICY "Allow insert" ON public.students FOR INSERT WITH CHECK (true);
 
 
@@ -6384,6 +7825,7 @@ CREATE POLICY "Allow insert" ON public.students FOR INSERT WITH CHECK (true);
 -- Name: subjects Allow insert; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert" ON public.subjects;
 CREATE POLICY "Allow insert" ON public.subjects FOR INSERT WITH CHECK (true);
 
 
@@ -6391,20 +7833,47 @@ CREATE POLICY "Allow insert" ON public.subjects FOR INSERT WITH CHECK (true);
 -- Name: transactions Allow insert; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert" ON public.transactions;
 CREATE POLICY "Allow insert" ON public.transactions FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: assessment_types Allow insert assessment types; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow insert assessment types" ON public.assessment_types;
+CREATE POLICY "Allow insert assessment types" ON public.assessment_types FOR INSERT WITH CHECK (true);
 
 
 --
 -- Name: custom_reward_types Allow insert custom reward types; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert custom reward types" ON public.custom_reward_types;
 CREATE POLICY "Allow insert custom reward types" ON public.custom_reward_types FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: achievement_events Allow insert achievement events; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow insert achievement events" ON public.achievement_events;
+CREATE POLICY "Allow insert achievement events" ON public.achievement_events FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: achievement_event_reward_rules Allow insert achievement event reward rules; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow insert achievement event reward rules" ON public.achievement_event_reward_rules;
+CREATE POLICY "Allow insert achievement event reward rules" ON public.achievement_event_reward_rules FOR INSERT WITH CHECK (true);
 
 
 --
 -- Name: exchange_rules Allow insert exchange rules; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert exchange rules" ON public.exchange_rules;
 CREATE POLICY "Allow insert exchange rules" ON public.exchange_rules FOR INSERT WITH CHECK (true);
 
 
@@ -6412,6 +7881,7 @@ CREATE POLICY "Allow insert exchange rules" ON public.exchange_rules FOR INSERT 
 -- Name: assessments Allow public read access; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public read access" ON public.assessments;
 CREATE POLICY "Allow public read access" ON public.assessments FOR SELECT USING (true);
 
 
@@ -6419,6 +7889,7 @@ CREATE POLICY "Allow public read access" ON public.assessments FOR SELECT USING 
 -- Name: backups Allow public read access; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public read access" ON public.backups;
 CREATE POLICY "Allow public read access" ON public.backups FOR SELECT USING (true);
 
 
@@ -6426,6 +7897,7 @@ CREATE POLICY "Allow public read access" ON public.backups FOR SELECT USING (tru
 -- Name: reward_rules Allow public read access; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public read access" ON public.reward_rules;
 CREATE POLICY "Allow public read access" ON public.reward_rules FOR SELECT USING (true);
 
 
@@ -6433,6 +7905,7 @@ CREATE POLICY "Allow public read access" ON public.reward_rules FOR SELECT USING
 -- Name: site_settings Allow public read access; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public read access" ON public.site_settings;
 CREATE POLICY "Allow public read access" ON public.site_settings FOR SELECT USING (true);
 
 
@@ -6440,6 +7913,7 @@ CREATE POLICY "Allow public read access" ON public.site_settings FOR SELECT USIN
 -- Name: students Allow public read access; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public read access" ON public.students;
 CREATE POLICY "Allow public read access" ON public.students FOR SELECT USING (true);
 
 
@@ -6447,6 +7921,7 @@ CREATE POLICY "Allow public read access" ON public.students FOR SELECT USING (tr
 -- Name: subjects Allow public read access; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public read access" ON public.subjects;
 CREATE POLICY "Allow public read access" ON public.subjects FOR SELECT USING (true);
 
 
@@ -6454,20 +7929,47 @@ CREATE POLICY "Allow public read access" ON public.subjects FOR SELECT USING (tr
 -- Name: transactions Allow public read access; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow public read access" ON public.transactions;
 CREATE POLICY "Allow public read access" ON public.transactions FOR SELECT USING (true);
+
+
+--
+-- Name: assessment_types Allow read access to assessment types; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow read access to assessment types" ON public.assessment_types;
+CREATE POLICY "Allow read access to assessment types" ON public.assessment_types FOR SELECT USING (true);
 
 
 --
 -- Name: custom_reward_types Allow read access to custom reward types; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow read access to custom reward types" ON public.custom_reward_types;
 CREATE POLICY "Allow read access to custom reward types" ON public.custom_reward_types FOR SELECT USING (true);
+
+
+--
+-- Name: achievement_events Allow read access to achievement events; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow read access to achievement events" ON public.achievement_events;
+CREATE POLICY "Allow read access to achievement events" ON public.achievement_events FOR SELECT USING (true);
+
+
+--
+-- Name: achievement_event_reward_rules Allow read access to achievement event reward rules; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow read access to achievement event reward rules" ON public.achievement_event_reward_rules;
+CREATE POLICY "Allow read access to achievement event reward rules" ON public.achievement_event_reward_rules FOR SELECT USING (true);
 
 
 --
 -- Name: exchange_rules Allow read access to exchange rules; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow read access to exchange rules" ON public.exchange_rules;
 CREATE POLICY "Allow read access to exchange rules" ON public.exchange_rules FOR SELECT USING (true);
 
 
@@ -6475,6 +7977,7 @@ CREATE POLICY "Allow read access to exchange rules" ON public.exchange_rules FOR
 -- Name: assessments Allow update; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update" ON public.assessments;
 CREATE POLICY "Allow update" ON public.assessments FOR UPDATE USING (true);
 
 
@@ -6482,6 +7985,7 @@ CREATE POLICY "Allow update" ON public.assessments FOR UPDATE USING (true);
 -- Name: backups Allow update; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update" ON public.backups;
 CREATE POLICY "Allow update" ON public.backups FOR UPDATE USING (true);
 
 
@@ -6489,6 +7993,7 @@ CREATE POLICY "Allow update" ON public.backups FOR UPDATE USING (true);
 -- Name: reward_rules Allow update; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update" ON public.reward_rules;
 CREATE POLICY "Allow update" ON public.reward_rules FOR UPDATE USING (true);
 
 
@@ -6496,6 +8001,7 @@ CREATE POLICY "Allow update" ON public.reward_rules FOR UPDATE USING (true);
 -- Name: site_settings Allow update; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update" ON public.site_settings;
 CREATE POLICY "Allow update" ON public.site_settings FOR UPDATE USING (true);
 
 
@@ -6503,6 +8009,7 @@ CREATE POLICY "Allow update" ON public.site_settings FOR UPDATE USING (true);
 -- Name: students Allow update; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update" ON public.students;
 CREATE POLICY "Allow update" ON public.students FOR UPDATE USING (true);
 
 
@@ -6510,6 +8017,7 @@ CREATE POLICY "Allow update" ON public.students FOR UPDATE USING (true);
 -- Name: subjects Allow update; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update" ON public.subjects;
 CREATE POLICY "Allow update" ON public.subjects FOR UPDATE USING (true);
 
 
@@ -6517,20 +8025,47 @@ CREATE POLICY "Allow update" ON public.subjects FOR UPDATE USING (true);
 -- Name: transactions Allow update; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update" ON public.transactions;
 CREATE POLICY "Allow update" ON public.transactions FOR UPDATE USING (true);
+
+
+--
+-- Name: assessment_types Allow update assessment types; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow update assessment types" ON public.assessment_types;
+CREATE POLICY "Allow update assessment types" ON public.assessment_types FOR UPDATE USING (true);
 
 
 --
 -- Name: custom_reward_types Allow update custom reward types; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update custom reward types" ON public.custom_reward_types;
 CREATE POLICY "Allow update custom reward types" ON public.custom_reward_types FOR UPDATE USING (true);
+
+
+--
+-- Name: achievement_events Allow update achievement events; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow update achievement events" ON public.achievement_events;
+CREATE POLICY "Allow update achievement events" ON public.achievement_events FOR UPDATE USING (true);
+
+
+--
+-- Name: achievement_event_reward_rules Allow update achievement event reward rules; Type: POLICY; Schema: public; Owner: -
+--
+
+DROP POLICY IF EXISTS "Allow update achievement event reward rules" ON public.achievement_event_reward_rules;
+CREATE POLICY "Allow update achievement event reward rules" ON public.achievement_event_reward_rules FOR UPDATE USING (true);
 
 
 --
 -- Name: exchange_rules Allow update exchange rules; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update exchange rules" ON public.exchange_rules;
 CREATE POLICY "Allow update exchange rules" ON public.exchange_rules FOR UPDATE USING (true);
 
 
@@ -6538,6 +8073,7 @@ CREATE POLICY "Allow update exchange rules" ON public.exchange_rules FOR UPDATE 
 -- Name: student_goals Allow anon and authenticated full access; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow anon and authenticated full access" ON public.student_goals;
 CREATE POLICY "Allow anon and authenticated full access" ON public.student_goals TO anon, authenticated USING (true) WITH CHECK (true);
 
 
@@ -6545,6 +8081,7 @@ CREATE POLICY "Allow anon and authenticated full access" ON public.student_goals
 -- Name: goal_templates Allow delete goal templates; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete goal templates" ON public.goal_templates;
 CREATE POLICY "Allow delete goal templates" ON public.goal_templates FOR DELETE TO anon, authenticated USING (true);
 
 
@@ -6552,6 +8089,7 @@ CREATE POLICY "Allow delete goal templates" ON public.goal_templates FOR DELETE 
 -- Name: goal_template_event_links Allow delete goal template event links; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow delete goal template event links" ON public.goal_template_event_links;
 CREATE POLICY "Allow delete goal template event links" ON public.goal_template_event_links FOR DELETE TO anon, authenticated USING (true);
 
 
@@ -6559,6 +8097,7 @@ CREATE POLICY "Allow delete goal template event links" ON public.goal_template_e
 -- Name: goal_templates Allow insert goal templates; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert goal templates" ON public.goal_templates;
 CREATE POLICY "Allow insert goal templates" ON public.goal_templates FOR INSERT TO anon, authenticated WITH CHECK (true);
 
 
@@ -6566,6 +8105,7 @@ CREATE POLICY "Allow insert goal templates" ON public.goal_templates FOR INSERT 
 -- Name: goal_template_event_links Allow insert goal template event links; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow insert goal template event links" ON public.goal_template_event_links;
 CREATE POLICY "Allow insert goal template event links" ON public.goal_template_event_links FOR INSERT TO anon, authenticated WITH CHECK (true);
 
 
@@ -6573,6 +8113,7 @@ CREATE POLICY "Allow insert goal template event links" ON public.goal_template_e
 -- Name: goal_templates Allow read goal templates; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow read goal templates" ON public.goal_templates;
 CREATE POLICY "Allow read goal templates" ON public.goal_templates FOR SELECT TO anon, authenticated USING (true);
 
 
@@ -6580,6 +8121,7 @@ CREATE POLICY "Allow read goal templates" ON public.goal_templates FOR SELECT TO
 -- Name: goal_template_event_links Allow read goal template event links; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow read goal template event links" ON public.goal_template_event_links;
 CREATE POLICY "Allow read goal template event links" ON public.goal_template_event_links FOR SELECT TO anon, authenticated USING (true);
 
 
@@ -6587,6 +8129,7 @@ CREATE POLICY "Allow read goal template event links" ON public.goal_template_eve
 -- Name: goal_templates Allow update goal templates; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update goal templates" ON public.goal_templates;
 CREATE POLICY "Allow update goal templates" ON public.goal_templates FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
 
 
@@ -6594,6 +8137,7 @@ CREATE POLICY "Allow update goal templates" ON public.goal_templates FOR UPDATE 
 -- Name: goal_template_event_links Allow update goal template event links; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "Allow update goal template event links" ON public.goal_template_event_links;
 CREATE POLICY "Allow update goal template event links" ON public.goal_template_event_links FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
 
 
@@ -6614,6 +8158,12 @@ ALTER TABLE public.achievement_events ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.assessments ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: assessment_types; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.assessment_types ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: ai_assessment_logs; Type: ROW SECURITY; Schema: public; Owner: -
@@ -6732,6 +8282,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessment_import_drafts TO
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessment_import_jobs TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessment_import_mistake_drafts TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessment_mistakes TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessment_types TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.assessments TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.backups TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.custom_reward_types TO anon, authenticated;
@@ -6808,63 +8359,96 @@ ALTER TABLE storage.vector_indexes ENABLE ROW LEVEL SECURITY;
 -- Name: supabase_realtime; Type: PUBLICATION; Schema: -; Owner: -
 --
 
-CREATE PUBLICATION supabase_realtime WITH (publish = 'insert, update, delete, truncate');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+        CREATE PUBLICATION supabase_realtime WITH (publish = 'insert, update, delete, truncate');
+    END IF;
+END$$;
 
 
 --
 -- Name: issue_graphql_placeholder; Type: EVENT TRIGGER; Schema: -; Owner: -
 --
 
-CREATE EVENT TRIGGER issue_graphql_placeholder ON sql_drop
-         WHEN TAG IN ('DROP EXTENSION')
-   EXECUTE FUNCTION extensions.set_graphql_placeholder();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_event_trigger WHERE evtname = 'issue_graphql_placeholder') THEN
+        CREATE EVENT TRIGGER issue_graphql_placeholder ON sql_drop
+                 WHEN TAG IN ('DROP EXTENSION')
+           EXECUTE FUNCTION extensions.set_graphql_placeholder();
+    END IF;
+END$$;
 
 
 --
 -- Name: issue_pg_cron_access; Type: EVENT TRIGGER; Schema: -; Owner: -
 --
 
-CREATE EVENT TRIGGER issue_pg_cron_access ON ddl_command_end
-         WHEN TAG IN ('CREATE EXTENSION')
-   EXECUTE FUNCTION extensions.grant_pg_cron_access();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_event_trigger WHERE evtname = 'issue_pg_cron_access') THEN
+        CREATE EVENT TRIGGER issue_pg_cron_access ON ddl_command_end
+                 WHEN TAG IN ('CREATE EXTENSION')
+           EXECUTE FUNCTION extensions.grant_pg_cron_access();
+    END IF;
+END$$;
 
 
 --
 -- Name: issue_pg_graphql_access; Type: EVENT TRIGGER; Schema: -; Owner: -
 --
 
-CREATE EVENT TRIGGER issue_pg_graphql_access ON ddl_command_end
-         WHEN TAG IN ('CREATE FUNCTION')
-   EXECUTE FUNCTION extensions.grant_pg_graphql_access();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_event_trigger WHERE evtname = 'issue_pg_graphql_access') THEN
+        CREATE EVENT TRIGGER issue_pg_graphql_access ON ddl_command_end
+                 WHEN TAG IN ('CREATE FUNCTION')
+           EXECUTE FUNCTION extensions.grant_pg_graphql_access();
+    END IF;
+END$$;
 
 
 --
 -- Name: issue_pg_net_access; Type: EVENT TRIGGER; Schema: -; Owner: -
 --
 
-CREATE EVENT TRIGGER issue_pg_net_access ON ddl_command_end
-         WHEN TAG IN ('CREATE EXTENSION')
-   EXECUTE FUNCTION extensions.grant_pg_net_access();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_event_trigger WHERE evtname = 'issue_pg_net_access') THEN
+        CREATE EVENT TRIGGER issue_pg_net_access ON ddl_command_end
+                 WHEN TAG IN ('CREATE EXTENSION')
+           EXECUTE FUNCTION extensions.grant_pg_net_access();
+    END IF;
+END$$;
 
 
 --
 -- Name: pgrst_ddl_watch; Type: EVENT TRIGGER; Schema: -; Owner: -
 --
 
-CREATE EVENT TRIGGER pgrst_ddl_watch ON ddl_command_end
-   EXECUTE FUNCTION extensions.pgrst_ddl_watch();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_event_trigger WHERE evtname = 'pgrst_ddl_watch') THEN
+        CREATE EVENT TRIGGER pgrst_ddl_watch ON ddl_command_end
+           EXECUTE FUNCTION extensions.pgrst_ddl_watch();
+    END IF;
+END$$;
 
 
 --
 -- Name: pgrst_drop_watch; Type: EVENT TRIGGER; Schema: -; Owner: -
 --
 
-CREATE EVENT TRIGGER pgrst_drop_watch ON sql_drop
-   EXECUTE FUNCTION extensions.pgrst_drop_watch();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_event_trigger WHERE evtname = 'pgrst_drop_watch') THEN
+        CREATE EVENT TRIGGER pgrst_drop_watch ON sql_drop
+           EXECUTE FUNCTION extensions.pgrst_drop_watch();
+    END IF;
+END$$;
 
 
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict J3whbaN4bNdxsrM8pFgVLt6fJ6ow0sDNE8PwrEikrLZaxRLBaGphErXnh2GKZ8I

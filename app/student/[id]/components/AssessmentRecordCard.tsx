@@ -3,6 +3,11 @@
 import React, { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import ImageViewer from '@/app/components/ImageViewer'
+import {
+  getAssessmentTypeIcon as getDynamicAssessmentTypeIcon,
+  getAssessmentTypeLabel as getDynamicAssessmentTypeLabel,
+  type AssessmentType,
+} from '@/lib/assessmentTypes'
 
 interface AssessmentRecord {
   id: string
@@ -38,10 +43,11 @@ interface AssessmentRecord {
 
 interface RecordCardProps {
   record: AssessmentRecord
+  assessmentTypes: AssessmentType[]
   onClick?: () => void
 }
 
-const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) => {
+const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, assessmentTypes, onClick }) => {
   const locale = useLocale()
   const t = useTranslations('student')
   const tAssessment = useTranslations('assessment')
@@ -153,21 +159,15 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, onClick }) =>
 
   // 根據評量種類獲取對應的 Material Icon
   const getAssessmentTypeIcon = (type: string | undefined | null): string => {
-    const typeIconMap: Record<string, string> = {
-      'exam': 'assignment',
-      'quiz': 'checklist_rtl',
-      'homework': 'edit_note',
-      'project': 'palette',
-    }
-    return typeIconMap[type || ''] || 'history_edu'
+    return getDynamicAssessmentTypeIcon(assessmentTypes, type) || 'history_edu'
   }
 
   const getAssessmentTypeLabel = (type: string | undefined | null): string => {
-    const normalizedType = type || 'exam'
-    if (['exam', 'quiz', 'homework', 'project'].includes(normalizedType)) {
-      return tAssessment(`types.${normalizedType}`)
-    }
-    return locale === 'zh-TW' ? '評量' : 'Assessment'
+    return getDynamicAssessmentTypeLabel(
+      assessmentTypes,
+      type,
+      locale === 'zh-TW' ? '評量' : 'Assessment'
+    )
   }
 
   const assessmentTypeLabel = getAssessmentTypeLabel(record.assessment_type)

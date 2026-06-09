@@ -501,6 +501,45 @@ export interface Database {
         }
         Relationships: []
       }
+      assessment_types: {
+        Row: {
+          id: string
+          type_key: string
+          display_name: string
+          icon: string
+          color: string | null
+          display_order: number
+          is_active: boolean
+          is_system: boolean
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          type_key: string
+          display_name: string
+          icon?: string
+          color?: string | null
+          display_order?: number
+          is_active?: boolean
+          is_system?: boolean
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          type_key?: string
+          display_name?: string
+          icon?: string
+          color?: string | null
+          display_order?: number
+          is_active?: boolean
+          is_system?: boolean
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       custom_reward_types: {
         Row: {
           id: string

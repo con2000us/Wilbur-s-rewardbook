@@ -17,7 +17,6 @@ import {
   buildMultimodalAssessmentSystemPrompt,
   buildMultimodalAssessmentUserPrompt,
   buildTextAnalysisSystemPrompt,
-  buildTextAnalysisUserPrompt,
   buildVisionSystemPrompt,
 } from '@/lib/ai/providers/openrouter'
 import { buildStudentContext } from '@/lib/ai/context-builder'
@@ -141,6 +140,33 @@ function resolveSubjectMatch(detectedSubject: string, subjects: CandidateSubject
   return {
     subjectId: scored[0]?.subject_id || null,
     candidates: scored,
+  }
+}
+
+function normalizeAiAssessmentType(
+  json: AssessmentJsonOutput,
+  assessmentTypes: Array<{ type_key: string; display_name: string }>
+): AssessmentJsonOutput {
+  const rawType = typeof json.assessment_type === 'string' ? json.assessment_type.trim() : ''
+  if (!rawType) {
+    return { ...json, assessment_type: null }
+  }
+
+  const activeTypeKeys = new Set(assessmentTypes.map((type) => type.type_key))
+  if (activeTypeKeys.has(rawType)) {
+    return { ...json, assessment_type: rawType }
+  }
+
+  return {
+    ...json,
+    assessment_type: null,
+    uncertainties: [
+      ...(json.uncertainties || []),
+      {
+        field: 'assessment_type',
+        reason: `Unsupported assessment_type "${rawType}". Please select an assessment type.`,
+      },
+    ],
   }
 }
 
@@ -512,7 +538,6 @@ export async function POST(
 
       const ocrTextForAnalysis = buildOcrPipelineText(ocrPageResults)
       const textSystemPrompt = buildTextAnalysisSystemPrompt(context, locale, true)
-      const textUserPrompt = buildTextAnalysisUserPrompt(ocrTextForAnalysis)
       const textStart = Date.now()
 
       extractResult = await provider.extractAssessment({
@@ -564,7 +589,8 @@ export async function POST(
       })
     }
 
-    const { draftId } = await createDraftFromJson(supabase, importJob, extractResult.json, createMistakeDrafts)
+    const validatedJson = normalizeAiAssessmentType(extractResult.json, context.assessmentTypes || [])
+    const { draftId } = await createDraftFromJson(supabase, importJob, validatedJson, createMistakeDrafts)
 
     await supabase
       .from('assessment_import_jobs')
@@ -572,7 +598,7 @@ export async function POST(
         status: 'completed',
         raw_ocr_text: rawOcrText,
         ai_json: (extractResult.rawJson || extractResult.json) as unknown as Record<string, unknown>,
-        validated_json: extractResult.json as unknown as Record<string, unknown>,
+        validated_json: validatedJson as unknown as Record<string, unknown>,
         model: extractResult.model || visionConfig.model,
         provider: visionConfig.provider,
         completed_at: new Date().toISOString(),

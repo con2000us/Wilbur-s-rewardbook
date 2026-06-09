@@ -7,6 +7,8 @@ import { parseStudentAvatar, getStudentBackgroundGradient } from '@/lib/utils/st
 import StudentHeaderWithDropdown from '@/app/components/StudentHeaderWithDropdown'
 import StudentFloatingQuickNav from '../components/StudentFloatingQuickNav'
 import HomeButton from '@/app/components/HomeButton'
+import { fetchAssessmentTypes } from '@/lib/assessmentTypesServer'
+import { getDefaultAssessmentTypeKey } from '@/lib/assessmentTypes'
 
 export default async function AddAssessmentPage({ 
   params 
@@ -45,25 +47,8 @@ export default async function AddAssessmentPage({
     .eq('is_active', true)
     .order('priority', { ascending: false })
 
-  // 查詢該學生最常用的評量類型
-  const { data: assessmentTypes } = await supabase
-    .from('assessments')
-    .select('assessment_type')
-    // @ts-ignore - Supabase type inference issue with select queries
-    .in('subject_id', subjects?.map((s: any) => s.id) || [])
-    .not('assessment_type', 'is', null)
-
-  // 統計最常用的類型
-  const typeCounts: Record<string, number> = {}
-  // @ts-ignore - Supabase type inference issue with select queries
-  assessmentTypes?.forEach((a: any) => {
-    if (a.assessment_type) {
-      typeCounts[a.assessment_type] = (typeCounts[a.assessment_type] || 0) + 1
-    }
-  })
-  const mostCommonType = Object.keys(typeCounts).length > 0
-    ? Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0][0]
-    : 'exam' // 預設為 exam
+  const assessmentTypes = await fetchAssessmentTypes(supabase)
+  const defaultAssessmentType = getDefaultAssessmentTypeKey(assessmentTypes)
 
   // 獲取所有學生（用於切換器）
   const { data: allStudents } = await supabase
@@ -122,7 +107,8 @@ export default async function AddAssessmentPage({
               studentId={id} 
               subjects={subjects} 
               rewardRules={rewardRules || []}
-              defaultAssessmentType={mostCommonType}
+              defaultAssessmentType={defaultAssessmentType}
+              assessmentTypes={assessmentTypes}
             />
           ) : (
             <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">

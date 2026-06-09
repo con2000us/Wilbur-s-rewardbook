@@ -15,9 +15,10 @@ interface Props {
   subjects?: any[]
   assessments?: any[]
   rewardTypes?: any[]
+  assessmentTypes?: any[]
 }
 
-export default function TransactionPageClient({ studentId, transactions, studentName, selectedRewardType, onRewardTypeSelect, subjects = [], assessments = [], rewardTypes = [] }: Props) {
+export default function TransactionPageClient({ studentId, transactions, studentName, selectedRewardType, onRewardTypeSelect, subjects = [], assessments = [], rewardTypes = [], assessmentTypes = [] }: Props) {
   const router = useRouter()
   const t = useTranslations('transaction')
   
@@ -59,6 +60,7 @@ export default function TransactionPageClient({ studentId, transactions, student
         subjects={subjects}
         assessments={assessments}
         rewardTypes={rewardTypes}
+        assessmentTypes={assessmentTypes}
       />
 
       {/* 交易表單 Modal */}
@@ -72,4 +74,3 @@ export default function TransactionPageClient({ studentId, transactions, student
     </>
   )
 }
-

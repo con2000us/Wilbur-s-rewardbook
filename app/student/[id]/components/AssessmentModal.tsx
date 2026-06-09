@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import Modal from '@/app/components/Modal'
 import AssessmentForm from './AssessmentForm'
+import type { AssessmentType } from '@/lib/assessmentTypes'
 
 interface Subject {
   id: string
@@ -54,6 +55,7 @@ interface AssessmentModalProps {
   assessment?: Assessment
   initialSubjectId?: string
   defaultAssessmentType?: string
+  assessmentTypes?: AssessmentType[]
   onSuccess?: () => void
 }
 
@@ -66,6 +68,7 @@ export default function AssessmentModal({
   assessment,
   initialSubjectId,
   defaultAssessmentType = 'exam',
+  assessmentTypes = [],
   onSuccess
 }: AssessmentModalProps) {
   const t = useTranslations('assessment')
@@ -123,6 +126,7 @@ export default function AssessmentModal({
         assessment={assessment}
         initialSubjectId={initialSubjectId}
         defaultAssessmentType={defaultAssessmentType}
+        assessmentTypes={assessmentTypes}
         onSuccess={handleSuccess}
         onCancel={onClose}
       />

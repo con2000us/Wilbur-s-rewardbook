@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import RuleCard from '../../components/RuleCard'
 import RewardConfigFormBasic from '@/examples/reward-config-form-basic'
+import type { AssessmentType } from '@/lib/assessmentTypes'
 
 interface RewardConfigItem {
   type_id: string
@@ -58,8 +59,8 @@ export default function SubjectRewardRulesManager({
 }: Props) {
   const router = useRouter()
   const t = useTranslations('rewardRules')
-  const tAssessment = useTranslations('assessment')
   const tCommon = useTranslations('common')
+  const locale = useLocale()
   const formRef = useRef<HTMLFormElement>(null)
   const referenceCardRef = useRef<HTMLDivElement>(null)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -85,8 +86,9 @@ export default function SubjectRewardRulesManager({
     reward_config: [] as RewardConfigItem[], // 新增：多种奖励配置
     is_active: true,
     is_student_specific: true, // 是否為學生專屬（科目+學生）
-    assessment_type: '' as '' | 'exam' | 'quiz' | 'homework' | 'project', // 評量類型
+    assessment_type: '',
   })
+  const [assessmentTypes, setAssessmentTypes] = useState<AssessmentType[]>([])
 
   const isNumericReward = (value: string) => {
     const v = (value ?? '').trim()
@@ -136,6 +138,22 @@ export default function SubjectRewardRulesManager({
     })
     setShowAddForm(true)
   }
+
+  useEffect(() => {
+    async function loadAssessmentTypes() {
+      try {
+        const response = await fetch('/api/assessment-types/list?includeInactive=true')
+        const data = await response.json()
+        if (response.ok && data.success) {
+          setAssessmentTypes(data.types || [])
+        }
+      } catch (err) {
+        console.error('Failed to load assessment types:', err)
+      }
+    }
+
+    loadAssessmentTypes()
+  }, [])
 
   // 當表單展開且正在編輯時，等待展開動畫結束後滾動到對照規則卡片
   useEffect(() => {
@@ -663,14 +681,23 @@ export default function SubjectRewardRulesManager({
               </label>
               <select
                 value={formData.assessment_type}
-                onChange={(e) => setFormData({ ...formData, assessment_type: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, assessment_type: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg"
               >
                 <option value="">{t('allTypesGeneral')}</option>
-                <option value="exam">📝 {tAssessment('types.exam')} - {t('higherReward')}</option>
-                <option value="quiz">📋 {tAssessment('types.quiz')}</option>
-                <option value="homework">📓 {tAssessment('types.homework')}</option>
-                <option value="project">🎨 {tAssessment('types.project')}</option>
+                {assessmentTypes.map((type) => {
+                  const inactiveText = locale === 'zh-TW' ? '已停用' : 'inactive'
+                  const isInactive = type.is_active === false
+                  return (
+                    <option
+                      key={type.type_key}
+                      value={type.type_key}
+                      disabled={isInactive && formData.assessment_type !== type.type_key}
+                    >
+                      {type.display_name}{isInactive ? ` (${inactiveText})` : ''}
+                    </option>
+                  )
+                })}
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 💡 {t('assessmentTypeHint')}
@@ -1019,4 +1046,3 @@ export default function SubjectRewardRulesManager({
     </div>
   )
 }
-

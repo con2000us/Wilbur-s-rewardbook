@@ -303,19 +303,34 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (shouldRetryWithoutGradeColumns(error)) {
-      const fallbackData = { ...updateData }
-      delete fallbackData.grade
-      delete fallbackData.score_type
-
-      const retryResult = await supabase
+      // PGRST204 on .single() means PostgREST couldn't serialize the response,
+      // NOT that the UPDATE failed. Query for the row instead of retrying
+      // with stripped columns (which would lose grade/score_type data).
+      const { data: found, error: findError } = await supabase
         .from('assessments')
-        .update(fallbackData)
+        .select('*')
         .eq('id', body.assessment_id)
-        .select()
         .single()
 
-      assessment = retryResult.data
-      error = retryResult.error
+      if (found && !findError) {
+        assessment = found
+        error = null
+      } else {
+        // Row wasn't found or query failed — retry without grade/score_type columns.
+        const fallbackData = { ...updateData }
+        delete fallbackData.grade
+        delete fallbackData.score_type
+
+        const retryResult = await supabase
+          .from('assessments')
+          .update(fallbackData)
+          .eq('id', body.assessment_id)
+          .select()
+          .single()
+
+        assessment = retryResult.data
+        error = retryResult.error
+      }
     }
 
     if (error) {

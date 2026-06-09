@@ -4,6 +4,7 @@ import StudentRecords from './StudentRecords'
 import { getTranslations } from 'next-intl/server'
 import { parseStudentAvatar, getStudentBackgroundGradient } from '@/lib/utils/studentTheme'
 import StudentHeaderWithDropdown from '@/app/components/StudentHeaderWithDropdown'
+import { fetchAssessmentTypes } from '@/lib/assessmentTypesServer'
 
 export default async function StudentPage({
   params
@@ -107,6 +108,8 @@ export default async function StudentPage({
     .eq('is_active', true)
     .order('priority', { ascending: false })
 
+  const assessmentTypes = await fetchAssessmentTypes(supabase, { includeInactive: true })
+
   // 獲取所有學生（用於切換器）
   const { data: allStudents } = await supabase
     .from('students')
@@ -139,6 +142,7 @@ export default async function StudentPage({
           transactions={transactions || []}
           summary={summary}
           rewardRules={rewardRules || []}
+          assessmentTypes={assessmentTypes}
         />
       </div>
     </div>

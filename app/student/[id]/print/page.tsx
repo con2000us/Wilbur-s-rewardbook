@@ -3,6 +3,12 @@ import { notFound } from 'next/navigation'
 import PrintButtons from './PrintButtons'
 import PrintFilters from './PrintFilters'
 import { getTranslations, getLocale } from 'next-intl/server'
+import { fetchAssessmentTypes } from '@/lib/assessmentTypesServer'
+import {
+  getAssessmentTypeColor,
+  getAssessmentTypeIcon,
+  getAssessmentTypeLabel,
+} from '@/lib/assessmentTypes'
 
 export default async function PrintPage({ 
   params,
@@ -35,6 +41,8 @@ export default async function PrintPage({
     .select('*')
     .eq('student_id', id)
     .order('order_index')
+
+  const assessmentTypes = await fetchAssessmentTypes(supabase, { includeInactive: true })
   
   // 獲取評量列表
   const { data: allAssessments } = await supabase
@@ -208,13 +216,11 @@ export default async function PrintPage({
 
   // 評量類型映射（包含 Material Icon 和顏色）
   const getAssessmentTypeDisplay = (type: string) => {
-    const typeConfig: Record<string, { icon: string; color: string; text: string }> = {
-      'exam': { icon: 'assignment', color: 'text-red-600', text: tAssessment('types.exam') },
-      'quiz': { icon: 'checklist_rtl', color: 'text-blue-600', text: tAssessment('types.quiz') },
-      'homework': { icon: 'edit_note', color: 'text-green-600', text: tAssessment('types.homework') },
-      'project': { icon: 'palette', color: 'text-purple-600', text: tAssessment('types.project') }
+    return {
+      icon: getAssessmentTypeIcon(assessmentTypes, type),
+      color: getAssessmentTypeColor(assessmentTypes, type),
+      text: getAssessmentTypeLabel(assessmentTypes, type, type || (locale === 'zh-TW' ? '評量' : 'Assessment')),
     }
-    return typeConfig[type] || { icon: 'description', color: 'text-gray-600', text: type }
   }
 
   return (
@@ -346,7 +352,7 @@ export default async function PrintPage({
                       {(() => {
                         const typeDisplay = getAssessmentTypeDisplay(assessment.assessment_type)
                         return (
-                          <span className={`flex items-center gap-1 ${typeDisplay.color}`}>
+                          <span className="flex items-center gap-1" style={{ color: typeDisplay.color }}>
                             <span className="material-icons-outlined text-sm">{typeDisplay.icon}</span>
                             {typeDisplay.text}
                           </span>

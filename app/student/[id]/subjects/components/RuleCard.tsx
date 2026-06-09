@@ -2,6 +2,12 @@
 
 import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
+import {
+  getAssessmentTypeColor,
+  getAssessmentTypeIcon,
+  getAssessmentTypeLabel,
+  type AssessmentType,
+} from '@/lib/assessmentTypes'
 
 interface CustomRewardType {
   id: string
@@ -31,6 +37,16 @@ function debugLog(location: string, message: string, data: any = {}) {
       })
     }).catch(() => {})
   }
+}
+
+function colorWithAlpha(color: string, alpha: number) {
+  const match = color.match(/^#([0-9a-f]{6})$/i)
+  if (!match) return color
+  const value = match[1]
+  const red = parseInt(value.slice(0, 2), 16)
+  const green = parseInt(value.slice(2, 4), 16)
+  const blue = parseInt(value.slice(4, 6), 16)
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`
 }
 
 interface RewardConfigItem {
@@ -94,11 +110,11 @@ export default function RuleCard({
   onDragEnd
 }: RuleCardProps) {
   const t = useTranslations('rewardRules')
-  const tAssessment = useTranslations('assessment')
   const tCommon = useTranslations('common')
   
   // 加载奖励类型数据
   const [rewardTypes, setRewardTypes] = useState<CustomRewardType[]>([])
+  const [assessmentTypes, setAssessmentTypes] = useState<AssessmentType[]>([])
   
   useEffect(() => {
     const loadRewardTypes = async () => {
@@ -113,6 +129,21 @@ export default function RuleCard({
       }
     }
     loadRewardTypes()
+  }, [])
+
+  useEffect(() => {
+    const loadAssessmentTypes = async () => {
+      try {
+        const response = await fetch('/api/assessment-types/list?includeInactive=true')
+        const data = await response.json()
+        if (data.success && data.types) {
+          setAssessmentTypes(data.types || [])
+        }
+      } catch (err) {
+        console.error('Failed to load assessment types:', err)
+      }
+    }
+    loadAssessmentTypes()
   }, [])
   
   // 根据 type_id 或 type_key 获取奖励类型信息
@@ -227,40 +258,33 @@ export default function RuleCard({
     scoreRange = t('conditionTypes.perfect_score')
   }
 
-  // 評量類型標籤（所有類型都顯示為標籤，包括"不限"）
   const getAssessmentTypeBadge = () => {
-    const typeLabels: Record<string, string> = {
-      'exam': tAssessment('types.exam'),
-      'quiz': tAssessment('types.quiz'),
-      'homework': tAssessment('types.homework'),
-      'project': tAssessment('types.project'),
-      'all': t('allTypes') || '不限',
-    }
-    
-    const typeIcons: Record<string, string> = {
-      'exam': '📝',
-      'quiz': '📋',
-      'homework': '📓',
-      'project': '🎨',
-      'all': '🌐',
+    const assessmentType = rule.assessment_type
+
+    if (!assessmentType) {
+      return (
+        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border-2 border-gray-300">
+          <span className="material-symbols-outlined text-[15px]">all_inclusive</span>
+          {t('allTypes') || 'All'}
+        </span>
+      )
     }
 
-    // 不同評量類型的顏色配置
-    const typeColors: Record<string, { bg: string; text: string; border: string }> = {
-      'exam': { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300' },
-      'quiz': { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
-      'homework': { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
-      'project': { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-300' },
-      'all': { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300' },
-    }
-
-    // 如果沒有評量類型，顯示"不限"
-    const assessmentType = rule.assessment_type || 'all'
-    const colors = typeColors[assessmentType] || typeColors['all']
+    const color = getAssessmentTypeColor(assessmentTypes, assessmentType)
+    const icon = getAssessmentTypeIcon(assessmentTypes, assessmentType)
+    const label = getAssessmentTypeLabel(assessmentTypes, assessmentType, assessmentType)
 
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colors.bg} ${colors.text} border-2 ${colors.border}`}>
-        {typeIcons[assessmentType] || ''} {typeLabels[assessmentType] || assessmentType}
+      <span
+        className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border-2"
+        style={{
+          color,
+          borderColor: colorWithAlpha(color, 0.35),
+          backgroundColor: colorWithAlpha(color, 0.12),
+        }}
+      >
+        <span className="material-symbols-outlined text-[15px]">{icon}</span>
+        {label}
       </span>
     )
   }
@@ -490,4 +514,3 @@ export default function RuleCard({
     </div>
   )
 }
-

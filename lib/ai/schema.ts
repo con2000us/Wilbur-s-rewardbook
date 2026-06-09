@@ -28,10 +28,10 @@ export const assessmentJsonSchema = z
     subject: z.string().min(1, 'Subject is required'),
     title: z.string().optional().default(''),
     assessment_type: z
-      .enum(['exam', 'homework', 'quiz', 'project'])
-      .nullable()
-      .optional()
-      .default(null),
+      .preprocess(
+        (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
+        z.string().trim().min(1).nullable().optional().default(null)
+      ),
     score: z
       .number()
       .min(0)

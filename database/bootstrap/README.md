@@ -7,8 +7,8 @@
 
 | 步驟 | 檔案 | 必跑？ | 功能 |
 |------|------|--------|------|
-| 1 | `01_schema.sql` | **必跑** | 完整 `public` schema（資料表、索引、FK、RLS、trigger 等）。由線上 DB 匯出，檔案大屬正常。已含大型目標（`goal_templates`、`goal_template_event_links`、`student_goals` 等）及其 RLS。 |
-| 2 | `02_seed_defaults.sql` | **必跑** | 系統必要種子：五種預設獎勵類型（積分、獎金、愛心、星星、鑽石）、AI 評量匯入相關 `site_settings` 預設值。 |
+| 1 | `01_schema.sql` | **必跑** | 完整 schema（資料表、索引、FK、RLS、trigger 等）。含 `achievement_events` RLS 與現行欄位定義。全新空 DB 跑此檔即可登入初始化。 |
+| 2 | `02_seed_defaults.sql` | **必跑** | 系統必要種子：五種預設獎勵類型（積分、獎金、愛心、星星、鑽石）、四種預設評量類別（考試、小考、作業、專題）、AI 評量匯入相關 `site_settings` 預設值。 |
 | 3 | `03_seed_optional.sql` | 選用 | 範例全域獎勵規則（`reward_rules`）。正式環境若要乾淨 DB 可跳過。 |
 | 4a | `04_seed_demo_zh-TW.sql` | 選用（擇一） | 繁中示範：成就事件、翻譯列、事件獎勵對應、兌換規則。 |
 | 4b | `04_seed_demo_en.sql` | 選用（擇一） | 英文示範，內容類型同 4a。 |
@@ -23,13 +23,13 @@
 
 ### `01_schema.sql`
 
-- 新環境的結構基礎，**一定要先跑**。
-- 已包含大型目標 P0 所需 schema 與 RLS，**不必**再補跑 `database/migrations/add-goal-templates*.sql`。
-- 若專案已有正式資料，**不要**重跑整份 schema。
+- 新環境的結構基礎，**一定要先跑**（建議在**全新空 DB** 或新 Supabase 專案上執行）。
+- 已包含大型目標 P0 所需 schema、RLS（含 `achievement_events`），**不必**再補跑 `database/migrations/add-goal-templates*.sql`。
+- 若專案已有正式資料，**不要**重跑整份 schema；舊 DB 升級請改用 `database/migrations/` 內對應遷移檔。
 
 ### `02_seed_defaults.sql`
 
-- 建立／更新五種系統獎勵類型與顯示順序。
+- 建立／更新五種系統獎勵類型、四種系統評量類別與顯示順序。
 - 可重複執行（使用 `ON CONFLICT` 更新）。
 
 ### `03_seed_optional.sql`

@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server'
 export interface StudentContextData {
   grade?: string
   candidateSubjects: Array<{ id: string; name: string }>
+  assessmentTypes: Array<{ type_key: string; display_name: string }>
   recentAssessmentPatterns: string[]
   subjectArchiveHints: Array<{ detected: string; subject: string; count: number }>
 }
@@ -33,6 +34,13 @@ export async function buildStudentContext(studentId: string): Promise<StudentCon
   const subjectRows = (subjects || []).map((s) => ({ id: s.id, name: s.name }))
   const subjectIds = subjectRows.map((s) => s.id)
   const subjectNameById = new Map(subjectRows.map((subject) => [subject.id, subject.name]))
+
+  const { data: assessmentTypes } = await supabase
+    .from('assessment_types')
+    .select('type_key, display_name')
+    .eq('is_active', true)
+    .order('display_order', { ascending: true })
+    .order('created_at', { ascending: true })
 
   // Fetch recent assessment titles for this student's subjects only.
   const { data: recentAssessments } = await supabase
@@ -84,6 +92,10 @@ export async function buildStudentContext(studentId: string): Promise<StudentCon
   return {
     grade,
     candidateSubjects: subjectRows,
+    assessmentTypes: (assessmentTypes || []).map((type) => ({
+      type_key: type.type_key,
+      display_name: type.display_name,
+    })),
     recentAssessmentPatterns: (recentAssessments || [])
       .map((a) => {
         const subjectName = a.subject_id ? subjectNameById.get(a.subject_id) : undefined

@@ -13,6 +13,12 @@ import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/li
 import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
 import AiAssessmentImport from './AiAssessmentImport'
 import type { Json } from '@/lib/supabase/types'
+import AssessmentTypeRadioGroup from '@/app/components/AssessmentTypeRadioGroup'
+import {
+  getAssessmentTypeLabel,
+  normalizeAssessmentTypes,
+  type AssessmentType,
+} from '@/lib/assessmentTypes'
 
 interface Subject {
   id: string
@@ -69,11 +75,12 @@ interface Props {
   studentId: string
   subjects: Subject[]
   rewardRules: RewardRule[]
-  assessment?: Assessment  // 如果有值就是編輯模式
-  initialSubjectId?: string // 新增模式：預選科目（例如跟學習記錄 focused tab 同步）
+  assessment?: Assessment
+  initialSubjectId?: string
   defaultAssessmentType?: string
-  onSuccess?: () => void  // 成功後的回調
-  onCancel?: () => void  // 取消的回調
+  assessmentTypes?: AssessmentType[]
+  onSuccess?: () => void
+  onCancel?: () => void
 }
 
 export default function AssessmentForm({ 
@@ -83,6 +90,7 @@ export default function AssessmentForm({
   assessment,
   initialSubjectId,
   defaultAssessmentType = 'exam',
+  assessmentTypes = [],
   onSuccess,
   onCancel
 }: Props) {
@@ -124,6 +132,15 @@ export default function AssessmentForm({
   const [selectedRewardTypeId, setSelectedRewardTypeId] = useState<string>('')
   const [activeMode, setActiveMode] = useState<'manual' | 'ai'>('manual')
   const [aiAvailable, setAiAvailable] = useState(false)
+  const assessmentTypeOptions = normalizeAssessmentTypes(
+    assessmentTypes,
+    assessment?.assessment_type || defaultAssessmentType
+  )
+  const selectedAssessmentTypeLabel = getAssessmentTypeLabel(
+    assessmentTypeOptions,
+    selectedAssessmentType,
+    locale === 'zh-TW' ? '評量' : 'Assessment'
+  )
 
   const getRewardTypeDisplayName = (type: RewardType) => {
     return type.display_name || type.type_key
@@ -368,7 +385,11 @@ export default function AssessmentForm({
         const dateStr = locale === 'zh-TW' ? `${month}/${day}` : `${month}/${day}`
         
         // 獲取評量類型文字
-        const typeText = t(`types.${assessmentType}`)
+        const typeText = getAssessmentTypeLabel(
+          assessmentTypeOptions,
+          assessmentType,
+          locale === 'zh-TW' ? '評量' : 'Assessment'
+        )
         
         // 生成標題：日期 + 評量類型
         title = `${dateStr} ${typeText}`
@@ -543,12 +564,9 @@ export default function AssessmentForm({
         <AiAssessmentImport
           studentId={studentId}
           subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
-          assessmentTypes={[
-            { value: 'exam', label: t('types.exam') },
-            { value: 'quiz', label: t('types.quiz') },
-            { value: 'homework', label: t('types.homework') },
-            { value: 'project', label: t('types.project') },
-          ]}
+          assessmentTypes={assessmentTypeOptions
+            .filter((type) => type.is_active !== false)
+            .map((type) => ({ value: type.type_key, label: type.display_name }))}
           onConfirmed={() => {
             if (onSuccess) {
               onSuccess()
@@ -675,38 +693,14 @@ export default function AssessmentForm({
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             {t('type')} *
           </label>
-          <div className="grid grid-cols-5 gap-2">
-            {['exam', 'quiz', 'homework', 'project'].map((type) => (
-              <label 
-                key={type}
-                className="relative flex flex-col items-center gap-1 p-2 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:shadow-md hover:border-blue-400 hover:bg-blue-50 border-gray-300"
-              >
-                <input
-                  type="radio"
-                  name="assessment_type"
-                  value={type}
-                  checked={selectedAssessmentType === type}
-                  onChange={(e) => setSelectedAssessmentType(e.target.value)}
-                  required
-                  className="absolute top-1 right-1 w-4 h-4 text-blue-600 accent-blue-600"
-                />
-                <span 
-                  className={`material-icons-outlined text-2xl ${
-                    type === 'exam' ? 'text-red-600' :
-                    type === 'quiz' ? 'text-blue-600' :
-                    type === 'homework' ? 'text-green-600' :
-                    type === 'project' ? 'text-purple-600' : ''
-                  }`}
-                >
-                  {type === 'exam' && 'assignment'} 
-                  {type === 'quiz' && 'checklist_rtl'} 
-                  {type === 'homework' && 'edit_note'} 
-                  {type === 'project' && 'palette'}
-                </span>
-                <span className="text-sm font-medium text-center text-gray-800">{t(`types.${type}`)}</span>
-              </label>
-            ))}
-          </div>
+          <AssessmentTypeRadioGroup
+            assessmentTypes={assessmentTypeOptions}
+            selectedType={selectedAssessmentType}
+            onChange={setSelectedAssessmentType}
+            currentType={assessment?.assessment_type}
+            compact
+            inactiveLabel={locale === 'zh-TW' ? '已停用' : 'Inactive'}
+          />
         </div>
 
         {/* 評量標題與日期 */}
@@ -1010,7 +1004,7 @@ export default function AssessmentForm({
                     </span>
                   </h3>
                   <p className="text-xs text-gray-500 text-left">
-                    {locale === 'zh-TW' ? '適用於' : 'For'}: {t(`types.${selectedAssessmentType}`)}
+                    {locale === 'zh-TW' ? '適用於' : 'For'}: {selectedAssessmentTypeLabel}
                   </p>
                 </div>
               </div>
