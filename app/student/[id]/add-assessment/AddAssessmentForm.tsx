@@ -732,6 +732,8 @@ export default function AddAssessmentForm({ studentId, subjects, rewardRules, de
             uploadEndpoint="/api/assessments/upload-image"
             deleteEndpoint="/api/assessments/delete-image"
             idFieldName="assessmentId"
+            sortable
+            showSubjectMatchHint
           />
         </div>
 

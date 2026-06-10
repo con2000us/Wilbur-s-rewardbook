@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# wilbur — Rewardbook 操作統一入口，避免每個腳本都要手動 approve
+# 用法: wilbur add-assessment --student 李承新 --subject 國語 ...
+#       wilbur query --student 李承新
+#       wilbur ocr --student 李承新 --vision-result "..."
+
+set -e
+SCRIPTS="/opt/wilbur-rewardbook/scripts"
+
+# Auth token for Wilbur API (set in .env or here)
+if [ -z "$WILBUR_AUTH_TOKEN" ]; then
+  export WILBUR_AUTH_TOKEN="v1.9e95f956d44ea3f8f424f68cf787d74c797ef246a5a886690ff22223f1850958"
+fi
+CMD="$1"
+shift
+
+case "$CMD" in
+  add-assessment)  python3 "$SCRIPTS/add-assessment.py" "$@" ;;
+  add-reward)      python3 "$SCRIPTS/add-reward.py" "$@" ;;
+  add-penalty)     python3 "$SCRIPTS/add-penalty.py" "$@" ;;
+  ocr)             python3 "$SCRIPTS/ocr-assess.py" "$@" ;;
+  parse)           python3 "$SCRIPTS/parse-assessment.py" "$@" ;;
+  query)           python3 "$SCRIPTS/query-student.py" "$@" ;;
+  list-students)   python3 "$SCRIPTS/query-student.py" --list "$@" ;;
+  classify)        python3 "$SCRIPTS/classify-exam.py" "$@" ;;
+  *)
+    echo "Usage: wilbur {add-assessment|add-reward|add-penalty|ocr|parse|query|list-students|classify} [args...]"
+    exit 1
+    ;;
+esac

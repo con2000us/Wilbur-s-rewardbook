@@ -70,13 +70,34 @@ body {
   box-shadow: 0 10px 20px rgba(42, 95, 162, 0.18);
 }
 
-/* Fixed anchor for student workspace (lg+); right edge matches main column inside max-w-7xl shell */
-.app-action-cluster-fixed {
-  position: fixed;
+/* Body-level absolute anchor (lg+, portal to body): sits in the gutter above the
+   glass panel, scrolls with page content, right-aligned to the content column */
+.app-action-cluster-anchor {
+  position: absolute;
   top: 2rem;
+  left: 0;
+  right: 0;
   z-index: 60;
   margin: 0;
   overflow: visible;
+  justify-content: flex-end;
+  pointer-events: none;
+  padding-right: max(
+    1rem,
+    calc(
+      var(--student-shell-pad-x) +
+        (
+          100vw - 2 * var(--student-shell-pad-x) -
+            min(var(--student-shell-max), 100vw - 2 * var(--student-shell-pad-x))
+        ) /
+        2 +
+        var(--student-shell-inner-pad-x)
+    )
+  );
+}
+
+.app-action-cluster-anchor > * {
+  pointer-events: auto;
 }
 
 .app-shell-student {
@@ -97,34 +118,6 @@ body {
   --student-shell-pad-x: 2rem;
   --student-shell-max: 56rem;
   --student-shell-inner-pad-x: 0rem;
-}
-
-/* Student workspace: hide fixed cluster at <=1023px, show at >=1024px */
-@media (max-width: 1023px) {
-  .app-action-cluster-fixed.app-action-cluster-align-student {
-    display: none !important;
-  }
-}
-
-@media (min-width: 1024px) {
-  .app-action-cluster-fixed.app-action-cluster-align-student {
-    display: inline-flex !important;
-  }
-}
-
-.app-action-cluster-align-student {
-  right: max(
-    1rem,
-    calc(
-      var(--student-shell-pad-x) +
-        (
-          100vw - 2 * var(--student-shell-pad-x) -
-            min(var(--student-shell-max), 100vw - 2 * var(--student-shell-pad-x))
-        ) /
-        2 +
-        var(--student-shell-inner-pad-x)
-    )
-  );
 }
 
 .home-action-cluster {

@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
       title: body.title,
       assessment_type: body.assessment_type,
       max_score: body.max_score || 100,
-      due_date: body.due_date || null,
+      ...(body.due_date !== undefined ? { due_date: body.due_date || null } : {} as Pick<AssessmentWriteData, 'due_date'>),
       notes: body.notes || null,
       score_type: isRecordOnly ? 'numeric' : body.score_type || 'numeric',
       grade: isRecordOnly ? null : body.grade || null,

@@ -55,6 +55,10 @@ Thumbs.db
 logs/
 *.log
 
+# Python cache
+__pycache__/
+*.py[cod]
+
 # Local design/demo drafts that should not be deployed
 _not_for_upload/
 

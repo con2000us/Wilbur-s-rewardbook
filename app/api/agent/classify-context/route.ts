@@ -6,9 +6,13 @@ import sharp from 'sharp'
 const BUCKET_NAME = 'assessment-imports'
 const STITCH_DIR = 'classify'
 
-// ── v3 拼圖參數 ──
-const CELL_WIDTH = 600
-const CELL_HEIGHT = 600
+// ── v3.1 混合尺寸佈局：新卷大圖 + 範本小圖 ──
+const NEW_CELL_MIN_WIDTH = 1600         // 新卷最小寬度（保證文字可讀）
+const NEW_CELL_MIN_HEIGHT = 1200        // 新卷最小高度（保證分數區可見）
+const NEW_CELL_MAX_WIDTH = 2800         // 新卷最大寬度（不超過 vision 限制）
+const NEW_CELL_MAX_HEIGHT = 2400        // 新卷最大高度
+const TEMPLATE_CELL_WIDTH = 600         // 範本格寬度
+const TEMPLATE_CELL_HEIGHT = 600        // 範本格高度
 const LABEL_BAR_HEIGHT = 24
 const TITLE_BAR_HEIGHT = 20
 const ROW_HEADER_HEIGHT = 28
@@ -155,43 +159,51 @@ async function renderCell(
   labelText: string,
   titleText: string,
   isNew: boolean,
+  cellWidth: number,
+  cellHeight: number,
 ): Promise<Buffer> {
-  const imgAreaHeight = CELL_HEIGHT - LABEL_BAR_HEIGHT - TITLE_BAR_HEIGHT
+  const imgAreaHeight = cellHeight - LABEL_BAR_HEIGHT - TITLE_BAR_HEIGHT
 
   let imgLayer: Buffer
-  let imgW = CELL_WIDTH
+  let imgW = cellWidth
   let imgH = imgAreaHeight
 
   if (imageBuffer) {
+    const resizeOpts: sharp.ResizeOptions = {
+      width: cellWidth,
+      height: imgAreaHeight,
+      fit: 'inside',
+      withoutEnlargement: !isNew, // 新卷允許放大到格子
+    }
     const resized = await sharp(imageBuffer)
-      .resize({ width: CELL_WIDTH, height: imgAreaHeight, fit: 'inside', withoutEnlargement: true })
+      .resize(resizeOpts)
       .png()
       .toBuffer({ resolveWithObject: true })
     imgW = resized.info.width
     imgH = resized.info.height
     imgLayer = resized.data
   } else {
-    imgLayer = createPlaceholder(CELL_WIDTH, imgAreaHeight)
-    imgW = CELL_WIDTH
+    imgLayer = createPlaceholder(cellWidth, imgAreaHeight)
+    imgW = cellWidth
     imgH = imgAreaHeight
   }
 
   const compos: sharp.OverlayOptions[] = [
-    { input: createCellLabel(labelText, CELL_WIDTH), top: 0, left: 0 },
+    { input: createCellLabel(labelText, cellWidth), top: 0, left: 0 },
     {
       input: imgLayer,
       top: LABEL_BAR_HEIGHT + Math.max(0, Math.floor((imgAreaHeight - imgH) / 2)),
-      left: Math.max(0, Math.floor((CELL_WIDTH - imgW) / 2)),
+      left: Math.max(0, Math.floor((cellWidth - imgW) / 2)),
     },
-    { input: createCellTitle(titleText, CELL_WIDTH), top: CELL_HEIGHT - TITLE_BAR_HEIGHT, left: 0 },
+    { input: createCellTitle(titleText, cellWidth), top: cellHeight - TITLE_BAR_HEIGHT, left: 0 },
   ]
 
   if (isNew) {
-    compos.push({ input: createCellBorder(CELL_WIDTH, CELL_HEIGHT, NEW_ROW_HEADER_COLOR, 2), top: 0, left: 0 })
+    compos.push({ input: createCellBorder(cellWidth, cellHeight, NEW_ROW_HEADER_COLOR, 2), top: 0, left: 0 })
   }
 
   return sharp({
-    create: { width: CELL_WIDTH, height: CELL_HEIGHT, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } },
+    create: { width: cellWidth, height: cellHeight, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } },
   })
     .composite(compos.map((c) => ({ ...c, blend: 'over' })))
     .png()
@@ -262,7 +274,7 @@ export async function POST(request: NextRequest) {
         subject_name: nameById.get(subjId) || 'Unknown',
         assessment_type: typeKey,
         title: row.title,
-        imageUrl: urls[0]?.url || '',
+        imageUrl: (urls as any[]).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0]?.url || '',
       })
     }
 
@@ -348,10 +360,22 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // ── 9. 計算佈局 ──
+    // ── 9. 計算佈局（混合尺寸）──
     const maxTypesInAnySubject = Math.max(1, ...subjectGroups.map((g) => g.types.length))
-    let cellWidth = Math.min(CELL_WIDTH, Math.floor(MAX_TOTAL_WIDTH / maxTypesInAnySubject))
-    const totalWidth = cellWidth * maxTypesInAnySubject
+    // 範本格寬度：基於科目類型數動態計算
+    let templateCellWidth = TEMPLATE_CELL_WIDTH
+    if (maxTypesInAnySubject > 1) {
+      templateCellWidth = Math.min(TEMPLATE_CELL_WIDTH, Math.floor(MAX_TOTAL_WIDTH / maxTypesInAnySubject))
+    }
+    // 新考卷寬度：撐滿全寬，但限制上限
+    const newCellWidth = Math.min(NEW_CELL_MAX_WIDTH, Math.max(NEW_CELL_MIN_WIDTH, MAX_TOTAL_WIDTH))
+    // 新考卷高度
+    const newCellHeight = Math.min(NEW_CELL_MAX_HEIGHT, Math.max(NEW_CELL_MIN_HEIGHT, 1600))
+    // 總寬 = max(範本區總寬, 新卷寬)
+    const totalWidth = Math.max(
+      templateCellWidth * maxTypesInAnySubject,
+      newCellWidth,
+    )
 
     // ── 10. 下載新考卷 ──
     let newImageBuffer: Buffer
@@ -377,7 +401,7 @@ export async function POST(request: NextRequest) {
 
       // 計算此科目列的最大格數（垂直方向）
       const maxPapersThisSubject = Math.max(1, ...group.types.map((t) => t.papers.length))
-      const subjectRowHeight = maxPapersThisSubject * CELL_HEIGHT
+      const subjectRowHeight = maxPapersThisSubject * TEMPLATE_CELL_HEIGHT
 
       if (currentY + subjectRowHeight > MAX_TOTAL_HEIGHT) break
 
@@ -392,10 +416,10 @@ export async function POST(request: NextRequest) {
             imgBuffer = await downloadImage(paper.imageUrl)
           } catch { /* 佔位 */ }
 
-          const cellBuf = await renderCell(imgBuffer, label, paper.title, false)
-          compos.push({ input: cellBuf, top: currentY + pi * CELL_HEIGHT, left: colX })
+          const cellBuf = await renderCell(imgBuffer, label, paper.title, false, templateCellWidth, TEMPLATE_CELL_HEIGHT)
+          compos.push({ input: cellBuf, top: currentY + pi * TEMPLATE_CELL_HEIGHT, left: colX })
         }
-        colX += cellWidth
+        colX += templateCellWidth
       }
 
       currentY += subjectRowHeight
@@ -407,19 +431,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ── 12. 雙分隔 + 待分類 ──
+    // ── 12. 雙分隔 + 待分類大圖 ──
     if (hasTemplates && currentY + DOUBLE_SEPARATOR_HEIGHT <= MAX_TOTAL_HEIGHT) {
       compos.push({ input: createSeparator(totalWidth, DOUBLE_SEPARATOR_HEIGHT, DOUBLE_SEP_COLOR), top: currentY, left: 0 })
       currentY += DOUBLE_SEPARATOR_HEIGHT
     }
 
     const newIndex = selected.length + 1
-    if (currentY + ROW_HEADER_HEIGHT + CELL_HEIGHT <= MAX_TOTAL_HEIGHT) {
+    if (currentY + ROW_HEADER_HEIGHT + newCellHeight <= MAX_TOTAL_HEIGHT) {
       compos.push({ input: createRowHeader('❓ 待分類', NEW_ROW_HEADER_COLOR, totalWidth), top: currentY, left: 0 })
       currentY += ROW_HEADER_HEIGHT
-      const cellBuf = await renderCell(newImageBuffer, `【第${newIndex}張】❓ 待分類`, '', true)
+      const cellBuf = await renderCell(newImageBuffer, `【第${newIndex}張】❓ 待分類`, '', true, newCellWidth, newCellHeight)
       compos.push({ input: cellBuf, top: currentY, left: 0 })
-      currentY += CELL_HEIGHT
+      currentY += newCellHeight
     }
 
     // ── 13. 產生最終圖像 ──
@@ -431,8 +455,25 @@ export async function POST(request: NextRequest) {
       .png({ quality: 90 })
       .toBuffer()
 
-    // ── 14. 上傳 ──
+    // ── 13b. 清理舊拼圖（保留最近 10 分鐘的）──
     const adminClient = createAdminClient()
+    const now = Date.now()
+    const MAX_AGE_MS = 10 * 60 * 1000 // 10 分鐘
+    try {
+      const { data: existingFiles, error: listErr } = await adminClient.storage
+        .from(BUCKET_NAME)
+        .list(STITCH_DIR, { sortBy: { column: 'created_at', order: 'desc' } })
+      if (!listErr && existingFiles) {
+        for (const f of existingFiles) {
+          const created = f.created_at ? new Date(f.created_at).getTime() : 0
+          if (now - created > MAX_AGE_MS) {
+            await adminClient.storage.from(BUCKET_NAME).remove([`${STITCH_DIR}/${f.name}`])
+          }
+        }
+      }
+    } catch { /* 清理失敗不影響主流程 */ }
+
+    // ── 14. 上傳 ──
     const ts = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').replace('T', '_')
     const filePath = `${STITCH_DIR}/${ts}.png`
 
@@ -449,17 +490,57 @@ export async function POST(request: NextRequest) {
     // ── 15. Vision prompt ──
     let prompt: string
     if (!hasTemplates) {
-      prompt = '這是一張考卷圖片。無範本可供參考。\n\n請根據這張考卷的題型內容、排版格式、文字關鍵字來判斷科目。\n\n規則：\n- 仔細看題目文字來判斷科目（例如：出現計算/時鐘/圖形→數學，出現拼音/閱讀/造句→國語）\n- 只回答科目名稱，不要其他說明'
+      prompt =
+        '這是一張考卷圖片（無範本可供比對）。\\n\\n' +
+        '請完成兩件事：\\n\\n' +
+        '【科目判斷】\\n' +
+        '根據題型內容、排版格式、文字關鍵字來判斷科目。\\n' +
+        '規則：仔細看題目文字（例如：出現計算/時鐘/圖形→數學，出現拼音/閱讀/造句→國語）\\n\\n' +
+        '【OCR 讀取】\\n' +
+        '從考卷中讀取以下欄位（找不到就留空，不要編造）：\\n' +
+        '科目_標題區：{考卷標題區寫的科目，如國語、數學}\\n' +
+        '總分_標題區：{老師手寫批改的總分，數字如95 或等第如A、B+、C-}\\n' +
+        '等第_標題區：{若總分是等第制（A/B/C/D/F，可含+-），填這裡；數字分數則留空}\\n' +
+        '總分_小計：{各題型得分，如「選擇題10/10, 填空題8/10」}\\n' +
+        '標題_標題區：{考試名稱}\\n' +
+        '類型_關鍵字：{期中考→exam, 小考→quiz, 作業→homework, 報告→project}\\n' +
+        '滿分_考卷標示：{考卷上的滿分，沒寫就填100}\\n' +
+        '日期_考卷標示：{考卷上的日期}\\n' +
+        '評分模式_有無總分：{有數字總分或等第填 scored，完全找不到任何分數或等第填 record_only}\\n\\n' +
+        '請用以下格式回覆：\\n' +
+        '分類科目：{科目名稱}\\n' +
+        '---OCR 欄位---\\n' +
+        '(上述 OCR 欄位，一行一個)\\n' +
+        '---結束---'
     } else {
       const sn = activeSubjects.map((s) => s.name).join('、')
       prompt =
-        '這是一張考卷分類對照圖。每種科目佔一排（綠色標題），科目下方依評量類型排列範本考卷。\n' +
-        `已知科目：${sn}。每張考卷頂部有【第N張】標記，同類型多張垂直堆疊。\n` +
-        '最後一排（紅底）是新考卷，標示「❓待分類」。\n\n' +
-        '請根據新考卷的題型內容、排版格式、文字關鍵字，與上方各科目的範本比對，\n' +
-        '判斷新考卷最可能屬於哪個科目。\n\n' +
-        '規則：\n- 不要用「已知科目有X種所以新的一定是第X+1種」的排除法\n' +
-        '- 仔細看題目文字來判斷（例如：出現計算/時鐘/圖形→數學，出現拼音/閱讀/造句→國語）\n- 只回答科目名稱，不要其他說明'
+        '這是一張考卷分類對照圖。每種科目佔一排（綠色標題），科目下方依評量類型排列範本考卷。\\n' +
+        `已知科目：${sn}。每張考卷頂部有【第N張】標記，同類型多張垂直堆疊。\\n` +
+        '最後一排（紅底）是新考卷（大圖），標示「❓待分類」。\\n\\n' +
+        '請完成兩件事：\\n\\n' +
+        '【科目分類】\\n' +
+        '根據新考卷的題型內容、排版格式、文字關鍵字，與上方各科目的範本比對，\\n' +
+        '判斷新考卷最可能屬於哪個科目。\\n' +
+        '規則：\\n' +
+        '- 不要用「已知科目有X種所以新的一定是第X+1種」的排除法\\n' +
+        '- 仔細看題目文字來判斷（例如：出現計算/時鐘/圖形→數學，出現拼音/閱讀/造句→國語）\\n\\n' +
+        '【OCR 讀取】\\n' +
+        '從新考卷大圖中讀取以下欄位（找不到就留空，不要編造）：\\n' +
+        '科目_標題區：{考卷標題區寫的科目，如國語、數學}\\n' +
+        '總分_標題區：{老師手寫批改的總分，數字如95 或等第如A、B+、C-。圈起來的或「總分」旁的}\\n' +
+        '等第_標題區：{若總分是等第制（A/B/C/D/F，可含+-），填這裡；數字分數則留空}\\n' +
+        '總分_小計：{各題型得分，如「選擇題10/10, 填空題8/10」}\\n' +
+        '標題_標題區：{考試名稱，如第二次期中考、第5課小考}\\n' +
+        '類型_關鍵字：{期中考→exam, 小考→quiz, 作業→homework, 報告→project}\\n' +
+        '滿分_考卷標示：{考卷上的滿分，如120。沒寫就填100}\\n' +
+        '日期_考卷標示：{考卷上的日期}\\n' +
+        '評分模式_有無總分：{有數字總分或等第填 scored，完全找不到任何分數或等第填 record_only}\\n\\n' +
+        '請用以下格式回覆：\\n' +
+        '分類科目：{科目名稱}\\n' +
+        '---OCR 欄位---\\n' +
+        '(上述 OCR 欄位，一行一個)\\n' +
+        '---結束---'
     }
 
     return NextResponse.json({

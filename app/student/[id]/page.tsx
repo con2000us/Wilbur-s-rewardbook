@@ -57,6 +57,7 @@ export default async function StudentPage({
     // @ts-ignore - Supabase type inference issue with select queries
     .in('subject_id', subjects?.map((s: any) => s.id) || [])
     .order('due_date', { ascending: false })
+    .order('created_at', { ascending: false })
   
   if (assessmentError) {
     console.error('Error fetching assessments:', assessmentError)

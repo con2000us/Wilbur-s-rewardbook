@@ -134,12 +134,12 @@ export async function createAssessmentWithReward(
     subject_id: body.subject_id,
     title: body.title,
     assessment_type: body.assessment_type,
-    max_score: isRecordOnly ? null : (body.max_score || 100),
+    max_score: isRecordOnly ? undefined : (body.max_score || 100),
     status: isRecordOnly ? 'completed' : body.status || 'upcoming',
     due_date: body.due_date || null,
-    notes: body.notes || null,
-    score_type: isRecordOnly ? null : (body.score_type || 'numeric'),
-    grade: isRecordOnly ? null : body.grade || null,
+    notes: body.notes || undefined,
+    score_type: isRecordOnly ? undefined : (body.score_type || 'numeric'),
+    grade: isRecordOnly ? undefined : body.grade || undefined,
     image_urls: body.image_urls || [],
     scoring_mode: scoringMode,
     counts_toward_average: countsTowardAverage,
@@ -148,9 +148,9 @@ export async function createAssessmentWithReward(
   }
 
   if (isRecordOnly) {
-    assessmentData.score = null
-    assessmentData.percentage = null
-    assessmentData.grade = null
+    assessmentData.score = undefined
+    assessmentData.percentage = undefined
+    assessmentData.grade = undefined
     assessmentData.completed_date = new Date().toISOString()
   }
 
@@ -183,14 +183,14 @@ export async function createAssessmentWithReward(
     actualPercentage = (actualScore / maxScore) * 100
     assessmentData.score = actualScore
     assessmentData.percentage = actualPercentage
-    assessmentData.grade = null
+    assessmentData.grade = undefined
   } else if (!isRecordOnly) {
     // No score or grade provided → auto record_only
     assessmentData.scoring_mode = 'record_only'
-    assessmentData.score_type = null
-    assessmentData.score = null
-    assessmentData.percentage = null
-    assessmentData.max_score = null
+    assessmentData.score_type = undefined
+    assessmentData.score = undefined
+    assessmentData.percentage = undefined
+    assessmentData.max_score = undefined
     assessmentData.counts_toward_reward = false
     assessmentData.reward_amount = 0
     assessmentData.status = 'completed'

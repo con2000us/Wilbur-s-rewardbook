@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 import ImageViewer from '@/app/components/ImageViewer'
 
 export interface UploadedImage {
@@ -9,10 +9,19 @@ export interface UploadedImage {
   size: number
   width?: number
   height?: number
+  order?: number
+  rotation?: 0 | 90 | 180 | 270
 }
 
 // 向後相容的別名
 export type GoalTemplateImage = UploadedImage
+
+function isUploadedImage(value: unknown): value is UploadedImage {
+  if (!value || typeof value !== 'object') return false
+  const image = value as Partial<UploadedImage>
+  return typeof image.url === 'string' && image.url.length > 0 &&
+    typeof image.path === 'string' && image.path.length > 0
+}
 
 interface ImageUploaderProps {
   images: UploadedImage[]
@@ -27,12 +36,10 @@ interface ImageUploaderProps {
   idFieldName?: string
   /** Optional ID value to pass with upload requests */
   entityId?: string
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  /** Enable drag-and-drop reordering (default: false) */
+  sortable?: boolean
+  /** Show subject match hint on the first image (default: false) */
+  showSubjectMatchHint?: boolean
 }
 
 async function compressImage(file: File): Promise<Blob> {
@@ -105,6 +112,8 @@ export default function ImageUploader({
   deleteEndpoint = '/api/goal-templates/delete-image',
   idFieldName = 'templateId',
   entityId,
+  sortable = false,
+  showSubjectMatchHint = false,
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
@@ -112,6 +121,24 @@ export default function ImageUploader({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+  // Recalculate order values to match array position
+  const syncOrder = useCallback(
+    (imgs: UploadedImage[]): UploadedImage[] => {
+      return imgs.map((img, idx) => ({ ...img, order: idx }))
+    },
+    []
+  )
+
+  const commitChange = useCallback(
+    (imgs: UploadedImage[]) => {
+      onChange(syncOrder(imgs))
+    },
+    [onChange, syncOrder]
+  )
+  const cleanImages = useMemo(() => images.filter(isUploadedImage), [images])
 
   const handleFiles = useCallback(
     async (files: FileList | null) => {
@@ -124,7 +151,7 @@ export default function ImageUploader({
         return
       }
 
-      if (images.length + newFiles.length > maxCount) {
+      if (cleanImages.length + newFiles.length > maxCount) {
         setError(`You can upload up to ${maxCount} images`)
         return
       }
@@ -164,14 +191,22 @@ export default function ImageUploader({
             continue
           }
 
-          uploadedImages.push(data.image)
+          const returnedImages = Array.isArray(data.images) ? data.images : [data.image]
+          const validImages = returnedImages.filter(isUploadedImage)
+
+          if (validImages.length === 0) {
+            setError(data.error || 'Upload failed')
+            continue
+          }
+
+          uploadedImages.push(...validImages)
         } catch (err) {
           setError('Failed to upload image: ' + (err as Error).message)
         }
       }
 
       if (uploadedImages.length > 0) {
-        onChange([...images, ...uploadedImages])
+        commitChange([...cleanImages, ...uploadedImages])
         setError('')
       }
 
@@ -182,13 +217,13 @@ export default function ImageUploader({
         fileInputRef.current.value = ''
       }
     },
-    [images, maxCount, onChange]
+    [cleanImages, maxCount, commitChange, entityId, idFieldName, uploadEndpoint]
   )
 
   const handleDelete = async (image: UploadedImage, index: number) => {
     // Remove from local state immediately
-    const newImages = images.filter((_, i) => i !== index)
-    onChange(newImages)
+    const newImages = cleanImages.filter((_, i) => i !== index)
+    commitChange(newImages)
 
     // Try to delete from storage
     try {
@@ -202,57 +237,208 @@ export default function ImageUploader({
     }
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleViewerRotate = useCallback((index: number, direction: 'cw' | 'ccw') => {
+    const cycleCw: Record<number, 0 | 90 | 180 | 270> = { 0: 90, 90: 180, 180: 270, 270: 0 }
+    const cycleCcw: Record<number, 0 | 90 | 180 | 270> = { 0: 270, 90: 0, 180: 90, 270: 180 }
+    const newImages = cleanImages.map((img, i) => {
+      if (i !== index) return img
+      const currentRotation = (img.rotation ?? 0) as 0 | 90 | 180 | 270
+      return { ...img, rotation: direction === 'cw' ? cycleCw[currentRotation] : cycleCcw[currentRotation] }
+    })
+    commitChange(newImages)
+  }, [cleanImages, commitChange])
+
+  // ── Drag & Drop handlers ──
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    if (!sortable || disabled) return
+    setDragIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    // Make the drag image semi-transparent
+    const target = e.currentTarget as HTMLElement
+    target.style.opacity = '0.4'
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    if (!sortable || disabled || dragIndex === null) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!sortable || disabled) return
+    // Only clear when leaving the entire list
+    const target = e.currentTarget as HTMLElement
+    if (!target.contains(e.relatedTarget as Node)) {
+      setDragOverIndex(null)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    if (!sortable || disabled || dragIndex === null) return
+    e.preventDefault()
+    setDragOverIndex(null)
+
+    if (dragIndex === dropIndex) {
+      setDragIndex(null)
+      return
+    }
+
+    const newImages = [...cleanImages]
+    const [moved] = newImages.splice(dragIndex, 1)
+    newImages.splice(dropIndex, 0, moved)
+    commitChange(newImages)
+    setDragIndex(null)
+  }
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (!sortable || disabled) return
+    const target = e.currentTarget as HTMLElement
+    target.style.opacity = '1'
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragOverContainer = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(true)
   }
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragLeaveContainer = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
   }
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDropContainer = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
     handleFiles(e.dataTransfer.files)
   }
 
-  const canUpload = !disabled && !uploading && images.length < maxCount
+  const canUpload = !disabled && !uploading && cleanImages.length < maxCount
+
+  // Rotation CSS mapping
+  const rotationMap: Record<number, string> = {
+    0: 'rotate(0deg)',
+    90: 'rotate(90deg)',
+    180: 'rotate(180deg)',
+    270: 'rotate(270deg)',
+  }
 
   return (
     <div className="space-y-3">
-      {/* Preview images grid */}
-      {images.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {images.map((image, index) => (
-            <div key={index} className="relative group">
-              <img
-                src={image.url}
-                alt={`Image ${index + 1}`}
-                className="w-20 h-20 object-cover rounded-xl border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
-                onMouseDown={(e) => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                  setViewerIndex(index)
-                  setViewerOpen(true)
-                }}
-              />
-              {!disabled && (
-                <button
-                  type="button"
-                  onClick={() => handleDelete(image, index)}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
-                >
-                  <span className="material-icons-outlined text-sm">close</span>
-                </button>
-              )}
-            </div>
-          ))}
+      {/* Preview images */}
+      {cleanImages.length > 0 && (
+        <div
+          className="flex flex-wrap gap-3"
+          onDragOver={handleDragOverContainer}
+          onDragLeave={handleDragLeaveContainer}
+          onDrop={handleDropContainer}
+        >
+          {cleanImages.map((image, index) => {
+            const rotation = image.rotation ?? 0
+            const isFirst = index === 0
+
+            return (
+              <div
+                key={image.path || index}
+                draggable={sortable && !disabled}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`relative flex flex-col items-center w-[92px] select-none ${
+                  sortable && !disabled ? 'cursor-grab active:cursor-grabbing' : ''
+                } ${dragIndex === index ? 'opacity-40' : ''} ${
+                  dragOverIndex === index && dragIndex !== index
+                    ? 'ring-2 ring-blue-500 rounded-xl'
+                    : ''
+                }`}
+              >
+                {/* Image card container */}
+                <div className="relative w-full rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                  {/* Drag handle + index badge */}
+                  <div className="flex items-center justify-between px-1.5 py-1 bg-slate-50 border-b border-slate-200">
+                    {sortable && !disabled ? (
+                      <span className="text-slate-400 text-sm leading-none cursor-grab active:cursor-grabbing select-none">
+                        ⋮⋮
+                      </span>
+                    ) : (
+                      <span className="w-4" />
+                    )}
+                    <span className="text-[11px] font-bold text-slate-500">
+                      #{index + 1}
+                    </span>
+                  </div>
+
+                  {/* Subject match star badge (only first image, top-right) */}
+                  {showSubjectMatchHint && isFirst && (
+                    <div className="absolute top-1 left-1/2 -translate-x-1/2 z-10 flex items-center justify-center group">
+                      <span
+                        className="inline-flex items-center justify-center text-xs leading-none cursor-help"
+                        title="第一張圖片將用於 AI 科目比對，請將考卷封面或標題頁排在最前面。"
+                      >
+                        ⭐
+                      </span>
+                      {/* Tooltip on hover - overlay inside card to avoid overflow-hidden clipping */}
+                      <div className="absolute left-1/2 -translate-x-1/2 top-0 w-40 px-2 py-1.5 rounded-lg bg-slate-800 text-[10px] text-white leading-relaxed shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 pointer-events-none z-20 whitespace-normal -translate-y-full -mt-2">
+                        ⭐ 第一張圖片（標示「比對用」）將用於 AI 科目比對。請將考卷封面或標題頁排在最前面。
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Thumbnail with rotation */}
+                  <div
+                    className="flex items-center justify-center mx-auto"
+                    style={{
+                      width: 80,
+                      height: rotation === 90 || rotation === 270 ? 68 : 80,
+                    }}
+                  >
+                    <img
+                      src={image.url}
+                      alt={`Image ${index + 1}`}
+                      className="max-w-full max-h-full transition-transform duration-200"
+                      style={{
+                        transform: rotationMap[rotation] || 'rotate(0deg)',
+                        objectFit: 'contain',
+                      }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation()
+                        e.preventDefault()
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        e.preventDefault()
+                        setViewerIndex(index)
+                        setViewerOpen(true)
+                      }}
+                    />
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center justify-center gap-1 px-1 py-1 bg-slate-50 border-t border-slate-200">
+                    {/* Delete button */}
+                    {!disabled && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(image, index)
+                        }}
+                        className="w-6 h-6 flex items-center justify-center rounded-md text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors"
+                        title="Delete"
+                      >
+                        <span className="material-icons-outlined text-sm">close</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -265,9 +451,9 @@ export default function ImageUploader({
               ? 'border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer'
               : 'border-slate-100 bg-slate-50 cursor-not-allowed opacity-60'
         }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        onDragOver={handleDragOverContainer}
+        onDragLeave={handleDragLeaveContainer}
+        onDrop={handleDropContainer}
         onClick={() => canUpload && fileInputRef.current?.click()}
       >
         {uploading ? (
@@ -278,16 +464,16 @@ export default function ImageUploader({
         ) : (
           <div className="flex flex-col items-center gap-1.5 py-2">
             <span className="material-icons-outlined text-2xl text-slate-400">
-              {images.length === 0 ? 'add_photo_alternate' : 'add'}
+              {cleanImages.length === 0 ? 'add_photo_alternate' : 'add'}
             </span>
             <p className="text-sm text-slate-500">
-              {images.length === 0
+              {cleanImages.length === 0
                 ? 'Click or drag images to upload'
                 : 'Add more images'}
             </p>
-            {images.length > 0 && (
+            {cleanImages.length > 0 && (
               <p className="text-xs text-slate-400">
-                {images.length} / {maxCount}
+                {cleanImages.length} / {maxCount}
               </p>
             )}
           </div>
@@ -314,10 +500,11 @@ export default function ImageUploader({
 
       {/* Image viewer */}
       <ImageViewer
-        images={images}
+        images={cleanImages}
         initialIndex={viewerIndex}
         isOpen={viewerOpen}
         onClose={() => setViewerOpen(false)}
+        onRotate={handleViewerRotate}
       />
     </div>
   )

@@ -467,6 +467,8 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
             deleteEndpoint="/api/assessments/delete-image"
             idFieldName="assessmentId"
             entityId={assessment.id}
+            sortable
+            showSubjectMatchHint
           />
         </div>
 

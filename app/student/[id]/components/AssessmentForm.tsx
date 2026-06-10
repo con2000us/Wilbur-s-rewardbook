@@ -129,6 +129,9 @@ export default function AssessmentForm({
   const [imageUrls, setImageUrls] = useState<UploadedImage[]>(
     Array.isArray(assessment?.image_urls) ? assessment.image_urls : []
   )
+  const [originalDueDate] = useState<string | null>(
+    assessment?.due_date || null
+  )
   const [rewardTypes, setRewardTypes] = useState<RewardType[]>([])
   const [selectedRewardTypeId, setSelectedRewardTypeId] = useState<string>('')
   const [activeMode, setActiveMode] = useState<'manual' | 'ai'>('manual')
@@ -423,11 +426,21 @@ export default function AssessmentForm({
         counts_toward_average: !isRecordOnly,
         counts_toward_reward: !isRecordOnly,
         max_score: isRecordOnly ? 100 : parseInt(formData.get('max_score') as string),
-        due_date: formData.get('due_date'),
         notes: ((formData.get('notes') as string) || '').trim() || null,
         manual_reward: !isRecordOnly && formData.get('manual_reward') ? parseFloat(formData.get('manual_reward') as string) : null,
         reward_type_id: isRecordOnly ? null : formData.get('reward_type_id') || null,
         image_urls: imageUrls,
+      }
+
+      // 只在日期被使用者修改過時才傳送，避免非受控 input re-render 造成日期跑掉
+      const formDueDate = formData.get('due_date') as string
+      const dueDateChanged = !isEditMode
+        ? true // 新增模式總是傳送
+        : !originalDueDate
+          ? !!formDueDate // 原本沒日期，現在有 → 有改
+          : formDueDate !== originalDueDate?.substring(0, 10)
+      if (dueDateChanged) {
+        payload.due_date = formDueDate || null
       }
 
       // 根據評分方式設定分數或等級
@@ -765,7 +778,7 @@ export default function AssessmentForm({
               type="date"
               defaultValue={
                 assessment?.due_date 
-                  ? new Date(assessment.due_date).toISOString().split('T')[0]
+                  ? assessment.due_date.substring(0, 10)
                   : new Date().toISOString().split('T')[0]
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -947,6 +960,8 @@ export default function AssessmentForm({
             deleteEndpoint="/api/assessments/delete-image"
             idFieldName="assessmentId"
             entityId={assessment?.id}
+            sortable
+            showSubjectMatchHint
           />
         </div>
 

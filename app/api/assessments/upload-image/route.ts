@@ -6,12 +6,31 @@ const BUCKET_NAME = 'goal-images'
 const PREFIX = 'assessments'
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
 
+function extensionForContentType(type: string): string | null {
+  switch (type) {
+    case 'image/jpeg':
+      return 'jpg'
+    case 'image/png':
+      return 'png'
+    case 'image/webp':
+      return 'webp'
+    case 'image/gif':
+      return 'gif'
+    case 'image/svg+xml':
+      return 'svg'
+    default:
+      return null
+  }
+}
+
 type UploadedImage = {
   url: string
   path: string
   size: number
   width?: number
   height?: number
+  order?: number
+  rotation?: 0 | 90 | 180 | 270
 }
 
 function parseImageDimensions(buffer: ArrayBuffer, type: string): { width: number; height: number } {
@@ -53,7 +72,7 @@ async function uploadSingleFile(
     throw new Error(`File size exceeds the limit of ${limitMB}MB per file`)
   }
 
-  const ext = file.name.split('.').pop() || 'jpg'
+  const ext = extensionForContentType(file.type) || file.name.split('.').pop() || 'jpg'
   const uniqueId = crypto.randomUUID()
   const filePath = `${PREFIX}/${assessmentId}/${uniqueId}.${ext}`
 
@@ -83,6 +102,7 @@ async function uploadSingleFile(
     size: file.size,
     width: width || undefined,
     height: height || undefined,
+    rotation: 0,
   }
 }
 
@@ -114,8 +134,14 @@ export async function POST(request: NextRequest) {
     })
 
     const resourceMode = settingsMap['resource_mode'] || 'free'
-    const singleFileLimit = parseInt(settingsMap['image_single_file_limit_bytes'] || '0', 10) || 2 * 1024 * 1024
-    const totalLimit = parseInt(settingsMap['image_total_limit_bytes'] || '0', 10) || 600 * 1024 * 1024
+    const isUpgraded = resourceMode === 'upgraded'
+    // upgraded 模式無單檔限制，free 模式用設定值或預設 2MB
+    const singleFileLimit = isUpgraded
+      ? Infinity
+      : parseInt(settingsMap['image_single_file_limit_bytes'] || '0', 10) || 2 * 1024 * 1024
+    const totalLimit = isUpgraded
+      ? Infinity
+      : parseInt(settingsMap['image_total_limit_bytes'] || '0', 10) || 600 * 1024 * 1024
 
     // Check total storage usage for free mode
     if (resourceMode === 'free') {
@@ -148,10 +174,10 @@ export async function POST(request: NextRequest) {
 
     // Upload all files
     const images: UploadedImage[] = []
-    for (const file of files) {
+    for (const [idx, file] of files.entries()) {
       try {
         const uploaded = await uploadSingleFile(file, assessmentId, singleFileLimit)
-        images.push(uploaded)
+        images.push({ ...uploaded, order: idx })
       } catch (fileError) {
         return NextResponse.json(
           { success: false, error: (fileError as Error).message },
@@ -160,7 +186,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, images })
+    return NextResponse.json({ success: true, image: images[0] || null, images })
   } catch (err) {
     console.error('Assessment upload image error:', err)
     return NextResponse.json(

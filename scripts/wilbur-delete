@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+# wilbur-delete — 危險操作專用入口，每次必定觸發確認
+# 用法: wilbur-delete assessment <assessment_id>
+#       wilbur-delete transaction <transaction_id>
+#       wilbur-delete subject <subject_id>
+#
+# 🆕 刪除前必定顯示完整資訊（科目、分數、日期、標題）供使用者確認
+
+set -euo pipefail
+
+SUPABASE_URL="http://127.0.0.1:8043"
+KEY_FILE="/opt/supabase-docker/.supabase_keys.json"
+API_KEY=$(python3 -c "import json; print(json.load(open('$KEY_FILE'))['SERVICE_ROLE_KEY'])")
+
+die() { echo "❌ $1"; exit 1; }
+
+show_assessment_detail() {
+    local id="$1"
+    local detail
+    detail=$(curl -s "${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}&select=title,score,max_score,scoring_mode,assessment_type,completed_date,subject_id" \
+      -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY")
+
+    if [ -z "$detail" ] || [ "$detail" = "[]" ]; then
+        die "找不到評量 ID: $id"
+    fi
+
+    local title score max_score scoring_mode atype cdate subject_id
+    title=$(echo "$detail" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('title',''))")
+    score=$(echo "$detail" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('score',''))")
+    max_score=$(echo "$detail" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('max_score',''))")
+    scoring_mode=$(echo "$detail" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('scoring_mode',''))")
+    atype=$(echo "$detail" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('assessment_type',''))")
+    cdate=$(echo "$detail" | python3 -c "import json,sys; d=json.load(sys.stdin); print((d[0].get('completed_date','') or '')[:10])")
+    subject_id=$(echo "$detail" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('subject_id',''))")
+
+    # 查科目名稱
+    local subject_name
+    subject_name=$(curl -s "${SUPABASE_URL}/rest/v1/subjects?id=eq.${subject_id}&select=name" \
+      -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" | \
+      python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0]['name'] if d else '未知')")
+
+    # 格式化分數顯示
+    local score_display
+    if [ "$scoring_mode" = "record_only" ]; then
+        score_display="不計分"
+    elif [ -n "$score" ] && [ "$score" != "None" ]; then
+        score_display="${score}/${max_score}"
+    else
+        score_display="無分數"
+    fi
+
+    # 類型中文
+    local type_display
+    case "$atype" in
+        exam) type_display="考試" ;;
+        quiz) type_display="小考" ;;
+        homework) type_display="作業" ;;
+        project) type_display="專案" ;;
+        *) type_display="$atype" ;;
+    esac
+
+    echo ""
+    echo "╔══════════════════════════════════════╗"
+    echo "║  ⚠️  即將刪除以下評量紀錄            ║"
+    echo "╠══════════════════════════════════════╣"
+    printf "║  科目：%-28s ║\n" "$subject_name"
+    printf "║  標題：%-28s ║\n" "$title"
+    printf "║  分數：%-28s ║\n" "$score_display"
+    printf "║  類型：%-28s ║\n" "$type_display"
+    printf "║  日期：%-28s ║\n" "$cdate"
+    printf "║  ID：%-30s ║\n" "$id"
+    echo "╚══════════════════════════════════════╝"
+    echo ""
+    echo "🚫 此操作將同時刪除關聯的交易紀錄，且不可逆！"
+    echo ""
+}
+
+require_confirm() {
+    echo "請輸入「確認刪除」以繼續，或直接按 Enter 取消："
+    read -r answer
+    if [ "$answer" != "確認刪除" ]; then
+        die "已取消刪除"
+    fi
+}
+
+CMD="$1"
+shift
+
+case "$CMD" in
+  assessment)
+    ID="$1"
+    [ -z "$ID" ] && die "用法: wilbur-delete assessment <id>"
+
+    show_assessment_detail "$ID"
+    require_confirm
+
+    # 先刪關聯的 transactions
+    curl -s -X DELETE "${SUPABASE_URL}/rest/v1/transactions?assessment_id=eq.${ID}" \
+      -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" > /dev/null
+    # 刪 assessments
+    curl -s -X DELETE "${SUPABASE_URL}/rest/v1/assessments?id=eq.${ID}" \
+      -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" > /dev/null
+    echo "✅ 已刪除評量"
+    ;;
+
+  transaction)
+    ID="$1"
+    [ -z "$ID" ] && die "用法: wilbur-delete transaction <id>"
+
+    echo ""
+    echo "⚠️ 即將刪除交易紀錄 ID: $ID"
+    echo "🚫 此操作不可逆！"
+    echo ""
+    require_confirm
+
+    curl -s -X DELETE "${SUPABASE_URL}/rest/v1/transactions?id=eq.${ID}" \
+      -H "apikey: $API_KEY" -H "Authorization: Bearer $API_KEY" > /dev/null
+    echo "✅ 已刪除交易: $ID"
+    ;;
+
+  *)
+    echo "⚠️ wilbur-delete — 危險操作專用"
+    echo ""
+    echo "用法:"
+    echo "  wilbur-delete assessment <id>    刪除評量及其關聯交易"
+    echo "  wilbur-delete transaction <id>   刪除單筆交易"
+    echo ""
+    echo "🚫 此指令會顯示完整資訊並要求輸入「確認刪除」才能執行"
+    exit 1
+    ;;
+esac

@@ -83,7 +83,8 @@ export default async function SubjectRewardsPage({
         reserveSpace
       />
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6 hidden lg:flex justify-between items-center">
+        {/* lg:pr-60 預留右上角全站操作按鈕（AppActionCluster）的空間，避免重疊 */}
+        <div className="mb-6 hidden lg:flex justify-between items-center lg:pr-60">
           <Link 
             href={`/student/${id}/subjects`}
             className="text-slate-700 hover:text-slate-900 text-lg font-medium"

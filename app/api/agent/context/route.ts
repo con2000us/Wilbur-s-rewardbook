@@ -121,10 +121,11 @@ export async function GET(request: NextRequest) {
 
     for (const txn of transactions) {
       const matchingType = findMatchingRewardType(txn, rewardTypes)
-      if (!matchingType) continue
+      if (!matchingType || !matchingType.type_key) continue
 
       const amount = getTransactionAmount(txn)
-      balances[matchingType.type_key] = (balances[matchingType.type_key] || 0) + amount
+      const typeKey = matchingType.type_key
+      balances[typeKey] = (balances[typeKey] || 0) + amount
     }
 
     // ── 組裝 assessment_types ──

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
@@ -178,6 +179,15 @@ export default function StudentFloatingQuickNav({
   const [trayPanelHeight, setTrayPanelHeight] = useState(0)
   const [trayHeightCookieKey, setTrayHeightCookieKey] = useState('')
   const [selectedSwitcherStudentId, setSelectedSwitcherStudentId] = useState(studentId)
+  // 桌面版操作按鈕 portal 到 body，需帶上 shell 的 CSS 變數 class 才能對齊內容欄
+  const [shellVarClass, setShellVarClass] = useState<string | null>(null)
+
+  useEffect(() => {
+    const shell = headerShellRef.current?.closest('.app-shell-student')
+    const tokens = ['app-shell-student', 'app-shell-student-form', 'app-shell-student-inline']
+      .filter((cls) => shell?.classList.contains(cls))
+    setShellVarClass(tokens.length > 0 ? tokens.join(' ') : 'app-shell-student')
+  }, [])
 
   const selectedSwitcherStudent = useMemo(
     () => allStudents.find((student) => student.id === selectedSwitcherStudentId) ?? null,
@@ -318,10 +328,13 @@ export default function StudentFloatingQuickNav({
 
   return (
     <>
-      <AppActionCluster
-        className="app-action-cluster-fixed app-action-cluster-align-student hidden lg:inline-flex"
-        ariaLabel={isZh ? '全站操作' : 'Global actions'}
-      />
+      {shellVarClass !== null &&
+        createPortal(
+          <div className={`app-action-cluster-anchor hidden lg:flex ${shellVarClass}`}>
+            <AppActionCluster ariaLabel={isZh ? '全站操作' : 'Global actions'} />
+          </div>,
+          document.body
+        )}
       <header className="fixed inset-x-0 top-0 z-50 w-full px-0 lg:hidden">
         <div
           ref={headerShellRef}
