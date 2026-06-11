@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
-import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
+import ImageUploader, { normalizeUploadedImages, type UploadedImage } from '@/app/components/ImageUploader'
 import AssessmentTypeRadioGroup from '@/app/components/AssessmentTypeRadioGroup'
 import {
   getAssessmentTypeLabel,
@@ -90,7 +90,7 @@ export default function EditAssessmentForm({ studentId, assessment, subjects, re
   )
   const [currentMaxScore, setCurrentMaxScore] = useState(assessment.max_score)
   const [imageUrls, setImageUrls] = useState<UploadedImage[]>(
-    Array.isArray(assessment.image_urls) ? assessment.image_urls : []
+    normalizeUploadedImages(assessment.image_urls)
   )
   const [assessmentTypes, setAssessmentTypes] = useState<AssessmentType[]>([])
   const assessmentTypeOptions = normalizeAssessmentTypes(assessmentTypes, selectedAssessmentType)

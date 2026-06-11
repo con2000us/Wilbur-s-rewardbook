@@ -23,6 +23,71 @@ function isUploadedImage(value: unknown): value is UploadedImage {
     typeof image.path === 'string' && image.path.length > 0
 }
 
+function extractStoragePathFromUrl(url: string) {
+  try {
+    const parsedUrl = new URL(url)
+    const marker = '/object/public/goal-images/'
+    const markerIndex = parsedUrl.pathname.indexOf(marker)
+    if (markerIndex === -1) return ''
+    return decodeURIComponent(parsedUrl.pathname.slice(markerIndex + marker.length))
+  } catch {
+    return ''
+  }
+}
+
+function normalizeImage(value: unknown, index: number): UploadedImage | null {
+  if (isUploadedImage(value)) {
+    return { ...value, order: value.order ?? index }
+  }
+
+  if (typeof value === 'string' && value.length > 0) {
+    return {
+      url: value,
+      path: extractStoragePathFromUrl(value),
+      size: 0,
+      order: index,
+      rotation: 0,
+    }
+  }
+
+  if (!value || typeof value !== 'object') return null
+
+  const image = value as Partial<UploadedImage> & {
+    publicUrl?: unknown
+    public_url?: unknown
+  }
+  const url = typeof image.url === 'string' && image.url.length > 0
+    ? image.url
+    : typeof image.publicUrl === 'string' && image.publicUrl.length > 0
+      ? image.publicUrl
+      : typeof image.public_url === 'string' && image.public_url.length > 0
+        ? image.public_url
+        : ''
+
+  if (!url) return null
+
+  const path = typeof image.path === 'string' && image.path.length > 0
+    ? image.path
+    : extractStoragePathFromUrl(url)
+
+  return {
+    url,
+    path,
+    size: typeof image.size === 'number' ? image.size : 0,
+    width: typeof image.width === 'number' ? image.width : undefined,
+    height: typeof image.height === 'number' ? image.height : undefined,
+    order: typeof image.order === 'number' ? image.order : index,
+    rotation: image.rotation === 90 || image.rotation === 180 || image.rotation === 270 ? image.rotation : 0,
+  }
+}
+
+export function normalizeUploadedImages(images: unknown): UploadedImage[] {
+  if (!Array.isArray(images)) return []
+  return images
+    .map(normalizeImage)
+    .filter((image): image is UploadedImage => image !== null)
+}
+
 interface ImageUploaderProps {
   images: UploadedImage[]
   onChange: (images: UploadedImage[]) => void
@@ -138,7 +203,7 @@ export default function ImageUploader({
     },
     [onChange, syncOrder]
   )
-  const cleanImages = useMemo(() => images.filter(isUploadedImage), [images])
+  const cleanImages = useMemo(() => normalizeUploadedImages(images), [images])
 
   const handleFiles = useCallback(
     async (files: FileList | null) => {

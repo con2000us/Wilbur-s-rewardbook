@@ -11,10 +11,7 @@ type SubjectGradeRow = Pick<Database['public']['Tables']['subjects']['Row'], 'gr
 type StudentIdRow = Pick<Database['public']['Tables']['students']['Row'], 'id'>
 type AssessmentScoringMode = 'scored' | 'record_only'
 
-type AssessmentWriteData = Omit<AssessmentUpdate, 'image_urls'> & {
-  image_urls?: Json | null
-}
-
+// Partial update: every field is optional — only send what you want to change
 type AssessmentUpdatePayload = {
   assessment_id?: string
   student_id?: string
@@ -23,6 +20,7 @@ type AssessmentUpdatePayload = {
   assessment_type?: string | null
   max_score?: number | null
   due_date?: string | null
+  completed_date?: string | null   // 🆕 allow backdating
   notes?: string | null
   score_type?: string | null
   grade?: string | null
@@ -102,6 +100,13 @@ function findMatchingRule(params: {
   }) || null
 }
 
+/** helper: only set a key if the value is not undefined (preserves existing DB values) */
+function setIfProvided<T extends Record<string, unknown>>(obj: T, key: keyof T, value: unknown) {
+  if (value !== undefined) {
+    (obj as Record<string, unknown>)[key as string] = value
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as AssessmentUpdatePayload
@@ -111,9 +116,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'assessment_id is required' }, { status: 400 })
     }
 
+    // Fetch full current record for fallback values
     const { data: oldAssessment } = await supabase
       .from('assessments')
-      .select('id, scoring_mode, counts_toward_average, counts_toward_reward')
+      .select('*')
       .eq('id', body.assessment_id)
       .single()
 
@@ -121,101 +127,117 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Assessment not found' }, { status: 404 })
     }
 
-    let scoringMode: AssessmentScoringMode
-    try {
-      scoringMode = normalizeScoringMode(
-        body.scoring_mode,
-        ((oldAssessment as { scoring_mode?: string | null }).scoring_mode as AssessmentScoringMode) || 'scored'
-      )
-    } catch {
-      return NextResponse.json({ error: 'Invalid scoring_mode' }, { status: 400 })
-    }
-
+    // ── Determine scoring mode ──
+    const scoringMode: AssessmentScoringMode = normalizeScoringMode(
+      body.scoring_mode,
+      (oldAssessment.scoring_mode as AssessmentScoringMode) || 'scored'
+    )
     const isRecordOnly = scoringMode === 'record_only'
-    const countsTowardAverage = isRecordOnly
-      ? false
-      : booleanOrDefault(
-          body.counts_toward_average,
-          (oldAssessment as { counts_toward_average?: boolean | null }).counts_toward_average ?? true
-        )
-    const countsTowardReward = isRecordOnly
-      ? false
-      : booleanOrDefault(
-          body.counts_toward_reward,
-          (oldAssessment as { counts_toward_reward?: boolean | null }).counts_toward_reward ?? true
-        )
 
-    const updateData: AssessmentWriteData = {
-      subject_id: body.subject_id,
-      title: body.title,
-      assessment_type: body.assessment_type,
-      max_score: body.max_score || 100,
-      ...(body.due_date !== undefined ? { due_date: body.due_date || null } : {} as Pick<AssessmentWriteData, 'due_date'>),
-      notes: body.notes || null,
-      score_type: isRecordOnly ? 'numeric' : body.score_type || 'numeric',
-      grade: isRecordOnly ? null : body.grade || null,
-      image_urls: body.image_urls || [],
-      scoring_mode: scoringMode,
-      counts_toward_average: countsTowardAverage,
-      counts_toward_reward: countsTowardReward,
-      reward_amount: 0,
+    // ── Build updateData incrementally (partial update) ──
+    const updateData: Record<string, unknown> = {}
+
+    // Simple scalar fields — only include if caller sent them
+    setIfProvided(updateData, 'subject_id', body.subject_id)
+    setIfProvided(updateData, 'title', body.title)
+    setIfProvided(updateData, 'assessment_type', body.assessment_type)
+    setIfProvided(updateData, 'max_score', body.max_score)
+    setIfProvided(updateData, 'due_date', body.due_date)
+    setIfProvided(updateData, 'notes', body.notes)
+    setIfProvided(updateData, 'image_urls', body.image_urls)
+    setIfProvided(updateData, 'scoring_mode', scoringMode)
+
+    if (body.counts_toward_average !== undefined) {
+      updateData.counts_toward_average = isRecordOnly ? false : body.counts_toward_average
+    }
+    if (body.counts_toward_reward !== undefined) {
+      updateData.counts_toward_reward = isRecordOnly ? false : body.counts_toward_reward
     }
 
-    let subjectGradeMapping: Json | null = null
-    if (!isRecordOnly && body.subject_id) {
-      const { data: subjectData } = await supabase
-        .from('subjects')
-        .select('grade_mapping')
-        .eq('id', body.subject_id)
-        .single()
+    // ── Determine if caller is changing scoring data ──
+    const callerSentScore = body.score !== undefined
+    const callerSentGrade = body.grade !== undefined || body.score_type === 'letter'
+    const callerChangingScoring = (
+      callerSentScore ||
+      callerSentGrade ||
+      body.score_type !== undefined ||
+      body.scoring_mode !== undefined
+    )
 
-      subjectGradeMapping = (subjectData as SubjectGradeRow | null)?.grade_mapping || null
-    }
-
+    // ── Score recalculation (only when caller is changing scoring) ──
     let actualScore: number | null = null
     let actualPercentage: number | null = null
     let rewardItemsForTransactions: CalculatedRewardItem[] = []
-    const maxScore = Number(updateData.max_score ?? 100)
+    const maxScore = Number(body.max_score ?? oldAssessment.max_score ?? 100)
 
-    if (isRecordOnly) {
-      updateData.score = null
-      updateData.percentage = null
-      updateData.grade = null
-      updateData.status = 'completed'
-      updateData.completed_date = new Date().toISOString()
-      updateData.reward_amount = 0
-    } else if (updateData.score_type === 'letter') {
-      if (!body.grade) {
-        return NextResponse.json({ error: 'grade is required for letter score type' }, { status: 400 })
-      }
-      actualScore = gradeToScore(body.grade, subjectGradeMapping)
-      actualPercentage = gradeToPercentage(body.grade, maxScore, subjectGradeMapping)
-      updateData.score = actualScore
-      updateData.percentage = actualPercentage
-      updateData.grade = body.grade
-    } else if (updateData.score_type === 'numeric') {
-      updateData.grade = null
-      if (body.score !== null && body.score !== undefined) {
-        actualScore = body.score
-        actualPercentage = (body.score / maxScore) * 100
-        updateData.score = body.score
-        updateData.percentage = actualPercentage
-      } else {
+    if (callerChangingScoring) {
+      const effectiveScoreType = body.score_type || (oldAssessment.score_type as string) || 'numeric'
+
+      if (isRecordOnly) {
         updateData.score = null
         updateData.percentage = null
+        updateData.grade = null
+        updateData.status = 'completed'
+        updateData.reward_amount = 0
+      } else if (effectiveScoreType === 'letter') {
+        const grade = body.grade || (oldAssessment.grade as string) || null
+        if (!grade) {
+          return NextResponse.json({ error: 'grade is required for letter score type' }, { status: 400 })
+        }
+        updateData.score_type = 'letter'
+        
+        let subjectGradeMapping: Json | null = null
+        const subjectId = body.subject_id || oldAssessment.subject_id
+        if (subjectId) {
+          const { data: subjectData } = await supabase
+            .from('subjects')
+            .select('grade_mapping')
+            .eq('id', subjectId)
+            .single()
+          subjectGradeMapping = (subjectData as SubjectGradeRow | null)?.grade_mapping || null
+        }
+
+        actualScore = gradeToScore(grade, subjectGradeMapping)
+        actualPercentage = gradeToPercentage(grade, maxScore, subjectGradeMapping)
+        updateData.score = actualScore
+        updateData.percentage = actualPercentage
+        updateData.grade = grade
+        updateData.status = 'completed'
+      } else {
+        // numeric
+        updateData.score_type = 'numeric'
+        updateData.grade = null
+        if (callerSentScore && body.score !== null) {
+          actualScore = body.score
+          actualPercentage = (body.score / maxScore) * 100
+          updateData.score = body.score
+          updateData.percentage = actualPercentage
+          updateData.status = 'completed'
+        } else if (callerSentScore && body.score === null) {
+          // explicitly cleared
+          updateData.score = null
+          updateData.percentage = null
+          updateData.status = 'upcoming'
+        }
+        // if caller didn't send score at all (only changed type/mode), keep existing
+      }
+
+      // completed_date: user-provided > auto-now (only when score is actually calculated)
+      if (body.completed_date !== undefined) {
+        updateData.completed_date = body.completed_date
+      } else if (actualScore !== null && actualPercentage !== null) {
+        updateData.completed_date = new Date().toISOString()
+      }
+    } else {
+      // Not changing scoring — just allow completed_date override
+      if (body.completed_date !== undefined) {
+        updateData.completed_date = body.completed_date
       }
     }
 
-    if (!isRecordOnly && actualScore !== null && actualPercentage !== null) {
-      updateData.status = 'completed'
-      updateData.completed_date = new Date().toISOString()
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[DEBUG] Updating assessment - Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-        console.log('[DEBUG] Assessment ID:', body.assessment_id, 'Student ID:', body.student_id, 'Subject ID:', body.subject_id)
-      }
-
-      if (countsTowardReward) {
+    // ── Reward calculation (only when score changed) ──
+    if (callerChangingScoring && !isRecordOnly && actualScore !== null && actualPercentage !== null) {
+      if (body.counts_toward_reward !== false) {
         const { data: rulesData, error: rulesError } = await supabase
           .from('reward_rules')
           .select('*')
@@ -228,12 +250,6 @@ export async function POST(request: NextRequest) {
         }
 
         let rules = (rulesData as RewardRuleRow[] | null) || []
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[DEBUG] Fetched reward_rules count:', rules.length)
-          if (rules.length > 0) {
-            console.log('[DEBUG] Sample rule student_id:', rules[0].student_id, 'subject_id:', rules[0].subject_id)
-          }
-        }
 
         const studentIdsInRules = new Set(
           rules
@@ -246,23 +262,20 @@ export async function POST(request: NextRequest) {
             .from('students')
             .select('id')
             .in('id', Array.from(studentIdsInRules))
-
           const validStudentIds = new Set(
             ((validStudents as StudentIdRow[] | null) || []).map((student) => student.id)
           )
           const invalidRules = Array.from(studentIdsInRules).filter((id) => !validStudentIds.has(id))
-
           if (invalidRules.length > 0) {
             console.error('[WARNING] Found reward_rules with student_ids not in current project:', invalidRules)
-            console.error('[WARNING] This may indicate connection to wrong Supabase project!')
             rules = rules.filter((rule) => !rule.student_id || validStudentIds.has(rule.student_id))
           }
         }
 
         const matchedRule = findMatchingRule({
           rules,
-          assessmentType: body.assessment_type,
-          subjectId: body.subject_id,
+          assessmentType: body.assessment_type || (oldAssessment.assessment_type as string),
+          subjectId: body.subject_id || oldAssessment.subject_id,
           studentId: body.student_id,
           percentage: actualPercentage,
         })
@@ -286,26 +299,17 @@ export async function POST(request: NextRequest) {
       } else {
         updateData.reward_amount = 0
       }
-    } else if (!isRecordOnly) {
-      updateData.score = null
-      updateData.percentage = null
-      updateData.grade = null
-      updateData.status = 'upcoming'
-      updateData.completed_date = null
-      updateData.reward_amount = 0
     }
 
+    // ── Execute update ──
     let { data: assessment, error } = await supabase
       .from('assessments')
-      .update(updateData)
+      .update(updateData as AssessmentUpdate)
       .eq('id', body.assessment_id)
       .select()
       .single()
 
     if (shouldRetryWithoutGradeColumns(error)) {
-      // PGRST204 on .single() means PostgREST couldn't serialize the response,
-      // NOT that the UPDATE failed. Query for the row instead of retrying
-      // with stripped columns (which would lose grade/score_type data).
       const { data: found, error: findError } = await supabase
         .from('assessments')
         .select('*')
@@ -316,14 +320,13 @@ export async function POST(request: NextRequest) {
         assessment = found
         error = null
       } else {
-        // Row wasn't found or query failed — retry without grade/score_type columns.
         const fallbackData = { ...updateData }
         delete fallbackData.grade
         delete fallbackData.score_type
 
         const retryResult = await supabase
           .from('assessments')
-          .update(fallbackData)
+          .update(fallbackData as AssessmentUpdate)
           .eq('id', body.assessment_id)
           .select()
           .single()
@@ -346,23 +349,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update assessment' }, { status: 500 })
     }
 
-    await supabase
-      .from('transactions')
-      .delete()
-      .eq('assessment_id', body.assessment_id)
+    // ── Handle transactions (only if score changed) ──
+    if (callerChangingScoring) {
+      await supabase
+        .from('transactions')
+        .delete()
+        .eq('assessment_id', body.assessment_id)
 
-    const rewardAmount = Number(updateData.reward_amount ?? 0)
-    const updatedAssessment = assessment as { id: string }
+      const rewardAmount = Number(updateData.reward_amount ?? 0)
+      const updatedAssessment = assessment as { id: string }
 
-    await insertAssessmentRewardTransactions(supabase, {
-      studentId: body.student_id,
-      assessmentId: updatedAssessment.id,
-      title: body.title,
-      dueDate: body.due_date,
-      rewardItems: rewardItemsForTransactions,
-      legacyRewardAmount: rewardAmount,
-      selectedRewardTypeId: body.reward_type_id || null,
-    })
+      await insertAssessmentRewardTransactions(supabase, {
+        studentId: body.student_id,
+        assessmentId: updatedAssessment.id,
+        title: body.title || (oldAssessment.title as string),
+        dueDate: (body.due_date || oldAssessment.due_date) as string,
+        rewardItems: rewardItemsForTransactions,
+        legacyRewardAmount: rewardAmount,
+        selectedRewardTypeId: body.reward_type_id || null,
+      })
+    }
 
     return NextResponse.json({ success: true, data: assessment })
   } catch (err) {

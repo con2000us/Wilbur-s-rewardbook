@@ -136,7 +136,7 @@ export async function createAssessmentWithReward(
     assessment_type: body.assessment_type,
     max_score: isRecordOnly ? undefined : (body.max_score || 100),
     status: isRecordOnly ? 'completed' : body.status || 'upcoming',
-    due_date: body.due_date || null,
+    due_date: body.due_date || new Date().toISOString().slice(0, 10),
     notes: body.notes || undefined,
     score_type: isRecordOnly ? undefined : (body.score_type || 'numeric'),
     grade: isRecordOnly ? undefined : body.grade || undefined,

@@ -11,7 +11,7 @@ import {
   type RewardConfigItem,
 } from '@/lib/rewardFormula'
 import { gradeToScore, gradeToPercentage, GRADE_OPTIONS, type Grade } from '@/lib/gradeConverter'
-import ImageUploader, { type UploadedImage } from '@/app/components/ImageUploader'
+import ImageUploader, { normalizeUploadedImages, type UploadedImage } from '@/app/components/ImageUploader'
 import AiAssessmentImport from './AiAssessmentImport'
 import type { Json } from '@/lib/supabase/types'
 import AssessmentTypeRadioGroup from '@/app/components/AssessmentTypeRadioGroup'
@@ -127,7 +127,7 @@ export default function AssessmentForm({
   const [showRules, setShowRules] = useState(false)
   const [showDangerZone, setShowDangerZone] = useState(false)
   const [imageUrls, setImageUrls] = useState<UploadedImage[]>(
-    Array.isArray(assessment?.image_urls) ? assessment.image_urls : []
+    normalizeUploadedImages(assessment?.image_urls)
   )
   const [originalDueDate] = useState<string | null>(
     assessment?.due_date || null
