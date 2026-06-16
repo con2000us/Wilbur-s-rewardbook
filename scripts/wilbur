@@ -7,9 +7,11 @@
 set -e
 SCRIPTS="/opt/wilbur-rewardbook/scripts"
 
-# Auth token for Wilbur API (set in .env or here)
+# Auth token for Wilbur API (set in your shell or .env.local; never commit it)
 if [ -z "$WILBUR_AUTH_TOKEN" ]; then
-  export WILBUR_AUTH_TOKEN="v1.9e95f956d44ea3f8f424f68cf787d74c797ef246a5a886690ff22223f1850958"
+  echo "Error: WILBUR_AUTH_TOKEN is not set." >&2
+  echo "Run: export WILBUR_AUTH_TOKEN=<site-auth token>" >&2
+  exit 1
 fi
 CMD="$1"
 shift
