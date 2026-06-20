@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import ImageViewer from '@/app/components/ImageViewer'
+import { toBrowserPublicStorageUrl } from '@/lib/storage/publicUrl'
 import {
   getAssessmentTypeIcon as getDynamicAssessmentTypeIcon,
   getAssessmentTypeLabel as getDynamicAssessmentTypeLabel,
@@ -22,7 +23,7 @@ interface AssessmentRecord {
   scoring_mode?: string | null
   counts_toward_average?: boolean | null
   counts_toward_reward?: boolean | null
-  image_urls?: Array<{ url: string; order?: number; rotation?: 0 | 90 | 180 | 270 }> | null
+  image_urls?: Array<{ url: string; order?: number; rotation?: 0 | 90 | 180 | 270; width?: number; height?: number }> | null
   mistakes?: Array<{
     id?: string
     question_number: string | null
@@ -39,20 +40,31 @@ interface AssessmentRecord {
   }
   description?: string
   notes?: string | null
+  reward_type_icon?: string | null
 }
 
 interface RecordCardProps {
   record: AssessmentRecord
+  studentId: string
   assessmentTypes: AssessmentType[]
   onClick?: () => void
 }
 
-const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, assessmentTypes, onClick }) => {
+const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, studentId, assessmentTypes, onClick }) => {
   const locale = useLocale()
   const t = useTranslations('student')
   const tAssessment = useTranslations('assessment')
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
+  const displayImages = (record.image_urls || []).map((image) => ({
+    ...image,
+    url: toBrowserPublicStorageUrl(image.url),
+  }))
+
+  const handleRotationsChange = useCallback(async (rotations: Record<number, number>) => {
+    const { saveAssessmentImageRotations } = await import('@/actions/assessments')
+    await saveAssessmentImageRotations(record.id, studentId, rotations)
+  }, [record.id, studentId])
 
   // Emoji 到 Material Icons Outlined 的映射表
   const emojiToMaterialIcon: Record<string, string> = {
@@ -186,6 +198,11 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, assessmentTyp
       ]
     : []
 
+  const rewardTypeIcon = record.reward_type_icon
+  const isRewardIconEmoji = rewardTypeIcon
+    ? rewardTypeIcon.length <= 2 || !/^[a-z_]+$/i.test(rewardTypeIcon)
+    : false
+
   return (
     <div
       className="group glass-card p-6 rounded-[2.5rem] shadow-sm relative overflow-hidden hover:shadow-xl cursor-pointer h-full flex flex-col"
@@ -237,7 +254,15 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, assessmentTyp
             </div>
             <h3 className="text-xl font-black text-slate-600">{record.title || record.description || formatDisplayDate(record.due_date)}</h3>
             {record.notes && (
-              <p className="mt-2 text-sm text-slate-600 line-clamp-4">{record.notes}</p>
+              <p
+                className={`mt-2 text-sm line-clamp-4 ${
+                  record.notes.startsWith('[OCR]')
+                    ? 'text-slate-400'
+                    : 'text-slate-600'
+                }`}
+              >
+                {record.notes}
+              </p>
             )}
           </div>
         </div>
@@ -260,9 +285,18 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, assessmentTyp
           {rewardTagItems.length > 0 && (
             <div className="flex flex-wrap justify-end gap-1.5 max-w-[220px]">
               {rewardTagItems.map((tag) => (
-                <div key={tag.key} className="inline-flex items-center bg-orange-50 px-2 py-1 rounded-full border border-orange-200">
+                <div key={tag.key} className="inline-flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-full border border-orange-200">
+                  {rewardTypeIcon ? (
+                    isRewardIconEmoji ? (
+                      <span className="text-xs leading-none">{rewardTypeIcon}</span>
+                    ) : (
+                      <span className="material-icons-outlined text-orange-600 text-xs leading-none">{rewardTypeIcon}</span>
+                    )
+                  ) : (
+                    <span className="material-icons-outlined text-orange-600 text-xs leading-none">savings</span>
+                  )}
                   <span className="text-orange-600 font-bold text-xs leading-none">
-                    {tag.label} ${tag.amount}
+                    ${tag.amount}
                   </span>
                 </div>
               ))}
@@ -309,50 +343,52 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, assessmentTyp
       <div className="mt-auto flex items-end justify-between">
         {/* 左下：圖片縮圖 */}
         <div>
-          {record.image_urls && record.image_urls.length > 0 && (
+          {displayImages.length > 0 && (
             <div className="flex gap-1.5 flex-wrap">
-              {record.image_urls.slice(0, 2).map((img, i) => (
+              {displayImages.slice(0, 4).map((img, i) => {
+                const isLast = i === 3 && displayImages.length > 4
+                return (
                 <div
                   key={i}
-                  className="w-14 h-14 rounded-xl border border-slate-200 shadow-sm overflow-hidden bg-white"
+                  className="relative w-14 h-14 rounded-xl border border-slate-200 shadow-sm overflow-hidden bg-white"
                 >
                   <img
                     src={img.url}
                     alt={`Image ${i + 1}`}
+                    draggable={false}
                     className="w-full h-full object-contain cursor-pointer hover:opacity-80 transition-opacity hover:scale-105"
                     style={{
                       transform: rotationMap[img.rotation ?? 0] || 'rotate(0deg)',
                     }}
-                    onMouseDown={(e) => {
-                      e.stopPropagation()
-                      e.preventDefault()
-                    }}
                     onClick={(e) => {
+                      console.log('[ImageClick] firing, index:', i)
                       e.stopPropagation()
                       e.preventDefault()
                       setViewerIndex(i)
                       setViewerOpen(true)
                     }}
                   />
+                  {isLast && (
+                    <div
+                      className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center cursor-pointer hover:bg-black/50 transition-colors"
+                      onMouseDown={(e) => {
+                        e.stopPropagation()
+                        e.preventDefault()
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        e.preventDefault()
+                        setViewerIndex(3)
+                        setViewerOpen(true)
+                      }}
+                    >
+                      <span className="text-white text-sm font-bold drop-shadow-md">
+                        +{displayImages.length - 4}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              ))}
-              {record.image_urls.length > 2 && (
-                <span
-                  className="w-14 h-14 rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-500 shadow-sm cursor-pointer hover:bg-slate-200 hover:text-slate-700 transition-colors"
-                  onMouseDown={(e) => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                    setViewerIndex(2)
-                    setViewerOpen(true)
-                  }}
-                >
-                  +{record.image_urls.length - 2}
-                </span>
-              )}
+              )})}
             </div>
           )}
         </div>
@@ -364,10 +400,11 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, assessmentTyp
       </div>
 
       <ImageViewer
-        images={record.image_urls || []}
+        images={displayImages}
         initialIndex={viewerIndex}
         isOpen={viewerOpen}
         onClose={() => setViewerOpen(false)}
+        onRotationsChange={handleRotationsChange}
       />
     </div>
   )

@@ -103,7 +103,7 @@ export async function GET(
 
       const recentAssessments = (recentBySubject.get(subject.id) || [])
         .sort((a, b) => b.sortTime - a.sortTime)
-        .slice(0, 3)
+        .slice(0, 15)
         .map((entry) => ({
           title: entry.title || 'Untitled',
           date: entry.date,

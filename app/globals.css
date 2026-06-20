@@ -387,6 +387,7 @@ body {
   align-items: stretch;
   gap: 6px;
   min-width: 0;
+  min-height: 0;
 }
 
 .home-subject-stat-strip-popup .home-subject-stat-cell {
@@ -404,13 +405,15 @@ body {
 
 .home-subject-recent-label {
   display: grid;
-  grid-template-columns: minmax(58px, 0.42fr) minmax(0, 0.58fr);
+  grid-template-columns: minmax(58px, 1fr) minmax(0, 1fr);
   column-gap: 6px;
   margin: 0;
   color: #94a3b8;
   font-size: 10px;
   font-weight: 700;
   line-height: 1.2;
+  /* ponytail: 對齊下方 .home-subject-recent-scores 的 content box（scrollbar 4px + padding 2px）；天花板：scores 的 scrollbar 寬度改變時需同步 */
+  padding-right: 6px;
 }
 
 .home-subject-recent-label > span:first-child {
@@ -427,11 +430,30 @@ body {
   align-items: stretch;
   gap: 4px;
   width: 100%;
+  max-height: 136px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
+}
+
+.home-subject-recent-scores::-webkit-scrollbar {
+  width: 4px;
+}
+
+.home-subject-recent-scores::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 2px;
+}
+
+.home-subject-recent-scores::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .home-subject-recent-score-row {
   display: grid;
-  grid-template-columns: minmax(58px, 0.42fr) minmax(0, 0.58fr);
+  grid-template-columns: minmax(58px, 1fr) minmax(0, 1fr);
   align-items: center;
   column-gap: 6px;
   width: 100%;
@@ -456,7 +478,9 @@ body {
   color: var(--subject-color, #4a9eff);
   font-size: 10px;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   line-height: 1.2;
+  min-width: 5ch; /* ponytail: 固定 value 欄寬讓 icon 左緣對齊；天花板：百分比 > 999.9 會破 */
   text-align: right;
   white-space: nowrap;
 }

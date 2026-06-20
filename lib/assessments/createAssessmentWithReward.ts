@@ -102,6 +102,7 @@ function findMatchingRule(params: {
   ]
 
   return orderedRules.find((rule) => {
+    if (rule.condition === 'unconditional') return true
     if (rule.condition === 'perfect_score') return percentage === 100
     if (rule.condition === 'score_equals') return percentage === rule.min_score
     if (rule.condition === 'score_range') {

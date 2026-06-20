@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef, useCallback, useMemo } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import ImageViewer from '@/app/components/ImageViewer'
+import { toBrowserPublicStorageUrl } from '@/lib/storage/publicUrl'
 
 export interface UploadedImage {
   url: string
@@ -23,9 +24,13 @@ function isUploadedImage(value: unknown): value is UploadedImage {
     typeof image.path === 'string' && image.path.length > 0
 }
 
+function withBrowserSafeUrl(image: UploadedImage): UploadedImage {
+  return { ...image, url: toBrowserPublicStorageUrl(image.url) }
+}
+
 function extractStoragePathFromUrl(url: string) {
   try {
-    const parsedUrl = new URL(url)
+    const parsedUrl = new URL(url, 'http://local.invalid')
     const marker = '/object/public/goal-images/'
     const markerIndex = parsedUrl.pathname.indexOf(marker)
     if (markerIndex === -1) return ''
@@ -37,12 +42,12 @@ function extractStoragePathFromUrl(url: string) {
 
 function normalizeImage(value: unknown, index: number): UploadedImage | null {
   if (isUploadedImage(value)) {
-    return { ...value, order: value.order ?? index }
+    return withBrowserSafeUrl({ ...value, order: value.order ?? index })
   }
 
   if (typeof value === 'string' && value.length > 0) {
     return {
-      url: value,
+      url: toBrowserPublicStorageUrl(value),
       path: extractStoragePathFromUrl(value),
       size: 0,
       order: index,
@@ -71,7 +76,7 @@ function normalizeImage(value: unknown, index: number): UploadedImage | null {
     : extractStoragePathFromUrl(url)
 
   return {
-    url,
+    url: toBrowserPublicStorageUrl(url),
     path,
     size: typeof image.size === 'number' ? image.size : 0,
     width: typeof image.width === 'number' ? image.width : undefined,
@@ -184,10 +189,78 @@ export default function ImageUploader({
   const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  
+  // Touch drag state for mobile support
+  const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null)
+  const [touchDragOverIndex, setTouchDragOverIndex] = useState<number | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const touchDragRef = useRef<{ dragIndex: number; overIndex: number }>({ dragIndex: -1, overIndex: -1 })
+  
+  // Refs to always have latest values accessible in native event handlers
+  const cleanImagesRef = useRef<UploadedImage[]>([])
+  const commitChangeRef = useRef<((imgs: UploadedImage[]) => void) | null>(null)
+
+  // Touch drag-and-drop for mobile
+  const handleTouchStart = useCallback((e: React.TouchEvent, index: number) => {
+    if (!sortable || disabled) return
+    e.stopPropagation()
+    setTouchDragIndex(index)
+    setTouchDragOverIndex(index)
+    touchDragRef.current = { dragIndex: index, overIndex: index }
+    
+    const onTouchMoveNative = (ev: TouchEvent) => {
+      if (!containerRef.current) return
+      ev.preventDefault() // Prevent scroll while dragging
+      
+      const touch = ev.touches[0]
+      const elements = containerRef.current.querySelectorAll('[data-image-index]')
+      
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i] as HTMLElement
+        const rect = el.getBoundingClientRect()
+        if (
+          touch.clientX >= rect.left &&
+          touch.clientX <= rect.right &&
+          touch.clientY >= rect.top &&
+          touch.clientY <= rect.bottom
+        ) {
+          const idx = parseInt(el.getAttribute('data-image-index') || '-1', 10)
+          if (idx !== -1 && idx !== touchDragRef.current.overIndex) {
+            touchDragRef.current.overIndex = idx
+            setTouchDragOverIndex(idx)
+          }
+          break
+        }
+      }
+    }
+    
+    const onTouchEndNative = () => {
+      document.removeEventListener('touchmove', onTouchMoveNative)
+      document.removeEventListener('touchend', onTouchEndNative)
+      document.removeEventListener('touchcancel', onTouchEndNative)
+      
+      const { dragIndex: dIdx, overIndex: oIdx } = touchDragRef.current
+      if (dIdx !== -1 && oIdx !== -1 && dIdx !== oIdx && cleanImagesRef.current && commitChangeRef.current) {
+        const newImages = [...cleanImagesRef.current]
+        const [moved] = newImages.splice(dIdx, 1)
+        newImages.splice(oIdx, 0, moved)
+        commitChangeRef.current(newImages)
+      }
+      
+      setTouchDragIndex(null)
+      setTouchDragOverIndex(null)
+      touchDragRef.current = { dragIndex: -1, overIndex: -1 }
+    }
+    
+    document.addEventListener('touchmove', onTouchMoveNative, { passive: false })
+    document.addEventListener('touchend', onTouchEndNative)
+    document.addEventListener('touchcancel', onTouchEndNative)
+  }, [sortable, disabled])
 
   // Recalculate order values to match array position
   const syncOrder = useCallback(
@@ -204,6 +277,10 @@ export default function ImageUploader({
     [onChange, syncOrder]
   )
   const cleanImages = useMemo(() => normalizeUploadedImages(images), [images])
+  
+  // Keep refs in sync for native event handlers
+  useEffect(() => { cleanImagesRef.current = cleanImages }, [cleanImages])
+  useEffect(() => { commitChangeRef.current = commitChange }, [commitChange])
 
   const handleFiles = useCallback(
     async (files: FileList | null) => {
@@ -277,9 +354,12 @@ export default function ImageUploader({
 
       setUploading(false)
 
-      // Reset file input
+      // Reset file inputs
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
+      }
+      if (cameraInputRef.current) {
+        cameraInputRef.current.value = ''
       }
     },
     [cleanImages, maxCount, commitChange, entityId, idFieldName, uploadEndpoint]
@@ -396,6 +476,7 @@ export default function ImageUploader({
       {/* Preview images */}
       {cleanImages.length > 0 && (
         <div
+          ref={containerRef}
           className="flex flex-wrap gap-3"
           onDragOver={handleDragOverContainer}
           onDragLeave={handleDragLeaveContainer}
@@ -404,10 +485,13 @@ export default function ImageUploader({
           {cleanImages.map((image, index) => {
             const rotation = image.rotation ?? 0
             const isFirst = index === 0
+            const isTouchDragging = touchDragIndex === index
+            const isTouchTarget = touchDragOverIndex === index && touchDragIndex !== null && touchDragIndex !== index
 
             return (
               <div
                 key={image.path || index}
+                data-image-index={index}
                 draggable={sortable && !disabled}
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={(e) => handleDragOver(e, index)}
@@ -416,8 +500,8 @@ export default function ImageUploader({
                 onDragEnd={handleDragEnd}
                 className={`relative flex flex-col items-center w-[92px] select-none ${
                   sortable && !disabled ? 'cursor-grab active:cursor-grabbing' : ''
-                } ${dragIndex === index ? 'opacity-40' : ''} ${
-                  dragOverIndex === index && dragIndex !== index
+                } ${dragIndex === index || isTouchDragging ? 'opacity-40' : ''} ${
+                  (dragOverIndex === index && dragIndex !== index) || isTouchTarget
                     ? 'ring-2 ring-blue-500 rounded-xl'
                     : ''
                 }`}
@@ -427,7 +511,11 @@ export default function ImageUploader({
                   {/* Drag handle + index badge */}
                   <div className="flex items-center justify-between px-1.5 py-1 bg-slate-50 border-b border-slate-200">
                     {sortable && !disabled ? (
-                      <span className="text-slate-400 text-sm leading-none cursor-grab active:cursor-grabbing select-none">
+                      <span
+                        className="text-slate-400 text-sm leading-none cursor-grab active:cursor-grabbing select-none"
+                        onTouchStart={(e) => handleTouchStart(e, index)}
+                        style={{ touchAction: 'none' }}
+                      >
                         ⋮⋮
                       </span>
                     ) : (
@@ -459,7 +547,7 @@ export default function ImageUploader({
                     className="flex items-center justify-center mx-auto"
                     style={{
                       width: 80,
-                      height: rotation === 90 || rotation === 270 ? 68 : 80,
+                      height: 80,
                     }}
                   >
                     <img
@@ -513,13 +601,12 @@ export default function ImageUploader({
           dragOver
             ? 'border-blue-500 bg-blue-50'
             : canUpload
-              ? 'border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer'
+              ? 'border-slate-200 hover:border-blue-400 hover:bg-blue-50/50'
               : 'border-slate-100 bg-slate-50 cursor-not-allowed opacity-60'
         }`}
         onDragOver={handleDragOverContainer}
         onDragLeave={handleDragLeaveContainer}
         onDrop={handleDropContainer}
-        onClick={() => canUpload && fileInputRef.current?.click()}
       >
         {uploading ? (
           <div className="flex flex-col items-center gap-2 py-2">
@@ -527,14 +614,32 @@ export default function ImageUploader({
             <p className="text-sm text-slate-500">Uploading...</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-1.5 py-2">
-            <span className="material-icons-outlined text-2xl text-slate-400">
-              {cleanImages.length === 0 ? 'add_photo_alternate' : 'add'}
-            </span>
-            <p className="text-sm text-slate-500">
-              {cleanImages.length === 0
-                ? 'Click or drag images to upload'
-                : 'Add more images'}
+          <div className="flex flex-col items-center gap-3 py-2">
+            <div className="flex items-center gap-3">
+              {/* 拍照按鈕 */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); canUpload && cameraInputRef.current?.click() }}
+                disabled={!canUpload}
+                className="flex flex-col items-center gap-1 px-5 py-3 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <span className="material-icons-outlined text-2xl text-blue-600">photo_camera</span>
+                <span className="text-xs font-medium text-blue-700">拍照</span>
+              </button>
+
+              {/* 選圖庫按鈕 */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); canUpload && fileInputRef.current?.click() }}
+                disabled={!canUpload}
+                className="flex flex-col items-center gap-1 px-5 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <span className="material-icons-outlined text-2xl text-slate-600">photo_library</span>
+                <span className="text-xs font-medium text-slate-700">選圖片</span>
+              </button>
+            </div>
+            <p className="text-xs text-slate-400">
+              或拖放圖片至此
             </p>
             {cleanImages.length > 0 && (
               <p className="text-xs text-slate-400">
@@ -544,6 +649,19 @@ export default function ImageUploader({
           </div>
         )}
 
+        {/* 拍照用 input（capture） */}
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          multiple
+          onChange={(e) => handleFiles(e.target.files)}
+          className="hidden"
+          disabled={!canUpload}
+        />
+
+        {/* 圖庫用 input（無 capture） */}
         <input
           ref={fileInputRef}
           type="file"

@@ -42,6 +42,18 @@ To deploy this project, you need **3 free accounts** (all take less than 2 minut
 
 **好消息：** GitHub 是免費的，你只需要用它來部署（不需要了解 Git！）
 
+## 🤖 AI Agent 自動部署 / AI Agent Auto-Deploy
+
+**如果你不想手動操作，可以讓 AI Agent 幫你完成部署。 / If you prefer not to do this manually, let an AI Agent handle it.**
+
+使用 Cursor、Claude Code 等 AI 編程工具，直接告訴 AI Agent：**「請依照 README.zh-TW.md 的安裝說明，幫我把這個專案完整部署起來」**，AI Agent 會自動完成 clone、讀取文檔、引導 Supabase 設定、建立 .env.local、安裝依賴並啟動。
+
+Using Cursor, Claude Code, or similar tools, just tell the AI Agent: **"Please deploy this project for me by following README.zh-TW.md"**. The AI Agent will clone the repo, read docs, guide Supabase setup, create `.env.local`, install dependencies, and start the server.
+
+**你需要準備 / What you need:**
+- Supabase 帳號 / Supabase account：[supabase.com](https://supabase.com)
+- 在 Supabase 建立新專案，取得 Project URL 和 anon key / Create a new project in Supabase and get the Project URL and anon key
+
 ## 🚀 Deployment Steps / 部署步驟
 
 ### Step 1: Create Accounts (5 minutes) / 步驟 1：創建帳號（5 分鐘）

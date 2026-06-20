@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
+import PlusIcon from '@/app/components/icons/PlusIcon'
 import {
   calculateRewardOutputsFromRule,
   parseRewardConfig,
@@ -20,6 +21,7 @@ import {
   normalizeAssessmentTypes,
   type AssessmentType,
 } from '@/lib/assessmentTypes'
+import { getFormPreferences, setFormPreferences } from '@/lib/formPreferences'
 
 interface Subject {
   id: string
@@ -101,24 +103,39 @@ export default function AssessmentForm({
   const tMessages = useTranslations('messages')
   const locale = useLocale()
   
-  // 判斷是編輯還是新增模式
-  const isEditMode = !!assessment
-  
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const [selectedSubjectId, setSelectedSubjectId] = useState(
-    assessment?.subject_id || initialSubjectId || subjects[0]?.id || ''
-  )
-  const [selectedAssessmentType, setSelectedAssessmentType] = useState(
-    assessment?.assessment_type || defaultAssessmentType
-  )
-  const [scoreType, setScoreType] = useState<'numeric' | 'letter' | 'record_only'>(
-    assessment?.scoring_mode === 'record_only'
-      ? 'record_only'
-      : (assessment?.score_type as 'numeric' | 'letter') || 'numeric'
-  )
+
+  // 判斷是編輯還是新增模式
+  const isEditMode = !!assessment
+
+  const [selectedSubjectId, setSelectedSubjectId] = useState(() => {
+    if (isEditMode) return assessment?.subject_id || initialSubjectId || subjects[0]?.id || ''
+    if (typeof window === 'undefined') return initialSubjectId || subjects[0]?.id || ''
+    const prefs = getFormPreferences()
+    return (prefs.subjectId && subjects.some(s => s.id === prefs.subjectId))
+      ? prefs.subjectId
+      : (initialSubjectId || subjects[0]?.id || '')
+  })
+  const [selectedAssessmentType, setSelectedAssessmentType] = useState(() => {
+    if (isEditMode) return assessment?.assessment_type || defaultAssessmentType
+    if (typeof window === 'undefined') return defaultAssessmentType
+    const prefs = getFormPreferences()
+    return prefs.assessmentType || defaultAssessmentType
+  })
+  const [scoreType, setScoreType] = useState<'numeric' | 'letter' | 'record_only'>(() => {
+    if (isEditMode) {
+      return assessment?.scoring_mode === 'record_only'
+        ? 'record_only'
+        : (assessment?.score_type as 'numeric' | 'letter') || 'numeric'
+    }
+    if (typeof window === 'undefined') return 'numeric'
+    const prefs = getFormPreferences()
+    return prefs.scoreType || 'numeric'
+  })
+
   const [score, setScore] = useState<number | null>(assessment?.score || null)
   const [grade, setGrade] = useState<Grade | null>(
     (assessment?.grade as Grade) || null
@@ -135,7 +152,12 @@ export default function AssessmentForm({
   const [rewardTypes, setRewardTypes] = useState<RewardType[]>([])
   const [selectedRewardTypeId, setSelectedRewardTypeId] = useState<string>('')
   const [activeMode, setActiveMode] = useState<'manual' | 'ai'>('manual')
+  const [ocrLoading, setOcrLoading] = useState(false)
+  const [ocrError, setOcrError] = useState<string | null>(null)
   const [aiAvailable, setAiAvailable] = useState(false)
+  const [applyReward, setApplyReward] = useState(
+    isEditMode ? assessment?.counts_toward_reward !== false : true
+  )
   const assessmentTypeOptions = normalizeAssessmentTypes(
     assessmentTypes,
     assessment?.assessment_type || defaultAssessmentType
@@ -217,6 +239,12 @@ export default function AssessmentForm({
     }
   }, [assessmentTypes, isEditMode, selectedAssessmentType])
 
+  // localStorage 寫入：新增模式時，科目、類型或評分方式變更 → 寫入
+  useEffect(() => {
+    if (isEditMode) return
+    setFormPreferences({ subjectId: selectedSubjectId, assessmentType: selectedAssessmentType, scoreType })
+  }, [selectedSubjectId, selectedAssessmentType, scoreType, isEditMode])
+
   // 根據選中的科目和評量類型篩選適用的規則
   const getApplicableRules = () => {
     if (!selectedSubjectId) return []
@@ -283,6 +311,7 @@ export default function AssessmentForm({
 
   // 找到匹配的規則（使用實際分數）
   const matchingRule = actualScore !== null ? applicableRules.find(rule => {
+    if (rule.condition === 'unconditional') return true
     if (rule.condition === 'score_equals') {
       return actualScore === rule.min_score
     } else if (rule.condition === 'perfect_score') {
@@ -424,7 +453,7 @@ export default function AssessmentForm({
         score_type: isRecordOnly ? 'numeric' : scoreType,
         scoring_mode: isRecordOnly ? 'record_only' : 'scored',
         counts_toward_average: !isRecordOnly,
-        counts_toward_reward: !isRecordOnly,
+        counts_toward_reward: isRecordOnly ? false : applyReward,
         max_score: isRecordOnly ? 100 : parseInt(formData.get('max_score') as string),
         notes: ((formData.get('notes') as string) || '').trim() || null,
         manual_reward: !isRecordOnly && formData.get('manual_reward') ? parseFloat(formData.get('manual_reward') as string) : null,
@@ -562,6 +591,35 @@ export default function AssessmentForm({
     }
   }
 
+  async function handleOcr() {
+    if (!assessment) return
+    setOcrLoading(true)
+    setOcrError(null)
+
+    try {
+      const res = await fetch('/api/assessments/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assessment_id: assessment.id, image_index: 0 }),
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'OCR failed')
+      }
+
+      router.refresh()
+      // Close the form modal after success
+      if (onSuccess) {
+        onSuccess()
+      }
+    } catch (err) {
+      setOcrError(err instanceof Error ? err.message : 'OCR failed')
+    } finally {
+      setOcrLoading(false)
+    }
+  }
+
   return (
     <>
       {!isEditMode && aiAvailable && (
@@ -617,6 +675,26 @@ export default function AssessmentForm({
         </div>
       )}
 
+      {/* OCR 處理中遮罩 */}
+      {ocrLoading && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 rounded-2xl backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 p-8">
+            <span className="material-icons-outlined text-5xl text-purple-600 animate-spin">sync</span>
+            <p className="text-lg font-bold text-purple-700">
+              {locale === 'zh-TW' ? 'OCR 文字辨識中...' : 'OCR in progress...'}
+            </p>
+            <p className="text-sm text-slate-500">
+              {locale === 'zh-TW'
+                ? '正在分析圖片中的文字，請稍候（約 30 秒～ 3 分鐘）'
+                : 'Analyzing text in the image, please wait (approx. 30s ~ 3 min)'}
+            </p>
+            <div className="w-48 h-1.5 bg-purple-100 rounded-full overflow-hidden">
+              <div className="w-full h-full bg-purple-500 rounded-full animate-pulse" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {success && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-green-700 flex items-center gap-2">
@@ -626,7 +704,7 @@ export default function AssessmentForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5 relative">
         {/* 科目選擇 */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -949,9 +1027,36 @@ export default function AssessmentForm({
 
         {/* 評量圖片上傳 */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {locale === 'zh-TW' ? '評量圖片' : 'Assessment Images'}
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-semibold text-gray-700">
+              {locale === 'zh-TW' ? '評量圖片' : 'Assessment Images'}
+            </label>
+            {isEditMode && imageUrls.length > 0 && (
+              <button
+                type="button"
+                onClick={handleOcr}
+                disabled={ocrLoading}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  ocrLoading
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100'
+                }`}
+              >
+                <span className="material-icons-outlined text-sm">
+                  {ocrLoading ? 'sync' : 'document_scanner'}
+                </span>
+                {ocrLoading
+                  ? (locale === 'zh-TW' ? '辨識中...' : 'OCR...')
+                  : 'OCR'}
+              </button>
+            )}
+          </div>
+          {ocrError && (
+            <p className="mb-2 text-xs text-red-500 flex items-center gap-1">
+              <span className="material-icons-outlined text-xs">error</span>
+              {ocrError}
+            </p>
+          )}
           <ImageUploader
             images={imageUrls}
             onChange={setImageUrls}
@@ -966,6 +1071,18 @@ export default function AssessmentForm({
         </div>
 
         {/* 分數預覽與預期獎勵 */}
+        {!isRecordOnly && (
+          <label className="flex items-center gap-3 cursor-pointer px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-lg">
+            <input
+              type="checkbox"
+              checked={applyReward}
+              onChange={(e) => setApplyReward(e.target.checked)}
+              className="rounded border-blue-300 h-5 w-5 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm font-semibold text-blue-700">{t('applyReward')}</span>
+            <span className="text-xs text-blue-500">{t('applyRewardHint')}</span>
+          </label>
+        )}
         {!isRecordOnly && ((scoreType === 'numeric' && score !== null) || (scoreType === 'letter' && grade)) && displayPercentage !== null && (
           <div className={`p-3 rounded-lg border-2 ${
             matchingRule 
@@ -1183,8 +1300,8 @@ export default function AssessmentForm({
             {loading 
               ? (isEditMode ? tMessages('updating') : tMessages('creating'))
               : success 
-              ? '✅ ' + (isEditMode ? tMessages('updated') : tMessages('created'))
-              : isEditMode ? '💾 ' + tCommon('save') : '➕ ' + t('createAssessment')}
+              ? <>{'✅ '}{(isEditMode ? tMessages('updated') : tMessages('created'))}</>
+              : isEditMode ? <>{'💾 '}{tCommon('save')}</> : <><PlusIcon className="w-5 h-5 inline-block mr-1" />{' '}{t('createAssessment')}</>}
           </button>
           
           <button

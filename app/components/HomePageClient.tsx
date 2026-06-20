@@ -431,15 +431,16 @@ function SelectedStudentBar({
                       </div>
                       {subject.recentAssessments && subject.recentAssessments.length > 0 ? (
                         <>
-                          <div className="home-subject-recent-label">
+                          <div className="home-subject-recent-label" style={{ gridTemplateColumns: 'minmax(58px, 1fr) minmax(0, 1fr)' }}>
                             <span>{labels.recentScoresLabel}</span>
                             <span>{labels.recentScoreDateLabel}</span>
                           </div>
                           <div className="home-subject-recent-scores">
-                            {subject.recentAssessments.map((assessment, scoreIndex) => (
+                            {subject.recentAssessments.slice(0, 15).map((assessment, scoreIndex) => (
                               <div
                                 key={`${subject.id}-${scoreIndex}`}
                                 className="home-subject-recent-score-row"
+                                style={{ gridTemplateColumns: 'minmax(58px, 1fr) minmax(0, 1fr)' }}
                                 title={assessment.title}
                               >
                                 <span className="home-subject-recent-score-primary">

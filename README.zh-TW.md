@@ -29,6 +29,25 @@
 
 ## 開始使用
 
+### 最簡單：讓 AI Agent 幫你部署
+
+如果你使用 Cursor、Claude Code 或其他 AI 編程工具，可以直接要求 AI Agent 幫你完成部署：
+
+1. 提供 GitHub 網址：`https://github.com/con2000us/Wilbur-s-rewardbook`
+2. 告訴 AI Agent：「請依照 README.zh-TW.md 的安裝說明，幫我把這個專案完整部署起來」
+3. AI Agent 會自動：
+   - Clone 專案到本地
+   - 閱讀 `docs/DEPLOYMENT.md`、`docs/DATABASE_SETUP.md` 等文檔
+   - 引導你建立 Supabase 專案並執行 bootstrap SQL
+   - 建立 `.env.local` 並填入你的 Supabase 憑證
+   - 執行 `npm install && npm run dev`
+4. 完成後開啟 `http://localhost:3000` 即可使用
+
+**你需要準備：**
+- 一個 Supabase 帳號（免費註冊：[supabase.com](https://supabase.com)）
+- 在 Supabase 建立一個新專案，取得 Project URL 和 anon key
+- 將這些憑證提供給 AI Agent
+
 ### 推薦給科技小白：一鍵部署（最簡單）
 
 如果你不熟悉寫程式，建議使用這個方式。你只需要把 bootstrap SQL 檔依序貼到 Supabase，然後點一下 Vercel 部署按鈕即可。

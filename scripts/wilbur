@@ -25,6 +25,7 @@ case "$CMD" in
   query)           python3 "$SCRIPTS/query-student.py" "$@" ;;
   list-students)   python3 "$SCRIPTS/query-student.py" --list "$@" ;;
   classify)        python3 "$SCRIPTS/classify-exam.py" "$@" ;;
+  smart-ocr2)       python3 "$SCRIPTS/smart-ocr2.py" "$@" ;;
   *)
     echo "Usage: wilbur {add-assessment|add-reward|add-penalty|ocr|parse|query|list-students|classify} [args...]"
     exit 1

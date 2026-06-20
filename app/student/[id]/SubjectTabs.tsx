@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
+import PlusIcon from '@/app/components/icons/PlusIcon'
 import AssessmentRecordCard from './components/AssessmentRecordCard'
 import {
   getAssessmentTypeColor,
@@ -15,8 +16,10 @@ import {
 const ASSESSMENT_RECORDS_GRID =
   'grid grid-cols-1 min-[880px]:max-[1023px]:grid-cols-2 min-[1192px]:grid-cols-2 gap-6'
 
+// ponytail: 加底框（bg-white/60 + backdrop-blur + border + shadow）與桌面版 filter 及下方統計卡風格一致，
+// 避免 pills 裸露在 glass-panel 上視覺不協調。圓角用 rounded-2xl 配合窄版卡片風格。
 const NARROW_FILTER_SCROLLER =
-  'flex gap-2 overflow-x-auto pb-2 pr-4 -mx-1 px-1 [scrollbar-width:thin] [scrollbar-color:rgba(26,90,189,0.15)_transparent] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[rgba(26,90,189,0.15)]'
+  'flex items-center gap-2 overflow-x-auto py-2 px-2 rounded-2xl border border-white/70 bg-white/85 shadow-sm [scrollbar-width:thin] [scrollbar-color:rgba(26,90,189,0.15)_transparent] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[rgba(26,90,189,0.15)]'
 
 interface Subject {
   id: string
@@ -194,14 +197,20 @@ export default function SubjectTabs({
     () => filteredAssessments.reduce((sum, a) => sum + (a.image_urls?.length || 0), 0),
     [filteredAssessments]
   )
+  // ponytail: 直接從已過濾的評量計算平均，不沿用 rewardBreakdown.totalAverage。
+  // 原因：totalAverage 在 StudentRecords 只根據單選 selectedSubject 計算，
+  // 不反映本組件的科目多選 (selectedSubjectIds) 與類型多選 (selectedAssessmentTypes)，
+  // 會導致篩選後平均不更新。percentage 為標準化分數，跨科目比較正確。
   const monthAverage = useMemo(() => {
-    const overall = rewardBreakdown?.totalAverage
-    if (typeof overall === 'number' && overall > 0) return Math.round(overall * 10) / 10
-    const scored = filteredAssessments.filter(a => typeof a.percentage === 'number' && a.percentage !== null) as Array<Assessment & { percentage: number }>
+    const scored = filteredAssessments.filter(
+      a => typeof a.percentage === 'number'
+        && a.percentage !== null
+        && a.counts_toward_average !== false
+    ) as Array<Assessment & { percentage: number }>
     if (scored.length === 0) return 0
     const sum = scored.reduce((acc, a) => acc + a.percentage, 0)
     return Math.round((sum / scored.length) * 10) / 10
-  }, [filteredAssessments, rewardBreakdown])
+  }, [filteredAssessments])
 
   const subjectFilterCount = Math.max(subjects?.length || 0, 1)
   const subjectFilterMinItemWidth = isSingleColumnLayout
@@ -310,7 +319,7 @@ export default function SubjectTabs({
                 onClick={onOpenAddModal}
                 className="inline-flex min-h-9 items-center gap-1 rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-3.5 text-sm font-bold text-white shadow-md transition-all hover:opacity-95 hover:shadow-lg active:scale-95 cursor-pointer"
               >
-                <span className="material-icons-outlined text-base">add_circle</span>
+                <PlusIcon className="w-4 h-4" />
                 {locale === 'zh-TW' ? '新增' : 'Add'}
               </button>
             )}
@@ -359,7 +368,7 @@ export default function SubjectTabs({
                     setSelectedSubjectIds(next)
                     setSelectedSubject(next.length === 1 ? next[0] : '')
                   }}
-                  className={`inline-flex w-auto max-w-full min-h-10 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-semibold shadow-sm transition-colors cursor-pointer ${
+                  className={`inline-flex w-auto max-w-full min-h-10 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-semibold shadow-sm transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${
                     isSelected
                       ? 'border-white/60 bg-white/70'
                       : 'border-white/60 bg-white/70 text-slate-600 hover:bg-white'
@@ -405,7 +414,7 @@ export default function SubjectTabs({
                       : [...selectedAssessmentTypes, type.type_key]
                     setSelectedAssessmentTypes(next)
                   }}
-                  className={`inline-flex w-auto max-w-full min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-bold border transition-colors cursor-pointer ${
+                  className={`inline-flex w-auto max-w-full min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-bold border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${
                     isSelected
                       ? 'border-white/60 bg-white/60'
                       : 'border-white/60 bg-white/60 hover:bg-white'
@@ -434,7 +443,7 @@ export default function SubjectTabs({
         <div className="-mx-1 px-1 pb-[10px] overflow-x-auto [scrollbar-width:thin] [scrollbar-color:rgba(26,90,189,0.15)_transparent] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[rgba(26,90,189,0.15)]">
           <div className="flex w-full min-w-full gap-2">
             <div className="flex-1 min-w-0 basis-0 rounded-2xl border border-white/70 bg-white/85 px-3 py-2.5 text-center shadow-sm">
-              <p className="text-[11px] font-bold text-slate-500 leading-tight">{locale === 'zh-TW' ? '本月平均' : 'Avg'}</p>
+              <p className="text-[11px] font-bold text-slate-500 leading-tight">{locale === 'zh-TW' ? '平均' : 'Avg'}</p>
               <p className="mt-1 text-[1.91rem] font-black leading-none text-sky-700">{monthAverage.toFixed(1)}</p>
             </div>
             <div className="flex-1 min-w-0 basis-0 rounded-2xl border border-white/70 bg-white/85 px-3 py-2.5 text-center shadow-sm">
@@ -614,7 +623,7 @@ export default function SubjectTabs({
                 onClick={onOpenAddModal}
                 className="px-6 py-2.5 min-h-11 rounded-full font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-md hover:shadow-lg"
               >
-                <span className="material-icons-outlined text-lg">add_circle</span>
+                <PlusIcon className="w-5 h-5" />
                 {t('addAssessment')}
               </button>
             )}
@@ -949,8 +958,10 @@ export default function SubjectTabs({
                   mistakes: assessment.mistakes,
                   notes: assessment.notes,
                   subjects: assessment.subjects,
-                  description: assessment.description || assessment.title
+                  description: assessment.description || assessment.title,
+                  reward_type_icon: assessment.reward_type_icon || null
                 }}
+                studentId={studentId}
                 assessmentTypes={assessmentTypes}
                 onClick={() => onEditAssessment && onEditAssessment(assessment)}
               />

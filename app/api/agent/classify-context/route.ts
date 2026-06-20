@@ -168,7 +168,7 @@ async function renderCell(
   let imgW = cellWidth
   let imgH = imgAreaHeight
 
-  if (imageBuffer) {
+  if (imageBuffer && imageBuffer.length > 0) {
     const resizeOpts: sharp.ResizeOptions = {
       width: cellWidth,
       height: imgAreaHeight,
@@ -245,10 +245,15 @@ export async function POST(request: NextRequest) {
     // ── 4. 查評量類型順序 ──
     const { data: atRows } = await supabase
       .from('assessment_types')
-      .select('type_key, display_order')
+      .select('type_key, display_name, display_order')
       .eq('is_active', true)
       .order('display_order', { ascending: true })
     const typeOrder = new Map((atRows || []).map((t) => [t.type_key, t.display_order ?? 999]))
+    const typeNameMap = new Map((atRows || []).map((t) => [t.type_key, t.display_name || t.type_key]))
+    // 動態產生分類規則：「小考→quiz, 考試→exam, ...」
+    const typeRuleStr = (atRows || [])
+      .map((t) => `${t.display_name || t.type_key}→${t.type_key}`)
+      .join(', ')
 
     // ── 5. 查所有附圖評量（依 created_at DESC）──
     const { data: templates } = await supabase
@@ -503,7 +508,7 @@ export async function POST(request: NextRequest) {
         '等第_標題區：{若總分是等第制（A/B/C/D/F，可含+-），填這裡；數字分數則留空}\\n' +
         '總分_小計：{各題型得分，如「選擇題10/10, 填空題8/10」}\\n' +
         '標題_標題區：{考試名稱}\\n' +
-        '類型_關鍵字：{期中考→exam, 小考→quiz, 作業→homework, 報告→project}\\n' +
+        '類型_關鍵字：{'+typeRuleStr+'}\\n' +
         '滿分_考卷標示：{考卷上的滿分，沒寫就填100}\\n' +
         '日期_考卷標示：{考卷上的日期}\\n' +
         '評分模式_有無總分：{有數字總分或等第填 scored，完全找不到任何分數或等第填 record_only}\\n\\n' +
@@ -532,7 +537,7 @@ export async function POST(request: NextRequest) {
         '等第_標題區：{若總分是等第制（A/B/C/D/F，可含+-），填這裡；數字分數則留空}\\n' +
         '總分_小計：{各題型得分，如「選擇題10/10, 填空題8/10」}\\n' +
         '標題_標題區：{考試名稱，如第二次期中考、第5課小考}\\n' +
-        '類型_關鍵字：{期中考→exam, 小考→quiz, 作業→homework, 報告→project}\\n' +
+        '類型_關鍵字：{'+typeRuleStr+'}\\n' +
         '滿分_考卷標示：{考卷上的滿分，如120。沒寫就填100}\\n' +
         '日期_考卷標示：{考卷上的日期}\\n' +
         '評分模式_有無總分：{有數字總分或等第填 scored，完全找不到任何分數或等第填 record_only}\\n\\n' +

@@ -89,6 +89,7 @@ function findMatchingRule(params: {
   ]
 
   return orderedRules.find((rule) => {
+    if (rule.condition === 'unconditional') return true
     if (rule.condition === 'perfect_score') return percentage === 100
     if (rule.condition === 'score_equals') return percentage === rule.min_score
     if (rule.condition === 'score_range') {
@@ -207,7 +208,7 @@ export async function POST(request: NextRequest) {
         // numeric
         updateData.score_type = 'numeric'
         updateData.grade = null
-        if (callerSentScore && body.score !== null) {
+        if (callerSentScore && body.score != null) {
           actualScore = body.score
           actualPercentage = (body.score / maxScore) * 100
           updateData.score = body.score

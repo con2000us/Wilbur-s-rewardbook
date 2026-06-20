@@ -1,4 +1,4 @@
-﻿--
+--
 -- PostgreSQL database dump
 --
 
@@ -3797,7 +3797,7 @@ CREATE TABLE IF NOT EXISTS public.reward_rules (
     is_accumulable boolean DEFAULT true,
     reward_icon text DEFAULT '??'::text,
     reward_config jsonb,
-    CONSTRAINT reward_rules_condition_check CHECK ((condition = ANY (ARRAY['score_equals'::text, 'score_range'::text, 'perfect_score'::text]))),
+    CONSTRAINT reward_rules_condition_check CHECK ((condition = ANY (ARRAY['score_equals'::text, 'score_range'::text, 'perfect_score'::text, 'unconditional'::text]))),
     CONSTRAINT reward_rules_reward_type_check CHECK ((reward_type = ANY (ARRAY['money'::text, 'hearts'::text, 'diamonds'::text, 'time'::text, 'habit'::text, 'task'::text, 'points'::text])))
 );
 

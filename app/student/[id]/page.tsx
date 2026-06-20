@@ -102,6 +102,31 @@ export default async function StudentPage({
     .eq('student_id', id)
     .order('transaction_date', { ascending: false })
 
+  // 獲取獎勵類型（用於顯示 icon）
+  const { data: rewardTypes } = await supabase
+    .from('custom_reward_types')
+    .select('id, icon')
+
+  // 建立 assessment_id → reward_type_icon 對應表
+  const rewardTypeIcons = new Map<string, string>()
+  if (rewardTypes && transactions) {
+    const iconById = new Map(rewardTypes.map((rt: any) => [rt.id, rt.icon]))
+    for (const tx of transactions) {
+      if (tx.assessment_id && tx.reward_type_id && iconById.has(tx.reward_type_id)) {
+        rewardTypeIcons.set(tx.assessment_id, iconById.get(tx.reward_type_id)!)
+      }
+    }
+  }
+
+  // 將 reward_type_icon 附加到評量資料上
+  if (assessments) {
+    assessments.forEach((a: any) => {
+      if (rewardTypeIcons.has(a.id)) {
+        a.reward_type_icon = rewardTypeIcons.get(a.id)
+      }
+    })
+  }
+
   // 獲取獎金規則（用於 Modal）
   const { data: rewardRules } = await supabase
     .from('reward_rules')

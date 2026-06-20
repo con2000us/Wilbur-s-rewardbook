@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import Modal from '@/app/components/Modal'
 import AssessmentForm from './AssessmentForm'
+import PlusIcon from '@/app/components/icons/PlusIcon'
 import type { AssessmentType } from '@/lib/assessmentTypes'
 
 interface Subject {
@@ -112,7 +113,7 @@ export default function AssessmentModal({
         </>
       ) : (
         <>
-          <span className="material-icons-outlined align-middle mr-1">add_circle</span>
+          <PlusIcon className="w-5 h-5 align-middle mr-1" />
           {t('addAssessment')}
         </>
       )}

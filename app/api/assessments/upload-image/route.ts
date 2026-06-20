@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server-admin'
 import { createClient } from '@/lib/supabase/server'
+import { toBrowserPublicStorageUrl } from '@/lib/storage/publicUrl'
 import { NextRequest, NextResponse } from 'next/server'
 
 const BUCKET_NAME = 'goal-images'
@@ -97,7 +98,7 @@ async function uploadSingleFile(
   const { width, height } = parseImageDimensions(fileBuffer, file.type)
 
   return {
-    url: urlData?.publicUrl || '',
+    url: toBrowserPublicStorageUrl(urlData?.publicUrl || ''),
     path: filePath,
     size: file.size,
     width: width || undefined,

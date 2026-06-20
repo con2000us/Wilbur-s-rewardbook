@@ -769,11 +769,12 @@ export default function GlobalRewardRulesManager({
                   <option value="perfect_score">{t('conditionTypes.perfect_score')}</option>
                   <option value="score_equals">{t('conditionTypes.score_equals')}</option>
                   <option value="score_range">{t('conditionTypes.score_range')}</option>
+                  <option value="unconditional">{t('conditionTypes.unconditional')}</option>
                 </select>
               </div>
 
               {/* 分數設置 */}
-              {formData.condition !== 'perfect_score' && (
+              {formData.condition !== 'perfect_score' && formData.condition !== 'unconditional' && (
                 <div className="grid grid-cols-2 gap-4">
                   {formData.condition === 'score_equals' ? (
                     <div className="col-span-2">

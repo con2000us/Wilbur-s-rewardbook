@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
 interface ImageItem {
   url: string
   rotation?: number
+  width?: number
+  height?: number
 }
 
 interface ImageViewerProps {
@@ -14,6 +16,8 @@ interface ImageViewerProps {
   isOpen: boolean
   onClose: () => void
   onRotate?: (index: number, direction: 'cw' | 'ccw') => void
+  /** 關閉時回報已變更的旋轉（index → 新 rotation），父層可決定是否存檔 */
+  onRotationsChange?: (rotations: Record<number, number>) => void
 }
 
 const cycleCw: Record<number, 0 | 90 | 180 | 270> = { 0: 90, 90: 180, 180: 270, 270: 0 }
@@ -39,13 +43,17 @@ export default function ImageViewer({
   isOpen,
   onClose,
   onRotate,
+  onRotationsChange,
 }: ImageViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [mounted, setMounted] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Internal rotation state per image (for visual-only rotation when no onRotate)
   const [localRotations, setLocalRotations] = useState<Record<number, number>>({})
+  // Snapshot of original rotations when viewer opens, for diffing on close
+  const originalRotationsRef = useRef<Record<number, number>>({})
 
   // Reset local rotations when viewer opens with new images
   useEffect(() => {
@@ -55,6 +63,7 @@ export default function ImageViewer({
         initial[i] = img.rotation ?? 0
       })
       setLocalRotations(initial)
+      originalRotationsRef.current = { ...initial }
     }
   }, [isOpen, images])
 
@@ -65,6 +74,9 @@ export default function ImageViewer({
   useEffect(() => {
     setCurrentIndex(initialIndex)
   }, [initialIndex, isOpen])
+
+  // 旋轉尺寸修正狀態（必須在所有 early return 之前宣告）
+  const [rotatedImgStyle, setRotatedImgStyle] = useState<React.CSSProperties>({})
 
   const goNext = useCallback(() => {
     setImageLoaded(false)
@@ -88,11 +100,29 @@ export default function ImageViewer({
     }
   }, [currentIndex, localRotations, onRotate])
 
+  // 關閉時計算旋轉變更並回報
+  const handleClose = useCallback(() => {
+    if (onRotationsChange) {
+      const changes: Record<number, number> = {}
+      for (const [idxStr, newRot] of Object.entries(localRotations)) {
+        const idx = parseInt(idxStr)
+        const orig = originalRotationsRef.current[idx] ?? 0
+        if (newRot !== orig) {
+          changes[idx] = newRot
+        }
+      }
+      if (Object.keys(changes).length > 0) {
+        onRotationsChange(changes)
+      }
+    }
+    onClose()
+  }, [localRotations, onRotationsChange, onClose])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return
       if (e.key === 'Escape') {
-        onClose()
+        handleClose()
       } else if (e.key === 'ArrowRight') {
         goNext()
       } else if (e.key === 'ArrowLeft') {
@@ -109,7 +139,50 @@ export default function ImageViewer({
       document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = 'unset'
     }
-  }, [isOpen, onClose, goNext, goPrev])
+  }, [isOpen, handleClose, goNext, goPrev])
+
+  // 旋轉 90/270 時，CSS transform 不影響 layout box，需手動計算正確尺寸
+  // 使旋轉後的視覺尺寸與原生橫式圖片一致
+  useEffect(() => {
+    if (!isOpen || images.length === 0) return
+    const img = images[currentIndex]
+    const rot = (localRotations[currentIndex] ?? img?.rotation ?? 0) as number
+    if (rot !== 90 && rot !== 270) { setRotatedImgStyle({}); return }
+    const effW = img?.width && img?.height && (rot === 90 || rot === 270) ? img.height : img?.width
+    const effH = img?.width && img?.height && (rot === 90 || rot === 270) ? img.width : img?.height
+    if (!effW || !effH) { setRotatedImgStyle({}); return }
+
+    const el = containerRef.current
+    if (!el) return
+
+    const compute = () => {
+      const style = getComputedStyle(el)
+      const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+      const padY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
+      const cw = el.clientWidth - padX
+      const ch = el.clientHeight - padY
+      if (cw === 0 || ch === 0) return
+      const ratio = effW / effH
+      let visualW: number, visualH: number
+      if (cw / ch > ratio) {
+        visualH = ch
+        visualW = visualH * ratio
+      } else {
+        visualW = cw
+        visualH = visualW / ratio
+      }
+      setRotatedImgStyle({
+        width: `${visualH}px`,
+        height: `${visualW}px`,
+        objectFit: 'contain',
+      })
+    }
+
+    compute()
+    const ro = new ResizeObserver(compute)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [isOpen, images, currentIndex, localRotations])
 
   if (!isOpen || !mounted || images.length === 0) return null
 
@@ -120,7 +193,7 @@ export default function ImageViewer({
   const handleBackdropClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (e.target === e.currentTarget) {
-      onClose()
+      handleClose()
     }
   }
 
@@ -131,7 +204,7 @@ export default function ImageViewer({
     >
       {/* Close button */}
       <button
-        onClick={(e) => { e.stopPropagation(); onClose() }}
+        onClick={(e) => { e.stopPropagation(); handleClose() }}
         className="absolute top-4 right-4 z-10 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all hover:scale-110"
         aria-label="Close"
       >
@@ -170,7 +243,11 @@ export default function ImageViewer({
       )}
 
       {/* Image container */}
-      <div className="w-full h-full flex items-center justify-center p-20" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={containerRef}
+        className="w-full h-full flex items-center justify-center p-20"
+        onClick={(e) => e.stopPropagation()}
+      >
         {!imageLoaded && (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="material-icons-outlined text-4xl text-white/40 animate-spin">autorenew</span>
@@ -179,13 +256,14 @@ export default function ImageViewer({
         <img
           src={currentImage.url}
           alt={`Image ${currentIndex + 1}`}
-          className={`max-w-full max-h-full object-contain rounded-lg select-none transition-opacity duration-300 ${
+          className={`rounded-lg select-none transition-opacity duration-300 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           style={{
             transform: rotationMap[rotation] || 'rotate(0deg)',
-            maxWidth: rotation === 90 || rotation === 270 ? 'none' : undefined,
-            maxHeight: rotation === 90 || rotation === 270 ? '100%' : undefined,
+            ...(Object.keys(rotatedImgStyle).length > 0
+              ? rotatedImgStyle
+              : { maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' as const }),
           }}
           onLoad={() => setImageLoaded(true)}
           draggable={false}

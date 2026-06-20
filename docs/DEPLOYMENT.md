@@ -2,6 +2,40 @@
 
 Complete step-by-step guide for deploying Wilbur's Reward Book.
 
+## 🤖 AI Agent Method (Recommended for AI Users)
+
+If you use Cursor, Claude Code, or any other AI coding tool, you can let an AI Agent handle the deployment for you:
+
+1. Provide the GitHub URL: `https://github.com/con2000us/Wilbur-s-rewardbook`
+2. Tell the AI Agent: "Please deploy this project for me by following the instructions in README.zh-TW.md"
+3. The AI Agent will:
+   - Clone the project locally
+   - Read `docs/DEPLOYMENT.md`, `docs/DATABASE_SETUP.md`, and related docs
+   - Guide you to create a Supabase project and run the bootstrap SQL
+   - Create `.env.local` with your Supabase credentials
+   - Run `npm install && npm run dev`
+4. Open `http://localhost:3000` when done
+
+**What you need to prepare:**
+- A Supabase account (free signup at [supabase.com](https://supabase.com))
+- Create a new project in Supabase and get the Project URL and anon key
+- Provide these credentials to the AI Agent
+
+### AI Agent Checklist
+
+When deploying via AI Agent, it should complete the following steps:
+
+- [ ] Clone the repo from GitHub
+- [ ] Read `docs/DEPLOYMENT.md` and `docs/DATABASE_SETUP.md`
+- [ ] Ask user for Supabase Project URL and anon key
+- [ ] Write `.env.local` file with all required variables
+- [ ] Run `npm install`
+- [ ] Guide user through Supabase SQL Editor:
+  - Run `database/bootstrap/01_schema.sql`
+  - Run `database/bootstrap/02_seed_defaults.sql`
+- [ ] Run `npm run dev`
+- [ ] Verify the app loads at `http://localhost:3000`
+
 ## 🎯 Quick Start (5 minutes)
 
 ### Option 1: One-Click Deploy (Easiest)

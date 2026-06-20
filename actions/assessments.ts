@@ -244,3 +244,47 @@ export async function gradeAssessment(
   return { success: true, reward }
 }
 
+/** 保存評量圖片的旋轉設定（不影響其他欄位） */
+export async function saveAssessmentImageRotations(
+  assessmentId: string,
+  studentId: string,
+  imageRotations: Record<number, number>
+) {
+  const supabase = createClient()
+
+  // 先取得現有 image_urls
+  const { data: assessment } = await supabase
+    .from('assessments')
+    .select('image_urls')
+    .eq('id', assessmentId)
+    .single()
+
+  if (!assessment) return { success: false, error: 'not found' }
+
+  const urls = (assessment.image_urls as any[]) || []
+  let changed = false
+  const updated = urls.map((img: any, i: number) => {
+    const newRot = imageRotations[i]
+    if (newRot !== undefined && newRot !== (img.rotation ?? 0)) {
+      changed = true
+      return { ...img, rotation: newRot }
+    }
+    return img
+  })
+
+  if (!changed) return { success: true } // no changes
+
+  const { error } = await supabase
+    .from('assessments')
+    .update({ image_urls: updated })
+    .eq('id', assessmentId)
+
+  if (error) {
+    console.error('saveAssessmentImageRotations:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath(`/student/${studentId}`)
+  return { success: true }
+}
+
