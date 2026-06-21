@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server-admin'
 import { decrypt, getEncryptionSecret } from '@/lib/crypto/encryption'
-import { getSupabaseStorageHostname, toServerPublicStorageUrl } from '@/lib/storage/publicUrl'
+import { toServerPublicStorageUrl } from '@/lib/storage/publicUrl'
 
 const MAX_OCR_CONTENT_LENGTH = 5000
 

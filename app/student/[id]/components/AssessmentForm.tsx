@@ -1037,6 +1037,11 @@ export default function AssessmentForm({
             rows={4}
             maxLength={5000}
             defaultValue={assessment?.ocr_content || ''}
+            onChange={(e) => {
+              // Track live character count for the counter below
+              const counter = e.target.nextElementSibling as HTMLElement | null
+              if (counter) counter.textContent = `${e.target.value.length} / 5000`
+            }}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
             placeholder={locale === 'zh-TW'
               ? '使用評量圖片旁的 OCR 按鈕後，辨識內容會存放在這裡（上限 5000 字）'
