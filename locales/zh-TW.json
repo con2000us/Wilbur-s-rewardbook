@@ -724,7 +724,6 @@
     "resourceUsageDesc": "查看儲存空間用量與資料庫記錄統計",
     "resourceUsageStorageTitle": "圖片儲存占用",
     "resourceUsageSummary": "已使用 {size}，共 {files} 個檔案",
-    "resourceUsagePercent": "已用 {percent}% / 上限 {total}",
     "resourceUsageLoadFailed": "讀取儲存統計失敗",
     "resourceUsageUnavailable": "目前無法取得儲存統計",
     "refreshUsage": "重新整理統計",
@@ -733,6 +732,67 @@
     "resourceUsageDBAssessments": "評量記錄：{count} 筆",
     "resourceUsageDBTransactions": "存摺交易：{count} 筆",
     "resourceUsageDBTotalRecords": "總記錄數：{count} 筆",
+    "imageQuality": {
+      "sectionTitle": "評量附圖儲存品質",
+      "sectionDesc": "選擇上傳照片的儲存方式，畫質越高越清晰但越佔空間。",
+      "saved": "已儲存",
+      "saving": "儲存中…",
+      "saveFailed": "儲存失敗",
+      "applyHint": "設定僅影響「之後」上傳的圖片，已上傳的不會重新壓縮。",
+      "defaultBadge": "預設",
+      "labels": {
+        "eco": "省流量",
+        "normal": "普通",
+        "standard": "標準",
+        "high": "高畫質",
+        "original": "原圖"
+      },
+      "eco": {
+        "title": "省流量 (800px)",
+        "summary": "圖片很小，能塞最多照片。",
+        "pros": "上傳最快、最省 Storage 空間",
+        "cons": "字會變糊、放大模糊明顯",
+        "sizeRange": "每張 50–100 KB",
+        "capacity": "1 GB ≈ 可存 15,000 張",
+        "ocrHint": "若有使用 AI 自動讀題功能，此選項可能會無法辨識。"
+      },
+      "normal": {
+        "title": "普通 (1200px)",
+        "summary": "字夠清楚，檔案小巧。",
+        "pros": "上傳快、平衡空間和畫質",
+        "cons": "字體小時辨識細節較吃力、放大會有點糊、長期保存細節較少",
+        "sizeRange": "每張 100–200 KB",
+        "capacity": "1 GB ≈ 可存 7,000 張",
+        "ocrHint": "想省空間又要 AI 讀題的話，這檔位最合適。"
+      },
+      "standard": {
+        "title": "標準 (1600px)",
+        "summary": "兼顧畫質和檔案大小，最平衡的選擇。",
+        "pros": "文字清晰、放大也看得清、適合多數情境",
+        "cons": "佔空間是「普通」的 3 倍",
+        "sizeRange": "每張 400–500 KB",
+        "capacity": "1 GB ≈ 可存 2,200 張",
+        "tagline": "推薦給絕大多數使用者"
+      },
+      "high": {
+        "title": "高畫質 (2400px)",
+        "summary": "細節完整，連最小的字都能看清。",
+        "pros": "畫質極佳、字體小或筆跡細時辨識度佳、適合長期保存重要評量",
+        "cons": "上傳慢、佔空間是「標準」的 2 倍",
+        "sizeRange": "每張 800 KB – 1 MB",
+        "capacity": "1 GB ≈ 可存 1,100 張",
+        "useCaseHint": "適合拍：考卷小字注釋、密集排版講義、紅筆批閱筆跡。"
+      },
+      "original": {
+        "title": "原圖（不壓縮）",
+        "summary": "完全不壓縮，保留原始拍攝資訊。",
+        "pros": "100% 保留原始照片、保留拍攝時間/方向資訊",
+        "cons": "上傳慢、佔空間最多",
+        "sizeRange": "每張 3–5 MB",
+        "capacity": "1 GB ≈ 可存 250 張",
+        "ocrHint": "若有使用 AI 自動讀題功能，此選項因檔案過大可能會處理失敗。"
+      }
+    },
     "rewardsCenter": "獎勵中心",
     "rewardsCenterDesc": "管理獎勵類型、評量類別、行為事件模板、大型目標與兌換規則",
     "openRewardsCenter": "開啟獎勵中心",

@@ -31,6 +31,7 @@ interface Assessment {
   counts_toward_reward?: boolean | null
   image_urls?: Array<{ url: string; path: string; size: number; width?: number; height?: number }> | null
   notes?: string | null
+  ocr_content?: string | null
 }
 
 interface RewardRule {

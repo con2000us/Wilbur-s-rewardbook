@@ -133,6 +133,7 @@ export interface Database {
           due_date: string | null
           completed_date: string | null
           notes: string | null
+          ocr_content: string | null
           grade: string | null
           score_type: string | null
           image_urls: Json | null
@@ -157,6 +158,7 @@ export interface Database {
           due_date?: string | null
           completed_date?: string | null
           notes?: string | null
+          ocr_content?: string | null
           grade?: string | null
           score_type?: string | null
           image_urls?: Json | null
@@ -181,6 +183,7 @@ export interface Database {
           due_date?: string | null
           completed_date?: string | null
           notes?: string | null
+          ocr_content?: string | null
           grade?: string | null
           score_type?: string | null
           image_urls?: Json | null

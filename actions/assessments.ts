@@ -36,6 +36,7 @@ export async function createAssessment(formData: {
   due_date?: string
   status?: 'upcoming' | 'completed' | 'graded'
   notes?: string
+  ocr_content?: string
 }) {
   const supabase = createClient()
   
@@ -48,6 +49,7 @@ export async function createAssessment(formData: {
     status: formData.status || 'upcoming',
     due_date: formData.due_date || null,
     notes: formData.notes || null,
+    ocr_content: formData.ocr_content || null,
   }
   
   // 如果有分數，計算相關數據
@@ -118,6 +120,7 @@ export async function updateAssessment(
     score: number
     status: 'upcoming' | 'completed' | 'graded'
     notes: string
+    ocr_content: string
   }>
 ) {
   const supabase = createClient()
@@ -287,4 +290,3 @@ export async function saveAssessmentImageRotations(
   revalidatePath(`/student/${studentId}`)
   return { success: true }
 }
-

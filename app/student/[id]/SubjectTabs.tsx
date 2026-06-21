@@ -57,6 +57,8 @@ interface Assessment {
     ai_reason?: string | null
   }> | null
   notes?: string | null
+  ocr_content?: string | null
+  reward_type_icon?: string | null
   subjects?: {
     name: string
     color: string
@@ -957,6 +959,7 @@ export default function SubjectTabs({
                   image_urls: assessment.image_urls,
                   mistakes: assessment.mistakes,
                   notes: assessment.notes,
+                  ocr_content: assessment.ocr_content,
                   subjects: assessment.subjects,
                   description: assessment.description || assessment.title,
                   reward_type_icon: assessment.reward_type_icon || null

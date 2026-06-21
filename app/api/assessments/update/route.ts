@@ -22,6 +22,7 @@ type AssessmentUpdatePayload = {
   due_date?: string | null
   completed_date?: string | null   // 🆕 allow backdating
   notes?: string | null
+  ocr_content?: string | null
   score_type?: string | null
   grade?: string | null
   image_urls?: Json[] | null
@@ -145,6 +146,7 @@ export async function POST(request: NextRequest) {
     setIfProvided(updateData, 'max_score', body.max_score)
     setIfProvided(updateData, 'due_date', body.due_date)
     setIfProvided(updateData, 'notes', body.notes)
+    setIfProvided(updateData, 'ocr_content', body.ocr_content)
     setIfProvided(updateData, 'image_urls', body.image_urls)
     setIfProvided(updateData, 'scoring_mode', scoringMode)
 

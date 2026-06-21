@@ -727,7 +727,6 @@
     "resourceUsageDesc": "View storage usage and database record statistics",
     "resourceUsageStorageTitle": "Image Storage Usage",
     "resourceUsageSummary": "Using {size} across {files} files",
-    "resourceUsagePercent": "{percent}% used / limit {total}",
     "resourceUsageLoadFailed": "Failed to load storage usage",
     "resourceUsageUnavailable": "Storage usage is currently unavailable",
     "refreshUsage": "Refresh Usage",
@@ -736,6 +735,67 @@
     "resourceUsageDBAssessments": "Assessments: {count}",
     "resourceUsageDBTransactions": "Transactions: {count}",
     "resourceUsageDBTotalRecords": "Total Records: {count}",
+    "imageQuality": {
+      "sectionTitle": "Assessment Image Quality",
+      "sectionDesc": "Choose how uploaded photos are saved. Larger sizes are clearer but use more storage.",
+      "saved": "Saved",
+      "saving": "Saving…",
+      "saveFailed": "Failed to save",
+      "applyHint": "Settings only affect future uploads; existing images are not re-compressed.",
+      "defaultBadge": "Default",
+      "labels": {
+        "eco": "Eco",
+        "normal": "Normal",
+        "standard": "Standard",
+        "high": "High",
+        "original": "Original"
+      },
+      "eco": {
+        "title": "Eco (800px)",
+        "summary": "Tiny size, fits the most photos.",
+        "pros": "Fastest upload, lowest storage usage",
+        "cons": "Text gets blurry, especially when zoomed",
+        "sizeRange": "~50–100 KB / image",
+        "capacity": "1 GB ≈ 15,000 photos",
+        "ocrHint": "AI auto-read may not recognize images at this size."
+      },
+      "normal": {
+        "title": "Normal (1200px)",
+        "summary": "Clear text, compact files.",
+        "pros": "Fast upload, balanced quality and storage",
+        "cons": "Struggles with small text or fine details, slightly blurry when zoomed",
+        "sizeRange": "~100–200 KB / image",
+        "capacity": "1 GB ≈ 7,000 photos",
+        "ocrHint": "Best choice if you want AI auto-read with minimal storage."
+      },
+      "standard": {
+        "title": "Standard (1600px)",
+        "summary": "Balanced quality and file size — works for most situations.",
+        "pros": "Sharp text, clear when zoomed, suits most needs",
+        "cons": "3× the size of Normal",
+        "sizeRange": "~400–500 KB / image",
+        "capacity": "1 GB ≈ 2,200 photos",
+        "tagline": "Recommended for most users"
+      },
+      "high": {
+        "title": "High (2400px)",
+        "summary": "Full detail, even the smallest text is clear.",
+        "pros": "Excellent quality, best for tiny text or fine handwriting, ideal for archiving important assessments",
+        "cons": "Slower upload, 2× the size of Standard",
+        "sizeRange": "~800 KB – 1 MB / image",
+        "capacity": "1 GB ≈ 1,100 photos",
+        "useCaseHint": "Great for: small annotations on tests, dense lecture notes, fine red-pen markings."
+      },
+      "original": {
+        "title": "Original (no compression)",
+        "summary": "No compression — keeps your photo exactly as taken.",
+        "pros": "100% original, preserves EXIF (date/orientation)",
+        "cons": "Slow upload, largest storage usage",
+        "sizeRange": "~3–5 MB / image",
+        "capacity": "1 GB ≈ 250 photos",
+        "ocrHint": "AI auto-read may fail on files this large."
+      }
+    },
     "rewardsCenter": "Rewards Center",
     "rewardsCenterDesc": "Manage reward types, assessment types, behavior event templates, major goals, and exchange rules",
     "openRewardsCenter": "Open Rewards Center",

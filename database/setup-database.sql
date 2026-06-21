@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS assessments (
   due_date TIMESTAMP WITH TIME ZONE,
   completed_date TIMESTAMP WITH TIME ZONE,
   notes TEXT,
+  ocr_content TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -47,6 +47,7 @@ interface Assessment {
   counts_toward_average?: boolean | null
   counts_toward_reward?: boolean | null
   notes?: string | null
+  ocr_content?: string | null
   image_urls?: UploadedImage[] | null
 }
 
@@ -456,6 +457,7 @@ export default function AssessmentForm({
         counts_toward_reward: isRecordOnly ? false : applyReward,
         max_score: isRecordOnly ? 100 : parseInt(formData.get('max_score') as string),
         notes: ((formData.get('notes') as string) || '').trim() || null,
+        ocr_content: ((formData.get('ocr_content') as string) || '').trim() || null,
         manual_reward: !isRecordOnly && formData.get('manual_reward') ? parseFloat(formData.get('manual_reward') as string) : null,
         reward_type_id: isRecordOnly ? null : formData.get('reward_type_id') || null,
         image_urls: imageUrls,
@@ -897,8 +899,8 @@ export default function AssessmentForm({
               <span className="material-icons-outlined text-base text-slate-500">inventory_2</span>
               <p>
                 {locale === 'zh-TW'
-                  ? '這筆評量會保留日期、備註與圖片，不列入平均，也不會產生獎勵。'
-                  : 'This assessment keeps the date, notes, and images without affecting averages or rewards.'}
+                  ? '這筆評量會保留日期、備註、OCR 內容與圖片，不列入平均，也不會產生獎勵。'
+                  : 'This assessment keeps the date, notes, OCR content, and images without affecting averages or rewards.'}
               </p>
             </div>
           </div>
@@ -1022,6 +1024,22 @@ export default function AssessmentForm({
             defaultValue={assessment?.notes || ''}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
             placeholder={locale === 'zh-TW' ? '可填寫此次評量的補充說明' : 'Optional additional details for this assessment'}
+          />
+        </div>
+
+        {/* OCR 評量內容 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            {locale === 'zh-TW' ? 'OCR 評量內容' : 'OCR Assessment Content'} ({t('optional')})
+          </label>
+          <textarea
+            name="ocr_content"
+            rows={4}
+            defaultValue={assessment?.ocr_content || ''}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+            placeholder={locale === 'zh-TW'
+              ? '使用評量圖片旁的 OCR 按鈕後，辨識內容會存放在這裡'
+              : 'OCR results from the assessment images will be stored here'}
           />
         </div>
 

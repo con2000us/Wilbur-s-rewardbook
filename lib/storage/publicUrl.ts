@@ -34,3 +34,17 @@ export function toBrowserPublicStorageUrl(url: string): string {
     return url
   }
 }
+
+/** Resolve a browser-safe relative storage URL back to an absolute URL for server fetches. */
+export function toServerPublicStorageUrl(url: string): string {
+  if (!url || /^https?:\/\//i.test(url)) return url
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!supabaseUrl) return url
+
+  try {
+    return new URL(url, new URL(supabaseUrl).origin).toString()
+  } catch {
+    return url
+  }
+}

@@ -59,6 +59,7 @@ export async function GET(
         due_date: assessment.due_date,
         completed_date: assessment.completed_date,
         notes: assessment.notes,
+        ocr_content: assessment.ocr_content,
         image_urls: assessment.image_urls,
         reward_amount: assessment.reward_amount,
         created_at: assessment.created_at,

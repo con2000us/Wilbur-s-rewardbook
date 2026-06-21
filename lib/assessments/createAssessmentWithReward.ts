@@ -25,6 +25,7 @@ export type AssessmentCreatePayload = {
   status?: string | null
   due_date?: string | null
   notes?: string | null
+  ocr_content?: string | null
   score_type?: string | null
   grade?: string | null
   image_urls?: Json[] | null
@@ -139,6 +140,7 @@ export async function createAssessmentWithReward(
     status: isRecordOnly ? 'completed' : body.status || 'upcoming',
     due_date: body.due_date || new Date().toISOString().slice(0, 10),
     notes: body.notes || undefined,
+    ocr_content: body.ocr_content || undefined,
     score_type: isRecordOnly ? undefined : (body.score_type || 'numeric'),
     grade: isRecordOnly ? undefined : body.grade || undefined,
     image_urls: body.image_urls || [],

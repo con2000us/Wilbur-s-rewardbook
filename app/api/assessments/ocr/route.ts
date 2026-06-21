@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server-admin'
 import { decrypt, getEncryptionSecret } from '@/lib/crypto/encryption'
+import { toServerPublicStorageUrl } from '@/lib/storage/publicUrl'
 
 // ── OCR Prompt (from direct-ocr.py) ──────────────────────────────
 
@@ -98,7 +99,7 @@ function parseOcr(text: string): OcrFields {
 
 // ── Formatting ───────────────────────────────────────────────────
 
-function formatNotes(fields: OcrFields): string {
+function formatOcrContent(fields: OcrFields): string {
   const labelMap: Record<string, string> = {
     subject_header: '科目(標題區)',
     subject_content: '科目(內文判斷)',
@@ -112,7 +113,7 @@ function formatNotes(fields: OcrFields): string {
     date: '日期',
   }
 
-  const parts: string[] = ['[OCR]']
+  const parts: string[] = []
 
   for (const [key, label] of Object.entries(labelMap)) {
     const value = fields[key as keyof OcrFields]
@@ -249,7 +250,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const imageUrl = imageUrls[image_index].url
+    const imageUrl = toServerPublicStorageUrl(imageUrls[image_index].url)
 
     // 2. Read active provider config (first active one)
     const { data: providerConfigs } = await supabase
@@ -340,18 +341,18 @@ export async function POST(request: NextRequest) {
     // 5. Parse OCR response
     const fields = parseOcr(ocrText)
 
-    // 6. Format notes
-    const notes = formatNotes(fields)
+    // 6. Format the dedicated OCR content
+    const ocrContent = formatOcrContent(fields)
 
     // 7. Write to DB
     const { error: updateError } = await supabase
       .from('assessments')
-      .update({ notes })
+      .update({ ocr_content: ocrContent })
       .eq('id', assessment_id)
 
     if (updateError) {
       return NextResponse.json(
-        { error: `Failed to save notes: ${updateError.message}` },
+        { error: `Failed to save OCR content: ${updateError.message}` },
         { status: 500 }
       )
     }
@@ -359,7 +360,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       fields,
-      notes,
+      ocr_content: ocrContent,
       raw_ocr_text: ocrText,
     })
   } catch (error) {

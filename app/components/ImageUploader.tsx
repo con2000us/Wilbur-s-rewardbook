@@ -3,6 +3,13 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import ImageViewer from '@/app/components/ImageViewer'
 import { toBrowserPublicStorageUrl } from '@/lib/storage/publicUrl'
+import {
+  IMAGE_QUALITY_PROFILES,
+  IMAGE_QUALITY_SETTING_KEY,
+  parseImageQualityProfile,
+  type ImageQualityProfile,
+  type ImageQualityProfileSpec,
+} from '@/lib/imageQuality'
 
 export interface UploadedImage {
   url: string
@@ -112,7 +119,11 @@ interface ImageUploaderProps {
   showSubjectMatchHint?: boolean
 }
 
-async function compressImage(file: File): Promise<Blob> {
+async function compressImage(file: File, spec: ImageQualityProfileSpec): Promise<Blob> {
+  // ponytail: original 檔位 bypass，原檔直接上傳保留 EXIF；副作用：可能 timeout
+  if (spec.bypass) {
+    return file
+  }
   return new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)
@@ -120,17 +131,16 @@ async function compressImage(file: File): Promise<Blob> {
     img.onload = () => {
       URL.revokeObjectURL(url)
 
-      const MAX_DIMENSION = 1200
+      const maxDim = spec.maxDim
       let { width, height } = img
 
-      // Resize if larger than max dimension
-      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+      if (maxDim && (width > maxDim || height > maxDim)) {
         if (width > height) {
-          height = Math.round((height / width) * MAX_DIMENSION)
-          width = MAX_DIMENSION
+          height = Math.round((height / width) * maxDim)
+          width = maxDim
         } else {
-          width = Math.round((width / height) * MAX_DIMENSION)
-          height = MAX_DIMENSION
+          width = Math.round((width / height) * maxDim)
+          height = maxDim
         }
       }
 
@@ -146,10 +156,9 @@ async function compressImage(file: File): Promise<Blob> {
 
       ctx.drawImage(img, 0, 0, width, height)
 
-      // Determine output format
       const isPng = file.type === 'image/png'
       const mimeType = isPng ? 'image/png' : 'image/jpeg'
-      const quality = isPng ? undefined : 0.7
+      const quality = isPng ? undefined : spec.quality
 
       canvas.toBlob(
         (blob) => {
@@ -194,6 +203,27 @@ export default function ImageUploader({
   const [viewerIndex, setViewerIndex] = useState(0)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+  // ponytail: 載入時拉一次 site_settings 拿目前選的 quality profile；
+  // 若失敗就用 DEFAULT（standard），上傳行為不會中斷
+  const [qualityProfile, setQualityProfile] = useState<ImageQualityProfile>(() =>
+    parseImageQualityProfile(null)
+  )
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/settings')
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (cancelled || !data) return
+        setQualityProfile(parseImageQualityProfile(data[IMAGE_QUALITY_SETTING_KEY]))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  const qualityProfileRef = useRef<ImageQualityProfile>(qualityProfile)
+  useEffect(() => { qualityProfileRef.current = qualityProfile }, [qualityProfile])
   
   // Touch drag state for mobile support
   const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null)
@@ -308,7 +338,7 @@ export default function ImageUploader({
           // Compress the image client-side
           let blob: Blob
           try {
-            blob = await compressImage(file)
+            blob = await compressImage(file, IMAGE_QUALITY_PROFILES[qualityProfileRef.current])
           } catch {
             // If compression fails, use original
             blob = file

@@ -40,6 +40,7 @@ interface AssessmentRecord {
   }
   description?: string
   notes?: string | null
+  ocr_content?: string | null
   reward_type_icon?: string | null
 }
 
@@ -254,15 +255,15 @@ const AssessmentRecordCard: React.FC<RecordCardProps> = ({ record, studentId, as
             </div>
             <h3 className="text-xl font-black text-slate-600">{record.title || record.description || formatDisplayDate(record.due_date)}</h3>
             {record.notes && (
-              <p
-                className={`mt-2 text-sm line-clamp-4 ${
-                  record.notes.startsWith('[OCR]')
-                    ? 'text-slate-400'
-                    : 'text-slate-600'
-                }`}
-              >
+              <p className="mt-2 text-sm text-slate-600 line-clamp-4">
                 {record.notes}
               </p>
+            )}
+            {record.ocr_content && (
+              <div className="mt-2 flex items-start gap-1.5 text-xs text-slate-400">
+                <span className="material-icons-outlined mt-0.5 text-sm">document_scanner</span>
+                <p className="line-clamp-4">{record.ocr_content}</p>
+              </div>
             )}
           </div>
         </div>

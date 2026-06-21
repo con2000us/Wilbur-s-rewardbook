@@ -55,7 +55,7 @@ export default function SettingsPage() {
               icon="cloud"
               title={t('storageAndResources') || '資源與儲存'}
               description={t('storageAndResourcesDesc') || '儲存空間模式與資料備份'}
-              badge="2"
+              badge="3"
             >
               <ResourceModeSettings />
               <BackupSettings />

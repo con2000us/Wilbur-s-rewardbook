@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl'
 import RuleCard from './RuleCard'
 import type { AssessmentType } from '@/lib/assessmentTypes'
 
+type RewardCondition = 'score_equals' | 'score_range' | 'perfect_score' | 'unconditional'
+
 interface RewardRule {
   id: string
   student_id: string | null
@@ -61,7 +63,7 @@ export default function GlobalRewardRulesManager({
   // 表單狀態
   const [formData, setFormData] = useState({
     rule_name: '',
-    condition: 'score_range' as 'score_equals' | 'score_range' | 'perfect_score',
+    condition: 'score_range' as RewardCondition,
     min_score: '',
     max_score: '',
     reward_amount: '',
@@ -101,7 +103,7 @@ export default function GlobalRewardRulesManager({
     }
     setFormData({
       rule_name: rule.rule_name || '',
-      condition: rule.condition as any,
+      condition: rule.condition as RewardCondition,
       min_score: rule.min_score?.toString() || '',
       max_score: rule.max_score?.toString() || '',
       // 若有公式，編輯時優先顯示公式
@@ -763,7 +765,7 @@ export default function GlobalRewardRulesManager({
                 </label>
                 <select
                   value={formData.condition}
-                  onChange={(e) => setFormData({ ...formData, condition: e.target.value as any })}
+                  onChange={(e) => setFormData({ ...formData, condition: e.target.value as RewardCondition })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 >
                   <option value="perfect_score">{t('conditionTypes.perfect_score')}</option>

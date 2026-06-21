@@ -3363,6 +3363,7 @@ CREATE TABLE IF NOT EXISTS public.assessments (
     due_date timestamp with time zone,
     completed_date timestamp with time zone,
     notes text,
+    ocr_content text,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
     grade text,
