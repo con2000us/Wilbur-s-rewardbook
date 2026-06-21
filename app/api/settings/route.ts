@@ -31,6 +31,13 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const supabase = createClient()
+
+    // Require authenticated user before mutating settings.
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { key, value } = body
     

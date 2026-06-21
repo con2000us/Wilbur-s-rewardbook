@@ -209,6 +209,7 @@ export default function ImageUploader({
   const [qualityProfile, setQualityProfile] = useState<ImageQualityProfile>(() =>
     parseImageQualityProfile(null)
   )
+  const [profileLoaded, setProfileLoaded] = useState(false)
   useEffect(() => {
     let cancelled = false
     fetch('/api/settings')
@@ -217,7 +218,13 @@ export default function ImageUploader({
         if (cancelled || !data) return
         setQualityProfile(parseImageQualityProfile(data[IMAGE_QUALITY_SETTING_KEY]))
       })
-      .catch(() => {})
+      .catch((err) => {
+        // Log so failures surface in dev tools even though we keep the UI working.
+        console.error('[ImageUploader] Failed to load image quality settings:', err)
+      })
+      .finally(() => {
+        if (!cancelled) setProfileLoaded(true)
+      })
     return () => {
       cancelled = true
     }
@@ -491,7 +498,7 @@ export default function ImageUploader({
     handleFiles(e.dataTransfer.files)
   }
 
-  const canUpload = !disabled && !uploading && cleanImages.length < maxCount
+  const canUpload = !disabled && !uploading && profileLoaded && cleanImages.length < maxCount
 
   // Rotation CSS mapping
   const rotationMap: Record<number, string> = {

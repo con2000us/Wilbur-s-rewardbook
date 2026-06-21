@@ -230,6 +230,7 @@ function ImageQualitySection() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const saveGenerationRef = useRef(0)
 
   useEffect(() => {
     fetch('/api/settings')
@@ -239,7 +240,9 @@ function ImageQualitySection() {
           setProfile(parseImageQualityProfile(data[IMAGE_QUALITY_SETTING_KEY]))
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error('[ResourceModeSettings] Failed to load image quality settings:', err)
+      })
       .finally(() => setLoaded(true))
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
@@ -252,6 +255,7 @@ function ImageQualitySection() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     if (statusTimerRef.current) clearTimeout(statusTimerRef.current)
     setSaveStatus('saving')
+    const generation = ++saveGenerationRef.current
     saveTimerRef.current = setTimeout(async () => {
       try {
         const res = await fetch('/api/settings', {
@@ -260,11 +264,20 @@ function ImageQualitySection() {
           body: JSON.stringify({ key: IMAGE_QUALITY_SETTING_KEY, value: next }),
         })
         if (!res.ok) throw new Error('save failed')
-        setSaveStatus('saved')
+        // Only update status if no newer save has been initiated
+        if (saveGenerationRef.current === generation) {
+          setSaveStatus('saved')
+        }
       } catch {
-        setSaveStatus('error')
+        if (saveGenerationRef.current === generation) {
+          setSaveStatus('error')
+        }
       }
-      statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 1500)
+      statusTimerRef.current = setTimeout(() => {
+        if (saveGenerationRef.current === generation) {
+          setSaveStatus('idle')
+        }
+      }, 1500)
     }, 500)
   }
 

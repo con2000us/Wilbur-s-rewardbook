@@ -146,7 +146,15 @@ export async function POST(request: NextRequest) {
     setIfProvided(updateData, 'max_score', body.max_score)
     setIfProvided(updateData, 'due_date', body.due_date)
     setIfProvided(updateData, 'notes', body.notes)
-    setIfProvided(updateData, 'ocr_content', body.ocr_content)
+    if (body.ocr_content !== undefined) {
+      if (typeof body.ocr_content === 'string' && body.ocr_content.length > 5000) {
+        return NextResponse.json(
+          { error: 'ocr_content exceeds maximum length of 5000 characters' },
+          { status: 400 }
+        )
+      }
+      setIfProvided(updateData, 'ocr_content', body.ocr_content)
+    }
     setIfProvided(updateData, 'image_urls', body.image_urls)
     setIfProvided(updateData, 'scoring_mode', scoringMode)
 

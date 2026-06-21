@@ -1035,12 +1035,16 @@ export default function AssessmentForm({
           <textarea
             name="ocr_content"
             rows={4}
+            maxLength={5000}
             defaultValue={assessment?.ocr_content || ''}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
             placeholder={locale === 'zh-TW'
-              ? '使用評量圖片旁的 OCR 按鈕後，辨識內容會存放在這裡'
-              : 'OCR results from the assessment images will be stored here'}
+              ? '使用評量圖片旁的 OCR 按鈕後，辨識內容會存放在這裡（上限 5000 字）'
+              : 'OCR results from the assessment images will be stored here (max 5000 chars)'}
           />
+          <p className="text-xs text-slate-400 mt-1">
+            {(assessment?.ocr_content || '').length} / 5000
+          </p>
         </div>
 
         {/* 評量圖片上傳 */}

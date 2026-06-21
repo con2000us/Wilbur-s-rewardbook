@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server-admin'
 import { decrypt, getEncryptionSecret } from '@/lib/crypto/encryption'
-import { toServerPublicStorageUrl } from '@/lib/storage/publicUrl'
+import { getSupabaseStorageHostname, toServerPublicStorageUrl } from '@/lib/storage/publicUrl'
+
+const MAX_OCR_CONTENT_LENGTH = 5000
 
 // ── OCR Prompt (from direct-ocr.py) ──────────────────────────────
 
@@ -252,6 +254,32 @@ export async function POST(request: NextRequest) {
 
     const imageUrl = toServerPublicStorageUrl(imageUrls[image_index].url)
 
+    // SSRF guard: ensure resolved URL points at the configured Supabase host.
+    const supabaseUrlEnv = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrlEnv) {
+      return NextResponse.json(
+        { error: 'Server misconfigured: NEXT_PUBLIC_SUPABASE_URL is not set' },
+        { status: 500 }
+      )
+    }
+    let parsedImageUrl: URL
+    let expectedHost: string
+    try {
+      parsedImageUrl = new URL(imageUrl)
+      expectedHost = new URL(supabaseUrlEnv).hostname
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid image URL' },
+        { status: 400 }
+      )
+    }
+    if (parsedImageUrl.hostname !== expectedHost) {
+      return NextResponse.json(
+        { error: 'Image URL host does not match configured storage host' },
+        { status: 400 }
+      )
+    }
+
     // 2. Read active provider config (first active one)
     const { data: providerConfigs } = await supabase
       .from('ai_provider_configs')
@@ -342,12 +370,29 @@ export async function POST(request: NextRequest) {
     const fields = parseOcr(ocrText)
 
     // 6. Format the dedicated OCR content
-    const ocrContent = formatOcrContent(fields)
+    const ocrContent = formatOcrContent(fields).slice(0, MAX_OCR_CONTENT_LENGTH)
 
-    // 7. Write to DB
+    // 7. Write to DB. Also clear stale OCR prefix from notes (only the prefix,
+    // preserving any user-added text after it) so the legacy and new fields
+    // don't both contain OCR data.
+    const { data: existing } = await supabase
+      .from('assessments')
+      .select('notes')
+      .eq('id', assessment_id)
+      .single()
+
+    const updatePayload: { ocr_content: string; notes?: string | null } = {
+      ocr_content: ocrContent,
+    }
+    const existingNotes = (existing as { notes: string | null } | null)?.notes
+    if (typeof existingNotes === 'string' && existingNotes.startsWith('[OCR]')) {
+      const stripped = existingNotes.replace(/^\[OCR\]\s*(\|\s*)?/, '').trim()
+      updatePayload.notes = stripped.length > 0 ? stripped : null
+    }
+
     const { error: updateError } = await supabase
       .from('assessments')
-      .update({ ocr_content: ocrContent })
+      .update(updatePayload)
       .eq('id', assessment_id)
 
     if (updateError) {

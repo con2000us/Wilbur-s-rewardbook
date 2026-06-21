@@ -43,8 +43,21 @@ export function toServerPublicStorageUrl(url: string): string {
   if (!supabaseUrl) return url
 
   try {
-    return new URL(url, new URL(supabaseUrl).origin).toString()
+    // Ensure path starts with '/' so new URL() resolves correctly
+    const normalizedPath = url.startsWith('/') ? url : `/${url}`
+    return new URL(normalizedPath, new URL(supabaseUrl).origin).toString()
   } catch {
     return url
+  }
+}
+
+/** Extract the Supabase storage hostname for SSRF validation. */
+export function getSupabaseStorageHostname(): string {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl) return ''
+    return new URL(supabaseUrl).hostname
+  } catch {
+    return ''
   }
 }
